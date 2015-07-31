@@ -1,2 +1,4 @@
-# ipe-issues
-Issue tracker for Ipe
+This repository is solely for tracking Ipe issues.
+
+Click on "issues" on the right.
+
