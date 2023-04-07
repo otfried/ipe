@@ -114,11 +114,11 @@ void AppUi::addItem(int id, const char *title, const char *name)
   addItem(shell, title, name);
 }
 
-static GtkWidget *submenu = 0;
-static GtkWidget *submenuitem = 0;
+static GtkWidget *submenu = nullptr;
+static GtkWidget *submenuitem = nullptr;
 static int submenuId = 0;
 
-void AppUi::startSubMenu(int id, const char *name)
+void AppUi::startSubMenu(int id, const char *name, int tag)
 {
   submenuId = id;
   submenu = gtk_menu_new();
@@ -177,8 +177,8 @@ AppUi::AppUi(lua_State *L0, int model)
   iStatusBar = gtk_statusbar_new();
   iStatusBarContextid = gtk_statusbar_get_context_id(GTK_STATUSBAR(iStatusBar),
 						     "explain");
-  iMousePosition = gtk_label_new(0);
-  iResolution = gtk_label_new(0);
+  iMousePosition = gtk_label_new(nullptr);
+  iResolution = gtk_label_new(nullptr);
   GtkBox *sb =
     GTK_BOX(gtk_statusbar_get_message_area(GTK_STATUSBAR(iStatusBar)));
   gtk_box_pack_end(sb, iResolution, FALSE, FALSE, 0);
@@ -196,6 +196,11 @@ AppUi::~AppUi()
 }
 
 // --------------------------------------------------------------------
+
+void AppUi::setRecentFileMenu(const std::vector<String> & names)
+{
+  // TODO
+}
 
 void AppUi::resetCombos()
 {
@@ -321,10 +326,20 @@ void AppUi::setMouseIndicator(const char *s)
   gtk_label_set_text(GTK_LABEL(iMousePosition), s);
 }
 
-void AppUi::showWindow(int width, int height)
+void AppUi::setSnapIndicator(const char *s)
+{
+  // TODO
+}
+
+void AppUi::showWindow(int width, int height, int x, int y, const Color & pathViewColor)
 {
   gtk_widget_set_size_request(GTK_WIDGET(iWindow), width, height);
   gtk_widget_show(iWindow);
+}
+
+void AppUi::setFullScreen(int mode)
+{
+  // TODO
 }
 
 int AppUi::setClipboard(lua_State *L)
@@ -355,7 +370,7 @@ void AppUi::action(String name)
   luaAction(name);
 }
 
-int AppUi::pageSorter(lua_State *L, Document *doc,
+int AppUi::pageSorter(lua_State *L, Document *doc, int pno,
 		      int width, int height, int thumbWidth)
 {
   // TODO

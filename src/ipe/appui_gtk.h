@@ -57,25 +57,29 @@ public:
   virtual void setActionState(const char *name, bool value);
   virtual void setWindowCaption(bool mod, const char *s);
   virtual void explain(const char *s, int t);
-  virtual void showWindow(int width, int height);
+  virtual void showWindow(int width, int height, int x, int y, const Color & pathViewColor);
+  virtual void setFullScreen(int mode);
 
   virtual void setBookmarks(int no, const String *s);
   virtual void setToolVisible(int m, bool vis);
-  virtual int pageSorter(lua_State *L, Document *doc,
+  virtual int pageSorter(lua_State *L, Document *doc, int pno,
 			 int width, int height, int thumbWidth);
 
   virtual int clipboard(lua_State *L);
   virtual int setClipboard(lua_State *L);
+
+  virtual void setRecentFileMenu(const std::vector<String> & names) override;
 
 private:
   int actionId(const char *name) const;
   virtual void addRootMenu(int id, const char *name);
   void addItem(GtkMenuShell *shell, const char *title, const char *name);
   virtual void addItem(int id, const char *title, const char *name);
-  virtual void startSubMenu(int id, const char *name);
+  virtual void startSubMenu(int id, const char *name, int tag);
   virtual void addSubItem(const char *title, const char *name);
   virtual MENUHANDLE endSubMenu();
   virtual void setMouseIndicator(const char *s);
+  virtual void setSnapIndicator(const char *s);
   virtual void addCombo(int sel, String s);
   virtual void resetCombos();
   virtual void addComboColors(AttributeSeq &sym, AttributeSeq &abs);

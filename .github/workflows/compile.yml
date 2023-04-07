@@ -30,3 +30,23 @@ jobs:
           cd src
           make 
       - run: 'echo "Status ${{ job.status }}"'
+  BuildGTK:
+    runs-on: ubuntu-latest
+    env:
+      IPEPREFIX: /usr/local
+      IPESTRICT: 1
+      IPEQVORONOI: 1
+      IPEUI: GTK
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Install build tools
+        run: |
+          sudo apt-get install \
+                  libgtk2.0-dev \
+                  liblua5.4-dev libspiro-dev libqhull-r8.0 libqhull-dev
+      - name: Compile
+        run: |
+          cd src
+          make 
+      - run: 'echo "Status ${{ job.status }}"'

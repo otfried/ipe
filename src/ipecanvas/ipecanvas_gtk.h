@@ -48,7 +48,7 @@ namespace ipe {
 
   private:
     virtual void setCursor(TCursor cursor, double w = 1.0,
-			   Color *color = 0);
+			   Color *color = nullptr);
 
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);

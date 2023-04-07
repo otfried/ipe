@@ -59,8 +59,8 @@ static void setup_globals(lua_State *L)
   lua_pushliteral(L, "gtk");
   lua_setfield(L, -2, "toolkit");
 
-  setup_config(L, "system_styles", 0, IPESTYLEDIR);
-  setup_config(L, "system_ipelets", 0, IPELETDIR);
+  setup_config(L, "system_styles", nullptr, IPESTYLEDIR);
+  setup_config(L, "system_ipelets", nullptr, IPELETDIR);
   setup_config(L, "docdir", "IPEDOCDIR", IPEDOCDIR);
 
   push_string(L, Platform::latexDirectory());
@@ -80,6 +80,8 @@ static void setup_globals(lua_State *L)
   int width = gdk_screen_get_width(screen);
   int height = gdk_screen_get_height(screen);
   ipeDebug("Screen resolution is (%d x %d)", width, height);
+
+  setup_common_config(L);
 
   lua_createtable(L, 0, 2);
   lua_pushinteger(L, width);
