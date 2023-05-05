@@ -39,17 +39,24 @@ GSL_CFLAGS    ?= $(shell $(PKG_CONFIG) --cflags gsl)
 GSL_LIBS      ?= $(shell $(PKG_CONFIG) --libs gsl)
 #
 # Until Qt 6.3.1, the pkg-config files are missing
-# here is an ugly hack
+# here is an ugly hack using the Qt5 pkg-config instead
 #
 QT6PKGCONFIG  := $(shell $(PKG_CONFIG) --exists Qt6Gui && echo "YES")
+ifndef QT_CFLAGS
 ifeq "$(QT6PKGCONFIG)" "YES"
 QT_CFLAGS     ?= $(shell $(PKG_CONFIG) --cflags Qt6Gui Qt6Widgets Qt6Core)
-QT_LIBS	      ?= $(shell $(PKG_CONFIG) --libs Qt6Gui Qt6Widgets Qt6Core)
 else
 QT_CFLAGS1    := $(shell $(PKG_CONFIG) --cflags Qt5Gui Qt5Widgets Qt5Core)
-QT_LIBS1      := $(shell $(PKG_CONFIG) --libs Qt5Gui Qt5Widgets Qt5Core)
 QT_CFLAGS     ?= $(subst qt5,qt6,$(QT_CFLAGS1))
+endif
+endif
+ifndef QT_LIBS
+ifeq "$(QT6PKGCONFIG)" "YES"
+QT_LIBS	      ?= $(shell $(PKG_CONFIG) --libs Qt6Gui Qt6Widgets Qt6Core)
+else
+QT_LIBS1      := $(shell $(PKG_CONFIG) --libs Qt5Gui Qt5Widgets Qt5Core)
 QT_LIBS	      ?= $(subst Qt5,Qt6,$(QT_LIBS1))
+endif
 endif
 #
 # QtSpell is not yet available for Qt6
