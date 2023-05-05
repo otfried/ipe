@@ -1,0 +1,57 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics, 
+.\" respectively.
+.TH IPE6UPGRADE 1 "September 29, 2009"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+ipe6upgrade \- Convert Ipe 6 file format to Ipe 7 file format
+.SH SYNOPSIS
+.B ipe6upgrade
+\fIinput-file\fP [ \fIoutput-file\fP ]
+
+.SH DESCRIPTION
+.PP
+\fBipe6upgrade\fP converts an XML file in any version of the Ipe 6
+file format to Ipe 7 format.
+
+If the \fIoutput-file\fP is not given, \fBipe6upgrade\fP replaces the
+input file extension by \fIipe\fP.
+
+
+.SH ENVIRONMENT VARIABLES
+
+\fBipe6upgrade\fP respects the following environment variables:
+
+.TP
+\fBIPEDEBUG\fP
+set this to 1 for debugging output from \fBipe6upgrade\fP.
+
+.SH AUTHOR
+Otfried Cheong
+
+.SH REPORTING BUGS
+.ad l
+Please report bugs using Ipe bugzilla at
+.I "http://ipe.otfried.org/bugzilla.html"
+
+.SH SEE ALSO
+.ad l
+Ipe is documented fully in
+.IR "The Ipe Manual" ,
+which is available online at
+.I "http://ipe.otfried.org/manual/manual.html" .

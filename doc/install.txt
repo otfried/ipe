@@ -1,0 +1,230 @@
+--------------------------------------------------------------------
+            Building and installing Ipe on Unix
+--------------------------------------------------------------------
+
+
+****  For MAC OS X, see the separate document "macos.txt"! ****
+
+
+Quickstart for Linux
+--------------------
+
+If you have a recent Mint, Ubuntu, or Debian system, the following
+steps will install the necessary libraries and tools:
+
+    sudo apt-get install build-essentials checkinstall
+    sudo apt-get install qt6-base-dev qt6-base-dev-tools
+    sudo apt-get install libqt6svg6
+    sudo apt-get install libfreetype6-dev libcairo2-dev libjpeg8-dev
+    sudo apt-get install libpng-dev liblua5.4-dev zlib1g-dev
+    sudo apt-get install libspiro-dev libgsl-dev curl doxygen
+
+Now you can compile and install Ipe into /usr/local:
+(Note that 7.x.y has to be replaced by the current Ipe version!)
+
+    cd src
+    make IPEPREFIX=/usr/local
+    make documentation IPEPREFIX=/usr/local
+    sudo checkinstall --pkgname=ipe --pkgversion=7.x.y --backup=no \
+    	 --fstrans=no --default make install IPEPREFIX=/usr/local
+    sudo ldconfig
+
+The line with "checkinstall" makes sure that Ipe is installed as
+package "ipe".  If you no longer need Ipe, or to remove it before
+compiling the next release, you can completely remove it from your
+system by saying
+
+    sudo apt-get remove ipe
+
+If something doesn't work for you, please read below to check the
+details!
+
+
+--------------------------------------------------------------------
+Detailed instructions
+--------------------------------------------------------------------
+
+
+Required components
+-------------------
+
+Before you can compile Ipe, you will need to have the following tools
+and libraries:
+
+ * GNU make
+
+   The Ipe makefiles are written for GNU make.  A Linux system will
+   already have it.  On other Unix systems, GNU make is often
+   installed as 'gmake'.  Otherwise, install it yourself from
+   www.gnu.org. Other "make" implementations will not work!
+
+ * Doxygen
+
+   If you want the Ipelib API documentation (it's only needed for
+   developers, for instance if you want to write ipelets), you'll need
+   doxygen.  On Linux, install the 'doxygen' package, or otherwise
+   from "www.doxygen.nl".  
+   
+   If you don't need the API documentation, just omit the "make
+   documentation" line below.
+   
+ * The compression library 'zlib'
+
+   Very likely you already have it on your system (check for the
+   include file "zlib.h").  If not, obtain it from "www.gzip.org/zlib"
+   and install it.
+
+ * The font library 'Freetype 2'
+
+   On Linux, you most likely already have this on your system.  You
+   will need the development package (on Debian/Ubuntu, this is
+   "libfreetype6-dev").  
+
+   The original sources are at "www.freetype.org".  You need version
+   2.1.8 or newer.
+
+ * The Cairo library (version 1.8.0 or higher)
+
+   The Gnome desktop uses this high-quality rendering library, so you
+   may already have it.  You will need the development package,
+   e.g. on Debian/Ubuntu "libcairo2-dev".  
+
+   You can also install from sources at "www.cairographics.org".  If
+   you compile Cairo yourself, note that you only need the image,
+   Postscript, and svg surfaces (backends).  You also need freetype
+   support, but no fontconfig.  Since Ipe does not need any
+   platform-dependent backends, Cairo should compile fine on any
+   platform.
+
+ * The libpng library
+
+   You'll need the development package, e.g. on Debian/Ubuntu
+   "libpng-dev". You can also install from source at
+   "http://www.libpng.org".
+
+ * The libjpeg library (version 6 or higher)
+
+   You'll need the development package, e.g. on Debian/Ubuntu
+   "libjpeg-dev".  You can also use libjpeg-turbo instead (the
+   package "libjpeg-turbo8-dev"), from "http://libjpeg-turbo.virtualgl.org/".
+
+ * The Lua language (version 5.3 or 5.4)
+
+   Lua is an embeddable scripting language. On Debian/Ubuntu, install
+   "liblua5.4-dev".  Or compile from source at "www.lua.org" - the
+   sources are ANSI C and compile very easily.  Ipe requires Lua 5.3
+   or 5.4.
+
+   Make sure that you build a DYNAMIC library.  Ipe will not work if
+   Lua is linked statically (linking statically would include three
+   copies of the Lua interpreter, resulting in random crashes).
+
+ * The Qt 6 toolkit
+
+   On Linux, you most likely already have it. On Debian/Ubuntu, you
+   would need the packages "qt6-base-dev", "qt6-base-dev-tools",
+   and "libqt6svg6" (the latter is the SVG plugin needed to display
+   the icons).
+
+   You can also download binaries or sources at "www.qt.io/".  You
+   only need the Qt6Core, Qt6Gui, and Qt6Widgets libraries.
+
+ * The GNU Scientific Library
+
+   This library is used to improve the precision of intersections of
+   Bezier splines and elliptic arcs.
+
+   You'll need the development package, e.g. on Debian/Ubuntu
+   "libgsl-dev". You can also install from source at
+   "https://www.gnu.org/software/gsl/".
+
+ * The spiro library
+
+   Spiro is a library for creating clothoid splines.
+
+   You'll need the development package, e.g. on Debian/Ubuntu
+   "libspiro-dev".  You can also install from source at
+   "https://github.com/fontforge/libspiro".
+
+ * Pdflatex, Xelatex, Lualatex
+ 
+   Ipe needs a PDF-producing version of Latex to convert Latex source
+   code to Postscript/PDF.  Ipe can do so through an online
+   Latex-compilation service, or using a TeX installation on your
+   computer.  You don't need to install LaTeX to compile and try out
+   Ipe.
+
+ * The curl program
+
+   To use the online Latex-compilation, Ipe calls the "curl"
+   program. (If you have a local Latex installation, it is not
+   needed.)
+   
+   Most likely you already have "curl".  On Debian/Ubuntu, install the
+   "curl" package.  You can also install from source at
+   "https://curl.haxx.se/libcurl/".
+
+
+
+Configuring and building Ipe
+----------------------------
+
+There are some pieces of information you need to provide to the Ipe
+build process by editing "src/config.mak" (in many cases you can also
+just give the definitions on the make command line, see below).
+
+You first have to indicate the location of the required components
+listed above.  On Linux, you probably have a correctly working
+'pkg-config' script, and the default settings should work.  
+
+You'll have to check that the Lua package name is correct - try saying
+
+     pkg-config --modversion lua5.4
+
+If the package isn't found, try 'lua5.3', 'lua' or 'lua53', etc.
+
+Second, you have to define the Ipe directory structure.  Normally, you
+would only need to define IPEPREFIX properly, depending on where you
+want Ipe to be installed.
+
+These steps will then build Ipe:
+
+     cd src
+     make
+     make documentation
+     make install
+
+Instead of editing "src/config.mak", you can also set the variables in
+the make call, e.g.:
+
+    cd src
+    make IPEPREFIX=/usr/local
+    make documentation IPEPREFIX=/usr/local
+    sudo make install IPEPREFIX=/usr/local
+
+You may need to do "make install" as root (depending on whether you
+have write permission to the installation location).
+
+
+Dynamic linking
+---------------
+
+The Ipe libraries are shared libraries, and so your dynamic linker has
+to find "libipe*.so".  If you have chosen a standard library directory
+for IPELIBDIR, saying "sudo ldconfig" will be enough to run Ipe.
+
+If you installed in a different location, such as "/opt/ipe7", you
+can make a small script called "ipe" like the following, and put it in
+your path:
+
+#!/bin/sh
+export LD_LIBRARY_PATH="/opt/ipe7/lib/:$LD_LIBRARY_PATH"
+/opt/ipe7/bin/ipe $* &
+
+Alternatively, you could put links to the library in a standard
+location:
+
+    sudo ln -f -s IPELIBDIR/lib* /usr/lib
+    sudo ldconfig
+
+--------------------------------------------------------------------

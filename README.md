@@ -1,5 +1,4 @@
-This repository is solely for tracking Ipe issues.
+This is the source code for the extensible drawing editor Ipe.
 
-Click on "Issues" or go to
-[https://github.com/otfried/ipe-issues/issues](https://github.com/otfried/ipe-issues/issues).
+[Ipe homepage](https://ipe.otfried.org).
 

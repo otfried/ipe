@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!DOCTYPE ipestyle SYSTEM "ipe.dtd">
+<ipestyle name="imperial">
+<layout paper="612 792" origin="0 0" frame="612 792"/>
+<gridsize name="1/8 in" value="9"/>
+<gridsize name="1/4 in" value="18"/>
+<gridsize name="1/2 in" value="36"/>
+</ipestyle>

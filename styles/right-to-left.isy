@@ -1,0 +1,7 @@
+<ipestyle name="right-to-left">
+<preamble>
+\ipedefinecolors{}
+</preamble>
+<textstyle name="rtl" type="minipage" begin="\RTL{}" end="\endRTL"/>
+<textstyle name="rtl" type="label" begin="\hboxR{" end="}"/>
+</ipestyle>

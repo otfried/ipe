@@ -1,0 +1,95 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics, 
+.\" respectively.
+.TH IPETOIPE 1 "June 27, 2009"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+ipetoipe \- Convert between Ipe file formats
+.SH SYNOPSIS
+.B ipetoipe
+( -pdf | -xml ) { options } \fIinput-file\fP [ \fIoutput-file\fP ]
+
+.SH DESCRIPTION
+.PP
+\fBipetoipe\fP converts between the two Ipe file formats XML and PDF.
+Options are:
+.TP
+\fB-pdf\fP
+convert to PDF format
+.TP
+\fB-xml\fP
+convert to XML format
+.TP
+\fB-export\fP
+do not include Ipe markup in the output file.
+.br
+\fIWarning:\fP this means that Ipe will not be able to read the
+resulting output file. 
+.TP
+\fB-pages\fP \fIfrom\fP-\fIto\fP
+restrict exporting to PDF to this page range.  This implies  the
+\fB-export\fP option. 
+.TP
+\fB-view\fP \fIpage\fP-\fIview\fP
+only export this single view from the document.  This implies  the
+\fB-export\fP option. 
+.TP
+\fB-markedview\fP
+create a PDF page only for the marked views of marked Ipe pages. This
+is for instance convenient for making handouts for slides used in 
+a presentation. This implies the
+\fB-export\fP option. 
+.TP
+\fB-runlatex\fP
+run Latex even for XML output. This has the effect of including the
+dimensions of each text object in the XML file.
+.TP
+\fB-nozip\fP
+do not compress streams in PDF or Postscript output.
+
+.SH ENVIRONMENT VARIABLES
+
+\fBipetoipe\fP respects the following environment variables:
+
+.TP
+\fBIPELATEXDIR\fP
+the directory where \fBipetoipe\fP runs Pdflatex.
+
+.TP
+\fBIPELATEXPATH\fP
+the directory containing pdflatex and xelatex.  If not set, they are
+searched for on the path.
+
+.TP
+\fBIPEDEBUG\fP
+set this to 1 for debugging output.
+
+.SH AUTHOR
+Otfried Cheong
+
+.SH REPORTING BUGS
+.ad l
+Please report bugs using Ipe bugzilla at
+.I "http://ipe.otfried.org/bugzilla.html"
+
+.SH SEE ALSO
+.ad l
+Ipe is documented fully in
+.IR "The Ipe Manual" ,
+which is available online at
+.I "http://ipe.otfried.org/manual/manual.html" .

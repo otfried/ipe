@@ -1,0 +1,966 @@
+/*! \page lua Programming in Lua
+
+The library \e libipelua implements Lua bindings for many classes in
+Ipelib.  The bindings are available in Lua ipelets, as well as in Lua
+scripts executed using the ipescript program.
+
+These pages document the Lua bindings to Ipelib:
+
+\li \subpage luageo
+\li \subpage luaobj
+\li \subpage luapage
+
+When writing Ipelets in Lua, you have access to additional methods
+provided by the Ipe program itself:
+
+\li \subpage luaipe
+\li \subpage luaipeui
+
+\section luaex Examples
+
+Here is a Lua script that reads an Ipe document and then recenters
+each page on the paper.  You can run this script as 
+"ipescript recenter".
+
+\verbinclude recenter.lua
+
+The following script prints out all the gradients defined in a
+document:
+
+\verbinclude show-gradients.lua
+
+And here is a script that shows how to add a gradient to a document
+(the same technique works for tilings and effects):
+
+\verbinclude add-gradient.lua
+
+For more examples, have a look at the scripts in your Ipe
+installation, such as add-style.lua or update-styles.lua.
+
+*/	
+
+/*! \page luageo Lua bindings for geometric objects
+
+All Ipelib objects have constructors of the form:
+
+\verbatim
+ v = ipe.Vector()
+ m = ipe.Matrix()
+ m = ipe.Translation()  -- another Matrix constructor
+ m = ipe.Rotation()     -- yet another Matrix constructor
+ r = ipe.Rect()
+ l = ipe.Line()
+ l = ipe.LineThrough()  -- another Line constructor
+ l = ipe.Bisector()     -- yet another Line constructor
+ s = ipe.Segment()
+ b = ipe.Bezier()
+ a = ipe.Arc()
+\endverbatim
+
+Note that ipe::Angle and ipe::Linear are not bound in Lua.  Use
+numbers and ipe.Matrix instead.  A useful method for angles is:
+\verbatim
+beta = ipe.normalizeAngle(alpha, lowLimit)
+\endverbatim
+
+\section luavector Vector
+
+\e ipe.Vector binds ipe::Vector. There are the following methods:
+\verbatim
+v = ipe.Vector()         -- zero vector
+v = ipe.Vector(x, y)
+v = ipe.Direction(alpha) -- unit vector in this direction 
+a = v.x                  -- read only access to x and y coordinates
+b = v.y
+
+v:len() -- returns norm of vector
+v:sqLen() -- returns square of norm
+v:normalized() -- returns this vector normalized
+v:orthogonal() -- returns this vector rotated left by 90 degrees
+v:factorize(u) -- factors v = lambda u + x, where x orth. to u, u is unit
+v:angle()     -- return direction 
+v == w        -- vector equality
+v ~= w
+-v            -- unary minus
+v + w         -- vector addition
+v - w         -- vector difference
+5 * v         -- multiplication with a scalar
+v * 5         -- multiplication with a scalar
+v ^ w         -- dot product
+\endverbatim
+
+\section luamatrix Matrix
+
+\e ipe.Matrix binds ipe::Matrix. It has the following methods:
+\verbatim
+m = ipe.Matrix()                        -- identity matrix
+m = ipe.Matrix(a1, a2, a3, a4)		-- linear transformation
+m = ipe.Matrix(a1, a2, a3, a4, a5, a6)  -- affine transformation
+m = ipe.Matrix( { a1, a2, a3, a4, a5, a6 } ) -- same from table
+m = ipe.Rotation(alpha)                 -- rotation matrix
+m = ipe.Translation(v)                  -- v is a vector
+m = ipe.Translation(x, y)
+
+m1 == m2          -- matrix equality
+m1 * m2           -- matrix multiplication
+m * v             -- matrix * vector
+m * arc		  -- matrix * arc
+
+m:elements()      -- returns six-element array with elements
+
+m:isIdentity()
+m:isSingular()
+m:inverse()
+m:translation()   -- return translation component
+m:linear()        -- returns matrix without the translation component
+\endverbatim
+
+\section luarect Rect
+
+\e ipe.Rect binds ipe::Rect.  This is the only mutable geometric
+object - take care not to be surprised when \e ipe.Rect objects are
+shared. 
+
+It has the following methods:
+\verbatim
+r = ipe.Rect()    -- empty
+r:isEmpty()
+r:topRight()
+r:bottomLeft()
+r:topLeft()
+r:bottomRight()
+r:left()
+r:right()
+r:bottom()
+r:top()
+r:width()
+r:height()
+r:add(v)          -- extend to cover vector v
+r1:add(r2)        -- extend to cover rectangle r2
+r1:clipTo(r2)     -- clip r1 to lie inside r2
+r:contains(v)     
+r1:contains(r2)
+r1:intersects(r2)
+\endverbatim
+
+\section lualine Line
+
+\e ipe.Line binds ipe::Line. It has the following methods:
+
+\verbatim
+l = ipe.Line(p, dir)      -- dir must be unit vector
+l = ipe.LineThrough(p, q)
+l = ipe.Bisector(p, q)
+
+-- l:side() returns +1 if v lies to the left side of the line, 
+-- 0 if on line, -1 if on the right side
+l:side(v)                 
+l:point()                 -- starting point of line
+l:dir()                   -- unit direction vector
+l:normal()                -- unit normal vector pointing to the left side
+l:distance(v)             -- returns distance from point to line
+l1:intersects(l2)         -- returns intersection point or nil
+l:project(p)              -- projection of point on line
+\endverbatim
+
+\section luasegment Segment
+
+\e ipe.Segment binds ipe::Segment. It has the following methods:
+
+\verbatim
+s = ipe.Segment(p, q)	
+p, q = s:endpoints()      -- returns both endpoints
+s:line()                  -- returns an ipe.Line
+s:project(p)              -- returns projection or nil
+s:distance(p)
+s:intersects(l)           -- return intersection point or nil
+s1:intersects(s2)
+\endverbatim
+
+\section luabezier Bezier
+
+\e ipe.Bezier binds ipe::Bezier. It has the following methods:
+
+\verbatim
+b = ipe.Bezier(v1, v2, v3, v4)	
+b:point(t)                -- point at value t
+v1, v2, v3, v4 = b:controlpoints()  -- returns all four control points
+b:bbox()
+t, p = b:snap(pos)
+
+-- intersections: 
+-- x is line, segment, or bezier
+-- returns table of intersection points
+b:intersect(x)
+\endverbatim
+
+\section luaarc Arc
+
+\e ipe.Arc binds ipe::Arc. It has the following methods:
+
+\verbatim
+a = ipe.Arc(m)            -- ellipse defined by ipe.Matrix m
+a = ipe.Arc(m, p, q)      -- arc from p to q
+a = ipe.Arc(m, alpha, beta)
+
+a:endpoints()             -- returns two endpoints
+a:angles()                -- returns two angles
+a:bbox()
+a:matrix()
+a:isEllipse() 
+alpha, p = a:snap(pos)
+
+-- intersections: 
+-- x is line, segment, arc, or bezier
+-- returns table of intersection points
+a:intersect(x)
+\endverbatim
+
+*/
+
+/*! \page luaobj Lua bindings for objects and attributes
+
+The five Ipe objects are ipe::Group, ipe::Path, ipe::Text, ipe::Image,
+and ipe::Reference.  They can be constructed from Lua as follows:
+
+\verbatim
+obj = ipe.Reference(attributes, name, pos)
+obj = ipe.Text(attributes, text, pos)          -- Text of type label
+obj = ipe.Text(attributes, text, pos, width)   -- Text of type minipage
+obj = ipe.Path(attributes, shape, with_arrows)	 
+obj = ipe.Group(elements)       -- elements is a table of objects
+obj = ipe.Image(rect, bitmap)   -- where bitmap is another Image object 
+\endverbatim
+
+Here, \c attributes is a table defining the desired attributes, see
+below.  \c shape is a table defining a shape, see below.  To create
+path with arrows, you need to set \c with_arrows to true (it defaults
+to false). The arrow settings are then used from the \c attributes.
+
+A bitmap can be created by reading from an image file:
+\verbatim
+bitmap, res = ipe.readImage(fname, format)
+\endverbatim
+where format is one of "png" or "jpeg".  If reading the bitmap fails,
+then bitmap is nil and res is an error message. Otherwise, bitmap is
+an Image object and res is the resolution in dots per inch.  This will
+be (0,0) if the file does not contain that information.
+
+Objects have the following methods:
+\verbatim
+obj:type()    -- return type as string: group, text, path, image, reference
+obj:clone()   -- clone the object
+
+obj:set(property, value)    -- see below
+obj:get(property)           -- see below
+
+obj:xml()                   -- return XML representation
+obj:matrix()
+obj:setMatrix(m)
+obj:addToBBox(r, m)         -- including control points
+obj:addToBBox(r, m, false)  -- without control points
+
+obj:setCustom(s)            -- set string s as custom field
+s = obj:getCustom()
+
+-- text and reference objects only:
+v = obj:position()
+-- text objects only:
+obj:setText(str)
+str = obj:text()
+width, height, depth = obj:dimensions()
+-- path objects only:
+shape = obj:shape()                      
+obj:setShape(shape)            
+-- group objects only:
+n = obj:count()                  
+shape = obj:clip()           -- nil if no clipping
+obj:setClip(shape)
+str = obj:text()             -- the link action (URL)
+obj:setText(str)
+-- image objects only:
+obj:info()                   -- returns table about bitmap
+-- group objects only:
+elements = obj:elements()    -- returns table with clones of elements 
+element = obj:element(i)     -- returns clone of element #i
+obj:elementType(i)           -- returns type of element #i
+\endverbatim
+
+\section luaattributes Attributes
+
+Attributes are represented in Lua as follows:
+
+\li Symbolic names are strings
+
+\li Absolute string values (e.g. dash style) are strings
+
+\li Absolute numeric values are numbers
+
+\li Absolute colors are tables with three entries with keys \c r, \c
+g, \c b
+
+\li Boolean values (for \c minipage, \c farrow, \c rarrow) are
+    booleans (but the strings "true" and "false" can be used to set them)
+
+\li Transformations, Pinned, Linejoin, Linecap, Fillrule, Horizontal
+alignment, and Vertical alignment are represented by fixed strings,
+see table below.  
+
+The \e attributes argument to the object constructors is a table
+defining all desired attributes.  Keys in the table are as follows. 
+If a key is not present, the default value is used.
+\verbatim
+pathmode -- "stroked", "strokedfilled", "filled"
+stroke   -- symbolic or color
+fill     -- symbolic or color
+dashstyle -- symbolic or absolute string
+pen      -- symbolic or number
+farrow   -- boolean
+rarrow   -- boolean
+farrowshape -- symbolic
+rarrowshape -- symbolic
+arrowsize  -- symbolic or number
+symbolsize -- symbolic or number
+symbolshape -- symbolic
+textsize   -- symbolic or number
+transformableText -- boolean
+textstyle  -- symbolic
+opacity    -- symbolic
+tiling     -- symbolic
+decoration -- symbolic ("normal" means no decoration)
+minipage   -- boolean	   
+width 	   -- number
+horizontalAlignment -- "left", "right", "hcenter"
+verticalAlignment   -- "bottom", "baseline", "top", "vcenter"
+linejoin            -- "normal", "miter", "round", "bevel"
+linecap             -- "normal", "butt", "round", "square"
+fillrule            -- "normal", "wind", "evenodd"
+pinned              -- "none", "horizontal", "vertical", "fixed"
+transformations     -- "translations", "rigid", "affine"
+\endverbatim
+
+
+\section luaprop Properties
+
+The \e set() and \e get() methods allow to access the attributes of
+objects.  The property names are 
+\verbatim
+    pen, symbolsize, 
+    farrow, rarrow, farrowsize, rarrowsize, farrowshape, rarrowshape, 
+    stroke, fill, markshape,
+    pathmode, dashstyle, 
+    textsize, textstyle, minipage, width, 
+    opacity, tiling, gradient, 
+    horizontalalignment, verticalalignment,
+    linejoin, linecap, fillrule, 
+    pinned, transformations,
+    decoration
+\endverbatim
+
+It is okay to set a property on objects that do not support them (for
+instance, "textsize" on a path object).  Reading such properties
+results in an "undefined" return value.
+
+\section luashape Shape
+
+The geometry of a path object and the clipping path of a group object
+is an ipe::Shape.  This is represented in Lua as a pure Lua object,
+namely an array with one entry per subpath.  
+
+Each subpath is again a table with a \c type field whose value must be
+one of "ellipse", "closedspline", or "curve".  
+
+For an ellipse, element 1 of the table is the matrix.  
+
+For a closed spline, the table contains the control points.  
+
+For a curve, the table has a second field \c closed, which is either
+\c true or \c false.  The table also has an entry for each segment of
+the curve.  Each segment is again a table with a \c type field, whose
+value is one of "arc", "segment", "spline", "oldspline", "cardinal",
+or "spiro".  The segment table contains the control points of the
+segment.  For arc segments, there is an additional \c arc field in the
+segment table that contains the arc as an ipe.Arc object.  For
+cardinal spline segments, there is an additional \c tension field in
+the segment table.
+
+*/
+
+
+/*! \page luapage Lua bindings for Document, Page, and StyleSheet
+
+\section luastyle Stylesheet
+
+A stylesheet can be constructed by reading from a file (in XML
+format), or by creating an empty stylesheet:
+\verbatim
+-- create from file:
+-- returns sheet or nil, error message
+sheet = ipe.Sheet("filename")
+-- create from XML data:
+-- returns sheet or nil, error message
+sheet = ipe.Sheet(nil, "<ipestyle> ... </ipestyle>")
+-- create empty stylesheet:
+sheet = ipe.Sheet()    
+\endverbatim
+
+Stylesheets have the following methods:
+\verbatim
+sheet:clone()            -- returns a private copy of the stylesheet
+sheet:xml(with_bitmaps)  -- return XML representation 
+sheet:add(kind, symbolic, value)
+sheet:addFrom(other_sheet, kind, symbolic)
+sheet:remove(kind, symbolic)			   
+sheet:set(kind, value)
+sheet:isStandard()      -- is this the built-in stylesheet?
+sheet:name()            -- name of the stylesheet
+sheet:setName(name)
+\endverbatim
+
+\c sheet:add adds a definition for symbolic name to the stylesheet.
+Permissible values for \c kind are:
+\verbatim
+ pen, symbolsize, arrowsize, color, dashstyle, textsize, textstretch, 
+ textstyle, gridsize, anglesize, opacity, symbol, 
+\endverbatim
+
+\c sheet:addFrom copies a definition for a gradient, tiling, or effect
+from another stylesheet.  This makes it possible to create such
+definitions by creating a temporary stylesheet from an XML string.
+
+\c sheet:remove removes the definition of a symbolic name from the
+stylesheet. This also works for symbols, gradients, tilings, and
+effects. It is permissible to remove a symbolic name that is not
+defined in the stylesheet.
+
+\c sheet:set sets a value. Permissible values for \c kind are:
+\verbatim
+ preamble, linecap, linejoin, fillrule
+\endverbatim
+
+\section luacascade Stylesheet cascade
+
+Documents own an entire stack of style sheets, the style sheet \e
+cascade.  An empty style sheet cascade can be created like this:
+\verbatim
+sheets = ipe.Sheets()
+\endverbatim
+or you can obtain one from an Ipe document.
+
+Style sheet cascades have the following methods:
+\verbatim
+sheets1 = sheets:clone()              -- make a private copy
+sheets:allNames(kind)
+sheets:find(kind, symbolic)
+sheets:has(kind, symbolic)
+sheets:count()                        -- return number of sheets
+sheets:sheet(index)                   -- return sheet at index
+sheets:insert(index, style_sheet)     -- insert sheet at index
+sheets:remove(index)                  -- delete a sheet
+log = sheets:update(directory)        -- update style sheets from directory
+\endverbatim
+
+\c sheets:allNames returns a table with all symbolic names defined in
+the entire stylesheet cascade.  Permissible values for \c kind are:
+\verbatim
+ pen, symbolsize, arrowsize, color, dashstyle, textsize, textstretch, 
+ textstyle, gridsize, anglesize, opacity, tiling, symbol, gradient, effect
+\endverbatim
+
+\c sheet:has checks whether a symbolic name is defined in
+the cascade.  Permissible values for \c kind are as for \c allNames.
+
+\c sheet:find looks up a symbolic definition.  Permissible values for
+\c kind are:
+\verbatim
+ pen, symbolsize, arrowsize, color, dashstyle, textsize, textstretch, 
+ textstyle, gridsize, anglesize, opacity, symbol, 
+ preamble, linecap, linejoin, fillrule, layout
+\endverbatim
+
+\section luapage1 Page
+
+Page objects can be created like this:
+\verbatim
+p = ipe.Page()   -- create basic page with one layer and one view
+p1 = p:clone()   -- returns a copy of the page
+\endverbatim
+
+The following methods act on the \b views of a page.  Note that views
+are indexed starting from 1, as usual in Lua.
+\verbatim
+p:countViews() 
+p:effect(view)
+p:setEffect(view, effect)
+p:active(view)
+p:setActive(view, layer)
+p:insertView(view, layer)
+p:removeView(view)
+p:clearViews()
+f = p:viewMarked(view) -- return true/false
+p:setViewMarked(view, f)
+name = p:viewName(view)
+p:setViewName(view, name)
+map = p:viewMap(view)
+p:setViewMap(view, map)
+lm = p:layerMatrices(view)
+p:setLayerMatrices(view, lm)
+\endverbatim
+
+The following methods act on the \b layers of a page. Note that layers
+are always accessed by name, not by index as in C++.
+\verbatim
+p:countLayers()
+p:layers()        -- return table of layer names
+p:isLocked(layer)
+p:setLocked(layer, boolean)
+p:layerData(layer)    -- free-use text for that layer
+p:setLayerData(layer, data)
+p:hasSnapping(layer)
+p:setSnapping(layer)
+p:renameLayer(oldname, newname)
+-- if layer is nil, automatically create name for new layer:
+p:addLayer(layer)     -- add layer at the end, return name of new layer
+p:removeLayer(layer)
+p:moveLayer(layer, target_index)
+p:visible(view, layer)   -- is layer visible in view?
+p:setVisible(view, layer, boolean)
+\endverbatim
+
+The \b objects of a page can be accessed by indexing, using an
+iterator, or with various methods. Note that object indices start with
+1, as usual in Lua.
+\verbatim
+-- objects:
+
+#p      -- return number of objects on page
+p[i]    -- return object #i, where 1 <= i <= #p
+
+-- iterate over objects of page:
+for i, obj, sel, layer in p:objects() do
+  print(i, obj, sel, layer)
+end
+
+p:select(objno)              -- returns nil, 1, or 2
+p:setSelect(objno, status)   -- status is nil, 1, or 2
+p:layerOf(objno)
+p:setLayerOf(objno, layer)
+p:visible(view, objno)       -- is object visible in view?
+p:bbox(objno)                -- cached by page
+p:invalidateBBox(objno)      -- invalidate cached bbox
+p:insert(objno, object, select, layer)  -- objno == nil means append
+p:remove(objno)
+p:replace(objno, object)     -- automatically clones object
+p:transform(objno, matrix)
+
+-- returns distance from pos if it is less than bound
+p:distance(objno, pos, bound)
+
+-- returns true if attribute was actually changed
+p:setAttribute(objno, property, value)
+\endverbatim
+
+Finally, there are various methods to query and modify the currently
+selected objects, the page title and sections, etc.:
+\verbatim
+-- selection:
+obj = p:primarySelection() -- nil if no primary selection
+p:hasSelection()           -- true or false
+p:deselectAll()
+p:ensurePrimarySelection()
+
+-- t is a table with fields "title", "section", "subsection"
+-- if section or subsection is not a string, the title is used 
+t = p:titles()  
+p:setTitles(t)
+
+-- n is a string
+n = p:notes()
+p:setNotes(n)
+
+-- f is true/false
+f = p:marked()
+p:setMarked(f)
+\endverbatim
+
+\section luadoc Document
+
+Documents have the following methods:
+\verbatim
+doc = ipe.Document()         -- empty document
+doc = ipe.Document(filename) -- load from file 
+-- returns either document or nil, error message, error code
+
+#doc    -- number of pages
+doc[i]  -- return page #i, where 1 <= i <= #doc
+
+-- format == nil: guess from filename
+-- flags is either nil, or a table with keys
+-- "export", "nozip", "lastview", "nocolor"
+doc:save(filename, format, flags)  
+doc:exportPages(filename, flags, fromPage, toPage)
+doc:exportView(filename, format, flags, pageNo, viewNo)
+
+-- iterating over pages of document:
+for i, p in doc:pages() do
+  print("Page number",  i, p)
+end
+
+doc:set(no, page)         -- replace with a clone of page, returns old page
+doc:insert(no, page)
+doc:append(page)
+doc:remove(no)            -- returns page and removes from document
+doc:countTotalViews()
+doc:sheets()              -- returns style sheet cascade
+old = doc:replaceSheets(sheets)  -- replace and return old cascade
+doc:has(what)  -- where what in { "truetype", "gradients", "tilings", "transparency" }
+doc:runLatex(docname)     -- pass filename of Ipe document or nil
+-- returns either true, nil, result code, logfile
+--         or     false, error message, result code, logfile
+
+doc:fontPool()    -- returns light userdata
+doc:checkStyle()  -- returns list of undefined symbolic names
+t = doc:properties()  -- returns table
+doc:setProperties(t)  -- changes properties set in table
+\endverbatim
+
+\c doc:properties() returns a table with the following fields (all
+fields exist even if their contents is an empty string):
+\verbatim
+title author subject keywords preamble created modified creator
+fullscreen cropbox numberpages tex
+\endverbatim
+
+\section luaother Other functions
+
+\verbatim
+ipe.fileFormat(filename)      -- returns one of "xml", "pdf", "eps", "ipe5", "unknown"
+ipe.fileExists(filename)      -- returns true or false
+ipe.realPath(filename)        -- convert relative path to absolute path
+ipe.directory(path)           -- return list of files in directory
+ipe.openFile(path, mode)      -- replacement for io.open
+beziers = ipe.splineToBeziers(spline, is_closed, old_style)
+ipelet = ipe.Ipelet(dllname)  -- loads C++ ipelet from absolute path
+-- returns ipelet or nil, error message
+\endverbatim
+
+*/
+
+/*! \page luaipe Lua bindings for Ipe
+
+These are the Lua methods provided by the Ipe program itself.  They
+are only available to Lua code running inside Ipe.
+
+\section luaappui Application user interface
+
+The application user interface object provides the GUI for the Ipe
+program. 
+
+\verbatim
+-- model is a Lua table containing methods that will be called 
+-- by the ui when events occur
+ui = AppUi(model)
+
+-- returns window id of window
+-- (to be used as parent for dialogs)
+id = ui:win()
+
+ui:close()         -- close window
+
+ui:setActionState(name, t) -- set whether action is checked 
+t = ui:actionState(name)   -- is action checked?
+-- return info about action: id, and whether it's always on 
+id, alwaysOn = actionInfo(name)       
+
+ui:explain(text)     -- show message in status bar for a few seconds
+ui:setWindowTitle(caption)
+
+-- make a tool visible or invisible
+-- tool is one of "layers", "properties", "bookmarks", "notes"
+-- t is true or false
+ui:showTool(tool, t)
+
+ui:setNotes(n)       -- set string for Notes tool
+
+
+-- set contents of attribute selectors from style sheet
+ui:setupSymbolicNames(styleSheet)
+
+-- set attribute values displayed in user interface
+-- 'attributes' table see below
+ui:setAttributes(styleSheet, attributes)
+
+-- set layer list from page
+ui:setLayers(page, view)  
+
+ui:setNumbers(?)
+ui:setBookmarks(?)
+
+-- page/view selector tool:
+-- select one page and return page number (or nil if canceled)
+pno = ui:selectPage(doc) 
+-- select one view and return view number (or nil if canceled)
+vno = ui:selectPage(doc, page_no)
+
+ui:pageSorter(?)
+
+ui:setClipboard(text)     -- store text on system clipboard
+-- get text or bitmap property from system clipboard
+-- if t is false, only text is retrieved
+-- returns either a string or an image object.
+obj = ipeui.clipboard(t)  
+\endverbatim
+
+The following methods work on the canvas inside the UI:
+
+\verbatim
+ui:setPage(page, pgno, view, styleSheet) -- set page shown on canvas
+ui:setSnap(snap)                    -- for 'snap' table see below
+ui:setFontPool(p)       -- an opaque object obtained from an ipe.Document
+
+-- 'pan' is a vector indicating the user coordinates at canvas center
+v = ui:pan()       
+ui:setPan(v)
+
+zoom = ui:zoom()        -- a number
+ui:setZoom(zoom)
+
+v = ui:pos()            -- current mouse position, after snapping
+v = ui:unsnappedPos()   -- current mouse position, before snapping
+v = ui:simpleSnapPos()  -- same, but ignoring angular snap
+v = ui:globalPos()      -- mouse position on screen
+
+v, dpi = ui:canvasSize()  -- size of canvas in pixels, monitor resolution
+
+ui:setNumbering(t)      -- true or false
+ui:setFifiVisible(t)    -- true or false
+ui:setSelectionVisible(t) -- true or false
+ui:setPretty(t)         -- true or false
+
+-- setCursor only implemented on Qt.
+-- Windows 8 switches to a dot cursor automatically when using the pen.
+ui:setCursor(name)         -- name in "standard", "hand", "cross"
+ui:setCursor(width, color) -- sets a colored dot cursor (on Qt)
+
+ui:update()             -- update canvas and tool
+ui:update(false)        -- update tool only
+ui:finishTool()
+
+ui:panTool()
+ui:selectTool()
+ui:transformTool()
+ui:shapeTool()
+\endverbatim
+
+\page luaipeui Lua bindings for dialogs and menus
+
+The ipeui module provides dialogs and popup menus for Lua.  It does
+not depend on any other Ipe component, and can be reused in other Lua
+projects.
+
+\section luaipeuiglobal Global methods
+
+There are a few global methods in the ipeui module:
+\verbatim
+ipeui.startBrowser(url)   -- on Win32 and Cocoa only
+dt = ipeui.currentDateTime() -- returns string with current date and time
+\endverbatim
+
+\section luaipeuipredialogs Predefined dialogs
+
+The following are predefined dialogs.  In all cases, \c parent can
+either be \c nil or a Window ID.
+
+\subsection luaipefiledialog File dialog
+
+Ask the user to select a filename for opening or for saving.  'type'
+is "open" or "save".  'filter' is a table with the file name
+filters. Each filter has two entries in the table, one with the name
+of the filter and the extensions in parenthesis (this is used by Qt),
+one with the pure patterns separated by semicolons (this is also used
+by Windows). Here is an example:
+\verbatim
+filter_save = { "XML (*.ipe *.xml)", "*.ipe;*.xml",
+	      	"PDF (*.pdf)", "*.pdf" }
+\endverbatim
+'dir' is the initially selected directory, or nil.  
+
+'name' is an initial name (without path) to show as the filename, or
+nil.
+
+'selected' is the number of the initally selected file name
+filter (where 1 is the first filter), or nil.
+
+The funtion returns nil, or both a file name and the number of the
+selected filter.
+\verbatim
+ipeui.fileDialog(parent, type, caption, filter, dir, name, selected)
+\endverbatim
+
+\subsection luaipecolordialog Color dialog
+
+\verbatim
+-- choose a color
+-- r,g,b are in the range 0.0 to 1.0
+-- returns nil or a (r,g,b) triple
+ipeui.getColor(parent, title, r, g, b)
+\endverbatim
+
+\subsection luaipemessagebox Message box
+
+\verbatim
+-- show a message box
+-- type is one of "none" "warning" "information" "question" "critical"
+-- details may be nil
+-- buttons may be nil (for "ok") or one of 
+-- "ok" "okcancel" "yesnocancel", "discardcancel", "savediscardcancel", 
+-- return 1 for ok/yes/save, 0 for no/discard, -1 for cancel
+ipeui.messageBox(parent, type, text, details, buttons)
+\endverbatim
+
+\subsection luaipewaitdialog Wait dialog
+
+This dialog executes an external program.  The function returns only
+after the external program has finished executing.  
+\verbatim
+ipeui.waitDialog(parent, command) 
+\endverbatim
+
+\section luaipeuidialogs Dialogs
+
+Other dialogs can be constructed programmatically.  A dialog consists
+of various elements layed out in a grid, and a row of buttons
+underneath.    Create the dialog by adding elements using 'add', and
+filling the button row using 'addButton'.  The 'action' for
+'addButton' can be one of the strings "accept" or "reject", or a Lua
+method.
+\verbatim
+d = ipeui.Dialog(parent, window_title)
+
+-- row == -1 means last row, row == 0 means start new row
+d:add(name, what, options, row, column, row_span, column_span)
+d:addButton(name, caption, action)
+
+d:setStretch("row", row_number, stretch_factor)
+d:setStretch("column", column_number, stretch_factor)
+
+d:set(name, value)
+value = d:get(name)
+
+-- enable/disable elements
+d:setEnabled(name, true_or_false)
+
+-- set whether escape should be ignored (true/false)
+d:set("ignore-escape", flag)
+
+-- returns true if dialog was accepted
+d:execute()
+d:execute(size)   -- where size == { width, height }
+\endverbatim
+
+\e name can be an arbitrary string. \e what must be one of 
+\verbatim
+button, text, list, label, combo, checkbox, input
+\endverbatim
+\e options is a table.  Most fields are optional:
+\verbatim 
+-- button:
+label="string"  (Required!)
+action="accept" or "reject" or a Lua method
+
+-- label:
+label="string"  (Required!)
+
+-- text:
+read_only=bool
+syntax="logfile" or "xml" or "latex"
+select_all=bool
+spell_check=bool
+
+-- list and combo:
+array of list items (strings)
+can also contain a Lua method with key "action" (called when an item
+is activated).
+
+-- checkbox:
+label="string"  (Required!)
+action= Lua method  (called when state changed)
+
+-- input:
+\endverbatim
+The Lua method for button, checkbox, combo, and list is called with
+the dialog as an argument.  Do not capture the dialog inside the
+method, as this would create a cyclic reference that would stop the
+dialog from being garbage collected! (It also causes a crash on Qt
+if the dialog is destroyed by Lua after the parent window has already
+deleted it.)
+
+The argument of \e set is:
+\li a string value for \e label, \e text, and \e input,
+\li either an integer, a string, or an array of string items for \e
+list and \e combo,
+\li a boolean for \e checkbox.
+
+The result value of \e get is:
+\li a string for \e text and \e input,
+\li an integer for \e list (or nil if there is no current item) and \e combo,
+\li a boolean for \e checkbox.
+
+\section luaipeuimenus Popup menus
+
+Popup menus are constructed and shown as follows:
+\verbatim
+m = ipeui.Menu(parent)	
+item, no, subitem = m:execute(global_position)
+\endverbatim
+When the menu is cancelled, \e execute returns \e nil.
+
+You can then add items to the menu one by one.  A simple item is added
+like this:
+\verbatim
+m:add("name", "Label")
+\endverbatim
+When this item is selected, execute returns \a name, 0, and an empty string.
+
+The following line adds an entire submenu:
+\verbatim
+m:add("name", "Submenu", { "alpha", "beta", "gamma" } )
+\endverbatim
+When an item from this submenu is selected, \e execute returns \a
+name, the index into the submenu, and the name of the submenu item.
+
+When the strings in the table are not directly the visible labels for
+the submenu, a Lua function can be used to convert them:
+\verbatim
+m:add("name", "Submenu", { "alpha", "beta", "gamma" },
+      function (i, item) return "select " .. item end )
+\endverbatim
+
+The final argument can either be a string or a function.
+If it is a string, then all items are checkable, and the item whose
+name is identical to the final argument is checked.
+Otherwise, the function maps item number and
+name to a color (three numbers in the range 0.0 to 1.0).  This is then
+used to display a color icon. 
+
+\section luaipeuitimers Timers
+
+Timers are constructed as follows:
+\verbatim
+t = ipeui.Timer(table, "method")
+\endverbatim
+When the timer times out, it will call the method named \a method in
+the Lua table \a table.  The timer stores only a weak reference to the
+table, so the timer will not stop the table from being garbage
+collected.
+
+The timer is controlled using the methods:
+\verbatim
+timer:setInterval(interval)     -- an integer in milliseconds
+timer:setSingleShot(bool)       -- default is repeating timer
+timer:start()	
+timer:stop()
+a = timer:active()              -- true if the timer is running
+\endverbatim
+
+*/

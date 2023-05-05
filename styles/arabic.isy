@@ -1,0 +1,4 @@
+<ipestyle name="arabic">
+<textstyle name="arabic" type="minipage" begin="\begin{arab}" end="\end{arab}"/>
+<textstyle name="arabic" type="label" begin="\arb{" end="}"/>
+</ipestyle>

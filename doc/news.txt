@@ -1,0 +1,3191 @@
+----------------------------------------------------------------------
+
+Ipe 7.2.27
+
+ * On Linux, migrate to Qt6 (#457).  Thanks Henri!
+
+ * Change behaviour of transform tools to never switch the current
+   selection (#459).
+
+ * Action to deselect everything on current page.
+
+ * Align center/H center/V center now aligns to the page if
+   only one object selected (#449).
+
+ * Fix absolute autosave paths (bug #433).
+
+ * Add /opt/homebrew/bin to path on MacOS (#440).
+
+ * Fix missing 'stroke-opacity' and 'opacity' attributes in
+   'ipe.dtd' (#67).
+
+ * Fix crash when 'recent_files_lua' ends up empty (bug #455).
+
+ * Fix missing page numbers when there is no text (bug #450).
+
+ * Don't lose group's link action during group edit (bug #456).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.26 (2022-07-16)
+
+ * Allow to store autosave file in same directory as document
+   itself.  This is now also the default. (#426)
+
+ * Circular graph edges no longer get broken when moving graph
+   nodes (bug #424).
+
+ * Make it possible to remap left_command on MacOS (bug #431).
+
+ * Use PKG_CONFIG environment variable (#429).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.25 (2022-06-19) Denmark Edition
+
+ * Add spell-checking to text entry on Linux.
+
+ * Change presentation style sheet to have 16:9 aspect ratio (#385).
+
+ * Many more configuration options in prefs.canvas_style (#400 &
+   #406).
+
+ * Remove box around links in PDF output (#397).
+
+ * Add 'script' text size (#410).
+
+ * Use most-recently used directory in "Save" and "Save As" (#394).
+
+ * Maintain a single custom string on each Ipe object. It's not
+   used by Ipe itself, but can be used by external software or
+   ipelets. (#409)
+
+ * Add page transition effects from PDF 1.5 (Push, Cover, Uncover,
+   Fade).
+
+ * Adjust highlighting text colors in dark theme.
+
+ * Fix crash when compiling with -D_GLIBCXX_ASSERTIONS (#387).
+
+ * Try to simply use UTF-8 in 'runlatex.bat'.  This should work
+   at least on Windows-10 (bug #338, second case).
+
+ * Upgrade Freetype in Windows package (fixes bug #411).
+
+ * Show error message when a style sheet mentioned in prefs.styles
+   cannot be read (bug #405).
+
+ * Reuse PDF text resources for identical text objects (#412).
+
+ * Fix losing primary selection when deselecting using rectangle drag
+   (bug #423).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.24 (2021-04-07)
+
+ * Fix a crash on MacOS 11 El Sur by applying a patch to cairo
+   (bug #370).
+
+ * Switch from CAIRO_FILTER_FAST to CAIRO_FILTER_GOOD for decent
+   display (essential when filming from the canvas).
+
+ * Make "Select by type/attribute" ipelet work when selecting on an
+   absolute color (#380).
+
+ * Fix semi-transparent bitmaps as well as bitmaps with color keys not
+   working in Ipepresenter (bug #9).
+
+ * Fix exporting to EPS when part of the drawing lies outside the
+   paper (bug #369).
+
+ * Remember online latex service URL in a different file to avoid
+   problems when using old and new Ipe versions.
+
+ * Improve calling of external editor on Qt, so that keyboard focus
+   is given to the external editor.
+
+ * Raise Ipe window after returning from external editor on Qt, in
+   case the editor program is still running.
+
+ * New preference 'freeze_in_latex' to let the Ipe UI freeze during a
+   Latex run.
+
+ * New shell script 'iperender-par' that allows to run several
+   instances of iperender in parallel (e.g. as part of a parallel
+   make) (#375).
+
+ * Add Lua API to access (Latex) dimensions of text object.
+
+ * Silently ignore non-integer grid sizes (#372).
+
+ * On MacOS 11, return to the classic toolbar underneath the title
+   bar, because the new unified look leaves most tool buttons off the
+   screen (bug #376).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.23 (2020-12-24)
+
+ * Shortcut for pretty display.
+
+ * A maximum on the number of recent files remembered.
+
+ * Improve scaling of toolbar buttons on El Sur, and add labels for
+   the toolbar overflow menu.
+ 
+ * Remove sources of libspiro from Ipe releases.
+
+ * Remove doxygen documentation from Ipe release, run doxygen as part
+   of the build process.
+
+----------------------------------------------------------------------
+
+Ipe 7.2.22 (2020-12-20)
+
+ * Recent file menu (#322).
+
+ * Update PDF resources on main thread to avoid race condition (bugs
+   #354, #359).
+
+ * Can exclude pages from PDF output by adding a layer "NOPDF" to the
+   page. The layer does not need to be visible. (#362).  
+
+ * Use a better bitmap checksum that is less likely to cause bitmaps
+   to be reordered.  Sort mappings of symbolic attributes to make them
+   deterministic (#356).
+
+ * Display Type3 fonts with a unique representation to make it easy to
+   diagnose the problem.
+
+----------------------------------------------------------------------
+
+Ipe 7.2.21 (2020-10-26)
+
+ * Fix hanging with message "Running Latex" on Windows (bug #338).
+
+ * Ability to hide the properties panel/layer list from the UI on
+   macOS, for use on Zoom etc (#350).
+ 
+ * Remove NoFocus policy from selectors in Qt.  This used to be
+   necessary to keep shortcuts working when the selector receives
+   focus, but that's no longer necessary (tested in Qt 5.9).
+   Fixes selectors not working on Qt 5.15 (bug #341).
+
+ * Fix incorrect update of grid size and angle size selector when
+   style sheet is changed (bug #344).
+
+ * Fix crash in 'iperender -pdf' when the document uses
+   \includegraphics on a jpg file (bug #342).
+
+ * Fix snapping to midpoint of closing segment of closed paths (bug
+   #346).
+
+ * Fix Fifi remaining invisible after switching back from ink mode
+   (bug #347).
+
+ * Escape key now closes page/view selectors and sorters on Windows
+   (bug #349).
+
+ * Improve PDF parser to handle when /Filter is an array, and to
+   interpret the /CIDToGIDMap table (ipepresenter bug #7).
+
+ * Ability to set position of main window and maximize the window or
+   full screen mode on startup (#353).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.20 (2020-06-25)
+
+ * Send Latex source to Latexonline service using a POST request with
+   a tarball, so that larger documents will work as well (bug #335).
+   On Linux, ipecurl is now a shell script.
+
+ * Fix Latex compilation when there is a space in the path (bug #339).
+
+ * Make it possible to interact with layers only reached by scrolling
+   on Windows (bug #337).
+
+ * Fix compilation with Qt 5.15 without deprecation warnings.
+
+----------------------------------------------------------------------
+
+Ipe 7.2.19 (2020-06-14)
+
+ * Improve pasting bitmaps on Windows and Qt: you can now paste images
+   directly from the file browser, with the additional benefit that
+   jpeg files are now treated as jpeg images.  This also works from
+   the Photos app in Windows 10 and e.g. in "xviewer" (#328).
+
+ * Fix text object colour not updating when it is changed from the
+   selector (bug #333, this was broken by 7.2.15).
+
+ * Fix bookmarks not working when exporting with -markedview (bug #331).
+   
+ * Fix crash in ink mode when current color is not symbolic (bug #326).
+
+ * On Win32, fix transient selector events causing an attribute
+   change.  (Fixes bug #327.)
+
+ * Delay showing "Running Latex" dialog by 300ms to avoid showing it
+   when Latex is fast (Windows and Qt).
+
+ * Run Latex after paste actions, undo, and redo, where it might be
+   necessary.
+
+----------------------------------------------------------------------
+
+Ipe 7.2.18 (2020-05-20)
+
+ * Fix Ipe crashing when GSL reports an error (bug #318).
+
+ * Support luatex on Texlive 2020 (#314).
+
+ * New icons from KDE Breeze icon set and hand-drawn icons by Willem
+   Sonke. 
+
+ * On Linux/Qt, Ipe will now pick up the platform theme (so dark mode
+   will work).  This had been disabled for many years because of a
+   buggy platform theme shipped with Ubuntu 14.04.
+
+ * On OSX, icons will switch between light and dark mode automatically.
+ 
+ * Rewrote ipecurl on Win32 and on OSX to use WinHttp/NSURLSession, 
+   removing dependency on the curl library.
+
+ * Keyboard shortcuts now also work from presentation window in
+   IpePresenter on Windows (#4).
+
+ * User interface no longer freezes during Latex compilation.
+
+ * Pasting images now preserves transparency on MacOS (thanks Csaba!).
+
+ * Pasting images on Windows will now preserve transparency when the
+   producer supports PNG on the clipboard (as seems to be common -
+   the Windows clipboard appears to be a big mess).
+
+ * Make sure ipelets can no longer return a page with only secondary
+   selections (bug #315).
+
+ * Fix attribute being uninitialized if not set from Lua.
+
+----------------------------------------------------------------------
+
+Ipe 7.2.17 (2020-05-09)
+
+ * The properties panel got a face-lift and now includes selectors for
+   dash style and opacity.
+
+ * Clicking on links now works in IpePresenter (#3).
+
+ * Pasting images from the clipboard on Windows was broken and always
+   returned fully transparent images.
+
+ * Pasting images from the clipboard now also works on MacOS (#311).
+
+ * Fix vertical infinite edges in qvoronoi ipelet sometimes showing up
+   as horizontal (bug #300).
+
+ * Fix transparency of images in IpePresenter (bug #2).
+
+ * Fixed graph-tool: it also moved edges that were not currently
+   visible (#307).
+
+ * Updated 'ipe.dtd' so it can again be used to validate Ipe XML files.
+
+ * Allow minipage objects to have a horizontal alignment, and let
+   "Change width" function work relative to this alignment, for more
+   natural behaviour in right-to-left languages.
+
+ * <textpad> adjustments now also work in tetex (bug #151).
+
+ * Fix crash when snapping to arcs on the same ellipse (and other
+   degree-lowering degeneracies) (bug #310).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.16 (2020-05-01)
+
+ * Arrows can now also be in the middle of a polyline (#295).
+
+ * Views can now cause changes in the drawing by changing the meaning
+   of symbolic attributes (#135).
+
+ * Views can now move or transform layers (with a very experimental UI).
+   
+ * Using GNU Scientific Library to compute intersection points for
+   Bezier curves and elliptic arcs with higher precision (#116).
+
+ * New grid maker ipelet (#198, #256).
+
+ * New snap mode: snap to custom grid (#198).
+
+ * Most dialogs are now resizable on Windows.
+
+ * Documented how to use CJK languages and right-to-left languages
+   such as Persian in the manual (#111).
+
+ * Fixed locked layers getting lost during group edit (#199).
+
+ * Fixed character spacing in CID fonts without default width
+   (e.g. LMRoman when typesetting Japanese with luatexja).
+
+ * Auto-exporting now available for all export formats (#296).
+
+ * Ipe File format 70216 to support attribute maps.
+
+----------------------------------------------------------------------
+
+Ipe 7.2.15 (2020-04-26)
+
+ * Interpolating splines are now available in addition to B-splines.
+   Thanks to SCALGO for making me look into this! :-)
+   There are many variants of interpolating splines, Ipe now provides
+   cardinal splines and clothoid splines (through libspiro) (#140).
+
+ * Ipe's PDF parser can now read PDF files where stream lengths are
+   indirect references (#120).
+
+ * Layers can now be active for snapping even when they are invisible,
+   to make the drawing of "helper lines" more powerful (#112).
+
+ * Absolute attribute values now become the UI setting, and are
+   displayed in the dropdown as <absolute>.
+
+ * A new section in the manual to help you make your first
+   stylesheet. 
+
+ * Windows page sorter is now resizable.
+
+ * Can mark and unmark pages and views from page sorter and view
+   sorter (#128).
+
+ * Windows UI now adapts when moved between monitors of different
+   resolution (feature #96).
+
+ * Added action to paste with layers (feature #131).
+
+ * Allow Escape key for closing dialogs if the text has not yet been
+   modified, on Windows and Qt (feature #263).
+
+ * Fix vector exports being scaled and not preserving integer
+   coordinates (bug #275).
+
+ * Show warning when user creates an object in an invisible layer
+   (issue #92).
+
+ * Added PNG prediction algorithm to Ipe's image decoder (sometimes
+   needed when including PDF graphics).
+
+ * Make it possible to remove "grid" and "angle" from
+   "prefs.win_toolbar_order".  Document "prefs.win_mini_edit".
+
+ * Add laser pointer mode button on Windows.
+
+ * Blackout function in IpePresenter (#293).
+
+ * Add F5 shortcut and make background black in IpePresenter (#291, #292).
+
+ * Removed IPEANCIENTPDFTEX (it is 2020).
+
+ * Removed code for parsing Ipe eps files (the file format was
+   abandoned by Ipe 7.1.10 in November 2015). You will now need to use
+   'ipeextract' to read such files.
+
+ * Ipe File format 70215 to support interpolating splines.
+
+----------------------------------------------------------------------
+
+Ipe 7.2.14 (2019-04-19) 
+
+ * New preference 'prefs.osx_properties_width' to enforce a minimum
+   width of the properties and layers panels, to avoid the canvas
+   jumping left-right while stepping through a document.
+ 
+ * Mirror at y-axis added, stretch and precise stretch now obeys
+   axis orientation.
+ 
+ * View sorter to rearrange the views of a page (issue #128).
+ 
+ * New "laser pointer" mode that is useful when giving a presentation
+   by filming directly from the Ipe canvas.
+
+ * Added actions "Mark views from this view" and "Unmark views from
+   this view".
+
+ * Make sure that properties panel doesn't change width while going
+   through a document by basing the button format on the largest
+   number of views and on the number of pages.
+   New preferences "view_button_prefix" and "page_button_prefix" to
+   make the display more concise for advanced users.
+    
+ * Fix notes display in IpePresenter when there are non-ASCII
+   characters (issue #282).
+ 
+ * Include page title in iperender with option -nocrop (issue #287).
+
+ * Allow path objects with trailing "m" operator and without subpaths,
+   to simplify automatic generation of Ipe files (issue #274).
+
+ * Show warning message when document contains Type3 fonts (issue #273).
+
+ * Fix positioning of frame in thumbnails (bug #280).
+ 
+ * Fix incorrect page bounding box when clipping groups (bug #265).
+
+ * Fix TEXINPUTS getting lost on Unix (bug #266).
+
+ * Fix notes field starting with size zero in Ipepresenter on MacOS
+   (bug #268).
+
+ * Fix some text fields with black text on dark gray in dark mode on
+   MacOS.
+
+ * Building separate packages for Ipe and IpePresenter on MacOS and
+   Windows.
+
+ * Fix "ipe -sheet presentation" not working.
+
+ * Fix "ipecurl" on MacOS not working if it's not on the path
+   (bug #269).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.13 (2019-10-07)
+
+ * IpePresenter now available on MacOS.
+
+ * Allow online Latex-compilation using "latexonline.cc" service.
+   Ipe is now fully usable without a Latex installation on your
+   computer. 
+ 
+ * Added script 'page-labels' (see Section 8.1 in manual).
+
+ * Views can now be named, and view names can be used instead of
+   numbers in iperender and ipetoipe (feature #136).
+
+ * Add directory containing Ipe document to TEXINPUTS when running
+   Latex (feature #243).
+
+ * Add button to use external editor for Latex preamble (feature
+   #261).
+
+ * Fixed bug in color key in grayscale bitmaps (bug #247).
+
+ * Handle stroke opacity correctly in properties panel (bug #252).
+
+ * Set Qt size policy for labels to fixed for better resizing
+   behaviour (bug #261).
+
+ * Fix crash in checkbox on Qt (bug #259).
+
+ * Fixed "Update stylesheets" action not being undoable.
+
+ * Added Bitmap::savePixels method for PowerIpe.
+
+ * Use ^ operator for dot-product of vectors in Lua.
+
+----------------------------------------------------------------------
+
+Ipe 7.2.12 (2019-5-2)
+
+ * Image objects now support transparency (feature #233).
+
+ * Path objects can now have distinct fill and stroke opacities
+   (feature #134).
+
+ * Symbols can now specify a list of snap positions, which are active
+   in vertex snap mode.  Such symbols can be selected by clicking near
+   any snap position, and are presented like groups in the selection
+   (feature #238).
+ 
+ * Can now specify the initial attribute settings in the preferences
+   (feature #235).
+ 
+ * Symbols ipelet now presents symbols in groups (feature #237).
+
+ * Added default external editors on Windows and MacOS.
+
+ * Fixed IPELATEXDIR environment variable not working on windows (bug
+   #242).
+
+ * Fix "Waiting for external editor" dialog not closing on MacOS. Define
+   default external editors for Windows and MacOS.
+
+ * New "Preferences" item in Help menu with information about
+   "prefs.lua".
+
+ * Lua function tonumber now returns nil when it fails to convert,
+   like the original Lua function (bug #236).
+
+ * Ipe File format 70212 to support transparency in images.
+
+----------------------------------------------------------------------
+
+Ipe 7.2.11 (2019-3-9) Barbados edition
+
+ * Added snap buttons on OSX touch bar.
+ 
+ * Images with alpha channel are now fully supported (feature #142).
+
+ * New "Rotate coordinate system" operation in "Goodies" ipelet.
+
+ * New ipelet to select objects by type and/or by attribute value.
+ 
+ * Can now use ".ipe/ipe.conf" to define environment variables on
+   Linux and OSX.
+
+ * The link action string of group objects is now more powerful.  You
+   can use it to create links inside the Ipe document (so that
+   clicking on an object in the PDF file will take you to a different
+   page), and to launch videos or audio (which can be played inside
+   some PDF viewers).
+
+ * Tiling patterns now follow opacity of the object (feature #195).
+
+ * The bullet in items now has the text color (bug #161).
+
+ * The coordinate system (the axes) can now be toggled on and off
+   without having to reset the origin.
+ 
+ * When exporting using ipetoipe, page notes are not included as PDF
+   annotations (but see -keepnotes) (feature #215).
+
+ * Storing section names of pages as PDF "named destinations", so that
+   external links can point to a specific page of an Ipe document.
+
+ * Fixed low-resolution display on Retina displays on OSX (bug #226).
+   The problem seems to be caused by the upgrade of Cairo to 1.16.0, 
+   it is currently fixed by using a Cairo surface as a backing store
+   instead of a CGLayer.
+
+ * Use page-piece dictionary to store Ipe XML data inside PDF file.
+
+ * Pressing "Ok" after "Apply" in text edit dialog no longer causes a
+   Latex run (feature #144).
+
+ * Up and Down keys now work to move between views in
+   IpePresenter. Added "jump to page" and "select page" in
+   IpePresenter (feature #228).
+
+ * Tiling patterns from PDF now display in Ipe and IpePresenter.
+
+ * Exporting to PNG from the Ipe UI now saves with transparent background.
+ 
+ * Fixed saving to weird location when starting from the command line
+   on Windows (bug #222).
+
+ * Fixed broken operation "create symbol (in new stylesheet)".
+   
+ * Fixed broken "Select in layer" and "Move to layer" submenus (bug
+   #214).
+
+ * "Insert image" file dialog starts in more reasonable directory.
+
+ * Fixed display of object counts per layer on OSX (bug #221).
+
+ * Removed support for ipelet dlls with .dylib extension (it changed
+   to .so in Ipe 7.1.10).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.10 (2019-02-04)
+
+ * IpePresenter companion program on Windows and Linux, to show PDF
+   presentations (made with Ipe or beamer). The presenter's display
+   shows the current slide, the next slide, the slide notes, and a
+   running clock.  The audience sees only the current slide.
+   IpePresenter relies entirely on the PDF file, so no Latex is needed
+   for a presentation.
+ 
+ * Move to modern C++: use nullptr consistently, compile with C++17,
+   starting to use unique_ptr and shared_ptr.
+
+ * Page notes are saved as PDF annotations (feature #187).
+
+ * Fixed strange conversion of labels to math mode (bug #211).
+
+ * Implemented undo/redo both in Ipe and in dialog text fields on OSX
+   (bug #212).
+
+ * Can now change direction of horizontal scrolling (with Alt+Scroll
+   wheel) using prefs.scroll.direction.x.
+
+----------------------------------------------------------------------
+
+Ipe 7.2.9 (2019-01-16)
+
+ * Rebuilt all dependencies with up-to-date versions for Windows and
+   OSX.
+
+ * Fixed crash when using layers on Linux and OSX (bug #208).
+
+ * Some improvements in dark mode on OSX Mojave (bug #207).
+ 
+ * Use Postscript glyph names to find glyph index (bug #122).
+
+ * Holding Control while using the scroll wheel now zooms the canvas
+   on all platforms (feature #206).
+
+ * Fix unmarked pages appearing in bookmarks after exporting with
+   -markedview (bug #205).
+
+ * Can use config.ipedrive to refer to the drive that Ipe is on in
+   customization files.  Environment variables can use "ipe:" to refer
+   to the same drive (feature #203). 
+
+----------------------------------------------------------------------
+
+Ipe 7.2.8 (2019-01-10)
+
+ * Windows binaries now built for 64-bit Windows.
+
+ * OSX binaries now require at least OSX 10.10 (Yosemite) and are
+   built on Mojave.
+
+ * PDF and SVG backends included in Cairo in Windows binaries, so that
+   -pdf and -svg options work for iperender.
+ 
+ * Zoom with two-finger pinch gestures on the touchpad/trackpad
+   implemented on OSX and Windows.
+
+ * Two-finger moves on the touchpad/trackpad and the scroll wheel now
+   pan the canvas rather than zoom (feature #158).  To go back to the
+   zooming behaviour, set prefs.scroll.pan to false.
+
+ * Number of objects in each layer shown next to the layer name.
+
+ * The page specifications in ipetoipe and iperender can now be given
+   using page names (feature #136).
+
+ * On Linux, side button on WACOM tablets can now be used (bug #164).
+ 
+ * Delete key can now be used again (e.g. in lines tool) on Windows
+   (bug #159).
+
+ * Fixed unmarking of views and pages on Windows (bug #155).
+
+ * Fixed crash when displaying grayscale JPEG on Windows.
+
+ * Fixed use before check (bug #118).
+
+ * Changed AppDelegate declaration for OSX 10.12 (bug #147).
+
+ * Iperender can now take arguments in any order (bug #184).
+
+ * New command \ipedefinecolors to allow using package options of the
+   xcolor package (feature #180).
+
+ * Updated qvoronoi ipelet to use reentrant version of Qhull.
+
+ * Fixed list of greek layernames (bug #196).
+
+ * New preference prefs.join_threshold (bug #191).
+
+ * Fixed exporting EPS and SVG to non-ASCII filenames (bug #170).
+
+ * Toggling "Automatically run Latex" from the File menu now works on
+   Windows (bug #127).
+
+ * Fixed crash on spurious character between objects in XML input (bug
+   #169).
+
+ * Added possibility to pass parameters from Lua wrapper to C++ ipelet
+   (feature #173).
+
+ * Implemented copying of snap information to IpeletData (bug #148).
+
+ * Absolute attributes can now be set as the current value in the UI
+   using the "Pick properties" operation (fixes bug #192).
+
+ * Fixed crash after using page sorter (bug #153).
+
+ * Fixed spurious beep on OSX on keys in lines/polygons mode (bug #152).
+
+ * Fixed missing undo in text entry on OSX (bug #124).
+
+ * Commmand+Return now works to close dialogs on OSX (bug #98).
+
+ * Using ipeLocale now also on Windows.
+
+ * Fixed page/view selector not closing on OSX >= 10.13 (bug #160).
+
+ * Fixed incorrect drawing of ptarc and fptarc arrows (bug #154).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.7 (2016-12-09) Bayreuth edition
+
+ * On Windows 10, Monitor DPI is used automatically (but does not yet
+   change when the Window is moved to a different monitor).
+ 
+ * Fixed styles directory in ipescript in bundle mode (OSX, snap,
+   appimage).
+
+ * Fixed vertex-move mode when edges have been transformed before.
+
+ * On OSX, shear mode and graph mode toolbar buttons were not
+   selectable.
+
+ * Accept empty ipestyle tag in XML parsing.
+
+ * Added shortcuts for "pick properties" and "apply properties".
+
+ * Renamed "tikz.isy" to "tikz-shapes.isy".
+
+ * Fixed crash in hovering pen on high-resolution Windows 10 tablet.
+
+ * Fixed cropped letters (bug #106).
+
+ * Fixed parsing of IPESCRIPTS variable in ipescript.  Added
+   ~/.ipe/scripts to the default list in appimage and Ipe.app.
+
+ * Refuse to load style sheets with fractional grid sizes (bug #115).
+
+ * Refuse precise scale/stretch with factor zero (bug #114).
+
+ * Use compatibility layer on Luatex 0.85 (bug #113).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.6 (2016-09-19) Bayreuth edition
+
+ * A file format update was necessary.  Ipe versions older than 7.2.6
+   will not be able to read documents create with 7.2.6 and newer.
+
+ * Added new mode to move graph vertices.  While the vertex moves, its
+   incident edges follow automatically.  This uses a simple heuristic:
+   Vertices are groups, references, or text objects, edges are path
+   objects with a single open curve.
+
+ * Text objects of type label can now also have a style.  Math objects
+   are now handled as having style "math", other styles are useful for
+   styling graph nodes using Tikz, etc.  Look at the new style file
+   'tikz.isy' for inspiration how this can be used.
+
+ * Added style file 'note-paper.isy' with a note paper background
+   (like the xournal background), for taking handwritten notes._{}
+
+ * Revived exporting to pdf when saving in xml format (set
+   prefs.auto_export_to_pdf).
+
+ * On Windows, touch is now only used for pan and zoom.
+
+ * Tuned pen handling on Windows 8 and higher.  It now works smoothly
+   on my slow Windows tablet.
+
+ * Fixed handling of PDF resources from pdflatex to work with the
+   output generated by Tikz.
+
+ * Fixed layout of dialogs created without 'addButton' on OSX.
+
+ * Try to work around Ubuntu bug (see #42) by unsetting environment
+   variables QT_QPA_PLATFORMTHEME and UBUNTU_MENUPROXY when Ipe
+   starts.
+
+ * Fixed cut-off glyphs (bug #93).
+
+ * Fixed error rendering TTF and TTC fonts (bug #97).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.5 (2016-07-19) Bayreuth edition
+
+ * The PDF interpreter for text objects has been improved to handle a
+   much larger subset of PDF.  Using interesting PDF-generating latex
+   packages is now supported and encouraged, including tikz, pgf, and
+   tcolorbox.  This makes it easy to create boxes for theorems and the
+   like in presentations, as the beamer package does.
+
+ * The use of \includegraphics inside text objects is now supported.
+   Since PDF is a very complex standard, some PDF features will not be
+   displayed correctly on the screen (but will work correctly in Ipe's
+   PDF output).  A few features cannot even be supported in the PDF
+   output. 
+
+ * luatex is now supported as an alternative to pdftex and xetex.  
+
+ * New shear transformation mode.  Without axis set, it will use a
+   horizontal line as the fixed line, otherwise your x-axis.
+
+ * Groups can now be decorated using "decoration symbols".  Those
+   should be a path (or a group of paths), and are automatically
+   resized to fit the bounding box of the group.  You'll need to
+   include a style sheet containing decoration symbols
+   (e.g. "decorations.isy" from the distribution), then right click on
+   a group to set a decoration.
+ 
+ * Action "Edit object" can now be used to edit text inside a group
+   object.  This is convenient, for instance, to edit graph vertices
+   (which are most easily represented as a group consisting of a
+   circle and a text object, or a mark and a text object).
+
+ * Experimental recursive group edit implemented.  It keeps all state
+   inside the Ipe document, so that you can save in the middle of a
+   group edit (and autosave continues to work during the group edit).
+   Group edit creates a new layer "EDIT GROUP", unpacks the group into
+   this layer, and locks all other layers. "End group edit"
+   automatically groups the elements again and returns the group to
+   its original layer.
+
+ * New action "set tangent direction" to set the axis to be tangent to
+   a given circle (or ellipse) or arc.  Move mouse close to boundary
+   of circle or circular arc and press Ctrl+F3.
+
+ * Improvements for ink mode to make it more responsive, less
+   memory-consuming, and display smoother strokes (thanks to Zhengdao
+   Wang and Philipp Kindermann for contributing code).
+
+ * Fixed missing shortcut for box mode.
+
+ * Added "Apply properties" to object menus. Fixed bug that caused it
+   to be applied to all objects (not just the selected ones).
+
+ * When creating a path object, the current arrow size and shape is
+   set, so that they can be used if an arrow is enabled later.
+
+ * Snapping no longer occurs for objects in layers that are not
+   visible (bug #88).
+
+ * Text objects now keep their PDF representation as a separate
+   XObject.  This implies that after changing the color of a text
+   object, Latex needs to be run to see the change on screen. This
+   should be automatic when automatic Latex run is enabled.
+
+ * \ipesymbol is no longer supported - you can use tikz or pgf
+   instead, or simply \includegraphics.
+
+----------------------------------------------------------------------
+
+Ipe 7.2.4 (2016-06-23) Bayreuth edition
+
+ * New modes for making rectangles and parallelograms.
+
+ * Page numbering works again (bug #57).  They are now customizable,
+   see the manual.
+
+ * Can now create links to external documents or websites, by
+   right-clicking on any top-level group object and using "Set link
+   URL" (feature #41).
+
+ * Actions to pick the properties of an object (and set them in the
+   properties panel), and to apply all current properties to the
+   selected objects.
+
+ * Replaced NSComboBox by NSPopUpButton.  They are more comfortable to
+   use (you can click anywhere to change the setting, rather than just
+   on the arrow), can display the color icons, and allow to re-select the
+   currently selected choice (bug #47).
+   
+ * File format has been updated to 70204, but only if one of the two
+   new features is used (external links, non-default pagenumberstyle).
+
+ * Implemented double-clicks on OSX (bug #79).
+
+ * Some support for HiDPI screens in Windows and Qt (use
+   prefs.ui_scale and prefs.toolbar_scale).
+
+ * Tested and documented installing Ipe with TeXlive on a USB-stick,
+   so that it can be used on any Windows computer without installing
+   anything (see manual).
+
+ * Fixed combination of prefs.auto_external_editor and
+   prefs.editor_closes_dialog.
+
+ * Removed beginnings of magnification gesture handling on OSX (it
+   wasn't finished and broke two-finger gestures for right-click).
+
+ * Fixed Save dialog (bug #78).
+
+ * Fixed behaviour when prefs.terminate_on_close is false on OSX (bug
+   #51).
+
+ * Improved width of grid size/angle size selector (bug #48).
+
+ * Obey prefs.editable_textfile for editing style sheets (bug #80).
+
+ * Updated ipe.dtd and manual for the correct Ipe file format (bug
+   #67).
+
+ * Customizable order of toolbars on Windows (feature #28).  
+
+ * Fixed angle size menu on Qt.
+
+ * Fixed join path for more than two segments (bug #85).
+
+----------------------------------------------------------------------
+
+Ipe 7.2.3 (2016-06-11) Bayreuth edition
+
+ * Added /opt/local/bin to latex search path on OS X.
+
+ * mainmenu.xib was missing from source distribution (bug #44).
+
+ * Enabled "Command" modifier for mouse actions (bug #46).
+
+ * Using Cairo FAST mode for rendering bitmaps (feature #53).
+
+ * Added /bin and /usr/bin to PATH on OSX (bug #71).
+
+ * Fixed crash in Ipelet information when ipelets contains no 'about'
+   line (bug #66).
+
+ * Fixed crash when processing empty text object (bug #64).
+
+ * Notes and bookmarks can now be shown on startup on Cocoa by setting
+   prefs (bug #68).
+
+ * Fixed code so that compilation on older OSX versions is easier
+   (feature #60).
+
+ * Fixed substitution of quotes by typographic quotes on OSX (bug #69).
+
+ * Removed duplicate overwrite warning on OSX (bug #50).
+
+ * Fixed crash in iperender (bug #63).
+
+ * Fixed selection of objects in locked layer (bug #55).
+
+ * On OSX, Ipe can keep running after last Window was closed using
+   prefs.terminate_on_close (request #51).
+
+ * Quit action on OSX (request #51).
+
+ * Fixed compilation on FreeBSD (bug #56).
+
+ * On Windows, Ipe can now use pdflatex from cygwin (feature
+   #72). See the manual for instructions.
+
+ * Can customize width of bookmarks and notes tools by setting
+   prefs.width_notes_bookmarks (feature #58).
+
+ * Added file type filter in OSX file dialogs (feature #49).
+
+ * Improved JPEG file handling (bug #75).
+
+ * Work-around for bug in Qt 5.5 (bug #54).
+
+ * Fixed crash when pasting large object on Windows (bug #59).
+
+ * Fixed crash when starting external editor.
+  
+----------------------------------------------------------------------
+
+Ipe 7.2.2 (2016-01-24) Fabian's edition
+
+ * Page/View selector implemented for Cocoa.
+
+ * Page sorter implemented for Cocoa, with drag and drop of pages.
+
+ * Fixed redrawing on Cocoa (bug #34).
+
+ * Removed APIs post OS X 10.8 (bug #35).
+
+ * Including qvoronoi ipelet in Ipe.app for OS X.
+
+ * Ctrl-click instead of right click in line editing tools and for path
+   properties popup menu (bugs #36, #37).
+
+ * Support for retina displays on OS X (feature #2).
+
+ * Changed icon format on OS X to tiff, allowing for multi-resolution
+   icons.
+
+ * Fixed PDF rendering of text with descenders and widths in CID fonts
+   using xetex.
+
+ * Fixed problem with exporting to eps caused by wrappers in cmr10.pfb
+   and other fonts that are incorrectly embedded by pdflatex.
+ 
+----------------------------------------------------------------------
+
+Ipe 7.2.1 (2016-01-01)
+
+ * Color of primary and secondary selection can be set in prefs.lua.
+
+ * Ipe can now use xelatex instead of pdflatex.  You can choose your
+   TeX engine in the document properties.
+
+ * Type1C and CID-keyed fonts are supported.  This means that OpenType
+   fonts on your system should work through xelatex.
+
+ * Location of pdflatex or xelatex can be specified as an environment
+   variable IPELATEXPATH.
+
+ * On Windows, environment variables can be set by placing a text file
+   with name "ipe.conf" in the Ipe folder. This makes it possible to
+   provide Ipe on a USB-stick without modifying the host system at
+   all. (The Ipe folder is the same place that contains the "bin",
+   "icons", "lua" subdirectories.  Each line of "ipe.conf" is of the
+   form "VARIABLE=setting".)
+
+ * Snap indicator in status line and mode indicator in properties
+   allow advanced users to hide all toolbars without losing any
+   feedback. 
+
+ * Using native user interface with Cocoa on OS X.
+
+ * Continuous spell-checking in text input/edit dialogs on OS X
+   (optional, set prefs.spell_check).
+
+ * Multiple shortcuts are no longer allowed in "shortcuts.lua".
+
+ * Added Header files to Mac OS app bundle.
+
+ * Removed support for the "14 standard PDF fonts".  Their use is
+   deprecated in PDF 1.5 - all fonts should now be embedded.  This
+   means it's no longer necessary to create a fontmap during Ipe
+   installation.
+
+ * Removed support for codeset conversion.  Latex supports Unicode
+   well now, in particular when you use xelatex.
+
+ * Ipe now requires a C++11 compiler.
+
+----------------------------------------------------------------------
+
+Ipe 7.1.10 (2015-11-21)
+
+ * "Export to EPS" replaces saving in EPS format.  Ipe can still load
+   Ipe figures in EPS format, but will not save in this format
+   anymore.  Use "Export to EPS" if you need EPS figures for your
+   publisher.
+
+ * I learnt how to compile on Mac OS X, and now build "Ipe.app"
+   binaries myself.  The makefiles and instructions for Mac OS are
+   updated.
+
+ * Ipe now compiles with both Qt 4 and Qt 5.  This is useful since Qt
+   5 drops support for older Mac platforms (in particular Snow
+   Leopard). 
+
+ * Transparency now available by default.
+   
+ * Trying both .dylib and .so extension when loading compiled ipelets
+   on Mac OS.
+
+ * Ipelets compiled using -bundle and .so extension on Mac OS.
+
+ * Removed lfs from Ipe, added Platform::listDirectory that works
+   correctly with UTF-8 on Windows.
+
+ * Ipe now runs correctly on Windows if installed in a directory with
+   non-ASCII characters (feature #17).
+
+ * On Windows, when closing from the cross icon in the window frame,
+   the "Save" option now works.
+
+ * Fixed problem with Enter key closing edit dialogs (bug #6).
+
+ * Windows and Mac OS binaries using Lua 5.3.
+
+ * On Windows libpng/libjpeg replaced by Windows GDI+ calls.
+   "Insert image" now also supports BMP, GIF, and TIFF.
+
+ * On Mac OS, libjpeg replaced by CoreGraphics calls.
+ 
+ * "Export to PNG" added to user interface (feature #22).
+
+ * Removed auto-exporting functionality.
+
+----------------------------------------------------------------------
+
+Ipe 7.1.9 (2015-10-24)
+
+ * Migrated to Qt5.
+
+ * Windows binary now works on WinXP by dynamically loading
+   GetGestureInfo (issue #9, thanks to czietz for the patch).
+
+ * Ignore spurious double-click (bug #17).
+
+ * Fixed Ctrl+F shortcut on Windows (bug #9).
+
+ * Fixed updating of style sheets on Windows (bug #8).
+
+ * Fixed crash when right-clicking on a toolbar icon on Windows (bug
+   #7). 
+
+ * Changed ordering of Ipelet directories (bug #16).
+
+ * Fixed misleading caption on layer menu (bug #14).
+
+ * Compiling with clang++-3.5 for testing.
+
+ * Bitmaps read from files are now compressed during insertion, crash
+   during insertion of PNG files with color palette fixed. Inserting
+   PNG images with color-keyed transparent color works now (bugs #19,
+   #20).
+
+ * Improved "About ipelets" dialog.
+
+--------------------------------------------------------------------
+
+Ipe 7.1.8 (2015-07-11)
+
+ * (Partial) support for MacOS retina displays.  You need to set
+   prefs.retina to true to enable this.  Thanks to Michael Thon for
+   testing my experiments.
+
+ * Fixed compilation of qvoronoi ipelet on Mac OS X (bug #31).
+
+ * Now using standard libjpeg API for embedded JPEG images, rather
+   than the TurboJPEG API.  Therefore Ipe now compiles with either
+   JPEG library.  Thanks to Michael Thon for the patch (bug #32).
+
+ * IPEBUNDLE variable to compile Ipe without references to the file
+   system. 
+
+ * IPENOGESTURE variable to compile Ipe for Windows Vista and older.
+
+ * Fixed Document properties dialog (bug #33).
+
+ * Fixed first entry in layer list popup menu.
+
+ * Fixed crash in Voronoi ipelet on Windows (issue #5).
+
+--------------------------------------------------------------------
+
+Ipe 7.1.7 (2015-02-23)
+
+ * Fifi shape and color now depends on the context: whether snapping
+   to a vertex, boundary, the grid, etc.  When no snapping occurs,
+   Fifi is not drawn at all.
+
+ * The definition of B-splines has changed.  For reasons lost in the
+   mist of time, Ipe has for many years used an incorrect definition
+   of uniform B-splines, which handled the boundary conditions
+   wrongly. In particular, the first and final segment of a spline was
+   always a straight segment. 
+
+   This has now been fixed, and the line/spline tools from now on
+   create correct uniform B-splines.  In particular, splines with four
+   control points are now identical to cubic Bezier segments.  As a
+   generalization, a spline with three control points generates a
+   quadratic Bezier segment, so the special keys 'q' and 'c' in the
+   line tool are no longer needed.
+
+   One benefit of this change is that it is now possible to cut
+   B-splines (both open and closed) at any knot value, so that splines
+   can be cut without first decomposing them entirely into Bezier
+   curves. 
+
+   Splines created with older versions of Ipe continue to work as
+   before and can still be edited.  They are now called "old splines".
+
+   As a result, the Ipe file format version was updated to 70107.
+   Older versions of Ipe will not read files created with Ipe 7.1.7.
+
+ * Separate snap mode for snapping to "control points".  These are the
+   control points of splines, but also the centers of
+   ellipses/circles/arcs, the corners of images, and the corners and
+   reference point of text objects.
+
+ * The midpoint of every straight segment is now also a snap point
+   (when control point snapping is on).
+
+ * When drawing a polyline or spline object, the previous segments of
+   the object being drawn are now already magnetic and can be snapped
+   to.  This feature was actually used in several snapping examples in
+   the manual, but didn't work since Ipe 7.0.0.
+
+ * A left double-click can now be used to terminate a path object
+   instead of a right click.
+
+ * Windows binaries now use a native UI without Qt.
+
+ * On Windows, can now use two-finger touch gestures for pan and zoom.
+   They work even in the middle of drawing an object with the mouse or
+   the pen.
+
+ * The paste actions (Ctrl+V) will now create an image object if the
+   clipboard contains a bitmap (this function used to be "Insert image
+   from clipboard").
+
+ * When selecting objects by dragging a rectangle, select all objects
+   included in the rectangle when dragging is from left to right,
+   select all objects intersecting the rectangle when dragging is from
+   right to left.
+
+ * Windows shell no longer pops up when running Latex (feature #2).
+
+ * Abort button for current drawing operation (useful on tablet
+   computers without Escape key).
+
+ * Focus now on text field in text creation dialogs.
+
+ * When an external editor is defined, the dialog displaying the Latex
+   error log now offers to show the Latex source used by Ipe (feature
+   #24). 
+
+ * Changed file extension of dynamic libraries to .dylib on Mac OS X
+   (feature #20).
+
+ * Charset support for Latex conversion now supported on Windows.
+
+ * Static member function "selectPageOrView" moved from "PageSelector"
+   to "CanvasBase".  "PageSelector" is now considered an internal
+   class and should not be used by external code (it doesn't even
+   exist in Windows code).
+
+ * Developer menu with useful functions for customizing ipelets: reload
+   all ipelets (this is useful when working on an ipelet), list all
+   the keyboard shortcuts, check if there are any duplicate shortcuts
+   defined.  The developer menu needs to be enabled by setting
+   prefs.developer.
+
+ * "Insert image" moved into Ipe program itself instead of an ipelet,
+   now implemented using turbojpeg and libpng libraries instead of Qt.
+
+ * Fixed creation of arc defined by three collinear points.
+
+ * Lua bindings for: (1) getting gradient from a stylesheet; (2)
+   creating gradients, tilings, and effects through an XML string; (3)
+   removing definitions of symbolic names from a stylesheet.
+
+ * In "Save as" file dialog, start with the current filename (feature
+   #22). 
+
+ * Fixed missed intersection points between splines and
+   splines/segments (bug #8).
+
+ * Unused arguments of Object::setAttribute removed.
+
+ * Fixed crash when snapping to the intersection of two parallel lines
+   (http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=728479).
+
+ * Changed default "Save as" destination on Windows to something more
+   useful. 
+
+--------------------------------------------------------------------
+
+Ipe 7.1.6 (2014-12-05)
+
+ * Fixed crash when input file contains zero-radius arc (bug #1).
+
+ * Added missing "qhull.dll" (bug #3).
+
+ * IPESTYLES and IPELETPATH now use semicolon as separator on Windows
+   and colon on Unix (bug #4).
+
+ * New arrow styles "ptarc" and "fptarc" for pointed arrows on
+   circular arcs (feature #19).
+
+ * Using a separate locale for number conversion, hopefully fixing the
+   problems Ipe users on European locales with a comma for the decimal
+   separator were having (bug #11).
+
+ * Option "Pretty display" to avoid drawing the green bounding box for
+   text objects, so that one can see what the drawing really looks
+   like (feature #13).
+
+ * Fixed snapping to negative grid coordinates (bug #9).
+
+ * Preference prefs.editable_textfile to set the name of the text file
+   to be written for editing in an external text editor.
+
+--------------------------------------------------------------------
+ 
+Ipe 7.1.5 (2014-05-07)
+
+ * Enabled automatic shortcuts on MacOS X.  The shortcuts Alt+Letter
+   for menu items and dialog buttons should now also work on Macs
+   (thanks Sascha).
+
+ * Included Voronoi ipelet in Windows binaries
+
+ * New -nocrop option in iperender.
+
+ * prefs.editor_size setting now works in Qt build (bug #140).
+
+ * prefs.docks to choose left/right dock side and prefs.hide_docks to
+   select which docks should be visible when Ipe starts.
+
+ * prefs.editor_closes_dialog to make editing dialog close immediately
+   when user exits external editor
+
+ * Fixed crash when Ipe file named on command line exists but cannot
+   be loaded.
+
+ * Fixed error message when trying to open PDF file that was not
+   created by Ipe.
+
+ * Iperender will now include the page background if used with
+   -nocrop.
+
+ * Fix compilation on MacOS X 10.9 (bug #145).
+
+ * Del key on Mac keyboard now works to delete last vertex (bug
+   #149).  
+
+ * Bitmaps are now displayed on screen with better quality (thanks
+   Dmitriy).
+
+ * Link to IpePresenter in Ipe manual and on the webpage.
+   IpePresenter executable included in Windows binary package.
+
+ * Layer names with non-ASCII characters now work and no longer cause
+   a crash (bugs #137 and #132).
+
+ * Using libturbojpeg for decoding embedded JPEG images.  It's faster
+   and fixes bug #125.
+
+ * "Insert text box" now computes position of new textbox based on the
+   position of the visible text only (feature #141).
+
+ * When text size is changed, Latex is automatically run.
+
+--------------------------------------------------------------------
+ 
+Ipe 7.1.4 (2013-3-15) 
+
+ * Windows binaries provided again.
+
+ * Migrated to using Lua 5.2 (feature #113).
+
+ * Fixed bug in "ipescript update-master" with several figures (bug
+   #85).
+
+ * Ipe scripts (to be run with "ipescript <script>") must no longer
+   contain the 'require "ipe"' line.
+
+ * Snap modes on Ipe-startup can now be specified in preferences
+   (feature #122).
+
+ * Customizing mouse move works as expected (without _G.mouse) 
+   (bug #123).
+
+  --------------------------------------------------------------------
+ 
+Ipe 7.1.3 (2013-01-08) Bayreuth edition
+
+ * Work around rounding error in stretching code.
+
+ * Improved Info.plist for Ipe application bundle on Mac OS X, to
+   register Ipe as an editor for IPE, EPS, and PDF files (feature
+   #90).
+
+ * Selecting objects by dragging a rectangle now correctly updates the
+   primary selection to the last newly selected object (bug #83).
+
+ * Using Monospace font for coordinates, so they don't wobble anymore
+   (bug #81).
+ 
+ * Added grid-visible button to toolbar.
+
+ * Support for scaling in coordinates display (feature #81).
+
+ * Snap turned off when switching to "ink" mode if prefs.tablet_mode
+   is true (feature #76).
+
+ * Move layer to top didn't work correctly (bug #114).
+
+ * Latex conversion did not work for old pdflatex versions without the
+   \pdfobjcompresslevel macro (bug #116).
+
+ * Added "Check layer from view" to layer menus (feature #115).
+
+ * Deleting single view of a page disabled (bug #110).
+
+ * No longer possible to delete all pages of a document from the page
+   sorter (bug #111).
+
+ * Fixed incorrect display of thumbnails in page/view selector and
+   page sorter.
+
+ * It was impossible to add a clipping path to a group (bug #109).
+
+--------------------------------------------------------------------
+ 
+Ipe 7.1.2 (2012-1-16) SVN 580  Sydney edition
+
+ * Latex is now automatically run every time text is inserted or
+   edited. This can be disabled from the File menu or from prefs.lua
+   (feature #98).
+
+ * Update stylesheets didn't look in current directory when filename
+   contained no slash (bug #68).
+
+ * Moving layers now moves them to the expected place.
+
+ * Properties menu less enormous.  Cut, copy, etc. will only be shown
+   when prefs.tablet_menu is true.
+
+ * Search & replace ipelet now only affects selected text
+   objects (bug #96).
+
+ * Fixed crash in rotate with right+alt (bug #97).
+
+ * Fixed compiler warnings (bug #89).
+
+ * Checkboxes in dialogs were not initialized correctly (bug #93).
+
+ * When the end of the undo/redo sequence is reached, a message
+   appears only in the status line (no longer using a pop-up).
+
+ * "Join paths" and "Compose paths" are again available in the
+   properties menu (bug #91).
+
+ * Invisible line segments with arrows now work correctly: If a line
+   segment is set to "filled only", then the arrows are drawn in the
+   fill color, and the segment itself is not drawn at all (bug #78).
+
+ * Cycling through "stroke-only / stroke & fill / fill-only" no longer
+   forgets the current colors of the object (bug #79).
+
+ * "Delete" and "Merge" now show up for each layer, but give an error
+   message if the layer is active.
+
+ * Color icons again visible in stroke and fill color list in property
+   menu. (Once again, Qt changed the semantics of an operation.)
+
+--------------------------------------------------------------------
+ 
+Ipe 7.1.1 (2011-09-07) SVN 563 Oberwolfach edition
+
+ * Fixed crash on odoc event on Mac OS X (bug #63).
+
+ * When a point is created using the lines tool (by clicking left and
+   then right at the same location), force line cap to be round to
+   avoid making invisible object (and for consistency with ink tool).
+
+ * IPESTYLES is now a list of style directories.  Ipe will search for
+   stylesheets in all these directories. By default, this will now
+   include ~/.ipe/styles on Unix, and also ~/Library/Ipe/Styles on
+   OSX.
+
+ * Fixed omission of ~/.ipe/ipelets on OSX and added
+   ~/Library/Ipe/Ipelets as well.
+
+ * Layers can now be moved in the layerlist (right-click on layer
+   name).
+
+ * Zoom and pan now properly initialized when Ipe starts up (feature
+   #4).
+
+ * New script "add-style" to add stylesheet to an Ipe figure.
+
+ * Removed "-styleupdate" option from ipetoipe, and created new script
+   "update-styles".  Updating styles both inside Ipe and using
+   "update-styles" now searches the entire IPESTYLES list.
+
+ * Reenabled compilation of omitted image ipelet (bug #66).
+
+ * New <textpad> setting in stylesheet to fix cropped text (bug #49).
+
+ * Always present 'normal' as the first attribute in dropdown list.
+
+ * Show real linewidth during handwriting.
+
+--------------------------------------------------------------------
+ 
+Ipe 7.1.0 (2011-08-29) SVN 549
+
+ * Refactored Ipe code so that it is easy to build the Ipe application
+   with different user interface toolkits.  A native Win32 interface
+   is nearly complete.  A Gtk interface is being considered, with
+   Canvas and dialog support implemented.  Perhaps someone will
+   contribute a native Cocoa interface for Mac OS X.
+
+ * Selection preserved after undo.
+
+ * When adding objects to the selection, the last selected object is
+   the primary selection.
+
+ * New shredder mode (feature #16).
+
+ * Easier customization of mouse buttons using a table in "mouse.lua".
+   More than three buttons can now be used.  New "shred" operation.
+
+ * Added "ipescript" tool.  It is no longer necessary to install the
+   Ipe module for Lua to run scripts.
+
+ * Fixed bounding box when exporting a view to Postscript.
+
+ * Properties menu now also shown when no object selected, and allows
+   to change properties of multiple objects at once.
+
+ * Updated Makefile and instructions for compiling on MacOS X (bug
+   #20). Including shell script for building an app bundle by leahcimb.
+
+ * Fixed regular k-gon ipelet (bug #35).
+
+ * Fixed prefs.lua for MacOS X (bug #28).
+
+ * Layers are now again presented in the order in which they were
+   added (bug #32).  In the future we'll need a feature to rearrange
+   them manually.
+
+ * Added preference for zoom factor (feature #53).
+
+ * On MacOS X, the close button should now correctly reflect whether
+   the document is modified.
+
+ * Fixed display of subsection bookmarks (bug #31).
+
+ * Fixed spurious loss of pinning information for group objects (bug #37).
+
+ * First attempt to handle file-open events on Mac OS X.
+   This would allow to launch documents by clicking them (feature #58).
+
+ * Shortcut to rename the active layer (feature #50).
+
+ * If prefs.tablet_mode is true, then in ink mode the selection is not
+   highlighted and the cursor remains a dot (feature #26).
+ 
+--------------------------------------------------------------------
+ 
+Ipe 7.0.14 (2011-01-27) SVN 474 Australia edition
+
+ * Fixed saving of <pagenumberstyle> (bug #7).
+
+ * Fixed iperender and thumbnails on 64-bit platforms.
+
+ * Pressing Enter in view/page selector now jumps to the view/page
+   (feature #24).  Shortcuts for view/page selector.  Original
+   view/page highlighted in selector.
+
+ * Background no longer hides page number in PDF output (bug #8).
+
+ * Mark circle center now also works for arcs (bug #3).
+
+ * Fit to selection/objects now fits to visible object, not including
+   control points (bug #2).
+
+ * Grid now only drawn inside page's frame area, drawn grid can be
+   coarser than grid resolution, thick lines drawn at configurable
+   steps (see prefs.lua)  (feature #17).
+
+ * Correctly render Latex text inside symbols (bug #18).
+
+ * matrix:inverse() no longer crashes on singular matrix.
+
+ * Circle to ellipse transformation no longer crashes on singular
+   ellipse (bug #21).
+
+ * Easier to use symbols by remembering current symbol, which can then
+   be inserted with one function key (Alt+Y) (feature #19).
+
+ * Introduced pref.close_distance.
+
+ * Paste at cursor now correctly observes pinning of the object.
+
+ * Fixed serious memory leak in group object.
+
+ * Implemented marking of pages and views for printing in Ipe, and
+   selecting those in ipetoipe.
+
+--------------------------------------------------------------------
+
+Ipe 7.0.13 (2010-11-26) SVN 466
+
+ * Error message when document requires charset conversion but iconv
+   is not compiled in.
+
+ * Fixed selection of invisible objects.
+
+ * New dialog for jumping to a page or view, showing thumbnails of the
+   pages/ views.
+   This is implemented using a new widget and function in
+   libipeqtcanvas so that it can be reused easily:
+   int pno = ipeqt::PageSelector::selectPageOrView(doc)
+
+ * When using the ink tool, actual stroke color is used while
+   handwriting. 
+
+ * Pressing the eraser end of a pen should generate a middle button
+   event.
+
+ * New action: "fit to page width" 
+
+ * In handwriting mode, cursor is a dot.
+
+ * New preference: prefs.coordinates_format
+
+ * Feedback in status line for line and spline tools now permanent.
+
+ * Pressing the pen without movement in ink tool now makes a dot.
+
+ * Handwriting now creates paths with round line cap, regardless of
+   current setting (but that can still be changed afterwards).
+
+ * Safety check for reasonable locale on startup.
+
+ * Layers now shown in the order in which they appear in views of the
+   page. 
+
+ * Page sorter that lets you rearrange the pages of the document.
+
+ * ipeqt::Canvas can now show page numbers, and Ipe will display page
+   numbers on screen as in the PDF output if page numbering is
+   enabled. 
+
+--------------------------------------------------------------------
+
+Ipe 7.0.12 (2010-11-21) SVN 452
+
+ * Fixed several small bugs in 7.0.11 release.
+ 
+ * Made use of iconv configurable.
+
+ * Edit toolbar, for tablet users.  Includes a sticky shift key.
+
+ * Implemented multiple shortcuts for an action (request #345).
+
+ * Worked around Qt crash in arc edit (bug #338).
+
+ * Ignoring Escape button in text creation/editing windows.
+
+ * Text edit window now has an "Apply" button.  It will update the
+   text object and run Latex, without closing the editing window.
+
+--------------------------------------------------------------------
+
+Ipe 7.0.11 (2010-11-13) SVN 444 India edition
+
+ * Fixed definition of filled marks in basic.isy and presentation.isy.
+
+ * Fixed loading of ipelets to occur before analyzing the
+   configuration, to make customization work as documented.
+
+ * "version" attribute in <ipe> tag was incorrectly filled with the
+   Ipelib version.  Now using the file format version as intended.
+
+ * Stylesheet can specify an alternate encoding for the Latex source
+   file.  The Latex source is converted from UTF-8 to this encoding
+   during Latex conversion.
+
+ * Possibility to store notes with each page.
+
+ * Fixed selection status in "Insert image" ipelet.
+
+ * Fixed bug in Ipe6 stylesheet in ipe6upgrade.
+
+ * Fixed bugs in alignment ipelet (thanks Norbert).
+
+ * Added "mactex2009-fontmap.xml" (by Changmook Chun).
+
+ * Use -dylib_install_name option on Mac OS.
+
+ * Include "beamer.isy" to use math fonts as in beamer.
+
+ * Changed temporary latex filename to "ipetemp.tex"
+
+ * Small changes to make Ipe compile with Sun compiler (thanks
+   Kostas).
+
+ * Fixed error reading views with no visible layer.
+
+ * New preference prefs.automatic_use_title.
+
+ * New -transparent flag for Iperender.
+
+ * Possibility to clip to paper in ipeqt::Canvas.
+
+ * config.screen_geometry provides width and height of default screen
+   in Lua.
+
+ * New preference prefs.auto_external_editor.
+
+ * Shortcuts in linetool can be configured (#346).
+
+ * Fixed display of line cap and line join in EPS (bug #331).
+
+ * Ipe should now work with Texlive 2010 (bug #350).
+
+ * Fixed bug in undo clipping (bug #333).
+
+ * Lua code can show and hide dock windows using showTool.
+
+--------------------------------------------------------------------
+
+Ipe 7.0.10 (2009-12-09) SVN 402
+
+ * Fixed crash in arc drawing (bug #324).
+ 
+ * Allow customization of canvas display: paper color, classic grid,
+   thickness of grid lines (see prefs.lua).
+
+ * Fixed display in path drawing tool on Windows (bug #323).
+
+ * Fixed broken line cap on circular arc (bug #325).
+
+ * Preference to set size of main window at startup
+   (prefs.window_size).
+
+ * SONAME set for all dynamic libraries, and symbolic links created
+   while building and installing.
+
+ * The "change width" box was placed incorrectly if the minipage had
+   been moved (bug #326).
+
+--------------------------------------------------------------------
+
+Ipe 7.0.9 (2009-11-20) SVN 393
+
+ * Changed default setting for MOC to moc-qt4.
+
+ * IPEANCIENTPDFTEX environment variable to support pdftex versions
+   older than 1.40.
+
+ * Support for color-keyed bitmaps.
+
+ * Fixed snapping to intersections of ellipses (bug #318).
+
+ * Convert "runlatex.bat" to OEM codepage on Windows.
+
+ * Open/Save can now handle non-ASCII filenames when not using UTF-8.
+
+ * New script "ipe-update-master" (see manual under "advanced topics").
+
+ * Better support for Mac OS 10.6 compilation.
+
+ * Support non-ASCII characters in PDF output of document
+   title/subject/author and in bookmarks.
+
+ * config.platform now returns "apple" on Mac OS X.
+
+ * Fixed snapping to boundaries of arcs.
+
+ * Implemented F3 (Set line & snap) for arcs and Bezier splines.
+
+--------------------------------------------------------------------
+
+Ipe 7.0.8 (2009-11-04) SVN 373
+
+ * Option -show-configuration to show the current configuration on
+   stdout. 
+
+ * Recognize Mac OS and change some compilation flags in Makefiles.
+ 
+ * FreeBSD and Mac OS do not support "install -t <dir>", and so
+   invocations of "install" were changed to use the traditional syntax
+   "install <files> <dir>".
+
+ * Fixed wrong transformation matrix after path editing (bug #313).
+
+ * New preference to set size of dialog to create/edit text objects.
+
+ * Fixed crash during stylesheet add (bug #315). 
+
+ * New shortcut "Ctrl+Return" to accept dialogs (useful in multi-line
+   text input fields).
+
+ * Enabled display of paper boundary during panning again.
+
+ * Menu item for showing/hiding bookmarks.
+
+ * Tooltips in "Properties" dock.
+ 
+ * "Edit" button in stylesheets dialog to edit stylesheet using
+   external editor.
+
+ * Fixed mouse shortcuts (Shift+Right and Shift+Ctrl+Right didn't work
+   properly).
+
+ * Moved path join/cap/fill rule to the path property menu.
+
+ * Added opacity and gradient pattern to path property menu.
+
+ * Current settings indicated in path property menu.
+
+--------------------------------------------------------------------
+
+Ipe 7.0.7 (2009-10-23) SVN 361
+
+ * Removed -fno-exceptions and -fno-rtti from CXXFLAGS, to avoid
+   surprises like bug #308.
+
+ * Fixed broken interpretation of symbol/mark matrix (bug #310).
+
+ * Fixed page numbering (bug #311).
+
+ * Implemented "prefs.select_distance".
+
+ * Fixed incorrect handling of line cap and line join (bug #312).
+
+--------------------------------------------------------------------
+
+Ipe 7.0.6 (2009-10-23) SVN 359
+
+ * Worked around Qt styling bug in QComboBox (bug #308).  Using
+   QSignalMapper now to map signals (no derived classes).
+
+ * LayerBox popup moved into Lua code.
+
+ * Fixed renaming of active layers.
+
+ * Fixed selection of objects in locked layers.
+
+ * Function to check symbolic attributes.
+
+--------------------------------------------------------------------
+
+Ipe 7.0.5 (2009-10-22) SVN 357
+
+ * Created script "svgtoipe.py" to convert SVG files to Ipe format.
+   It is available as a separate download.
+
+ * Made Lua interface for attribute values more robust - interface now
+   checks that attributes have correct type before passing them to
+   Ipelib.  This fixes opacity names starting with digits. (Bug #288)
+
+ * #define to enable use of ancient pdftex versions ( < 130).
+   Bug #309.
+
+ * Show current view and page number in the properties window.
+
+ * Environment variable IPEQTSTYLE sets this Qt style.  Saying, for
+   instance, 'export IPEQTSTYLE="cleanlooks" ' would fix the Qt crash
+   in some styles on some systems. (See bug #308.)
+
+ * Gradient support changed: gradients are now used as fill patterns
+   for path objects.  Gradients can now have more than two color
+   stops.
+   The file format has changed slightly because of this, so the
+   current file format version is 70005.   There is no support for
+   reading 70000-version files with gradients.
+
+ * Support base64-encoding for bitmaps in XML format.
+
+ * Fixed views without active layer.
+
+ * Fixed filename in autosave (bug #2883631).
+
+--------------------------------------------------------------------
+
+Ipe 7.0.4 (2009-10-14) SVN 335
+
+ * Fixed bug in save_as (bug #305).
+
+ * ipe6upgrade: fixed empty dash.
+ 
+ * Fixed handling of matrix in path join.
+
+ * Added "arc" and "farc" arrow types.  When the final segment of a
+   path is circular arc, then these arrows take on a shape that
+   depends on the radius of the arc, as metafont arrows do.
+
+ * Fixed handling of path objects with missing stroke and fill
+   attributes. 
+
+ * Added "presentation.isy" to styles directory.  You can now create a
+   new presentation by saying "ipe -sheet presentation".
+
+ * Fixed computation of bounding box of transformed text object.
+
+ * Fixed handling of horizontal and vertical alignment and
+   transformable text from Properties menu.
+
+--------------------------------------------------------------------
+
+Ipe 7.0.3 (2009-10-10) SVN 318
+
+ * Style sheets now looked for in IPESTYLES directory, so it suffices
+   to say "ipe -sheet presentation" to create a new presentations.
+
+ * Fixed cropped boundaries in iperender (bug #284).
+
+ * "Save as" dialog will start in more sensible directory (can be
+   customized, see prefs.save_as_directory).
+
+ * Using Cairo font if Latex has not been run.
+
+ * Fixed colorstack problem in Latex run, require Pdflatex 1.30.
+
+ * Ipe can now create independent bounding boxes for each view.
+   This is activated by creating a layer named "VIEWBBOX".
+
+--------------------------------------------------------------------
+
+Ipe 7.0.2 (2009-09-27) SVN 311
+
+ * Path edit tool, including scissors and path join implemented.
+
+ * Implemented clipping path operations for groups.
+
+ * Several bugs fixed.
+
+ * Implemented automatic angular snapping.
+
+ * Included intersection snapping (from pre29).
+
+ * Fixed Cairo glyph cache handling (bug #293).
+
+ * Fixed snapping to ends of B-spline (bug #290).
+
+--------------------------------------------------------------------
+
+Ipe 7.0.1 (2009-09-17) SVN 288
+
+ * Path entry tool finished, can switch between spline and line mode
+   and handle quadratic and cubic Bezier splines and circular arcs.
+
+ * If Ipe is called with a non-existing file as an argument, it will
+   not show an error message but remember the file for the next save.
+
+ * Mark shape selection moved to properties window.
+
+ * Added $(INSTALL_ROOT) variable to Makefiles for packaging.
+ 
+--------------------------------------------------------------------
+
+Ipe 7.0.0 (2009-09-16) SVN 282
+ 
+ * Most of Ipe was rewritten entirely.
+
+ * Group object can now have a clipping path.
+
+ * User-defined marks and arrows can be defined in a style sheet.
+
+ * Gradients, tilings, and transparency added.
+
+ * Standard style settings are no longer hardwired into Ipe. 
+   Everything is defined in loadable stylesheets.
+
+ * Mouse button shortcuts have been changed.  Right mouse button is
+   now always the popup menu. 
+
+ * Using Cairo library for rendering Ipe documents, Qt for the user
+   interface, and Lua as a scripting language.  The entire high-level
+   Ipe model is written in Lua.
+
+ * Namespaces ipe, ipeqt, ipeui, ipelua.
+
+ * C++ method names now start with a lowercase letter.
+
+ * Mark object removed (it is now implemented using symbols).
+
+ * Ipeextract can open any Ipe file (any version of Ipe 6 or 7) and
+   extract the XML stream. Ipeextract can help to recover files that
+   are unreadable due to an Ipe bug.
+
+ * There were many small changes in the file format during the
+   lifetime of Ipe 6, and it was becoming cumbersome (and buggy) to
+   keep Ipe able to read all these various versions.  Ipe 7.0 has a
+   fresh format, and a separate program ipe6upgrade is used to convert
+   from Ipe 6 to Ipe 7 format.
+
+ * The grid has been replaced by graph paper.
+
+ * Ipetopng was replaced by iperender, which can produce output in PNG
+   and in SVG.  SVG output can be used to embed scalable Ipe figures
+   in webpages.  Iperender does not need to be linked with a GUI
+   toolkit and requires no X server, so it can easily be used on a
+   webserver (to convert Latex source to images or SVG art).
+
+ * Ipe now fails gracefully on incorrect XML input.
+
+ * Painter now has a drawArc primitive.  Circular arcs on the screen
+   should now be accurate even at high zoom. (PDF and Postscript
+   output still needs to approximate using splines, though.)
+
+ * Text "transformable" attribute replaced by general
+   "transformations" attribute. Any object can be restricted to
+   translations only or rigid motions only.
+
+ * Ipe now runs creates temporary directory for running latex under
+   Windows in user's local APPDATA directory.
+
+ * Ipe XML format contains DOCTYPE declaration, and "ipe.dtd" is
+   provided. 
+
+ * Ipetoipe, ipe6upgrade, ipeextract guess output filename if it is
+   not provided.
+
+ * Appearance of page numbers on the page can be customized in the
+   style sheet.
+
+ * Text for latex conversion is now written out in UTF-8, and it is
+   assumed that Pdflatex can handle that (using a suitable package,
+   either "inputenc" or "CJK").
+
+ * Ipe symbols can be used as the "bullet" in itemize environments etc.
+
+ * Path objects can be drawn using a pen on a tablet PC.
+
+ * New alignment modes to distribute centers and sides equally.
+
+ * Latex and XML code can now be edited using an external editor.
+
+ * Support for subpixel information from a tablet (but still
+   completely untested).
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 32 patch 1 (2009-04-30)
+
+ * Fixed writing floating point numbers again (bug #279).
+
+ * Qt 4.5 breaks setting locale (bug #281).
+
+ * Fixed broken \rule (bug #268).
+
+ * Removed check against freetype version.  It breaks Ipe whenever
+   distributions upgrade freetype, and seems no longer necessary.  In
+   principle, freetype should provide upwards binary compatibility.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 32 (2008-12-01)
+
+ * Fixed writing floating point numbers (bug #274).
+
+ * Fixed compilation with Qt 4.2 (bug #272).
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 31 (2008-11-04)
+
+ * Fixed display of mathematical symbols and rules (bugs #253, #268).
+
+ * ANSI C now requires printf to obey the locale.  Since the Ipe file
+   format must be locale independent, we just set the numeric locale
+   to "C" until it becomes clear how ANSI C wants programs to write
+   locale independent data files (bug #263).
+
+ * Ipe now tries hard not to write numbers in the "1e-3" format that
+   PDF and Postscript do not understand (bug #209).
+
+ * Correctly handle & in page titles and section headings (bug #240).
+
+ * Fixed incorrect label for "Turn 90 degrees" and "Turn 270 degrees"
+   ipelets (bug #244).
+
+ * Some changes for g++ 4.3 (bug #265).
+
+ * Ipe5toxml now distributed separately.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 30 (2007-11-27)
+
+ * Ipe now works with pdftex 1.40 (in MikTeX 2.6 and texlive 2007).
+
+ * Pascal-Nicolas Becker, Frederik Hermans, and Damian Schmidt
+   implemented the missing forms of intersection snapping (for arcs
+   and Bezier curves), with bug fix by Jonathan Backer.
+
+ * Fixed the broken user interface (fields were too small to contain
+   the text) on Unix (removed a static QFont) (bug #191).
+
+ * Figtoipe now distributed separately.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 28 (2006-12-23)
+
+ * To allow for interesting styles that can be applied at will and
+   exchanged to change the look of a presentation, there were several
+   changes. The "layout" now defines the size of the paper and the
+   'frame', a rectangular area where (most) drawing on a page will
+   occur. The origin of the Ipe coordinate system is the lower left
+   corner of the frame (no longer of the paper).  The frame can be
+   anywhere on the paper, and is displayed with a dotted line on the
+   screen.  The layout is specified in the style sheet (and so the
+   paper size can no longer be changed from the UI).
+
+ * Antialiasing now also works on systems without X Render extension.
+
+ * Pages can now have a title (Page/Edit title and sections).  If a 
+   title is set, it is displayed on the page as defined in the style
+   sheet. 
+
+ * Objects can now be pinned horizontally, vertically, or entirely.
+
+ * Ipe no longer makes a distinction between 'textbox' and
+   'minipage'.  The function "Insert textbox" actually inserts a
+   'minipage', set to cover the entire width of the frame and
+   horizontally pinned, with transformable set to false.
+
+ * Textstretch is now a single scalar.
+
+ * Snapping now recognizes the corners and the boundary of paper and
+   frame.
+
+ * New alignment functions: left-to-right, top-to-bottom, and
+   left-and-right, top-and-bottom.
+
+ * New "Properties" menu, where the properties not in the properties
+   panel can be set and changed (en masse).  Mark shape and
+   transformable text have been moved here.
+
+ * The layout of the properties panel can now be selected from three
+   variants (one row, one column, and two columns as before).
+
+ * Added "Change text width" to "Edit" menu (and a shortcut key).
+
+ * Coordinate display shows units.
+
+ * Automatic angular snap is now in force during moving.
+
+ * Ipe now requires Qt 4.2 or higher (Qmake has silently changed its
+   quoting syntax) (bug #176).
+
+ * Moved layer renaming to layer list and fixed problem (bug #187).
+
+ * New functions for moving to/selecting all in any layer.
+
+ * Added -from and -to options to ipetoipe.
+
+ * Fixed display of bitmaps in Background template in PDF output.
+
+ * Fixed crash when a style sheet containing a template was updated.
+
+ * Fixed paste-undo-undo crash (bug #198).
+ 
+ * Ipetopng no longer needs an X server.
+
+ * Hopefully fixed the bug that caused keyboard shortcuts to not work
+   sometimes.  
+
+ * Save and restore toolbar state (bug #197).
+
+ * When the page is empty, "Fit objects" does a "Fit frame".
+
+ * Removed canvas tooltip again.  It was too annoying.
+
+ * Added "Move" ipelet by Gunter Schenck to distribution (bug #53).
+
+ * Added "Euclidean Geometry" ipelet by Jari Lappalainen to
+   distribution. 
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 27 (2006-09-26)
+
+ * Function to update all style sheets of the document from external
+   style sheet files (with matching names in the same directory as the
+   Ipe document). 
+
+ * Mark objects can now be filled (for type 'Box' and 'Circle') (bug
+   #139).
+
+ * Text style now accessible through popup menu.
+
+ * Text size can now be set while creating text object.
+
+ * Option -styleupdate for "ipetoipe".
+
+ * New functions to move objects forward/backward more precisely (bug #144).
+
+ * Can now select display of mouse position in points, inches, or
+   millimeters (bug #156).
+
+ * Removed the inclusion of additional directories to the Latex source
+   path. It didn't work in a portable way, and I don't think it's very
+   useful.  Fixes problems with MikTex 2.5 (bug #179).
+
+ * Double buffering is now a preference.  It seems not to work on some
+   (Linux) systems.
+
+ * Disable canvas tooltip while drawing.
+
+ * Text in Background template works now.
+
+ * Fixed double vertex in regular k-gon.
+
+ * Ipetoipe showed number of pages, not number of views, when testing
+   for conversion to EPS (bug #155).
+
+ * Fixed display of size (not an integer) in ipetopng (bug #155).
+
+ * Fixed warning when compiling ipestdfonts with GCC 4.2 (bug #159).
+
+ * Fixed inclusion of JPG images with zero resolution.
+
+ * Last line in minipage environments is terminated with a LF now.
+
+ * Save as bitmap now uses anti-aliasing (bug #138).
+ 
+ * Fixed warnings on unused return values (bug #169, #170).
+
+ * Changed project type of ipelets to plugin (bug #171).
+
+ * Fixed rendering bug for text (bug #146).
+
+ * Added "Reset Direction" function (bug #140).
+
+ * Fixed crash when path started with zero length segment followed by
+   circle arc (bug #145).
+
+ * Reading and writing through Qt is now explicitely buffered (bug
+   #162).
+
+ * Fixed duplicated control point when joining paths to form a closed
+   loop (bug #133).
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 26 (2005-12-14)
+
+ * Added visibility polygon ipelet by Chris Gray.
+
+ * Anti-aliasing enabled for lines and edges (this is controlled by
+   the preference setting for anti-aliasing fonts).  Enabled
+   double-buffering.
+
+ * Changed how key assignments are defined.  Key assignments can be
+   easily customized by editing an XML file.  Keyboard shortcuts can
+   be defined for any Ipelet as well.
+   
+ * Changed "default" text style back to Latex default style (justified).
+
+ * Fixed matrix problem in smallest-circle ipelet.
+
+ * Fixed "pan here" (bug #119).
+
+ * Fixed cancellation of color dialog (bug #121).
+
+ * Added "About ipelets" to display proper credits for code used in
+   ipelets. 
+
+ * Virtual destructors to make g++ 4 happy.
+
+ * Changed rendering of text (using QPainter::drawImage).
+
+ * Fixed bug #122 (shortcuts for actions were not disabled during
+   drawing). 
+
+ * Fixed bug #123 (Fifi bleeding).
+
+ * Fixed default setting of editor font (bug #131).
+ 
+ * Fixed problem in JPEG importing on systems where char is signed.
+
+ * Starting to make snapshots available between releases.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 25 (2005-11-24)
+
+ * Migrated to Qt 4.0.0 and switched to MinGW compiler on Windows.
+
+ * Added smallest enclosing circle ipelet written by Chris Gray to the
+   distribution.
+
+ * Removed the 'Postscript' file format.  The three Ipe file formats
+   are now XML, PDF, and EPS.
+
+ * 'void' is no longer allowed as a stroke color.  To draw objects
+   without boundary, use the new 'void' line style.  This model allows
+   for arrows without tails, and avoids problems with invisible text
+   and marks.
+
+ * If the style sheet contains a template with name "Background", this
+   template will automatically be shown on each page.  There is no
+   need to explicitely create a reference on each page anymore. 
+   This replaces the old "background" layer + reference mechanism.
+
+ * Templates containing bitmaps are now supported (bug #100).
+
+ * Minipage objects now have a "Latex style" - common Latex
+   environments can be used that way without having to type them every
+   time.
+
+ * When Ipe displays the Latex log file, it highlights the errors and
+   scrolls automatically to the first one.
+
+ * Ipe can now number pages visibly in the PDF output.
+
+ * Resolution of bitmaps displayed on screen now configurable.
+
+ * Default line cap, line join, and fill rule can now be defined in
+   the style sheet.  Object menu now shows them
+   correctly (enhancement #79).
+
+ * Ipe XML files can now have extension ".ipe" (enhancement #92).
+
+ * Changes to stroke color of text objects are displayed immediately. 
+
+ * Option -runlatex for Ipetoipe (enhancement #88).
+
+ * Loading and saving alternative formats replaced by auto-exporting.
+
+ * Ipe XML parser now silently skips all tags whose name starts with
+   "x-". This allows you to make XML files with more information, to
+   be shared between other programs and Ipe (enhancement #110).
+
+ * -nocolor option for ipetoipe (enhancement #107).
+
+ * 'media' attribute is now in the <info> element, where it should have
+   been all along.
+
+ * Fixed building RPM from source RPM (bug #98, thanks to Laurent
+   Rineau).
+
+ * Fixed -lastview option in ipetoipe (introduced in pre23 but didn't
+   actually work...)
+
+ * No more support for KDE (it doesn't use Qt 4).
+
+ * Fixed bug #86 (incorrect XML for textsize).
+
+ * Fixed bug #116 (error in IpeBezier::Straight).
+
+ * XML comments now use correct syntax <!-- ... --> .
+
+ * "Ipe5toxml" is no longer automatically called.
+
+ * Fixed bug #103 (comment in last line of text object).
+
+ * Recognize alternative names of standard fonts used in libwmf (bug
+   #109).
+
+ * Fixed bug #77 (spaces in layer names).
+ 
+ * Fixed bug #83 (editing a path lost arrows).
+
+ * Fixed bug #102 (bookmark destinations were wrong).
+
+ * Fixed bug #96 (vertical text caused Acrobat to fail opening PDF).
+
+ * Removed handling of obsolete Ipe file versions in IpeImlParser.
+
+ * A subpath consisting of a single moveto no longer causes Ipe to
+   crash (but to fail an assertion).
+
+ * Fixed bug #74 (New layer, new view keeps view settings).
+
+ * "Last page" now goes to last page (not second-to-last one).
+
+ * Snapping to center of arc works now.
+ 
+ * Changed computation of dimmed colors (Qt's definition doesn't dim
+   black at all).
+
+ * Intersection snapping now works inside groups.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 23 (2004-11-22)
+
+ * Option for ipetoipe to save last view of each page only (#69).
+
+ * Fixed bug #70 (wrong filename for ipe5toxml)
+
+ * Fixed bug #71 (compiler warning in qvoronoi.cpp)
+
+ * Fixed ASCII85 encoder (if # bytes was multiple of 4, no EOD marker
+   was generated).  Caused errors in Ghostscript, as reported by Jirka
+   Matousek. 
+
+ * Bug #72 appears to be fixed.
+
+ * Fixed bug #67 (splinegons with less than 3 control points).
+
+ * Fixed bug #65 (changing attributes and visibility of layers does
+   not cause "edited" status of page to be changed).
+
+ * Added "figtoipe", an auxiliary program that converts figures in FIG
+   format (as created by xfig) to Ipe format.
+
+ * Fixed filename of "ipe5toxml" in Unix build.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 22 (2004-09-07)
+
+ * Fixed crash when cutting the only page.
+
+ * Fixed handling of mark size, text size and mark shape in group
+   objects. 
+
+ * Fixed bug #59: pasting didn't work on Unix.
+
+ * Fixed bug #64: undo wasn't properly cleared.
+
+ * Fixed bug #58: "Edit object" now in Edit menu.
+
+ * Fixed enabling/disabling of keyboard shortcuts for edit menu.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 21
+
+ * Fixed compilation on some Debian architectures.
+
+ * Corrected default location of manpages (.../share/man/man1)
+
+ * Saving page labels in PDF file.
+
+ * Revised handling of shortcut keys completely.  Shortcuts should now
+   be recognized in any situation.
+
+ * Fixed bug #54: Selecting objects no longer first snaps the cursor
+   position.
+
+ * Fixed bug #55: Edit path didn't show your options when started.
+
+ * Don't create CropBox/ArtBox for entirely empty pages (crashes
+   gpdf).
+
+ * Added sections and subsections for multi-page documents (shown as
+   "Bookmarks" in PDF readers).
+
+ * Documented environment variables in man pages and manual.
+
+ * Members of IpeView are now private.
+
+ * Added -noshading option to ipetoipe.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 20
+ 
+ * It now works to copy objects between Ipe and Emacs on Unix as
+   well. 
+
+ * Added <cmap> tag to style sheet.
+
+ * Fixed behavior of "stretch" on aligned mouse movements (also fixes
+   bug #49).
+
+ * Fixed crash in "Fit objects" when width or height is zero.
+
+ * Fixed Postscript rendering of objects where stroke and fill color
+   are identical (and not black).
+
+ * Fixed rounding behavior of resolution when zooming in and out.
+
+ * Fixed deletion of layer.
+
+ * Removed hiding of layers.  The difference between a hidden layer
+   and a layer not in the current view was too confusing.
+
+ * Page tools hidden when only one view exists.
+
+ * Fixed rendering of selection on Unix.
+
+ * Fixed oversized color tools.
+
+ * Made grid size an integer.
+
+ * Showing relative coordinates as well as absolute ones.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 19 (2004-06-30)
+
+ * Fixed crash in scissors.
+
+ * Removed IPEDATADIR from options.
+
+ * Moved documentation to /usr/share/doc in RPMs.
+
+ * Generate /ToUnicode character maps if Cyberbit is used. 
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 18 (2004-06-28)
+
+ * Fixed crash when creating circle through three points.
+
+ * Compilation against KDE libraries supported.  This only adds very
+   rudimentary KDE support, for instance Ipe now correctly switches
+   style when the theme is changed in the KDE control center.
+
+ * All personal Ipe configuration files are now in $HOME/.ipe
+
+ * Added -debug command line flag.
+
+ * Building source RPM and binary RPM for Fedora Core 2. 
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 17 (2004-06-25)
+
+ * Added man pages.
+
+ * Fixed incorrect call to putenv (glibc has changed the semantics).
+
+ * Removed dependence on Xpdf. Ipelib now contains the necessary code
+   to parse and produce PDF as well as Postscript, so Ipelib clients
+   can open any kind of Ipe document.
+
+ * Removed pdftoipe from main Ipe distribution and packaged separately
+   (it's still contained in the Windows distribution).
+
+ * Fixed enormous memory leak in Ipebitmap destructor.
+
+ * Directory for documentation is now configurable separately (for
+   systems such as Debian where the natural place for documentation is
+   in /usr/share/doc/ipe).
+
+ * Ipe now displays current mouse position in user coordinates.
+
+ * Split ipetoipe and ipetopng.
+ 
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 16 (2004-06-05)
+
+ * Ipetoipe was not installed.
+
+ * Ipe could not load its own figures because of a stupid typo.
+
+ * Fixed a bug in scissors.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 15 (2004-06-04)
+
+ * Color changes in text objects (e.g. made using \textcolor) and
+   quotient bars are now shown on screen.
+
+ * Views (that is, page views) are now fully integrated in Ipe's main
+   user interface. They are easier to create and maintain.
+
+ * Views keep a record of the active layer, so that switching back to
+   a view to edit it makes objects go in the right layer (usually).
+
+ * Pressing the right mouse button in the layer list opens a context
+   menu.
+
+ * Changed handling of style-sheet stretching of text objects.  The
+   width/depth/height of text objects now correctly reflects this
+   stretching, and when creating a minipage object, the user drags out
+   the actual desired width.  
+
+   Unfortunately, this changes the semantics of Ipe documents!  To
+   make it possible to do this change automatically, the style sheet
+   tag has been renamed from <textmatrix> to <textstretch> (with
+   slightly changed syntax, see the manual).  Currently, a simple
+   automatic conversion is done: if the style sheet contains ANY
+   textmatrix tag, the conversion factor is applied to the width of
+   ALL text objects in the document.
+
+ * Simple background shadings are now possible using <shading> in a
+   style sheet.
+
+ * Two new types of text objects defined.  They are just variants of
+   label and minipage.  A new function 'Insert text object' creates
+   textbox objects with fixed left and right margins (set in the style
+   sheet).
+
+ * Move-to-back function now inserts in front of anything in
+   background layer.
+
+ * Renamed the method NotifyStyle to CheckStyle.  
+
+ * Added a simple clipping ipelet (clips only marks and line segments
+   to a convex polygon - just about enough to be useful for clipping
+   Voronoi diagrams).
+
+ * Fixed bug #42 (linewidth could be null in IpeBBoxPainter).
+
+ * Ipe remembers file format used for saving. 
+
+ * Latex style files are now searched for both in the current
+   directory and in the directory containing the Ipe document.
+
+ * Command line option -geom WxH+X+Y (note the slight difference to
+   X11, where the option is '-geometry').  Smarter zoom on opening
+   documents. 
+
+ * Simplified handling of locked layers.  A locked layer cannot be
+   made the active layer now.
+
+ * Each page stores the grid size used to create it.
+
+ * Only one (global) media size per Ipe document.
+
+ * Refactored Ipe program into separate model/canvas library.  
+   The Ipe canvas can be reused by programs wishing to display Ipe
+   data. 
+
+ * Ipe file format conversion functionality (-topng, -topdf etc) has
+   been moved into a separate program "ipetoipe".
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 14 (2004-04-30)
+
+ * Changed display of grid as requested by Sariel Har-Peled.
+
+ * Fixed bug #40 (atan2 DOMAIN bug on zero-length segments).
+
+ * Changed to using dynamic Borland RTL (cc3250.dll)
+
+ * Finally libipe is compiled as a DLL on Windows as well.
+
+ * Fixed bug #28 again, differently, and hopefully really...
+
+ * Disabled pasting bitmaps on Windows version - Qt crashes on certain
+   bitmaps (perhaps GIF format bitmaps??)
+
+ * Fixed serious bug that stopped Ipe from opening any figure
+   containing bitmaps. 
+
+ * Fixed problem with templates not defined in current style sheet.
+
+ * New 'templates' ipelet with simple functionality for making
+   backgrounds for presentations.
+
+ * Fixed bug #37 (Ipe now more accurately computes the bounding box
+   stored in PDF output).
+
+ * Added setting for infinite-edge length to qvoronoi ipelet, and
+   fixed a crash when it is called without any sites.
+
+ * Fixed divide by zero crash in arc drawing.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 13 (2004-04-20)
+
+ * Official Windows Ipe distribution is now compiled with free Borland
+   C++ compiler.
+
+ * Changed license to allow linking with CGAL.
+
+ * In preferences dialog, one can now set the initial grid visibility,
+   window maximizing, default paper size, and the default style sheet.
+
+ * Style sheets can now define LaTeX preamble pieces.
+
+ * Command line option to add a style sheet to new document.
+
+ * "Insert image" moved to file menu, added inserting from clipboard.
+   Ctrl+V will now paste a bitmap from the clipboard.
+
+ * Fixed bug #1 (copied text has wrong textmatrix).
+ 
+ * Fixed display of arrows on non-solid lines.
+
+ * Fixed bug #13 (Symbolic attributes missing in the style sheet no
+   longer cause Ipe to crash).
+
+ * XML parser slightly improved, accepts XML comments <-- XXX -->.
+
+ * Ipe now compiles on two different compilers without warnings.
+
+ * Invisible text objects no longer break latex run.
+
+ * Fixed bug #28 (Ipe5toxml couldn't run).
+
+ * Notes on changing keyboard shortcuts (thanks to Kostas Oikonomou).
+
+ * Fixed bug #38 (horizontal text alignment not preserved when reloading).
+
+ * Fixed bug #26 (Ipe doesn't work with fptex).
+
+ * Fixed compilation on Solaris and other Unixes (thanks to Kostas
+   Oikonomou). 
+
+ * Improved C++ portability (thanks to Thomas J. Kacvinsky).  Ipe
+   should compile with Forte C++ now.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 12 (2003-11-18)
+
+ * Fixed bug #24: A pdfTeX/pdfeTeX mixup that stopped Ipe from working
+   with MikTeX 2.4.
+
+ * Documentation wasn't installed correctly.
+
+ * According to Stefan Langerman, Mac OS X 10.3 changes name
+   convention for dynamic libraries.  Fixed in Ipe.
+
+ * Fixed bug #18. The directory containing the Ipe file is now
+   searched for Latex style files. (When using the -topdf etc options,
+   the current directory is searched.)
+
+ * Fixed bug #20, creation of arc/circle through three collinear
+   points.
+
+ * Added feature #22 (loading and modifying files for which pdf and
+   eps versions exist).
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 11 (2003-11-06)
+
+ * Patches by Stefan Langerman for Mac OS X.
+
+ * Ipe installation automated with "make install".
+
+ * Fixed serious problem that caused Ipe figures to crash printer or
+   previewer when circles/arcs where used.
+
+ * Fixed stroke color appearing incorrectly on screen when using
+   anti-aliased text.
+
+ * Fixed crash when snapping to intersection on zero-length segments
+
+ * Fixed bugs in "Goodies/Precise box"
+
+ * "Duplicate" now unselects old objects.
+
+ * Fixed Ctrl+E leaving Ipe.
+
+ * Fixed undocumented operator 'h'.
+
+ * Fixed bug that caused menu to be dimmed when creating marks and
+   labels. 
+
+ * Fixed bug #11 (Ipe closes without saving file).
+
+ * It's no longer necessary to enter an extension when saving.  Ipe
+   will now use whatever is set as the filter in the dialog.
+
+ * Fixed bug #12 (Arrows drawn with dotted linestyle).
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 10 (2003-04-14)
+
+ * Changed calls to Freetype to be less dependant on Freetype
+   version.  Ipe should now work correctly with the Freetype version
+   already on the system.
+
+ * "runlatex.bat" created with CRLF
+
+ * Support for multi-key sequences if compiled with Qt 3.1.
+
+ * Paragraph input dialog comes up with focus.
+
+ * Function to move objects to current layer (in Layer menu).
+
+ * Fixed bounding box of marks. 
+
+ * Added "What's this" to snap buttons.
+
+ * Fixed handling of text matrix (with "presentation.xml" style
+   sheet).
+
+ * Copy and paste for images fixed. 
+
+ * Copy and paste for whole pages implemented.
+
+ * Ipe is now usable with two-button mouse (see manual section "Mouse
+   shortcuts")
+
+ * Images will only be embedded once, even if they have been inserted
+   several times from the same file.
+
+ * Using system fontmap if available, otherwise allow installer to
+   specify Ipe fontmap.  See "install.txt" for instructions.
+
+ * Style sheet dialog.
+
+ * Anti-aliased text.
+
+ * Can change font of Latex source input fields.
+
+ * Zoom spinbox buttons behave more reasonably.
+
+ * Keyboard shortcuts for ipelets possible (and used by align ipelet)
+
+ * Copy and paste of Unicode text works now.
+
+ * Ipe checks for not matching header files/library version for libipe
+   and libfreetype.
+
+ * Large bitmaps are rendered at lower resolution to speed up
+   redisplay.
+
+ * Reference point of text objects can be chosen, including baseline position.
+
+ * Edit and Ungroup now available in Edit menu.
+
+ * Ipelet/Align supports baseline alignment.
+
+ * Pasting text creates a text object.
+
+ * Displaying closed paths on-screen uses line-join properly now.
+
+ * When saving a file, Ipe runs Pdflatex only if it's necessary.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 9 (2003-03-26)
+
+ * Compression option in Preferences is now a single checkbox.
+
+ * Function to save current page as bitmap (can also be called from
+   command line as -topng).
+
+ * Fixed behaviour when switching between absolute and symbolic
+   attributes. Introduced separate switch for grid size and angle.
+
+ * Fixed masks for toolbar icons.
+
+ * Finished handling of images.  They are now finally embedded
+   efficiently in PDF documents (that is, not once in PDF format and
+   once in XML format).
+
+ * Text objects can now be transformed (rotated, stretched, and scaled).
+
+ * Support for magnified text in presentations (see section on Style
+   Sheets in the manual). 
+
+ * Fixed size selection of Ipe window on start-up.
+
+ * Goodies ipelet: Function "Create mediabox" added.
+
+ * Support for Ipe localization added. Can also be used to change the
+   keyboard shortcuts.
+
+ * Fixed origin of stretch/scale.
+
+ * "Select all" retains primary selection.
+
+ * Keyboard shortcuts can be configured (see section "Customizing Ipe"
+   in the manual).  
+
+ * Width of paragraph objects can be changed (in object menu).
+
+ * Snapping functions F3 and Shift-F3 implemented.
+
+ * In snapping functions F1 and F2, angular snapping is now off.
+
+ * Object menu button finds near object if primary selection is far
+   from mouse.
+
+ * 'Normal size' function implemented according to Rene's suggestion.
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 7 (2003-03-14)
+
+ * Voronoi diagram ipelet
+
+ * Invisible layers are hidden in default PDF presentation
+
+ * Zlib no longer included in source distribution, upgraded to zlib
+   1.1.4 in Windows distribution.
+
+ * Text objects have no snapping.
+
+ * Inserting JPEG images is now supported.
+
+ * Inserting bitmap images compresses the bitmap (makes PDF, EPS, and
+   XML files smaller).
+
+--------------------------------------------------------------------
+
+Ipe 6.0 preview 4 (2003-02-28)
+
+ * First public release of Ipe 6.0
+
+--------------------------------------------------------------------
+
+Ipe 5.0 August 15, 1994
+
+ * rewrote Ipe to run under the X window system, and ported to 
+   HP7xx systems and Sun SparcStations.
+
+ * the user interface is now based on Motif.
+
+ * there are two versions of the canvas, one using gl and my
+   previous code, the other using plain X calls. This version,
+   however, needs to allocate a large number of color cells to
+   implement an overlay plane with double buffering (which gives much
+   smoother drawing).
+
+ * added fields showing the name of the last operation and the
+   keyboard shortcut.
+
+ * the Ium interface now handles -input and -file, and is capable of
+   making this persistent.
+
+--------------------------------------------------------------------
+
+Ipe 4.1 July 5, 1994
+
+ * fixed bugs introduced with the transition to PLAGEO 2.0.
+
+ * changed calling of Iums so that the same Ipe binary works under
+   irix 4.0.5 and irix 5.x.
+
+ * the windows are now redrawn while loading and saving files.
+
+ * moved more complicated Iums out of standard Ipe distribution and
+   put the documentation on my www page (the world wide Ipe home
+   page), instead of in the Ipe documentation. This will make it
+   easier and more convenient to update the set of Iums for non-local
+   users.
+
+ * the executable for a Ium is now required to have the file extension
+   .ium.
+
+ * the height of the bounding box shown for minipages is now computed
+   through LaTeX. Only the width is part of the minipage's definition.
+
+ * added Segments object type, to compactify Ipe files containing lots
+   of strokes of the same type (which typically arise in mechanically
+   created drawings).
+
+ * fixed up manual and index.
+
+ * added blueadj and display options for mipe.cls.
+
+ * changed style files and documentation to conform to LaTeX2e.
+
+ * font sizes are now defined as floats, so we can use real LaTeX font sizes.
+
+--------------------------------------------------------------------
+  
+Ipe 4.0 March 8, 1994
+
+ * the Ipe file format is now at the same time an encapsulated
+   Postscript file (eps), and it can be included without any package
+   support. The style file ipe.sty is now only necessary for
+   scaling or other non-standard behavior.
+
+ * Text and Mark objects can now be invisible, like any other
+   object.
+
+ * when creating a Minipage object, you first have to drag out a
+   bounding rectangle.
+
+ * when previewing a single page that does not contain any text
+   object, Latex is not run anymore.
+
+ * introduced UndoLimit configuration variable and statistics function
+   (in misc menu).
+
+ * fixed treatment of linewidth for Postscript importing.
+
+ * made changes necessary to use PLAGEO 2.0.
+
+ * while loading a file, the new Latex preamble is now already in
+   effect. But: this is now also true when inserting a file.  After
+   insertion, the preamble of the containing file is used again.  This
+   may become confusing.
+
+ * the center of the drawing is now mapped to (300bp,400bp), so that
+   printing the Ipe file directly will roughly center it on a4 or
+   letter style paper.
+
+--------------------------------------------------------------------
+
+Ipe 3.2 February 10, 1994
+
+ * made Ipe into a ``package'' (this concerns some changes in
+   our local installation.)
+
+ * the manual is now in a reasonable shape
+
+ * added ``Ipe user objects'', the possibility to specify an
+   Ipe file as a ``user macro''.
+
+ * added "With Prologue" button and code.
+
+ * added arrows for splines (back). 
+
+--------------------------------------------------------------------
+
+Ipe 3.1 February 1, 1994
+
+ * rewrote the spline code. Ipe now has a full spline object
+   type, supports snapping to splines, and has a clearer interface.
+
+ * the pop up bit-planes are now managed via redraw events. The
+   interface is much clearer. Made colors that are used in pop up
+   planes user-definable.
+
+ * added directional snapping modes.
+
+ * made mouse-explainer work for forms objects and with Shift and Ctrl
+   keys.
+
+ * put documentation in html document.
+
+ * added some Ipe user macros for handling bitmaps, based on the "lug"
+   graphics utilities library by Raul Rivero.
+
+ * changed handling for calling Iums. Ipe will now redraw while
+   waiting for a Ium to finish, and the ESC button can be used to
+   cancel a Ium.
+
+ * added a Ium for polygon approximation.
+
+ * added reading and writing of raw bitmaps when communicating with
+   Iums.
+
+ * added a contour tracer for the Bitmap Ipe user macro.
+
+ * added MakeBackups option.
+
+ * when Ipe is killed and the drawing is not saved, Ipe will now
+   save it in #unsaved.ipe#.
+
+ * added Iums to call imged, imgworks, and xpaint.
+
+ * "preview page" and "preview all" now use different temporary files,
+   so they will not collide any more.
+
+--------------------------------------------------------------------
+
+Ipe 3.0 January 1, 1994
+
+ * fixed bug in Postscript prologue that made coexistence of ipe.sty and
+   epsf.sty in same LaTeX-file difficult
+
+ * Now Ipe does not crash anymore when the Ghostscript window is
+   deleted from the window manager. The next time that preview is
+   called, a new Ghostscript window is created.
+
+ * revised the handling of keyboard and menu events. They are now
+   table-driven, and controlled by a single subroutine.
+
+ * reintroduced the Zoom & Pan mode for synchronizing the Ghostscript
+   window. It is much more convenient than the fully dynamic mode.
+
+ * added a documented .iperc file format. Ipe will no longer start up
+   without such a configuration file (but you can specify a different
+   one using the -n flag).
+
+ * Line widths, font sizes, grid sizes and the like are now all
+   defined in the configuration file. There is no new line style
+   function anymore, and no save configuration option.  All counters
+   are replaced by choice objects.
+
+ * added type-driven selection mode. If the Ctrl key is pressed when
+   selecting objects with the right mouse button, only objects of the
+   currently active type are considered. The same works for M-C-a.
+
+ * added interface to Ipe user macros, and moved several rarely used
+   functions and the import functions into Iums.
+
+ * export Idraw has disappeared for the time being. I have never
+   actually used this feature yet, and it's a mess, since all
+   interesting pictures have some elements that Idraw doesn't
+   understand.
+
+ * wrote several pretty simple Iums based on existing plageo or leda
+   code. Currently available are convex hulls, Voronoi diagrams, and
+   clipping of polygonal objects.
+
+ * revised the snapping concept, introduced priorities, and made
+   peaceful coexistence of angular and boundary snapping possible.
+
+ * Rotate, Scale, and Stretch are now available using a modifier key
+   and the mouse. Their buttons have disappeared, since these
+   operations are not actually object types, and there should not be
+   such an ``object type.''
+
+ * added delete function, that deletes objects without placing them in
+   the cut buffer.
+
+ * added keys C-d and r for the polygonal objects edit mode, and key
+   C-d for line entry.
+
+ * there is now a panning function. This was necessary because of the
+   multi-page mode, were the template has to remain aligned with
+   respect to all pages.
+
+ * the snap to intersection point function now recognizes self
+   intersections of polygonal chains. Also added a button to control
+   snapping to object itself during editing and entry of polygonal
+   objects.
+
+ * added Fifi, a little marker that accompanies the cursor and shows
+   the current snapping.
+
+ * Ipe now does not crash anymore when the background Latex process
+   for finding bounding boxes wants to read another file.
+
+ * added bitmap object type, and a Ium to read in Silicon Graphics
+   .rgb format files as bitmaps.
+
+--------------------------------------------------------------------
+
+Ipe 2.4 December 3, 1993
+
+ * fixed bug in text yank that made Ipe crash
+
+ * added multi-page mode
+
+ * when undo is turned off in the configuration panel, the storage
+   currently used by the undo buffer is released
+
+ * the saved properties now do not contain a description of the data.
+   If you use the edit properties function, you are supposed to know
+   what you are doing.
+
+ * changed keyboard shortcuts to cohere to IES (International Emacs
+   Standard)
+
+ * changed layout of configuration form to fit better with main form
+
+ * added configuration option to disable drawing of filled
+   splines. This is much faster than the default behavior.
+
+ * Zoom now has a logarithmic scale, and different interface.
+
+--------------------------------------------------------------------
+
+Ipe 2.3 August 11, 1993
+
+ * scale and rotate now use center of object by default.
+
+ * fixed bug in precise scale
+
+ * added second input mode for arcs, using center of circle
+
+ * added arrows on arcs
+
+ * made Latex preamble for previewing and printing user-definable
+
+ * bounding box for text objects is now computed by Latex
+
+ * fixed two severe bugs that caused Ipe to eat up memory
+
+ * put help information into a Texinfo file
+
+ * made Control-middle button shortcut for scale/stretch
+
+ * added Ghostscript previewer that runs in background
+
+ * added importing Postscript files
+
+ * changed all fixed limits to rerays, to make sure that arbitrary
+   Postscript files that can be read won't make Ipe crash
+
+ * allow filled non-simple polygons
+
+ * added snapping to intersection points
+
+--------------------------------------------------------------------
+
+Ipe 2.2 August 1, 1993
+
+ * added circular arc object type
+
+ * added minipage version of text objects
+
+ * added support for splines.
+
+ * circles now behave properly when stretched and become ellipses
+
+ * more color buttons, click with left and right mouse for fill and
+   stroke
+
+--------------------------------------------------------------------
+
+Ipe 2.1 July 28, 1993
+
+ * snapping to other objects
+
+ * viewing and editing object properties
+
+ * parameter form to change the configuration
+
+ * changed layout of form
+
+ * added icons for object type buttons
+
+ * added field showing arrow/line style choice
+
+--------------------------------------------------------------------
+
+Ipe 2.0 July 14, 1993
+
+ * This is the first version of Ipe. It is version 2.0 to distinguish
+   the Ipe file format from the format generated by "ipefy".
+
+--------------------------------------------------------------------

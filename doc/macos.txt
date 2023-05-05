@@ -1,0 +1,177 @@
+--------------------------------------------------------------------
+            Building Ipe on Mac OS X
+--------------------------------------------------------------------
+
+Ipe runs on Mac OS 10.10 (Yosemite) and higher.
+
+
+If you have Macports...
+-----------------------
+
+... then you can install the libraries that Ipe depends on simply by
+saying:
+
+  sudo port install libpng lua cairo freetype gsl libspiro doxygen
+
+Then continue below under "Now you can compile Ipe".
+
+
+--------------------------------------------------------------------
+Detailed instructions
+--------------------------------------------------------------------
+
+ * Install Xcode from the Mac App store:
+ 
+   http://itunes.apple.com/us/app/xcode/id497799835
+
+ * Agree to the Xcode license by saying this in a terminal:
+
+     sudo xcodebuild -license
+
+ * Install the command line tools by saying the following in a
+   terminal:
+
+     xcode-select --install
+
+ * You need to start Xcode at least once to install some additional
+   components. Close it when it's done installing.
+
+ * Doxygen
+
+   If you want the Ipelib API documentation (it's only needed for
+   developers, for instance if you want to write ipelets), you'll need
+   doxygen.  Doxygen is available through macports, or as a dmg
+   package at "www.doxygen.nl".
+
+   If you don't need the API documentation, just omit the "make
+   documentation" line below.
+   
+ * Get libpng, Freetype, and Cairo
+
+   If you don't want to install these through macports or homebrew,
+   you can install the three libraries from sources, and set the
+   corresponding CFLAG and LIBS variables in 'macos.mak'.
+   
+   + The libpng library 
+
+     Install from source at "http://www.libpng.org".
+
+   + The font library 'Freetype 2'
+
+     Install from source at "www.freetype.org".  
+
+   + The Cairo library
+
+     The sources are at "www.cairographics.org".  Compile with
+     Freetype support, but without fontconfig.  You need the Quartz
+     and PS backend (they are enabled by default), all others are
+     optional (disable the X11 backends to create a smaller library).
+
+ * The Lua language (version 5.3 or 5.4)
+
+   Lua is an embeddable scripting language. Ipe requires Lua 5.3 or 5.4.
+
+   Download the prebuild binaries from 
+      http://luabinaries.sourceforge.net/download.html
+
+   You need the "lua-5.3_MacOS1010_lib.tar.gz" package only.  
+
+   Unzip the package.
+   
+   Copy the header files ("lua.h" and other ".h" files) into
+      "IPEDEPS/include" 
+   Copy "liblua53.dylib" into "IPEDEPS/lib".
+   (Where IPEDEPS is as you set it in the previous step.)
+   
+   Or use "/usr/local/include" and "/usr/local/lib", and set
+   LUA_CFLAGS and LUA_LIBS appropriately in "src/macos.mak".
+   
+   DO NOT install "liblua53.a" on your system, to avoid accidentally
+   performing a static link.
+
+   Alternatively, compile from source at "www.lua.org" - the sources
+   are ANSI C and compile very easily.  Make sure that you build a
+   DYNAMIC (shared) library.  Unfortunately, "make macosx" compiles a
+   static library - but you really MUST compile a shared library, so
+   you need to modify the Makefile!
+
+   Ipe will not work if Lua is linked statically (linking statically
+   would include three copies of the Lua interpreter, resulting in
+   random crashes).
+
+ * The GNU Scientific Library
+
+   This library is used to improve the precision of intersections
+   of Bezier splines and elliptic arcs.
+
+   You can find GSL at "https://www.gnu.org/software/gsl/".  It
+   compiles cleanly on MacOS using 'configure' and 'make'.
+
+   Set GSL_CFLAGS and GSL_LIBS in "src/macos.mak".  You can use either
+   the static or the shared library version of libgsl.
+
+ * The spiro library
+
+   Spiro is a library for creating clothoid splines.
+
+   Get the sources from "https://github.com/fontforge/libspiro".
+
+   You can use either the static or the shared library version of
+   libspiro.
+
+ * Pdflatex, Xelatex, Lualatex
+ 
+   Ipe needs a PDF-producing version of Latex to convert Latex source
+   code to Postscript/PDF.  Ipe can do so through an online
+   Latex-compilation service, or using a TeX installation on your
+   computer.  You don't need to install LaTeX to compile and try out
+   Ipe.  If you decide to install LaTeX later, most people seem to use
+   MacTeX (https://www.tug.org/mactex/).
+
+--------------------------------------------------------------------
+
+ * Now you can compile Ipe:
+
+     cd src
+     make
+     make documentation
+     make app
+
+ * Ipe is now available as a MacOS app in "build/Ipe.app".
+
+   You can start it from the command line by saying
+
+     open ../build/Ipe.app
+
+   (assuming you are still in the "src" directory).
+
+   Or double-click on the Ipe.app icon in the Finder.
+   
+   You can now use the Finder to move the "Ipe.app" bundle to
+   /Applications, or anywhere else.
+
+   Note that "Ipe.app" is linked dynamically against the libraries
+   liblua, libpng, Freetype, Cairo, (perhaps) libgsl, and libspiro.
+   It will not work if you copy the bundle to a different computer
+   that does not have (compatible versions of) the libraries in the
+   same locations.  If you used macports to install the libraries,
+   make sure you don't accidentally remove those macports packages.
+
+ * You will want to add the "/Applications/Ipe.app/Contents/MacOS"
+   directory to your path, so that you can start Ipe and use the tools
+   ipetoipe, iperender, etc. from the command line.
+
+ * If you use a local LaTeX installation, then the 'pdflatex',
+   'xelatex', and 'lualatex' program must be in one of these
+   locations:
+
+     * /Library/TeX/texbin
+     * /usr/texbin
+     * /usr/local/texbin
+     * /usr/local/bin
+     * /opt/local/bin
+
+   If your pdflatex is somewhere else, change the PATH being searched
+   in "Ipe.app/Contents/Info.plist".
+
+--------------------------------------------------------------------

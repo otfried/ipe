@@ -1,0 +1,13 @@
+<ipestyle name="tikz-shapes">
+<preamble>
+\usepackage{tikz}
+\usetikzlibrary{shapes.misc}
+</preamble>
+<textstyle name="tikz" type="label" begin="\begin{tikzpicture}" 
+  end="\end{tikzpicture}"/>
+<textstyle name="purple-box" type="label" begin="\begin{tikzpicture}\node at (0,0) [rectangle, draw=purple!50,fill=purple!25] {" end="};\end{tikzpicture}"/>
+<textstyle name="green-disk" type="label" begin="\begin{tikzpicture}\node at (0,0) [circle, draw=green!75!black,fill=green!50] {" end="};\end{tikzpicture}"/>
+<textstyle name="ball" type="label" begin="\begin{tikzpicture}\node at (0,0) [circle,ball color=blue!50, text=white] {" end="};\end{tikzpicture}"/>
+<textstyle name="red-ball" type="label" begin="\begin{tikzpicture}\node at (0,0) [circle,ball color=red!50!black, text=white] {" end="};\end{tikzpicture}"/>
+<textstyle name="blue-white-round" type="label" begin="\begin{tikzpicture}\node at (0,0) [rounded rectangle, draw=black!50, top color=white, bottom color=blue!50] {" end="};\end{tikzpicture}"/>
+</ipestyle>

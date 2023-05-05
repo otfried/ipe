@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<!DOCTYPE ipestyle SYSTEM "ipe.dtd">
+<ipestyle name="note-paper">
+<symbol name="Background" transformations="translations" xform="yes">
+<group>
+<path stroke="0.25 0.629 1" pen="0.5" cap="1" join="1">
+0 808 m
+595 808 l
+0 784 m
+595 784 l
+0 760 m
+595 760 l
+0 736 m
+595 736 l
+0 712 m
+595 712 l
+0 688 m
+595 688 l
+0 664 m
+595 664 l
+0 640 m
+595 640 l
+0 616 m
+595 616 l
+0 592 m
+595 592 l
+0 568 m
+595 568 l
+0 544 m
+595 544 l
+0 520 m
+595 520 l
+0 496 m
+595 496 l
+0 472 m
+595 472 l
+0 448 m
+595 448 l
+0 424 m
+595 424 l
+0 400 m
+595 400 l
+0 376 m
+595 376 l
+0 352 m
+595 352 l
+0 328 m
+595 328 l
+0 304 m
+595 304 l
+0 280 m
+595 280 l
+0 256 m
+595 256 l
+0 232 m
+595 232 l
+0 208 m
+595 208 l
+0 184 m
+595 184 l
+0 160 m
+595 160 l
+0 136 m
+595 136 l
+0 112 m
+595 112 l
+0 88 m
+595 88 l
+0 64 m
+595 64 l
+0 40 m
+595 40 l
+0 16 m
+595 16 l
+</path>
+<path stroke="1 0 0.5" pen="0.5" cap="1" join="1">
+72 842 m
+72 0 l
+</path>
+</group>
+</symbol>
+</ipestyle>

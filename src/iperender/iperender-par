@@ -1,0 +1,6 @@
+#!/bin/sh
+# Allow running several instances of iperender in parallel
+dir=`mktemp -d`
+export IPELATEXDIR=$dir
+iperender $*
+rm -fr $dir

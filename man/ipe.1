@@ -1,0 +1,103 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invoke bold face and italics, 
+.\" respectively.
+.TH IPE 1 "September 1, 2011"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+ipe \- drawing editor for creating figures in PDF or EPS formats
+.SH SYNOPSIS
+.B ipe
+[ \fIQt options\fP ] [ -sheet \fIstylesheet\fP ] \fIfilename\fP
+
+.SH DESCRIPTION
+
+Ipe is a program that supports making small figures for inclusion into
+LaTeX documents as well as making multi-page PDF presentations.
+
+.PP
+This manual page only documents the command line options and
+environment variables.  Full documentation for using Ipe can be found
+in HTML and PDF format; see below.
+
+.TP
+\fB\-sheet\fR \fIstylesheet\fP
+add the Ipe style sheet in the indicated file to all newly created Ipe
+documents.  This option can be used more than once.
+
+.SH ENVIRONMENT VARIABLES
+
+Ipe respects the following environment variables:
+
+.TP
+\fBIPELATEXDIR\fP
+the directory where Ipe runs Pdflatex.
+
+.TP
+\fBIPELATEXPATH\fP
+the directory containing pdflatex and xelatex.  If not set, they are
+searched for on the path.
+
+.TP
+\fBIPELETPATH\fP a list of directories, separated by semicolons,
+containing ipelets. You can write a single underscore for the
+system-wide ipelet directory. If this variable is not set, the default
+consists of the system-wide ipelet directory, plus
+\fI~/.ipe/ipelets\fP on Unix, plus \fI~/Library/Ipe/Ipelets\fP on OS
+X.
+
+.TP
+\fBEDITOR\fP
+external editor to use for editing text objects.
+
+.TP
+\fBIPESTYLES\fP a list of directories, separated by semicolons, where
+Ipe looks for stylesheets. You can write a single underscore for the
+system-wide stylesheet directory.  If this variable is not set, the
+default consists of the system-wide stylesheet directory, plus
+\fI~/.ipe/styles\fP on Unix, plus \fI~/Library/Ipe/Styles\fP on OS X.
+
+.TP
+\fBIPEDEBUG\fP
+set this to 1 for debugging output.
+
+.TP
+\fBIPEDOCDIR\fP
+the directory containing the Ipe documentation.
+
+.TP
+\fBIPEICONDIR\fP directory containing icons for the Ipe user
+interface.
+
+.TP
+\fBIPELUAPATH\fP
+path for searching for Ipe Lua code.
+
+.SH AUTHOR
+Otfried Cheong
+
+.SH REPORTING BUGS
+.ad l
+Please report bugs using Ipe bugzilla at
+.I "http://ipe.otfried.org/bugzilla.html"
+
+.SH SEE ALSO
+.ad l
+Ipe is documented fully in
+.IR "The Ipe Manual" ,
+which is available online at
+.I "http://ipe.otfried.org/manual/manual.html" .

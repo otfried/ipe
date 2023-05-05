@@ -1,0 +1,47 @@
+#include <windows.h>
+
+#define IDI_MYICON			1
+#define IDD_INPUTBOX                    103
+#define IDC_INPUTBOX_PROMPT             1000
+#define IDC_INPUTBOX_EDIT 		1001
+#define IDC_STATIC                      -1
+
+IDI_MYICON ICON DISCARDABLE "../ipe/ipe.ico"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 7,2,27,1
+ PRODUCTVERSION 7,2,27,1
+ FILEFLAGSMASK VS_FF_PRERELEASE
+ FILEFLAGS VS_FF_PRERELEASE
+ FILEOS VOS__WINDOWS32
+ FILETYPE VFT_APP
+ FILESUBTYPE 0x0L
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName", "Otfried Cheong\0"
+      VALUE "FileDescription", "Ipe presentation tool\0"
+      VALUE "FileVersion", "7.2.27\0"
+      VALUE "InternalName", "IpePresenter\0"
+      VALUE "LegalCopyright", "Copyright (c) 2023\0"
+      VALUE "OriginalFilename", "IpePresenter.exe\0"
+      VALUE "ProductName", "IpePresenter\0"
+      VALUE "ProductVersion", "7.2.27\0"
+    END
+  END
+END
+
+IDD_INPUTBOX DIALOGEX 22, 17, 220, 60
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
+CAPTION "IpePresenter"
+FONT 8, "MS Shell Dlg", 700, 0, 0x0
+BEGIN
+    LTEXT           "Enter time in minutes:",IDC_INPUTBOX_PROMPT,6,4,157,14,SS_NOPREFIX
+    EDITTEXT        IDC_INPUTBOX_EDIT,6,20,200,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Ok",IDOK,100,40,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,156,40,50,14,WS_GROUP
+END
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "ipepresenter.exe.manifest"

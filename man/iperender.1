@@ -1,0 +1,94 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics, 
+.\" respectively.
+.TH IPERENDER 1 "June 27, 2009"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+iperender \- Export Ipe document as bitmap or SVG 
+.SH SYNOPSIS
+.B iperender
+( -png | -eps | -pdf | -svg ) 
+[ -page \fIpage\fP ] 
+[ -view \fIview\fP ]
+[ -resolution \fIdpi\fP ]
+[ -transparent ]
+[ -nocrop ] 
+\fIinput-file\fP \fIoutput-file\fP
+
+.SH DESCRIPTION
+.PP
+\fBiperender\fP exports an Ipe document as a PNG bitmap, as a
+figure in Encapsulated Postscript (EPS), in PDF, or in SVG format.
+Options are:
+.TP
+\fB-png\fP
+export as a PNG image
+.TP
+\fB-eps\fP
+export as an EPS figure
+.TP
+\fB-pdf\fP
+export as a PDF figure
+.TP
+\fB-svg\fP
+export as an SVG figure
+.TP
+\fB-page\fP \fIpage\fP
+export this page from a multipage document.
+.TP
+\fB-view\fP \fIview\fP
+export this view from a page with multiple views.
+.TP
+\fB-resolution\fP \fIdpi\fP
+set resolution for exporting to PNG.
+.TP
+\fB-transparent\fP
+make background transparent when exporting to PNG.
+.TP
+\fB-nocrop\fP
+do not crop the page to the bounding box of the objects.
+
+.SH ENVIRONMENT VARIABLES
+
+\fBiperender\fP respects the following environment variables:
+
+.TP
+\fBIPELATEXDIR\fP
+the directory where \fBipetoipe\fP runs Pdflatex.
+.TP
+\fBIPELATEXPATH\fP
+the directory containing pdflatex and xelatex.  If not set, they are
+searched for on the path.
+.TP
+\fBIPEDEBUG\fP
+set this to 1 for debugging output from \fBiperender\fP.
+
+.SH AUTHOR
+Otfried Cheong
+
+.SH REPORTING BUGS
+.ad l
+Please report bugs using Ipe bugzilla at
+.I "http://ipe.otfried.org/bugzilla.html"
+
+.SH SEE ALSO
+.ad l
+Ipe is documented fully in
+.IR "The Ipe Manual" ,
+which is available online at
+.I "http://ipe.otfried.org/manual/manual.html" .

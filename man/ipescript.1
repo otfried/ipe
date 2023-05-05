@@ -1,0 +1,72 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics, 
+.\" respectively.
+.TH IPESCRIPT 1 "August 28, 2011"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+ipescript \- Run an Ipe script (written in Lua)
+.SH SYNOPSIS
+.B ipescript
+\fIscript\fP
+{ \fIarguments\fP }
+
+.SH DESCRIPTION
+.PP
+\fBipescript\fP runs an Ipe script written in Lua.  The Ipe bindings
+are automatically available in the script.  Ipescript looks for the
+script in any of the script directories.
+
+.PP
+The \fIscript\fP argument should not contain the .lua extension.
+
+.SH ENVIRONMENT VARIABLES
+
+\fBipescript\fP respects the following environment variables:
+
+.TP
+\fBIPELATEXDIR\fP
+the directory where \fBipetoipe\fP runs Pdflatex.
+.TP
+\fBIPELATEXPATH\fP
+the directory containing pdflatex and xelatex.  If not set, they are
+searched for on the path.
+.TP
+\fBIPESCRIPTS\fP a list of directories where Ipescript will look for
+scripts.  When this variable is not set, Ipe searches first the
+current directory, then \fI~/.ipe/scripts\fP, and finally the
+system-wide Ipe script directory.  When this variable is set, it
+should contain a list of directories, separated by semicolons.  A
+single underscore is replaced by the system-wide Ipe script directory.
+.TP
+\fBIPEDEBUG\fP
+set this to 1 for debugging output from \fBipescript\fP.
+
+.SH AUTHOR
+Otfried Cheong
+
+.SH REPORTING BUGS
+.ad l
+Please report bugs using Ipe bugzilla at
+.I "http://ipe.otfried.org/bugzilla.html"
+
+.SH SEE ALSO
+.ad l
+Ipe is documented fully in
+.IR "The Ipe Manual" ,
+which is available online at
+.I "http://ipe.otfried.org/manual/manual.html" .

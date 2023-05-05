@@ -1,0 +1,270 @@
+/*! \page ipelets Ipelets
+
+Ipe is an \e extensible drawing editor, and you can write extensions
+to Ipe that will appear on the Ipe menu and can be called from inside
+Ipe like other Ipe functions.
+
+Ipe extensions are called Ipelets.  They are most easily written in
+the language Lua (www.lua.org), in which also most of Ipe's user
+interface is written.  Lua is a high-level interpreted language, in
+which interesting classes like vectors, matrices, and Ipe objects are
+made available. See \ref lua for more information about programming
+with Ipelib in Lua. 
+
+\subpage lua-ipelets explains how to write ipelets in Lua.
+
+Often, however, you will already have code that provides some
+geometric computation in another programming language such as C++.  In
+such a situation you can create Lua bindings for your code and use it
+from your Lua ipelet.  Creating Lua bindings is not documented here,
+as Ipe also provides an easier solution that will suffice in many
+cases.  You can implement your ipelet entirely in C++, and only need
+some boilerplate code in Lua that defines the labels and functions
+inside the ipelet.  Ipe will take care of loading and calling your C++
+code. 
+
+\subpage cpp-ipelets explains how to write ipelets in C++.
+
+*/
+
+// --------------------------------------------------------------------
+
+/*! \page cpp-ipelets Ipelets written in C++
+
+As in Ipe 6, it is possible to write ipelets entirely in C++.
+Different from Ipe 6, however, the labels of the ipelet and its
+functions must now be specified in a short Lua wrapper with some
+boilerplate code.  This Lua code will invoke your C++ methods.
+
+\section cpp-framework C++ ipelet framework
+
+The C++ code is in a dynamically loaded library (DLL), that you place
+on Ipe's C++ ipelet path.  The DLL has to be written in C++, and must
+export a function \c newIpelet that creates an object derived from the
+class \c Ipelet (defined in \e ipelet.h).  Here is a minimal ipelet
+implementation:
+
+\verbatim
+#include "ipelet.h"
+
+class MyIpelet : public ipe::Ipelet {
+public:
+  virtual int ipelibVersion() const { return IPELIB_VERSION; }
+  virtual bool run(int function, ipe::IpeletData *data, ipe::IpeletHelper *helper);
+};
+
+bool MyIpelet::run(int function, ipe::IpeletData *data, ipe::IpeletHelper *helper)
+{
+  // this is where you do all the work
+}
+
+IPELET_DECLARE ipe::Ipelet *newIpelet()
+{
+  return new MyIpelet;
+}
+\endverbatim
+
+When the ipelet is executed, Ipe hands it a structure with some
+information about the document, in particular a pointer to the current
+page.  The ipelet can examine the selected objects, and modify the
+page in any way it wishes. (It is not possible to modify the document
+outside the current page, as this would interfere with the undo
+stack).  It can also request services from the Ipe application through
+the \c IpeletHelper object, for instance to display a message in the
+status bar, to pop up message boxes and to obtain input from the user.
+
+The \e run method must return \e true if it modified the document
+page.  This is used to create an item on the undo stack so that this
+change can be undone.   If the \e run method returns \e false, then no
+undo stack item is created.  In this case, the ipelet must \b not
+modify the page.
+
+\section wrapper The Lua wrapper
+
+You need to provide a small Lua wrapper that declares the names of the
+ipelet and its methods, and that calls your C++ code when an ipelet
+method is invoked.  This wrapper will look as follows:
+
+\verbatim
+-- Lua wrapper for C++ ipelet "myipelet"
+
+label = "My Ipelet"
+
+about = "This ipelet is for explanation only"
+
+-- this variable will store the C++ ipelet when it has been loaded
+ipelet = false
+
+function run(ui, num)
+  if not ipelet then ipelet = assert(loadIpelet("myipelet"))
+  model:runIpelet(ipelet, num) 
+end
+
+methods = { { label = "First function of my ipelet" },
+            { label = "Second function of my ipelet" }
+          }
+\endverbatim
+
+If the ipelet contains only a single method, then the \c methods table
+is omitted.
+
+The Lua wrapper needs to be placed in Ipe's ipelet directory.  When
+Ipe starts up, it automatically loads all ipelets from this
+directory.  Note that the wrapper above does not immediately load the
+C++ ipelet (using \c loadIpelet) when the Lua wrapper is loaded by
+Ipe, but only when the first method of the ipelet is called.  This is
+considered good style.
+
+\section parameters Passing parameters from Lua wrapper to the C++ code
+
+Your Lua wrapper can include a table with key/value pairs that the C++
+code can examine to set parameters or otherwise decide what to do
+without recompiling the C++ code.
+
+The table is passed as an additional argument to model:runIpelet.  You
+can retrieve the value for a given key using the
+ipe::IpeletHelper.getParameter method.  
+
+\section kgon-example An example ipelet
+
+\e Kgon is a minimal ipelet that you can use as the basis for your own
+development.  It defines only a single function, and makes no use
+of the function argument to \c run.   It does show how to pass
+parameters from the Lua wrapper to the C++ code.
+
+\include kgon.cpp
+
+The Lua wrapper would look like this: 
+
+\include kgon.lua
+
+\section unix-compile Compiling ipelets on Unix
+
+The ipelet must be compiled as a shared library and must be linked
+with the Ipe library \e libipe.so.  C++ mandates that it must be
+compiled with the same compiler that was used to compile Ipe.  Have a
+look at the ipelet sources in the Ipe source distribution, and their
+makefiles for details on compiling them.
+
+\section win-compile Compiling ipelets on Windows
+
+The ipelet must be compiled as a DLL and must be linked with the Ipe
+library \e ipe.dll.  C++ mandates that it must be compiled with the
+same compiler that was used to compile Ipe.  If you use the binary Ipe
+distribution for Windows, that means you have to use the \e
+g++-mingw-w64-x86-64 toolchain.  Place the resulting \e kgon.dll in
+the \e ipelets subdirectory, and restart Ipe.
+
+\section dylib Linking with external libraries
+
+
+If you write an ipelet in C++, you probably want to link with some
+existing C++ library or framework such as CGAL, and the loader needs
+to find this framework when it loads the ipelet.
+
+On MacOS, you would for instance have a setting like this to tell the
+loader where to find shared libraries:
+\verbatim
+$ export DYLD_LIBRARY_PATH=$CGAL_DIR/lib
+\endverbatim
+
+Unfortunately, OSX integrity protection makes it impossible to specify
+such a setting inside Ipe, in \e ipe.conf, or in Ipe's \e Info.plist
+file.
+
+You can set the environment variable when you call Ipe from the
+command line, but when starting Ipe from the Finder this does not work.
+
+One clean solution is to make sure the path of the shared library is
+hard-coded in the ipelet, using otool and install_name_tool on OSX.
+
+A simpler solution is to make a dynamic link like this:
+
+\verbatim
+$ ln -s $HOME/CGAL/build/4.13R/lib $HOME/lib
+\endverbatim
+
+Since $HOME/lib is searched by dlopen, this will work.  You can check
+which paths are searched when Ipe loads an ipelet by setting this
+environment variable (and running Ipe from the command line):
+ 
+\verbatim
+$ export DYLD_PRINT_LIBRARIES=1
+\endverbatim
+
+*/	
+
+// --------------------------------------------------------------------
+
+/*! \page lua-ipelets Ipelets written in Lua
+
+Ipelets written in Lua have access to the entire Ipe user interface,
+and can in principle do anything that Ipe can do.
+
+An ipelet is a Lua script that is placed in Ipe's ipelet directory.
+
+The script needs to define three global variables, namely \c label, \c
+about, and either \c run or \c methods (or both).
+
+\li \c label is a string containing the label (that is, the name) of
+  the ipelet.  It is shown in the Ipelet menu.
+
+\li \c about is a string containing an 'about' or copyright notice for
+      the ipelet.  Ipe displays this in the "About the ipelets" box.
+
+\li \c run is used if the ipelet contains only a single method.
+    When the ipelet is invoked, the function \c run is called by Lua.
+
+\li \c methods is used if the ipelet contains more than one method.
+    It is an array with an entry for each method.  Each entry is a
+    table with keys \c label (defining the label of the method) and
+    \c run (a Lua function that will be called by Ipe to execute this
+    method).  If an entry does not have a \c run field, then the
+    global \c run method is called instead.
+
+If an ipelet defines no \c label variable, then the ipelet is not
+added to the Ipelet menu.  Such ipelets can be used to customize Ipe.
+
+When Ipe invokes an ipelet, the Lua method is called with two
+arguments: the first argument \a model is the active Ipe user
+interface, the second is the index of the method being invoked.
+
+The "global" environment of the ipelet is a private environment for
+this ipelet only, so there is no need to fear polluting the global
+namespace - you can use names here freely.  The commonly used names
+have been imported from Ipe's global namespace already, and you can
+access any others you may need through \c _G.
+
+It is important that the ipelet does \e not directly modify the
+document.  This would mess up the undo stack, and could cause Ipe to
+crash on undo or redo.  Instead, to modify the document the ipelet
+needs to create an undo item \c t and call \c model:register(t).
+
+If all the ipelet does is to create a new object \c obj, then it can
+simply call 
+\verbatim
+model:creation("create new object", obj)
+\endverbatim
+
+The following are some useful methods and data structures:
+\verbatim
+model.doc     -- the document
+model.pno     -- current page number
+model.vno     -- current view number
+
+model:page()  -- returns current page
+
+model:register(t) -- register undo item and execute its redo method
+model:creation("label", obj)  -- register undo item for object creation
+
+model:warning(text, details)  -- display a warning box
+
+model.attributes   -- attributes currently set in user interface
+model.snap         -- currently active snap settings
+\endverbatim
+
+Look at the existing ipelets for inspiration.
+
+*/
+
+// --------------------------------------------------------------------
