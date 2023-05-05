@@ -1,0 +1,27 @@
+name: Build Ipe
+on: [push]
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    env:
+      IPEPREFIX: /usr/local
+      QT_CFLAGS: >-
+        -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
+        -I/usr/include/x86_64-linux-gnu/qt6/QtWidgets
+        -I/usr/include/x86_64-linux-gnu/qt6/QtGui
+        -I/usr/include/x86_64-linux-gnu/qt6/QtCore
+        -I/usr/include/x86_64-linux-gnu/qt6
+      QT_LIBS: -lQt6Widgets -lQt6Gui -lQt6Core
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Install build tools
+        run: |
+          sudo apt-get install \
+                  qt6-base-dev qt6-base-dev-tools \
+                  liblua5.4-dev libspiro-dev
+      - name: Compile
+        run: |
+          cd src
+          make 
+      - run: 'echo "Status ${{ job.status }}"'
