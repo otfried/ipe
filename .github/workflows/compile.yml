@@ -21,7 +21,7 @@ jobs:
         run: |
           sudo apt-get install \
                   qt6-base-dev qt6-base-dev-tools \
-                  liblua5.4-dev libspiro-dev
+                  liblua5.4-dev libspiro-dev libqhull-r7 libqhull-dev
       - name: Compile
         run: |
           cd src
