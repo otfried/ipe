@@ -61,7 +61,7 @@ IpeAction::IpeAction(int cmd, const QString &text, const char *shortcut,
 {
   if (shortcut)
     setShortcut(QKeySequence(shortcut));
-  connect(this, &QAction::triggered, [=] () { parent->cmd(iCommand); });
+  connect(this, &QAction::triggered, [parent,this] () { parent->cmd(iCommand); });
 }
 
 // --------------------------------------------------------------------
@@ -174,7 +174,7 @@ MainWindow::MainWindow(BeamerView* bv, Qt::WindowFlags f) :
   iViewMenu->addAction(iBlackoutAction);
 
   connect(iViewMenu, &QMenu::aboutToShow,
-	  [=] () {
+	  [this] () {
 	    iShowPresentationAction->setChecked(iScreen->isVisible());
 	    iFullScreenAction->setChecked((iScreen->windowState() & Qt::WindowFullScreen) != 0);
 	    iBlackoutAction->setChecked(iScreen->pdfView()->blackout());
@@ -208,14 +208,14 @@ MainWindow::MainWindow(BeamerView* bv, Qt::WindowFlags f) :
   iHelpMenu->addAction(new IpeAction(EAbout, "About IpePresenter", nullptr, this));
 
   connect(iScreen->pdfView(), &PdfView::sizeChanged,
-	  [=] () { fitBox(mediaBox(-1), iScreen->pdfView()); });
+	  [this] () { fitBox(mediaBox(-1), iScreen->pdfView()); });
   connect(iCurrent, &PdfView::sizeChanged,
-	  [=] () { fitBox(mediaBox(-1), iCurrent); });
+	  [this] () { fitBox(mediaBox(-1), iCurrent); });
   connect(iNext, &PdfView::sizeChanged,
-	  [=] () { fitBox(mediaBox(-2), iNext); });
+	  [this] () { fitBox(mediaBox(-2), iNext); });
 
   connect(iCurrent, &PdfView::mouseButton,
-	  [=] (int button, const Vector &pos) {
+	  [this] (int button, const Vector &pos) {
 	    const PdfDict *action = findLink(pos);
 	    if (action) {
 	      interpretAction(action);

@@ -12,6 +12,8 @@ jobs:
         -I/usr/include/x86_64-linux-gnu/qt6/QtCore
         -I/usr/include/x86_64-linux-gnu/qt6
       QT_LIBS: -lQt6Widgets -lQt6Gui -lQt6Core
+      IPESTRICT: 1
+      IPEQVORONOI: 1
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
