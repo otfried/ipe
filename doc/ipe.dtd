@@ -1,0 +1,260 @@
+<!ELEMENT ipe (info?,preamble?,(bitmap|ipestyle)*,page+)>
+<!ATTLIST ipe 
+	  creator CDATA #IMPLIED
+	  version CDATA #REQUIRED>
+
+<!ELEMENT info EMPTY>
+<!ATTLIST info 
+	  created CDATA #IMPLIED
+	  modified CDATA #IMPLIED
+	  title CDATA #IMPLIED
+	  author CDATA #IMPLIED
+	  subject CDATA #IMPLIED
+	  keywords CDATA #IMPLIED
+	  pagemode CDATA #FIXED "fullscreen"
+	  numberpages (yes|no) #IMPLIED
+	  tex (pdftex|xetex|luatex) "pdftex" >
+
+<!ELEMENT preamble (#PCDATA)>
+
+<!ELEMENT bitmap (#PCDATA)>
+<!ATTLIST bitmap
+	  id CDATA #REQUIRED
+	  width CDATA #REQUIRED
+	  height CDATA #REQUIRED
+	  ColorSpace (DeviceGray|DeviceRGB|DeviceCMYK) "DeviceRGB"
+	  BitsPerComponent CDATA #FIXED "8"
+	  ColorKey CDATA #IMPLIED
+	  length CDATA #IMPLIED
+	  encoding (base64) #IMPLIED
+	  Filter (FlateDecode|DCTDecode) #IMPLIED >
+
+<!ELEMENT page (notes?,layer*,view*,(group|image|use|text|path)*)>
+<!ATTLIST page
+	  title CDATA #IMPLIED
+	  section CDATA #IMPLIED
+	  subsection CDATA #IMPLIED
+	  marked (yes|no) "yes" >
+
+<!ELEMENT notes (#PCDATA)>
+
+<!ELEMENT layer EMPTY>
+<!ATTLIST layer
+	  name CDATA #REQUIRED
+	  edit (yes|no) "yes"
+	  snap (never|visible|always) "visible"
+	  data CDATA #IMPLIED >
+
+<!ELEMENT view (map|transform)*>
+<!ATTLIST view
+	  layers CDATA #REQUIRED
+	  active CDATA #REQUIRED
+	  effect CDATA "normal"
+	  name   CDATA ""
+	  marked (yes|no) "yes" >
+
+<!ELEMENT map EMPTY>
+<!ATTLIST map
+	  kind (pen|symbolsize|arrowsize|opacity|color|dashstyle|symbol) #REQUIRED
+	  from CDATA #REQUIRED
+	  to   CDATA #REQUIRED >
+
+<!ELEMENT transform EMPTY>
+<!ATTLIST transform
+	  layer  CDATA #REQUIRED
+	  matrix CDATA #REQUIRED >
+
+<!ELEMENT group ((group|image|use|text|path)*)>
+<!ATTLIST group
+	  layer CDATA #IMPLIED
+	  matrix CDATA "1 0 0 1 0 0"
+	  pin (yes|h|v) #IMPLIED
+	  transformations (affine|rigid|translations) "affine"
+	  clip CDATA #IMPLIED 
+	  url CDATA #IMPLIED
+	  decoration CDATA #IMPLIED >
+
+<!ELEMENT image (#PCDATA)>
+<!ATTLIST image 
+	  layer CDATA #IMPLIED
+	  matrix CDATA "1 0 0 1 0 0"
+	  pin (yes|h|v) #IMPLIED
+	  transformations (affine|rigid|translations) "affine"
+	  opacity CDATA "normal"
+	  rect CDATA #REQUIRED
+	  bitmap CDATA #IMPLIED
+	  width CDATA #IMPLIED
+	  height CDATA #IMPLIED
+	  ColorSpace (DeviceGray|DeviceRGB|DeviceCMYK) "DeviceRGB"
+	  BitsPerComponent CDATA #FIXED "8"
+	  length CDATA #IMPLIED
+	  encoding (base64) #IMPLIED
+	  Filter (FlateDecode|DCTDecode) #IMPLIED >
+
+<!ELEMENT use EMPTY>
+<!ATTLIST use
+	  layer CDATA #IMPLIED
+	  matrix CDATA "1 0 0 1 0 0"
+	  pin (yes|h|v) #IMPLIED
+	  transformations (affine|rigid|translations) "affine"
+	  name CDATA #REQUIRED
+	  size CDATA #IMPLIED
+	  pos CDATA #IMPLIED
+	  stroke CDATA "black"
+	  fill CDATA "black"
+	  pen CDATA "normal" >
+
+<!ELEMENT text (#PCDATA)>
+<!ATTLIST text
+	  layer CDATA #IMPLIED
+	  matrix CDATA "1 0 0 1 0 0"
+	  pin (yes|h|v) #IMPLIED
+	  transformations (affine|rigid|translations) "affine"
+	  type (label|minipage) "label"
+	  stroke CDATA "black"
+	  size CDATA #IMPLIED
+	  pos CDATA #REQUIRED
+	  width CDATA #IMPLIED
+	  opacity CDATA "normal"
+	  height CDATA #IMPLIED
+	  depth CDATA #IMPLIED
+	  valign (top|bottom|center|baseline) #IMPLIED
+	  halign (left|right|center) #IMPLIED
+	  style CDATA #IMPLIED >
+
+<!ELEMENT path (#PCDATA)>
+<!ATTLIST path
+	  layer CDATA #IMPLIED
+	  matrix CDATA "1 0 0 1 0 0"
+	  pin (yes|h|v) #IMPLIED
+	  transformations (affine|rigid|translations) "affine"
+	  stroke CDATA #IMPLIED
+	  fill CDATA #IMPLIED
+	  tiling CDATA "normal"
+	  gradient CDATA "normal"
+	  dash CDATA #IMPLIED
+	  pen CDATA "normal"
+	  opacity CDATA "normal"
+	  stroke-opacity CDATA "normal"
+	  cap CDATA #IMPLIED
+	  join CDATA #IMPLIED
+	  fillrule (wind|eofill) #IMPLIED
+	  arrow CDATA #IMPLIED
+	  rarrow CDATA #IMPLIED >
+
+<!ELEMENT ipestyle ((bitmap|symbol|preamble|cmap|textstyle|layout|textpad|
+	  titlestyle|pagenumberstyle|pathstyle|gradient|tiling|effect|
+	  color|dashstyle|pen|textsize|textstretch|opacity|
+	  symbolsize|arrowsize|gridsize|anglesize)*)>
+<!ATTLIST ipestyle name CDATA #IMPLIED>
+
+<!ELEMENT pen EMPTY>
+<!ATTLIST pen name CDATA #REQUIRED value CDATA #REQUIRED>
+
+<!ELEMENT symbolsize EMPTY>
+<!ATTLIST symbolsize name CDATA #REQUIRED value CDATA #REQUIRED>
+
+<!ELEMENT arrowsize EMPTY>
+<!ATTLIST arrowsize name CDATA #REQUIRED value CDATA #REQUIRED>
+
+<!ELEMENT color EMPTY>
+<!ATTLIST color name CDATA #REQUIRED value CDATA #REQUIRED>
+
+<!ELEMENT dashstyle EMPTY>
+<!ATTLIST dashstyle name CDATA #REQUIRED value CDATA #REQUIRED>
+
+<!ELEMENT textsize EMPTY>
+<!ATTLIST textsize name CDATA #REQUIRED value CDATA #REQUIRED>
+
+<!ELEMENT textstretch EMPTY>
+<!ATTLIST textstretch name CDATA #REQUIRED value CDATA #REQUIRED>
+
+<!ELEMENT opacity EMPTY>
+<!ATTLIST opacity name CDATA #REQUIRED value CDATA #REQUIRED>
+
+<!ELEMENT gridsize EMPTY>
+<!ATTLIST gridsize name CDATA #REQUIRED value CDATA #REQUIRED>
+
+<!ELEMENT anglesize EMPTY>
+<!ATTLIST anglesize name CDATA #REQUIRED value CDATA #REQUIRED>
+
+<!ELEMENT symbol (group|image|use|text|path)>
+<!ATTLIST symbol 
+	  name CDATA #REQUIRED
+	  xform (yes|no) "no"
+	  transformations (affine|rigid|translations) #IMPLIED>
+
+<!ELEMENT gradient (stop)+>
+<!ATTLIST gradient
+	  name CDATA #REQUIRED
+	  type (axial|radial) "axial"
+	  extend (yes|no) "no"
+	  matrix CDATA "1 0 0 1 0 0"
+	  coords CDATA #REQUIRED>
+
+<!ELEMENT stop EMPTY>
+<!ATTLIST stop
+	  offset CDATA #REQUIRED
+	  color CDATA #REQUIRED>
+
+<!ELEMENT tiling EMPTY>
+<!ATTLIST tiling
+	  name CDATA #REQUIRED
+	  angle CDATA #REQUIRED
+	  step CDATA #REQUIRED
+	  width CDATA #REQUIRED>
+	  
+<!ELEMENT cmap EMPTY>
+<!ATTLIST cmap font CDATA #REQUIRED>
+
+<!ELEMENT textstyle EMPTY>
+<!ATTLIST textstyle 
+	  name CDATA #REQUIRED
+	  begin CDATA #REQUIRED
+	  end CDATA #REQUIRED
+	  type (label|minipage) "minipage">
+
+<!ELEMENT layout EMPTY>
+<!ATTLIST layout 
+	  paper CDATA #REQUIRED
+	  origin CDATA #REQUIRED
+	  frame CDATA #REQUIRED
+	  crop (yes|no) "yes"
+	  skip CDATA #IMPLIED>
+
+<!ELEMENT textpad EMPTY>
+<!ATTLIST textpad 
+	  left CDATA #REQUIRED
+	  right CDATA #REQUIRED
+	  top CDATA #REQUIRED
+	  bottom CDATA #REQUIRED>
+
+<!ELEMENT titlestyle EMPTY>
+<!ATTLIST titlestyle
+	  pos CDATA #REQUIRED
+	  color CDATA #REQUIRED
+	  size CDATA #REQUIRED
+	  halign CDATA #IMPLIED
+	  valign CDATA #IMPLIED>
+
+<!ELEMENT pagenumberstyle (#PCDATA)>
+<!ATTLIST pagenumberstyle
+	  pos CDATA #REQUIRED
+	  color CDATA "black"
+	  size CDATA "normal"
+	  valign (top|bottom|center|baseline) "baseline"
+	  halign (left|right|center) "left">
+
+<!ELEMENT pathstyle EMPTY>
+<!ATTLIST pathstyle 
+	  cap CDATA #IMPLIED
+	  join CDATA #IMPLIED
+	  fillrule CDATA #IMPLIED>
+
+<!ELEMENT effect EMPTY>
+<!ATTLIST effect
+	  name CDATA #REQUIRED
+	  duration CDATA #IMPLIED
+	  transition CDATA #IMPLIED
+	  effect CDATA #REQUIRED>
+
