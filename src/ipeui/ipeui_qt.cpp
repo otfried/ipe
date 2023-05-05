@@ -378,7 +378,9 @@ bool PDialog::buildAndRun(int w, int h)
 	  b->setCurrentIndex(m.value);
 	  if (m.lua_method != LUA_NOREF) {
 	    connect<void (QComboBox::*)(int)>(b, &QComboBox::activated,
-					      [=](int index){ callLua(m.lua_method); });
+					      [this,method=m.lua_method](int index){
+						callLua(method);
+					      });
 	  }
 	  w = b;
 	}
@@ -390,7 +392,7 @@ bool PDialog::buildAndRun(int w, int h)
 	    l->addItem(QString::fromUtf8(m.items[k].c_str()));
 	  if (m.lua_method != LUA_NOREF) {
 	    connect(l, &QListWidget::itemActivated,
-		    [=](QListWidgetItem *){ callLua(m.lua_method); });
+		    [this,method=m.lua_method](QListWidgetItem *){ callLua(method); });
 	  }
 	  w = l;
 	}
