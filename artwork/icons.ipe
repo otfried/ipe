@@ -1,0 +1,2723 @@
+<?xml version="1.0"?>
+<!DOCTYPE ipe SYSTEM "ipe.dtd">
+<ipe version="70216" creator="Ipe 7.2.17">
+<info created="D:20200520161559" modified="D:20200520180808"/>
+<ipestyle name="icons">
+<color name="black" value="0.137 0.149 0.161"/>
+<color name="red" value="0.855 0.267 0.325"/>
+<color name="blue" value="0.114 0.6 0.953"/>
+<dashstyle name="dotted" value="[1 3] 0"/>
+<layout paper="22 22" origin="0 0" frame="22 22" crop="no"/>
+</ipestyle>
+<ipestyle name="dark">
+<color name="black" value="0.937 0.941 0.945"/>
+</ipestyle>
+<page section="mode_arc1">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+15.0793 13.3582 m
+9.30054 0 0 9.30054 11 5 6.86469 13.3306 a
+</path>
+<path matrix="1 0 0 1 1.5 -4.5" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+<path matrix="1 0 0 1 7 -12" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+<path matrix="1 0 0 1 -0.5 0" fill="black">
+15 18 m
+15 17 l
+10 17 l
+10 18 l
+h
+</path>
+<path matrix="-1 0 0 1 21 0" fill="black">
+14 17.6 m
+11 15 l
+11 20 l
+h
+</path>
+<path matrix="1 0 0 1 12.5 -4.5" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+</page>
+<page section="mode_arc2">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+15.0793 13.3582 m
+9.30054 0 0 9.30054 11 5 6.86469 13.3306 a
+</path>
+<path matrix="1 0 0 1 1.5 -4.5" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+<path matrix="1 0 0 1 7 -12" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+<path matrix="1 0 0 1 0.5 0" fill="black">
+8 18 m
+8 17 l
+12 17 l
+12 18 l
+h
+</path>
+<path matrix="1 0 0 1 1 0" fill="black">
+14 17.6 m
+11 15 l
+11 20 l
+h
+</path>
+<path matrix="1 0 0 1 12.5 -4.5" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+</page>
+<page section="mode_arc3">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+5.78823 6.96879 m
+7.24784 0 0 -7.24784 12.625 9.375 6.50238 13.2538 a
+</path>
+<path stroke="black" pen="1" cap="1" join="1">
+8.82632 15.5476 m
+7.24784 0 0 -7.24784 12.625 9.375 14.9831 16.2285 a
+</path>
+<path matrix="1 0 0 1 3.5 -2.5" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+<path matrix="1 0 0 1 2.5 -11.5" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+<path matrix="1 0 0 1 12.5 -1.5" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+</page>
+<page section="mode_circle1">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+14.5761 17.0176 m
+7 0 0 7 11 11 17.0236 14.566 a
+</path>
+<path matrix="1 0 0 1 7 -6" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+<path matrix="1 0 0 1 12 -1" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+</page>
+<page section="mode_circle2">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+5.05135 7.31034 m
+7 0 0 -7 11 11 14.5761 17.0176 a
+</path>
+<path stroke="black" pen="1" cap="1" join="1">
+17.0236 14.566 m
+7 0 0 -7 11 11 7.3985 4.99756 a
+</path>
+<path matrix="1 0 0 1 2 -11" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+<path matrix="1 0 0 1 12 -1" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+</page>
+<page section="mode_circle3">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+5.34121 15.1204 m
+7 0 0 -7 11 11 14.5761 17.0176 a
+</path>
+<path stroke="black" pen="1" cap="1" join="1">
+17.0325 14.5508 m
+7 0 0 -7 11 11 15.0768 5.3097 a
+</path>
+<path stroke="black" pen="1" cap="1" join="1">
+11.8923 4.05711 m
+7 0 0 -7 11 11 4.03775 11.726 a
+</path>
+<path matrix="1 0 0 1 9.5 -12.5" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+<path matrix="1 0 0 1 12 -1" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+<path matrix="1 0 0 1 0.5 -3.5" fill="blue">
+1 0 0 1 4 17 e
+2 0 0 2 4 17 e
+</path>
+</page>
+<page section="mode_graph">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" dash="dotted" pen="1" cap="1">
+10.2779 6.44417 m
+5.79907 15.4019 l
+</path>
+<path stroke="black" pen="1">
+11.4472 5.89443 m
+16.5528 16.1056 l
+</path>
+<path fill="black">
+8 18 m
+8 17 l
+12 17 l
+12 18 l
+h
+</path>
+<path fill="black">
+14 17.6 m
+11 15 l
+11 20 l
+h
+</path>
+<path fill="black">
+2 0 0 2 11 5 e
+</path>
+<path matrix="1 0 0 1 6 12" fill="black">
+2 0 0 2 11 5 e
+</path>
+<path matrix="1 0 0 1 -6 12" fill="black">
+2 0 0 2 11 5 e
+</path>
+</page>
+<page section="mode_ink">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+12.002 3 m
+4.6582 10.3125 l
+3.25195 11.75 l
+3.00195 12 l
+3.00195 16 l
+4.00195 16 l
+6.00195 16 l
+7.00195 16 l
+7.25195 15.75 l
+7.62695 15.4062 l
+8.31445 14.6875 l
+8.68945 14.3438 l
+15 8 l
+16 7 l
+12.002 3 l
+h
+11.4082 5 m
+14 7.59375 l
+9.7207 11.8438 l
+7.1582 9.25 l
+11.4082 5 l
+h
+6.43945 9.96875 m
+9.0332 12.5625 l
+8.31445 13.2812 l
+5.7207 10.6875 l
+6.00195 10.4062 l
+6.43945 9.96875 l
+h
+5.0332 11.375 m
+7.62695 13.9688 l
+6.9082 14.6875 l
+4.31445 12.0938 l
+5.0332 11.375 l
+h
+16.498 14 m
+16.2364 14.0001
+15.5436 14.046
+14.4355 14.5625 c
+14.0892 14.7241
+13.8018 14.907
+13.4062 15.125 c
+13.1951 15.2414
+12.438 15.6193
+12.1562 15.75 c
+11.3306 16.1332
+11.0562 16.2299
+10.3438 16.5 c
+9.65424 16.7615
+8.9106 16.9987
+8.40625 17.1875 c
+6.28335 17.9823
+3 18
+3 18 c
+3 19 l
+3 19
+6.32741 19.032
+8.75 18.125 c
+9.07135 18.0047
+9.63148 17.8074
+10.1562 17.625 c
+10.9633 17.3306
+11.8354 16.9683
+12.5625 16.6562 c
+12.8672 16.5148
+13.5734 16.1652
+13.873 16 c
+14.3133 15.7574
+14.6069 15.5783
+14.8418 15.4688 c
+15.3552 15.1663
+15.9252 14.9864
+16.498 15 c
+16.4532 15.0002
+16.6718 15.001
+16.873 15.0938 c
+17.0743 15.1777
+17.2978 15.3273
+17.4668 15.4688 c
+17.7941 15.8006
+17.9314 16.0539
+17.998 16.5 c
+17.9723 17.182
+17.7374 17.3957
+17.248 17.7812 c
+16.9242 17.9958
+16.4683 18.0348
+16 18.0039 c
+16 18.9727 l
+16.7837 18.9747
+17.411 18.8183
+17.7793 18.625 c
+18.616 18.1478
+19.0273 17.2886
+18.998 16.4688 c
+18.993 16.1808
+18.9208 15.9437
+18.7793 15.625 c
+18.6377 15.3064
+18.4353 14.9489
+18.123 14.6875 c
+17.6412 14.2643
+17.3994 14.0781
+16.498 14 c
+h
+</path>
+</group>
+</page>
+<page section="mode_label">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="black">
+6 4 m
+3 4 l
+9 19 l
+13 19 l
+19 4 l
+16 4 l
+14 9 l
+8 9 l
+h
+13.1429 11 m
+8.85714 11 l
+11 16 l
+h
+</path>
+</page>
+<page section="mode_laser">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" matrix="0.540551 0.540551 -0.540551 0.540551 10.336 -0.228078" stroke="blue" pen="2" cap="1" join="1">
+9.51444 11.2861 m
+4 0 0 -4 11 15 12.4856 11.2861 a
+</path>
+<path matrix="0.707107 0.707107 -0.707107 0.707107 11.3536 -4.2028" fill="black">
+10 15 m
+10 2 l
+11 2 l
+11 15 l
+h
+</path>
+</page>
+<page section="mode_lines">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+11.0616 14.9555 m
+13.9387 7.04359 l
+</path>
+<path stroke="black" pen="1" cap="1" join="1">
+6.50428 10.906 m
+9.49547 15.0937 l
+</path>
+<path matrix="1 0 0 1 5.5 -0.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+<path matrix="1 0 0 1 0.5 -7.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+<path matrix="1 0 0 1 9.5 -11.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+</page>
+<page section="mode_lines_variant">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+6.67683 15.3232 m
+15.2997 6.70025 l
+</path>
+<path matrix="1 0 0 1 0.5 -0.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+<path matrix="1 0 0 1 11.5 -11.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+</page>
+<page section="mode_marks">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" matrix="1 0 0 1 1 -1" fill="black">
+3 19 m
+3 14 l
+8 14 l
+8 19 l
+h
+</path>
+<path matrix="1 0 0 1 10 -1" fill="black">
+3 19 m
+3 14 l
+8 14 l
+8 19 l
+h
+4 18 m
+4 15 l
+7 15 l
+7 18 l
+h
+</path>
+<path matrix="1.1 0 0 1.1 -0.1 -10.55" fill="black">
+2.5 0 0 2.5 6 15.5 e
+</path>
+<path matrix="1.08 0 0 1.08 -1.78 -1.06" stroke="black" pen="1" join="1">
+14 5 m
+18 9 l
+</path>
+<path matrix="1.08 0 0 1.08 -1.78 -1.06" stroke="black" pen="1" join="1">
+14 9 m
+18 5 l
+</path>
+</page>
+<page section="mode_math">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="black">
+3 18 m
+10 18 l
+10 17 l
+3 17 l
+h
+</path>
+<path fill="black">
+3 9 m
+10 9 l
+10 8 l
+3 8 l
+h
+</path>
+<path matrix="1 0 0 1 0 1" fill="black">
+6 6 m
+6 5 l
+7 5 l
+7 6 l
+h
+</path>
+<path fill="black">
+3 9 m
+7 13 l
+3 17 l
+4.41421 17 l
+8.41421 13 l
+4.41421 9 l
+h
+</path>
+<path fill="black">
+6 5 m
+6 3 l
+7 3 l
+7 5 l
+h
+</path>
+<path matrix="1 0 0 1 -1 0" fill="black">
+16 14 m
+16 7 l
+17 7 l
+17 14 l
+h
+</path>
+<path matrix="1 0 0 1 -1 0" fill="black">
+12 11 m
+3 0 0 3 15 11 16.6641 8.50385 a
+16.4142 9.58579 l
+2 0 0 -2 15 11 13 11 a
+13 14 l
+12 14 l
+h
+</path>
+<path matrix="1 0 0 1 12 3" fill="black">
+6 6 m
+6 5 l
+7 5 l
+7 6 l
+h
+</path>
+<path matrix="1 0 0 1 12 2" fill="black">
+6 5 m
+6 3 l
+7 3 l
+7 5 l
+h
+</path>
+<path matrix="1 0 0 1 -1 0" fill="black">
+17 7 m
+4 0 0 -4 13 7 12.3424 3.05442 a
+12.5068 4.04082 l
+3 0 0 3 13 7 16 7 a
+h
+</path>
+</page>
+<page section="mode_pan">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+14.127 3.00385 m
+13.5056 3.04153
+13.0804 3.43167
+12.7813 3.9145 c
+12.4549 2.72796
+10.1423 2.65374
+9.6797 4.33555 c
+9.31624 3.94421
+8.85222 3.67323
+8.26759 3.71474 c
+8.24415 3.71474 l
+7.17507 3.80837
+6.41849 4.74853
+6.60157 5.77888 c
+7.51368 11.09 l
+7.16844 10.8531
+6.74929 10.4469
+6.44142 10.3126 c
+5.72793 10.0011
+5.07489 9.96202
+4.54883 10.1128 c
+3.49673 10.4142
+3.18164 11.3995
+3.18164 11.3995 c
+3 11.9106 l
+3.45508 12.222 l
+4.45956 12.8827
+5.47864 14.4843
+6.44142 15.9762 c
+6.9228 16.7221
+7.4023 17.4273
+7.94728 17.9973 c
+8.49225 18.5672
+9.11018 19.0051
+9.94142 19 c
+9.9551 19 l
+12.2885 18.9988
+14.6217 19.0002
+16.9551 19 c
+17.1368 19 l
+17.1602 18.3321 l
+17.1602 18.3321
+17.2244 17.0916
+17.3418 15.6217 c
+17.4593 14.1519
+17.6413 12.4375
+17.8438 11.6443 c
+18.9395 7.35734 l
+19.2551 6.17955
+18.293 5.04646
+17.0469 5.13653 c
+16.6645 5.15786
+16.3267 5.32185
+16.043 5.53604 c
+16.0645 4.89174 l
+16.1359 3.81567
+15.2315 2.93433
+14.127 3.00385 c
+h
+11.2539 3.71279 m
+11.2539 3.71475 l
+11.8345 3.6792
+12.3929 4.16877
+12.416 4.73507 c
+12.6914 9.64474 l
+12.7069 9.92241
+12.8837 9.91904
+12.8965 9.66824 c
+13.1465 4.73507 l
+13.1679 4.21328
+13.6369 3.74506
+14.1719 3.71279 c
+14.7909 3.67369
+15.376 4.24365
+15.336 4.84669 c
+15.0625 10.244 l
+15.0543 10.4062
+15.1017 10.486
+15.1524 10.2891 c
+16.0879 6.668 l
+16.1946 6.22355
+16.6241 5.87156
+17.0918 5.84547 c
+17.7833 5.79571
+18.4076 6.52555
+18.2325 7.17913 c
+17.1368 11.466 l
+16.6969 13.1889
+16.475 17.4841
+16.4493 17.9973 c
+10 18 l
+10 18 l
+7.88349 17.9786
+6.33605 13.2479
+3.86524 11.6227 c
+3.86524 11.6227
+4.75577 9.06706
+8.40431 12.6215 c
+8.40431 12.6215
+8.42991 12.5027
+8.47267 12.3336 c
+8.44596 12.2471
+8.42944 12.1555
+8.4258 12.0653 c
+7.33204 5.66726 l
+7.22919 5.08838
+7.71196 4.47629
+8.31251 4.42368 c
+8.85833 4.38529
+9.39622 4.80671
+9.47463 5.33433 c
+10.2735 9.99921 l
+10.3064 10.1917
+10.5383 10.1414
+10.5235 9.88954 c
+10.2285 4.84669 l
+10.1916 4.28815
+10.6805 3.7467
+11.2539 3.71279 c
+h
+</path>
+</group>
+</page>
+<page section="mode_paragraph">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="black">
+3 19 m
+3 18 l
+16 18 l
+16 19 l
+h
+</path>
+<path fill="black">
+3 16 m
+3 15 l
+19 15 l
+19 16 l
+h
+</path>
+<path fill="black">
+3 13 m
+3 12 l
+17 12 l
+17 13 l
+h
+</path>
+<path fill="black">
+3 10 m
+3 9 l
+18 9 l
+18 10 l
+h
+</path>
+<path fill="black">
+3 7 m
+3 6 l
+17 6 l
+17 7 l
+h
+</path>
+<path fill="black">
+3 4 m
+3 3 l
+8 3 l
+8 4 l
+h
+</path>
+</page>
+<page section="mode_parallelogram">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+5.59596 11.8152 m
+9.5 16.5 l
+15.9401 13.2799 l
+</path>
+<path stroke="black" pen="1" cap="1" join="1">
+16.4379 11.2255 m
+13.5138 7.71657 l
+</path>
+<path matrix="1 0 0 1 -1 0" stroke="black" pen="1" cap="1" join="1">
+7.01113 9.74443 m
+12.0569 7.22154 l
+</path>
+<path matrix="1 0 0 1 7.5 -10.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+<path matrix="1 0 0 1 12.5 -4.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+<path matrix="1 0 0 1 -0.5 -6.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+</page>
+<page section="mode_polygons">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+11.0616 14.9555 m
+13.9387 7.04359 l
+</path>
+<path stroke="black" pen="1" cap="1" join="1">
+6.97866 8.84282 m
+12.9944 6.16914 l
+</path>
+<path stroke="black" pen="1" cap="1" join="1">
+6.50428 10.906 m
+9.49547 15.0937 l
+</path>
+<path matrix="1 0 0 1 5.5 -0.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+<path matrix="1 0 0 1 0.5 -7.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+<path matrix="1 0 0 1 9.5 -11.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+</page>
+<page section="mode_rectangles1">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="black">
+7 17 m
+17 17 l
+17 7 l
+16 7 l
+16 16 l
+7 16 l
+h
+</path>
+<path fill="black">
+5 15 m
+6 15 l
+6 6 l
+15 6 l
+15 5 l
+5 5 l
+h
+</path>
+<path matrix="1 0 0 1 0.5 -0.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+<path matrix="1 0 0 1 11.5 -11.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+</page>
+<page section="mode_rectangles2">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="black">
+4 18 m
+17 18 l
+17 7 l
+16 7 l
+16 17 l
+4 17 l
+h
+</path>
+<path fill="black">
+4 18 m
+5 18 l
+5 6 l
+15 6 l
+15 5 l
+4 5 l
+h
+</path>
+<path matrix="1 0 0 1 5.5 -5.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+<path matrix="1 0 0 1 11.5 -11.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+</page>
+<page section="mode_rectangles3">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+7.01113 9.74443 m
+12.0569 7.22154 l
+</path>
+<path stroke="black" pen="1" cap="1" join="1">
+6.27825 12.0565 m
+8.5 16.5 l
+14.9881 13.256 l
+</path>
+<path stroke="black" pen="1" cap="1" join="1">
+14.1955 7.8911 m
+15.8313 11.1625 l
+</path>
+<path matrix="1 0 0 1 8.5 -10.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+<path matrix="1 0 0 1 11.5 -4.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+<path matrix="1 0 0 1 0.5 -6.5" fill="blue">
+1 0 0 1 5 17 e
+2 0 0 2 5 17 e
+</path>
+</page>
+<page section="mode_rotate">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" matrix="1 0 0 1 -1 0" fill="black">
+18.5 12 m
+16 15 l
+21 15 l
+h
+</path>
+<path matrix="1 0 0 1 -1 1" fill="black">
+15 18 m
+4 0 0 -4 15 14 19 14 a
+18 14 l
+3 0 0 3 15 14 15 17 a
+h
+</path>
+<path matrix="-1 0 0 -1 23 22" fill="black">
+18.5 12 m
+16 15 l
+21 15 l
+h
+</path>
+<path matrix="-1 0 0 -1 23 21" fill="black">
+15 18 m
+4 0 0 -4 15 14 19 14 a
+18 14 l
+3 0 0 3 15 14 15 17 a
+h
+</path>
+<path fill="black">
+10.6863 12 m
+4 12 l
+4 18 l
+11 18 l
+11 12.3137 l
+h
+8.92893 8.82843 m
+13.1716 13.0711 l
+18.1213 8.12132 l
+13.8787 3.87868 l
+h
+3 11 m
+3 19 l
+12 19 l
+12 13.3137 l
+13.1716 14.4853 l
+19.5355 8.12132 l
+13.8787 2.46446 l
+7.51472 8.82843 l
+9.68629 11 l
+h
+</path>
+</page>
+<page section="mode_select">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="black">
+7 3 m
+10.9004 7.6992 l
+17 8 l
+7 16 l
+h
+</path>
+<path fill="black">
+1 0 0 1 6 18 e
+</path>
+</page>
+<page section="mode_shear">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="black">
+8.85 8 m
+10.5 13.5 l
+12 13.5 l
+12 19 l
+3 19 l
+3 8 l
+h
+4 18 m
+4 9 l
+9.15 9 l
+10.5 13.5 l
+11 13.5 l
+11 18 l
+h
+</path>
+<path matrix="1 0 0 1 -0.3 0.5" stroke="black" pen="1" cap="0" join="0">
+11 13 m
+8 3 l
+16 3 l
+19 13 l
+h
+</path>
+<path matrix="0.377121 0.926164 -0.926164 0.377121 14.0433 -7.76973" fill="black">
+18.5 12 m
+16 15 l
+21 15 l
+h
+</path>
+<path matrix="0.377121 0.926164 -0.926164 0.377121 18.1737 1.34569" fill="black">
+8 18 m
+8 15 l
+9 15 l
+9 18 l
+h
+</path>
+</page>
+<page section="mode_shredder">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="red">
+8 19 m
+8 17 l
+9 17 l
+9 18 l
+13 18 l
+13 17 l
+14 17 l
+14 19 l
+8 19 l
+</path>
+<path fill="red">
+4 16 m
+4 15 l
+18 15 l
+18 16 l
+4 16 l
+</path>
+<path fill="red">
+6 14 m
+6 3 l
+16 3 l
+16 14 l
+15 14 l
+15 4 l
+7 4 l
+7 14 l
+6 14 l
+</path>
+</page>
+<page section="mode_splinegons">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" matrix="1 0 0 1 0.113943 -0.740626" stroke="black" pen="1" cap="1" join="1">
+6.78686 8.52022
+10.5582 14.4623
+3.6733 13.9361
+8.60676 20.7333
+17.1362 14.3527
+15.8206 5.07776
+5.95365 4.2007 u
+</path>
+</page>
+<page section="mode_splines">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1" join="1">
+5.5 5.5 m
+8.84503 19.2007
+13.2816 1.45424
+16.5 16.5 c
+</path>
+</page>
+<page section="mode_stretch">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="black">
+16 6 m
+12 6 l
+16 10 l
+h
+</path>
+<path fill="black">
+3 19 m
+3 12 l
+8 12 l
+8 14 l
+10 14 l
+10 19 l
+h
+4 18 m
+4 13 l
+7 13 l
+7 15 l
+9 15 l
+9 18 l
+h
+</path>
+<path fill="black">
+7 15 m
+7 3 l
+19 3 l
+19 15 l
+h
+8 14 m
+8 4 l
+18 4 l
+18 14 l
+h
+</path>
+<path fill="black">
+5.14643 16.1464 m
+14.0858 7.20711 l
+14.7929 7.91421 l
+5.85357 16.8536 l
+h
+</path>
+</page>
+<page section="mode_translate">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" matrix="1 0 0 -1 0 22" fill="black">
+11 3 m
+9 7 l
+13 7 l
+11 3 l
+h
+7 9 m
+3 11 l
+7 13 l
+7 9 l
+h
+15 9 m
+15 13 l
+19 11 l
+15 9 l
+h
+11 10 m
+10.446 10
+10 10.446
+10 11 c
+10 11.554
+10.446 12
+11 12 c
+11.554 12
+12 11.554
+12 11 c
+12 10.446
+11.554 10
+11 10 c
+h
+9 15 m
+11 19 l
+13 15 l
+9 15 l
+h
+</path>
+</page>
+<page section="snapvtx">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1">
+3.5 9.5 m
+6.25061 12.9383 l
+</path>
+<path stroke="black" pen="1" cap="1">
+8.56 12.804 m
+12.5 6.5 l
+18.5 10.5 l
+</path>
+<path fill="red">
+2 0 0 2 7.5 14.5 e
+1 0 0 1 7.5 14.5 e
+</path>
+</page>
+<page section="snapctl">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="red">
+2 0 0 2 10.5 11.5 e
+1 0 0 1 10.5 11.5 e
+</path>
+<path fill="black">
+8 0 0 8 10.5 11.5 e
+7 0 0 7 10.5 11.5 e
+</path>
+</page>
+<page section="snapbd">
+<layer name="alpha"/>
+<layer name="GRID"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1">
+12.9142 9.08579 m
+15.5 6.5 l
+19.5 8.5 l
+</path>
+<path stroke="black" pen="1" cap="1">
+3.5 11.5 m
+6.5 15.5 l
+10.0858 11.9142 l
+</path>
+<group layer="GRID">
+<path stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 1 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 2 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 3 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 4 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 5 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 6 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 7 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 8 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 9 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 10 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 11 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 12 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 13 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 14 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 15 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 16 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 17 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 18 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 19 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 20 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 21 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 1" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 2" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 3" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 4" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 5" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 6" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 7" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 8" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 9" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 10" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 11" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 12" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 13" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 14" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 15" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 16" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 17" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 18" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 19" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 19" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 20" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 21" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+</group>
+<path layer="alpha" matrix="1 0 0 1 1 -1" fill="red">
+2 0 0 2 10.5 11.5 e
+1 0 0 1 10.5 11.5 e
+</path>
+</page>
+<page section="snapint">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1">
+3.5 14.5 m
+9.71115 11.3944 l
+</path>
+<path stroke="black" pen="1" cap="1">
+18.5 17.5 m
+12.9142 11.9142 l
+</path>
+<path stroke="black" pen="1" cap="1">
+19.5 6.5 m
+13.2889 9.60557 l
+</path>
+<path stroke="black" pen="1" cap="1">
+5.5 4.5 m
+10.0858 9.08579 l
+</path>
+<path matrix="1 0 0 1 1 -1" fill="red">
+2 0 0 2 10.5 11.5 e
+1 0 0 1 10.5 11.5 e
+</path>
+</page>
+<page section="snapgrid">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1">
+2.5 16.5 m
+18.5 16.5 l
+</path>
+<path stroke="black" pen="1" cap="1">
+2.5 4.5 m
+18.5 4.5 l
+</path>
+<path stroke="black" pen="1" cap="1">
+4.5 19.5 m
+4.5 1.5 l
+</path>
+<path stroke="black" pen="1" cap="1">
+16.5 19.5 m
+16.5 1.5 l
+</path>
+<path stroke="black" pen="1" cap="1">
+2.5 10.5 m
+8.5 10.5 l
+</path>
+<path stroke="black" pen="1" cap="1">
+10.5 19.5 m
+10.5 12.5 l
+</path>
+<path stroke="black" pen="1" cap="1">
+18.5 10.5 m
+12.5 10.5 l
+</path>
+<path stroke="black" pen="1" cap="1">
+10.5 1.5 m
+10.5 8.5 l
+</path>
+<path matrix="1 0 0 1 0 -1" fill="red">
+2 0 0 2 10.5 11.5 e
+1 0 0 1 10.5 11.5 e
+</path>
+</page>
+<page section="snapangle">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1">
+2.5 9.5 m
+19.5 9.5 l
+</path>
+<path matrix="-0.5 0.866025 -0.866025 -0.5 20.9772 6.88878" stroke="black" pen="1" cap="1">
+2.5 9.5 m
+19.5 9.5 l
+</path>
+<path stroke="black" pen="1" cap="1">
+5.5 4.30385 m
+10.4163 12.8191 l
+</path>
+<path stroke="black" pen="1" cap="1">
+14 19.0263 m
+12.4139 16.279 l
+</path>
+<path matrix="1 0 0 1 1 3" fill="red">
+2 0 0 2 10.5 11.5 e
+1 0 0 1 10.5 11.5 e
+</path>
+<path stroke="black" fill="black" pen="1" cap="1">
+19.5 9.5 m
+16.5 11.5 l
+16.5 7.5 l
+h
+</path>
+</page>
+<page section="snapcustom">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1">
+2.5 10.5 m
+8.5 10.5 l
+</path>
+<path stroke="black" pen="1" cap="1">
+6.5 18.5 m
+9.60557 12.2889 l
+</path>
+<path stroke="black" pen="1" cap="1">
+14.5 18.5 m
+11.3944 12.2889 l
+</path>
+<path stroke="black" pen="1" cap="1">
+18.5 10.5 m
+12.5 10.5 l
+</path>
+<path stroke="black" pen="1" cap="1">
+14.5 2.5 m
+11.3944 8.71115 l
+</path>
+<path stroke="black" pen="1" cap="1">
+6.5 2.5 m
+9.60557 8.71115 l
+</path>
+<path matrix="1 0 0 1 0 -1" fill="red">
+2 0 0 2 10.5 11.5 e
+1 0 0 1 10.5 11.5 e
+</path>
+</page>
+<page section="snapauto">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black" pen="1" cap="1">
+15.5 12.5 m
+15.5 4.5 l
+6.5 4.5 l
+6.5 7.5 l
+11.5 7.5 l
+11.5 11.5 l
+4.5 11.5 l
+4.5 17.5 l
+</path>
+<path matrix="1 0 0 1 5 3" fill="red">
+2 0 0 2 10.5 11.5 e
+1 0 0 1 10.5 11.5 e
+</path>
+</page>
+<page section="copy">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+3 3 m
+3 17 l
+7 17 l
+7 19 l
+17 19 l
+17 10 l
+13 6 l
+12 6 l
+9 3 l
+3 3 l
+h
+4 4 m
+8 4 l
+8 6 l
+7 6 l
+7 16 l
+4 16 l
+4 4 l
+h
+8 7 m
+12 7 l
+12 11 l
+16 11 l
+16 18 l
+8 18 l
+8 7 l
+h
+</path>
+</group>
+</page>
+<page section="cut">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+7.01172 3 m
+6.43437 4
+6.13359 4
+6.71094 5 c
+10.252 11.1406 l
+8.19336 14.668 l
+7.7481 14.2565
+7.15686 14
+6.5 14 c
+5.115 14
+4 15.115
+4 16.5 c
+4 17.885
+5.115 19
+6.5 19 c
+7.885 19
+9 17.885
+9 16.5 c
+9 16.3329
+8.98215 16.1695
+8.95117 16.0117 c
+10.1133 13.998 l
+10.8937 13.997
+10.9921 13.2234
+11.4473 13.2129 c
+13.0508 15.9941 l
+13.0176 16.1572
+13 16.3269
+13 16.5 c
+13 17.885
+14.115 19
+15.5 19 c
+16.885 19
+18 17.885
+18 16.5 c
+18 15.115
+16.885 14
+15.5 14 c
+14.8467 14
+14.2589 14.2546
+13.8145 14.6621 c
+11.7598 11.1406 l
+15.3008 5 l
+15.8781 4
+15.5774 4
+15 3 c
+11.0059 9.84766 l
+7.01172 3 l
+11 11 m
+11.277 11
+11.5 11.223
+11.5 11.5 c
+11.5 11.777
+11.277 12
+11 12 c
+10.723 12
+10.5 11.777
+10.5 11.5 c
+10.5 11.223
+10.723 11
+11 11 c
+h
+6.5 15 m
+7.331 15
+8 15.669
+8 16.5 c
+8 17.331
+7.331 18
+6.5 18 c
+5.669 18
+5 17.331
+5 16.5 c
+5 15.669
+5.669 15
+6.5 15 c
+15.5 15 m
+16.331 15
+17 15.669
+17 16.5 c
+17 17.331
+16.331 18
+15.5 18 c
+14.669 18
+14 17.331
+14 16.5 c
+14 15.669
+14.669 15
+15.5 15 c
+</path>
+</group>
+</page>
+<page section="delete">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="red">
+4 3 m
+4 10 l
+5 10 l
+5 4 l
+13 4 l
+13 8 l
+17 8 l
+17 10 l
+18 10 l
+18 7 l
+18 6.99219 l
+14.0078 3 l
+14 3.00977 l
+14 3 l
+h
+</path>
+<path fill="red">
+3.00001 11 m
+19 11 l
+19 12 l
+3 12 l
+h
+</path>
+<path fill="red">
+4.00001 13 m
+5 13.0001 l
+4.99999 19 l
+4 18.9999 l
+h
+</path>
+<path fill="red">
+6.00002 13 m
+7.00001 13.0001 l
+7 19 l
+6.00001 18.9999 l
+h
+</path>
+<path fill="red">
+8.00002 13 m
+9.00001 13.0001 l
+9 19 l
+8.00001 18.9999 l
+h
+</path>
+<path fill="red">
+10 13 m
+11 13.0001 l
+11 19 l
+10 18.9999 l
+h
+</path>
+<path fill="red">
+12 13 m
+13 13.0001 l
+13 19 l
+12 18.9999 l
+h
+</path>
+<path fill="red">
+14 13 m
+15 13.0001 l
+15 19 l
+14 18.9999 l
+h
+</path>
+<path fill="red">
+16 13 m
+17 13.0001 l
+17 19 l
+16 18.9999 l
+h
+</path>
+</group>
+</page>
+<page section="fit_objects">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="black">
+3 19 m
+3 18 l
+3 15 l
+4 15 l
+4 18 l
+7 18 l
+7 19 l
+4 19 l
+3 19 l
+h
+</path>
+<path fill="black">
+11 19 m
+9 17 l
+13 17 l
+11 19 l
+h
+</path>
+<path fill="black">
+15 19 m
+15 18 l
+18 18 l
+18 15 l
+19 15 l
+19 18 l
+19 19 l
+18 19 l
+15 19 l
+h
+</path>
+<path fill="black">
+5 13 m
+3 11 l
+5 9 l
+5 13 l
+h
+</path>
+<path fill="black">
+17 13 m
+17 9 l
+19 11 l
+17 13 l
+h
+</path>
+<path fill="black">
+3 7 m
+3 4 l
+3 3 l
+7 3 l
+7 4 l
+4 4 l
+4 7 l
+3 7 l
+h
+</path>
+<path fill="black">
+18 7 m
+18 4 l
+15 4 l
+15 3 l
+19 3 l
+19 4 l
+19 7 l
+18 7 l
+h
+</path>
+<path fill="black">
+9 5 m
+11 3 l
+13 5 l
+9 5 l
+h
+</path>
+<path matrix="0.3 0 0 0.3 6.05905 9.27267" fill="black">
+6 4 m
+3 4 l
+9 19 l
+13 19 l
+19 4 l
+16 4 l
+14 9 l
+8 9 l
+h
+13.1429 11 m
+8.85714 11 l
+11 16 l
+h
+</path>
+<path matrix="0.4 0 0 0.4 7.66177 4.7164" stroke="black" pen="1" cap="1" join="1">
+5.5 5.5 m
+8.84503 19.2007
+13.2816 1.45424
+16.5 16.5 c
+</path>
+</page>
+<page section="fit_page">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+3 3 m
+3 4 l
+3 7 l
+4 7 l
+4 4 l
+7 4 l
+7 3 l
+4 3 l
+3 3 l
+h
+11 3 m
+9 5 l
+13 5 l
+11 3 l
+h
+15 3 m
+15 4 l
+18 4 l
+18 7 l
+19 7 l
+19 4 l
+19 3 l
+18 3 l
+15 3 l
+h
+6 6 m
+6 16 l
+16 16 l
+16 6 l
+6 6 l
+h
+7 7 m
+15 7 l
+15 15 l
+7 15 l
+7 7 l
+h
+5 9 m
+3 11 l
+5 13 l
+5 9 l
+h
+17 9 m
+17 13 l
+19 11 l
+17 9 l
+h
+3 15 m
+3 18 l
+3 19 l
+7 19 l
+7 18 l
+4 18 l
+4 15 l
+3 15 l
+h
+18 15 m
+18 18 l
+15 18 l
+15 19 l
+19 19 l
+19 18 l
+19 15 l
+18 15 l
+h
+9 17 m
+11 19 l
+13 17 l
+9 17 l
+h
+</path>
+</group>
+</page>
+<page section="fit_width">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" fill="black">
+5 13 m
+3 11 l
+5 9 l
+5 13 l
+h
+</path>
+<path fill="black">
+17 13 m
+17 9 l
+19 11 l
+17 13 l
+h
+</path>
+<path fill="black">
+4 15 m
+4 19 l
+3 19 l
+3 15 l
+h
+</path>
+<path fill="black">
+18 15 m
+18 19 l
+19 19 l
+19 15 l
+h
+</path>
+<path fill="black">
+18 7 m
+18 3 l
+19 3 l
+19 7 l
+h
+</path>
+<path fill="black">
+4 7 m
+4 3 l
+3 3 l
+3 7 l
+h
+</path>
+<path fill="black">
+6 16 m
+6 6 l
+16 6 l
+16 16 l
+6 16 l
+h
+7 15 m
+15 15 l
+15 7 l
+7 7 l
+7 15 l
+h
+</path>
+</page>
+<page section="grid_visible">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+4 4 m
+4 20 l
+20 20 l
+20 4 l
+4 4 l
+h
+5 5 m
+7 5 l
+7 7 l
+5 7 l
+5 5 l
+h
+8 5 m
+10 5 l
+10 7 l
+8 7 l
+8 5 l
+h
+11 5 m
+13 5 l
+13 7 l
+11 7 l
+11 5 l
+h
+14 5 m
+16 5 l
+16 7 l
+14 7 l
+14 5 l
+h
+17 5 m
+19 5 l
+19 7 l
+17 7 l
+17 5 l
+h
+5 8 m
+7 8 l
+7 10 l
+5 10 l
+5 8 l
+h
+8 8 m
+10 8 l
+10 10 l
+8 10 l
+8 8 l
+h
+11 8 m
+13 8 l
+13 10 l
+11 10 l
+11 8 l
+h
+14 8 m
+16 8 l
+16 10 l
+14 10 l
+14 8 l
+h
+17 8 m
+19 8 l
+19 10 l
+17 10 l
+17 8 l
+h
+5 11 m
+7 11 l
+7 13 l
+5 13 l
+5 11 l
+h
+8 11 m
+10 11 l
+10 13 l
+8 13 l
+8 11 l
+h
+11 11 m
+13 11 l
+13 13 l
+11 13 l
+11 11 l
+h
+14 11 m
+16 11 l
+16 13 l
+14 13 l
+14 11 l
+h
+17 11 m
+19 11 l
+19 13 l
+17 13 l
+17 11 l
+h
+5 14 m
+7 14 l
+7 16 l
+5 16 l
+5 14 l
+h
+8 14 m
+10 14 l
+10 16 l
+8 16 l
+8 14 l
+h
+11 14 m
+13 14 l
+13 16 l
+11 16 l
+11 14 l
+h
+14 14 m
+16 14 l
+16 16 l
+14 16 l
+14 14 l
+h
+17 14 m
+19 14 l
+19 16 l
+17 16 l
+17 14 l
+h
+5 17 m
+7 17 l
+7 19 l
+5 19 l
+5 17 l
+h
+8 17 m
+10 17 l
+10 19 l
+8 19 l
+8 17 l
+h
+11 17 m
+13 17 l
+13 19 l
+11 19 l
+11 17 l
+h
+14 17 m
+16 17 l
+16 19 l
+14 19 l
+14 17 l
+h
+17 17 m
+19 17 l
+19 19 l
+17 19 l
+17 17 l
+h
+</path>
+</group>
+</page>
+<page section="keyboard">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+2 6 m
+2 15 l
+5 19 l
+5 15 l
+20 15 l
+20 6 l
+h
+3 7 m
+19 7 l
+19 14 l
+3 14 l
+h
+</path>
+<path fill="black">
+4 8 m
+4 9 l
+5 9 l
+5 8 l
+h
+6 8 m
+6 9 l
+7 9 l
+7 8 l
+h
+8 8 m
+8 9 l
+9 9 l
+9 8 l
+h
+10 8 m
+10 9 l
+11 9 l
+11 8 l
+h
+12 8 m
+12 9 l
+13 9 l
+13 8 l
+h
+14 8 m
+14 9 l
+15 9 l
+15 8 l
+h
+16 8 m
+16 9 l
+18 9 l
+18 8 l
+h
+4 10 m
+4 11 l
+6 11 l
+6 10 l
+h
+7 10 m
+7 11 l
+8 11 l
+8 10 l
+h
+9 10 m
+9 11 l
+10 11 l
+10 10 l
+h
+11 10 m
+11 11 l
+12 11 l
+12 10 l
+h
+13 10 m
+13 11 l
+14 11 l
+14 10 l
+h
+15 10 m
+15 11 l
+18 11 l
+18 10 l
+h
+4 12 m
+4 13 l
+6 13 l
+6 12 l
+h
+7 12 m
+7 13 l
+15 13 l
+15 12 l
+h
+16 12 m
+16 13 l
+18 13 l
+18 12 l
+h
+</path>
+</group>
+</page>
+<page section="paste">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+7 3 m
+7 5 l
+5 5 l
+4 5 l
+4 19 l
+5 19 l
+18 19 l
+18 18 l
+18 5 l
+17 5 l
+15 5 l
+15 3 l
+7 3 l
+h
+5 6 m
+6 6 l
+6 8 l
+16 8 l
+16 6 l
+17 6 l
+17 18 l
+5 18 l
+5 6 l
+h
+7 9 m
+7 10 l
+15 10 l
+15 9 l
+7 9 l
+h
+7 12 m
+7 13 l
+13 13 l
+13 12 l
+7 12 l
+h
+7 15 m
+7 16 l
+10 16 l
+10 15 l
+7 15 l
+h
+</path>
+</group>
+</page>
+<page section="pen">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+3 3 m
+3 3.99787 l
+19 3.99787 l
+19 3 l
+h
+3 5.9974 m
+3 8.00071 l
+19 8.00071 l
+19 5.9974 l
+h
+3 10.0002 m
+3 13.0014 l
+19 13.0014 l
+19 10.0002 l
+h
+3 15.0009 m
+3 19 l
+19 19 l
+19 15.0009 l
+h
+</path>
+</group>
+</page>
+<page section="redo">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+13.6992 3 m
+12.9922 3.70703 l
+15.2852 6 l
+13 6 l
+11.9922 6 l
+11.5 6 l
+7.899 6
+5 8.899
+5 12.5 c
+5 16.101
+7.899 19
+11.5 19 c
+13 19 l
+13 18 l
+11.5 18 l
+8.453 18
+6 15.547
+6 12.5 c
+6 9.453
+8.453 7
+11.5 7 c
+11.9922 7 l
+13 7 l
+15.2852 7 l
+12.9922 9.29297 l
+13.6992 10 l
+16.9922 6.70703 l
+17.1992 6.5 l
+16.9922 6.29297 l
+13.6992 3 l
+</path>
+</group>
+</page>
+<page section="shift_key">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<path layer="alpha" stroke="black">
+4.65634 8.93477 m
+1.35798 0 0 1.35798 6.01396 8.90385 6.01396 7.54587 a
+16.6577 7.54623 l
+1.35762 0 0 1.35762 16.6577 8.90385 18.0154 8.90385 a
+18.0154 14.2257 l
+1.35762 0 0 1.35762 16.6577 14.2257 16.6577 15.5834 a
+6.01396 15.5834 l
+1.35762 0 0 1.35762 6.01396 14.2257 4.65634 14.2257 a
+4.65634 8.90385 l
+</path>
+<path stroke="black" fill="black" pen="0.01">
+6.35483 12.648 m
+8.15977 14.5557 l
+9.96471 12.648 l
+9.44117 12.1526 l
+8.53445 13.111 l
+8.52663 9.82896 l
+7.79291 9.82896 l
+7.7851 13.111 l
+6.87837 12.1526 l
+h
+</path>
+</page>
+<page section="stop">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="red">
+11 3 m
+15.432 3
+19 6.568
+19 11 c
+19 12.442
+18.617 13.79
+17.955 14.955 c
+17.217 14.217 l
+6.985 0 0 -6.985 11.015 11.0037 18 11 a
+18 7.122
+14.878 4
+11 4 c
+6.985 0 0 -6.985 10.9963 10.985 7.783 4.783 a
+7.045 4.045 l
+7.982 0 0 7.982 10.9935 10.982 11 3 a
+4.045 7.045 m
+4.783 7.783 l
+6.985 0 0 -6.985 10.985 10.9963 4 11 a
+4 14.878
+7.122 18
+11 18 c
+6.985 0 0 -6.985 11.0037 11.015 14.217 17.217 a
+14.955 17.955 l
+7.982 0 0 7.982 11.0065 11.018 11 19 a
+6.568 19
+3 15.432
+3 11 c
+3 9.558
+3.383 8.21
+4.045 7.045 c
+</path>
+<path fill="red">
+7.5 9.998 m
+14.5 9.998 l
+14.5 11.998 l
+7.5 11.998 l
+h
+</path>
+</group>
+</page>
+<page section="undo">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+8.30078 3 m
+5.00781 6.29297 l
+4.80078 6.5 l
+5.00781 6.70703 l
+8.30078 10 l
+9.00781 9.29297 l
+6.71484 7 l
+9 7 l
+10.0078 7 l
+10.5 7 l
+13.547 7
+16 9.453
+16 12.5 c
+16 15.547
+13.547 18
+10.5 18 c
+9 18 l
+9 19 l
+10.5 19 l
+14.101 19
+17 16.101
+17 12.5 c
+17 8.899
+14.101 6
+10.5 6 c
+10.0078 6 l
+9 6 l
+6.71484 6 l
+9.00781 3.70703 l
+8.30078 3 l
+</path>
+</group>
+</page>
+<page section="zoom_in">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+3 3 m
+3 5 l
+4 5 l
+4 4 l
+5 4 l
+5 3 l
+3 3 l
+h
+8 3 m
+8 4 l
+10 4 l
+10 3 l
+8 3 l
+h
+12 3 m
+12 4 l
+14 4 l
+14 3 l
+12 3 l
+h
+17 3 m
+17 4 l
+18 4 l
+18 5 l
+19 5 l
+19 3 l
+17 3 l
+h
+11 7 m
+11 8 l
+13.293 8 l
+10 11.293 l
+10.707 12 l
+14 8.70703 l
+14 11 l
+15 11 l
+15 7 l
+14 7 l
+11 7 l
+h
+3 8 m
+3 10 l
+4 10 l
+4 8 l
+3 8 l
+h
+18 8 m
+18 10 l
+19 10 l
+19 8 l
+18 8 l
+h
+18 12 m
+18 14 l
+19 14 l
+19 12 l
+18 12 l
+h
+3 13 m
+3 19 l
+9 19 l
+9 13 l
+3 13 l
+h
+4 14 m
+8 14 l
+8 18 l
+4 18 l
+4 14 l
+h
+18 17 m
+18 18 l
+17 18 l
+17 19 l
+19 19 l
+19 17 l
+18 17 l
+h
+</path>
+</group>
+</page>
+<page section="zoom_out">
+<layer name="alpha"/>
+<view layers="alpha" active="alpha"/>
+<group layer="alpha" matrix="1 0 0 -1 0 22">
+<path fill="black">
+3 3 m
+3 10 l
+4 10 l
+4 4 l
+18 4 l
+18 18 l
+12 18 l
+12 19 l
+19 19 l
+19 18 l
+19 4 l
+19 3 l
+4 3 l
+3 3 l
+h
+14.293 7 m
+11 10.293 l
+11 8 l
+10 8 l
+10 12 l
+11 12 l
+14 12 l
+14 11 l
+11.707 11 l
+15 7.70703 l
+14.293 7 l
+h
+3 13 m
+3 15 l
+4 15 l
+4 14 l
+5 14 l
+5 13 l
+3 13 l
+h
+7 13 m
+7 14 l
+8 14 l
+8 15 l
+9 15 l
+9 13 l
+7 13 l
+h
+3 17 m
+3 19 l
+5 19 l
+5 18 l
+4 18 l
+4 17 l
+3 17 l
+h
+8 17 m
+8 18 l
+7 18 l
+7 19 l
+9 19 l
+9 17 l
+8 17 l
+h
+</path>
+</group>
+</page>
+<page section="GRID">
+<layer name="alpha"/>
+<layer name="GRID"/>
+<view layers="alpha" active="alpha"/>
+<group layer="GRID">
+<path stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 1 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 2 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 3 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 4 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 5 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 6 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 7 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 8 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 9 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 10 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 11 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 12 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 13 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 14 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 15 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 16 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 17 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 18 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 19 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 20 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path matrix="1 0 0 1 21 0" stroke="0.1" pen="0.1">
+0.5 0 m
+0.5 22 l
+</path>
+<path stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 1" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 2" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 3" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 4" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 5" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 6" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 7" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 8" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 9" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 10" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 11" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 12" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 13" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 14" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 15" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 16" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 17" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 18" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 19" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 19" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 20" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+<path matrix="1 0 0 1 0 21" stroke="0.1" pen="0.1">
+0 0.5 m
+22 0.5 l
+</path>
+</group>
+</page>
+</ipe>
