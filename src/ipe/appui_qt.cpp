@@ -898,8 +898,6 @@ static const char * const aboutText =
   "<p>Ipe is released under the GNU Public License.</p>"
   "<p>See the <a href=\"http://ipe.otfried.org\">Ipe homepage</a>"
   " for further information.</p>"
-  "<p>You can \"like\" Ipe and follow Ipe announcements on "
-  "<a href=\"http://www.facebook.com/drawing.editor.Ipe7\">Facebook</a>.</p>"
   "<p>If you are an Ipe fan and want to show others, have a look at the "
   "<a href=\"https://www.shirtee.com/en/store/ipe\">Ipe T-shirts</a>.</p>"
   "<h3>Platinum and gold sponsors</h3>"

@@ -115,8 +115,6 @@ static const char * const about_text =
   "using LaTeX to format the text in the figures.\n"
   "Ipe is released under the GNU Public License.\n"
   "See http://ipe.otfried.org for details.\n"
-  "You can \"like\" Ipe and follow Ipe announcements on Facebook "
-  "(http://www.facebook.com/drawing.editor.Ipe7).\n\n"
   "If you are an Ipe fan and want to show others, have a look at the "
   "Ipe T-shirts (www.shirtee.com/en/store/ipe).\n\n"
   "Platinum and gold sponsors\n\n"

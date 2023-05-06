@@ -412,8 +412,6 @@ static const char * const aboutText =
   "IpePresenter is now developed together with Ipe and released under the GNU Public License.</p>"
   "<p>See the <a href=\"http://ipepresenter.otfried.org\">IpePresenter homepage</a>"
   " for further information.</p>"
-  "<p>You can \"like\" IpePresenter and follow IpePresenter announcements on "
-  "<a href=\"http://www.facebook.com/drawing.editor.Ipe7\">Facebook</a>.</p>"
   "<p>If you are an IpePresenter fan and want to show others, have a look at the "
   "<a href=\"https://www.shirtee.com/en/store/ipe\">Ipe T-shirts</a>.</p>"
   "<h3>Platinum and gold sponsors</h3>"

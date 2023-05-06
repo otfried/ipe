@@ -314,8 +314,6 @@ static const char * const about_text =
   "Originally invented by Dmitriy Morozov, "
   "IpePresenter is now developed together with Ipe and released under the GNU Public License.\n"
   "See http://ipepresenter.otfried.org for details.\n\n"
-  "You can \"like\" IpePresenter and follow IpePresenter announcements on Facebook "
-  "(http://www.facebook.com/drawing.editor.Ipe7).\n\n"
   "If you are an IpePresenter fan and want to show others, have a look at the "
   "Ipe T-shirts (www.shirtee.com/en/store/ipe).\n\n"
   "Platinum and gold sponsors\n\n"
