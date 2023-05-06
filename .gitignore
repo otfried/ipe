@@ -1,1 +1,4 @@
 build/
+mingw64/
+mingw32/
+

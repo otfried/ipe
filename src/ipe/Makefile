@@ -7,8 +7,6 @@ include ../common.mak
 
 TARGET = $(call exe_target,ipe)
 
-ICONSET = $(BUILDDIR)/ipe.iconset
-
 CPPFLAGS += -I../include -I../ipecanvas -I../ipecairo -I../ipelua \
 	-I../ipeui -I../spiro \
 	$(LUA_CFLAGS) $(UI_CFLAGS) $(CAIRO_CFLAGS) $(ZLIB_CFLAGS)
@@ -17,6 +15,7 @@ LIBS += -L$(buildlib) -lipecanvas -lipecairo -lipelua -lipe -lipeui \
 
 manualdir = ../../build/doc
 doxydir = ../../build/doxygen/ipelib/html
+ICONSET = ../../build/ipe.iconset
 
 ifdef IPEBUNDLE
 CPPFLAGS += -DIPEBUNDLE
@@ -37,8 +36,6 @@ win_sources = main_win.cpp appui_win.cpp pathview_win.cpp pagesorter_win.cpp
 gtk_sources = main_gtk.cpp appui_gtk.cpp
 cocoa_sources = main_cocoa.cpp appui_cocoa.cpp controls_cocoa.cpp \
 	pagesorter_cocoa.cpp
-
-ipelogo = ../../artwork/ipe_logo.ipe
 
 ifdef WIN32
 CXXFLAGS += -mwindows
@@ -77,16 +74,6 @@ $(DEPEND): Makefile
 
 -include $(DEPEND)
 
-$(ICONSET): 
-	mkdir $(ICONSET)
-	iperender -png -resolution 41 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_16x16.png
-	iperender -png -resolution 82 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_32x32.png
-	iperender -png -resolution 162 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_64x64.png
-	iperender -png -resolution 322 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_128x128.png
-	iperender -png -resolution 644 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_256x256.png
-	iperender -png -resolution 1286 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_512x512.png
-	iperender -png -resolution 2570 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_512x512@2x.png
-
 ifdef IPEAPP
 
 app:
@@ -116,7 +103,7 @@ app:
 
 endif
 
-install: $(TARGET) $(ICONSET)
+install: $(TARGET)
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEBINDIR) 
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEMANDIR) 
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEDOCDIR) 

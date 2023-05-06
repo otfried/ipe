@@ -6,7 +6,7 @@
 #define IDC_INPUTBOX_EDIT 		1001
 #define IDC_STATIC                      -1
 
-IDI_MYICON ICON DISCARDABLE "../ipe/ipe.ico"
+IDI_MYICON ICON DISCARDABLE "../../build/ipe.ico"
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION 7,2,27,1
