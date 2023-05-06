@@ -628,7 +628,7 @@ doc:setProperties(t)  -- changes properties set in table
 fields exist even if their contents is an empty string):
 \verbatim
 title author subject keywords preamble created modified creator
-fullscreen cropbox numberpages tex
+fullscreen cropbox numberpages sequentialtext tex
 \endverbatim
 
 \section luaother Other functions

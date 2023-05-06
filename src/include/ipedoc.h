@@ -76,6 +76,7 @@ namespace ipe {
       LatexType iTexEngine { LatexType::Default };
       bool iFullScreen { false };
       bool iNumberPages { false };
+      bool iSequentialText { false };
       //! Date/time in PDF style "D:20010428191400" format.
       String iCreated;
       String iModified;

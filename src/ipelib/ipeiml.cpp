@@ -112,6 +112,7 @@ int ImlParser::parseDocument(Document &doc)
     properties.iKeywords = att["keywords"];
     properties.iFullScreen = (att["pagemode"] == "fullscreen");
     properties.iNumberPages = (att["numberpages"] == "yes");
+    properties.iSequentialText = (att["sequentialtext"] == "yes");
     properties.iCreated = att["created"];
     properties.iModified = att["modified"];
     String tex = att["tex"];

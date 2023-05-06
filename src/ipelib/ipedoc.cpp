@@ -432,6 +432,9 @@ void Document::saveAsXml(Stream &stream, bool usePdfBitmaps) const
   if (iProperties.iNumberPages) {
     infoStr << " numberpages=\"yes\"";
   }
+  if (iProperties.iSequentialText) {
+    infoStr << " sequentialtext=\"yes\"";
+  }
   switch (iProperties.iTexEngine) {
   case LatexType::Pdftex:
     infoStr << " tex=\"pdftex\"";

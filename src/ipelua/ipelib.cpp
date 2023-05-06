@@ -431,6 +431,8 @@ static int document_properties(lua_State *L)
   lua_setfield(L, -2, "fullscreen");
   lua_pushboolean(L, prop.iNumberPages);
   lua_setfield(L, -2, "numberpages");
+  lua_pushboolean(L, prop.iSequentialText);
+  lua_setfield(L, -2, "sequentialtext");
   lua_pushstring(L, tex_engine_names[int(prop.iTexEngine)]);
   lua_setfield(L, -2, "tex");
   return 1;
@@ -459,6 +461,7 @@ static int document_setProperties(lua_State *L)
   Document::SProperties prop = (*d)->properties();
   // take from table
   propFlag(L, "numberpages", prop.iNumberPages);
+  propFlag(L, "sequentialtext", prop.iSequentialText);
   propFlag(L, "fullscreen", prop.iFullScreen);
   propString(L, "title", prop.iTitle);
   propString(L, "author", prop.iAuthor);
