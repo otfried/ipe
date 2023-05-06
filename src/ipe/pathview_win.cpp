@@ -146,7 +146,7 @@ void PathView::wndPaint()
     Vector vf = iAll.iFArrowShape.isMidArrow() ? mid : v1;
     Vector vr = iAll.iRArrowShape.isMidArrow() ? mid : v0;
 
-    CairoPainter painter(iCascade, nullptr, cc, 3.0, false);
+    CairoPainter painter(iCascade, nullptr, cc, 3.0, false, false);
     painter.setPen(iAll.iPen);
     painter.setDashStyle(iAll.iDashStyle);
     painter.setStroke(iAll.iStroke);

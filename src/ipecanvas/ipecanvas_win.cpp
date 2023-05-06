@@ -240,7 +240,7 @@ void Canvas::wndPaint()
     drawFifi(cr);
 
   if (iPage) {
-    CairoPainter cp(iCascade, iFonts.get(), cr, iZoom, false);
+    CairoPainter cp(iCascade, iFonts.get(), cr, iZoom, false, false);
     cp.transform(canvasTfm());
     cp.pushMatrix();
     drawTool(cp);
