@@ -47,12 +47,13 @@ using namespace ipe;
 */
 
 //! Create a converter object.
-Latex::Latex(const Cascade *sheet, LatexType latexType)
+Latex::Latex(const Cascade *sheet, LatexType latexType, bool sequentialText)
 {
   iCascade = sheet;
   iResources = new PdfResources;
   iLatexType = latexType;
   iXetex = (latexType == LatexType::Xetex);
+  iSequentialText = sequentialText;
 }
 
 //! Destructor.
@@ -290,14 +291,15 @@ int Latex::createLatexSource(Stream &stream, String preamble)
       source << style.substr(sp + 1) << "%\n";
   }
 
-  std::sort(iTextObjects.begin(), iTextObjects.end(),
-	    [](const SText &a, const SText &b) {
-	      return a.iSource < b.iSource;
-	    });
+  if (!iSequentialText)
+    std::sort(iTextObjects.begin(), iTextObjects.end(),
+	      [](const SText &a, const SText &b) {
+		return a.iSource < b.iSource;
+	      });
 
   for (int i = 0; i < size(iTextObjects); ++i) {
     auto & it = iTextObjects[i];
-    if (i > 0 && it.iSource == iTextObjects[i-1].iSource)
+    if (!iSequentialText && i > 0 && it.iSource == iTextObjects[i-1].iSource)
       continue;
     stream << "\\setbox0=\\hbox{";
     stream << it.iSource;
@@ -473,7 +475,7 @@ bool Latex::updateTextObjects()
   int curXForm = 0;
   Text::XForm *xf = nullptr;
   for (int i = 0; i < size(iTextObjects); ++i) {
-    if (i > 0 && iTextObjects[i].iSource == iTextObjects[i-1].iSource) {
+    if (!iSequentialText && i > 0 && iTextObjects[i].iSource == iTextObjects[i-1].iSource) {
       if (xf == nullptr)
 	return false;
       iTextObjects[i].iText->setXForm(xf);

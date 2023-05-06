@@ -48,7 +48,7 @@ namespace ipe {
 
   class Latex {
   public:
-    Latex(const Cascade *sheet, LatexType latexType);
+    Latex(const Cascade *sheet, LatexType latexType, bool sequentialText);
     ~Latex();
 
     int scanObject(const Object *obj);
@@ -76,6 +76,7 @@ namespace ipe {
 
     const Cascade *iCascade;
     bool iXetex;
+    bool iSequentialText;
     LatexType iLatexType;
 
     PdfFile iPdf;

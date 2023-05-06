@@ -603,8 +603,9 @@ int Document::runLatexAsync(String docname, String &texLog, Latex **pConverter)
 {
   *pConverter = nullptr;
   texLog = "";
-  std::unique_ptr<Latex> converter(new Latex(cascade(), iProperties.iTexEngine));
-
+  std::unique_ptr<Latex> converter(new Latex(cascade(),
+					     iProperties.iTexEngine,
+					     iProperties.iSequentialText));
   AttributeSeq seq;
   cascade()->allNames(ESymbol, seq);
 
