@@ -177,7 +177,7 @@ active, in view 2, both layers are selected and *beta* is active.
 Create a third layer and view, and mark the vertices.
 
 Save in PDF format, and voila, you have a lovely little presentation.
-The result is available `here <polygon.pdf>`_.
+The result is available `here <https://github.com/otfried/ipe/raw/master/examples/polygon.pdf>`_.
 
 
 Text boxes
