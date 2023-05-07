@@ -81,7 +81,7 @@ app:
 	$(INSTALL_DIR) $(RESOURCEDIR)/lua
 	$(INSTALL_DIR) $(RESOURCEDIR)/styles
 	$(INSTALL_DIR) $(RESOURCEDIR)/icons
-	$(INSTALL_DIR) $(BUNDLEDIR)/SharedSupport/doc
+#	$(INSTALL_DIR) $(BUNDLEDIR)/SharedSupport/doc
 	$(INSTALL_SCRIPTS) ../../scripts/* $(RESOURCEDIR)/scripts
 	$(INSTALL_FILES) lua/*.lua $(RESOURCEDIR)/lua
 	$(INSTALL_FILES) ../../styles/basic.isy $(RESOURCEDIR)/styles
@@ -98,15 +98,15 @@ app:
 	iconutil -c icns -o ipe.icns ../../icons/ipe.iconset
 	$(INSTALL_FILES) ipe.icns $(RESOURCEDIR)
 	$(INSTALL_FILES) ../../icons/icons.ipe $(RESOURCEDIR)/icons
-	$(INSTALL_FILES) $(manualdir)/* $(BUNDLEDIR)/SharedSupport/doc
-	$(INSTALL_FILES) $(doxydir)/* $(BUNDLEDIR)/SharedSupport/doc
+#	$(INSTALL_FILES) $(manualdir)/* $(BUNDLEDIR)/SharedSupport/doc
+#	$(INSTALL_FILES) $(doxydir)/* $(BUNDLEDIR)/SharedSupport/doc
 
 endif
 
 install: $(TARGET)
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEBINDIR) 
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEMANDIR) 
-	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEDOCDIR) 
+#	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEDOCDIR) 
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPELUADIR) 
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPESTYLEDIR) 
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPESCRIPTDIR) 
@@ -114,9 +114,9 @@ install: $(TARGET)
 	$(INSTALL_PROGRAMS) $(TARGET) $(INSTALL_ROOT)$(IPEBINDIR)
 	$(INSTALL_SCRIPTS) ../../scripts/* $(INSTALL_ROOT)$(IPESCRIPTDIR)
 	$(INSTALL_FILES) ../../man/*.1 $(INSTALL_ROOT)$(IPEMANDIR) 
-	$(INSTALL_FILES) $(manualdir)/* $(INSTALL_ROOT)$(IPEDOCDIR)
-	test -d $(doxydir) && \
-		$(INSTALL_FILES) $(doxydir)/* $(INSTALL_ROOT)$(IPEDOCDIR) || true
+#	$(INSTALL_FILES) $(manualdir)/* $(INSTALL_ROOT)$(IPEDOCDIR)
+#	test -d $(doxydir) && \
+#		$(INSTALL_FILES) $(doxydir)/* $(INSTALL_ROOT)$(IPEDOCDIR) || true
 	$(INSTALL_FILES) lua/*.lua $(INSTALL_ROOT)$(IPELUADIR)
 	$(INSTALL_FILES) ../../styles/*.isy $(INSTALL_ROOT)$(IPESTYLEDIR)
 	$(INSTALL_FILES) ../../artwork/icons.ipe $(INSTALL_ROOT)$(IPEICONDIR)

@@ -24,7 +24,6 @@ Now you can compile and install Ipe into /usr/local:
 
     cd src
     make IPEPREFIX=/usr/local
-    make documentation IPEPREFIX=/usr/local
     sudo checkinstall --pkgname=ipe --pkgversion=7.x.y --backup=no \
     	 --fstrans=no --default make install IPEPREFIX=/usr/local
     sudo ldconfig
@@ -58,16 +57,6 @@ and libraries:
    installed as 'gmake'.  Otherwise, install it yourself from
    www.gnu.org. Other "make" implementations will not work!
 
- * Doxygen
-
-   If you want the Ipelib API documentation (it's only needed for
-   developers, for instance if you want to write ipelets), you'll need
-   doxygen.  On Linux, install the 'doxygen' package, or otherwise
-   from "www.doxygen.nl".  
-   
-   If you don't need the API documentation, just omit the "make
-   documentation" line below.
-   
  * The compression library 'zlib'
 
    Very likely you already have it on your system (check for the
@@ -191,7 +180,6 @@ These steps will then build Ipe:
 
      cd src
      make
-     make documentation
      make install
 
 Instead of editing "src/config.mak", you can also set the variables in
@@ -199,7 +187,6 @@ the make call, e.g.:
 
     cd src
     make IPEPREFIX=/usr/local
-    make documentation IPEPREFIX=/usr/local
     sudo make install IPEPREFIX=/usr/local
 
 You may need to do "make install" as root (depending on whether you

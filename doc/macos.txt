@@ -36,16 +36,6 @@ Detailed instructions
  * You need to start Xcode at least once to install some additional
    components. Close it when it's done installing.
 
- * Doxygen
-
-   If you want the Ipelib API documentation (it's only needed for
-   developers, for instance if you want to write ipelets), you'll need
-   doxygen.  Doxygen is available through macports, or as a dmg
-   package at "www.doxygen.nl".
-
-   If you don't need the API documentation, just omit the "make
-   documentation" line below.
-   
  * Get libpng, Freetype, and Cairo
 
    If you don't want to install these through macports or homebrew,
@@ -134,7 +124,6 @@ Detailed instructions
 
      cd src
      make
-     make documentation
      make app
 
  * Ipe is now available as a MacOS app in "build/Ipe.app".

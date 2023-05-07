@@ -874,10 +874,13 @@ end
 -- this function is called without arguments on OSX from ipeAlwaysAction
 function action_manual()
   local url = config.docdir .. "/manual.html"
+  if ipe.fileExists(url) then
+    url = "file:///" ..  url
+  else
+    url = prefs.manual_url
+  end
   if ipeui.startBrowser then
-    if not ipeui.startBrowser("file:///" ..  url) then
-      messageBox(nil, "warning", "Manual not available!", url)
-    end
+    ipeui.startBrowser(url)
   else
     os.execute(prefs.browser:format(url))
   end

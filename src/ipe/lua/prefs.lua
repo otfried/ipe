@@ -348,6 +348,8 @@ prefs.browser = "xdg-open %s"
 -- XFCE: exo-open
 -- Ubuntu/Debian: sensible-browser
 
+prefs.manual_url = "http://otfried.github.io/ipe"
+
 -- How to start onscreen keyboard
 if config.platform == "win" then
   prefs.keyboard = "tabtip.exe"
