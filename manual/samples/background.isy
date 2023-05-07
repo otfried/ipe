@@ -1,0 +1,7 @@
+<ipestyle name="background">
+<symbol name="Background" xform="yes">
+<text pos="10 10" stroke="black" size="LARGE">
+Background text
+</text>
+</symbol>
+</ipestyle>

@@ -36,7 +36,7 @@ else
 IPEICO =
 endif
 
-.PHONY: all documentation $(subdirs)
+.PHONY: all manual epub book documentation $(subdirs)
 
 all: $(subdirs)
 
@@ -90,6 +90,15 @@ ifdef IPEQVORONOI
 	$(MAKE) --directory=ipelets/qvoronoi app
 endif
 	$(MAKE) --directory=ipepresenter app
+
+manual:
+	sphinx-build -M html ../manual ../build
+
+epub:
+	sphinx-build -M epub ../manual ../build
+
+book:
+	sphinx-build -M latexpdf ../manual ../build
 
 documentation:
 	$(MAKE) --directory=ipelib documentation

@@ -1,4 +1,5 @@
 build/
 mingw64/
 mingw32/
-
+manual/images/*.svg
+venv/
