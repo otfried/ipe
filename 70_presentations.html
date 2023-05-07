@@ -1,0 +1,496 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Presentations &#8212; Ipe 7.2.27 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Advanced topics" href="80_advanced.html" />
+    <link rel="prev" title="Documents with text that is not in English" href="66_babel.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="80_advanced.html" title="Advanced topics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="66_babel.html" title="Documents with text that is not in English"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="presentations">
+<h1>Presentations<a class="headerlink" href="#presentations" title="Permalink to this headline">¶</a></h1>
+<p>An Ipe presentation is an Ipe PDF document that is presented using a
+PDF viewer and a video projector.  Ipe has a number of features that
+make it easier to make such presentations.</p>
+<p>Ipe comes with the presentation tool IpePresenter.  It shows the
+current slide in one window (which you can make full screen on the
+external display), while showing the current slide, the next slide,
+notes for the current page, as well as a timer on your own display.
+IpePresenter not only works for Ipe presentations, but also for
+presentations made with beamer.  It easily fits on and runs from a
+USB-stick, and does not require Latex on the computer where you give
+the presentation.</p>
+<p>The following sections explain Ipe features that are useful for making
+presentations.</p>
+<p>Ipe comes with a somewhat basic style sheet <code class="file docutils literal notranslate"><span class="pre">presentation.isy</span></code>
+for making presentations.  For a more sophisticated presentation style
+sheet, have a look at <a class="reference external" href="https://www3.tuhh.de/e11/schmidt/#IpeStyle">Jens’ webpage</a>.</p>
+<div class="section" id="presentation-stylesheets">
+<h2>Presentation stylesheets<a class="headerlink" href="#presentation-stylesheets" title="Permalink to this headline">¶</a></h2>
+<p>A presentation <em>must</em> use a dedicated stylesheet.  Presentations must
+use much larger fonts than what is normal for a figure.  Don’t try to
+make use of the <code class="docutils literal notranslate"><span class="pre">LARGE</span></code> and <code class="docutils literal notranslate"><span class="pre">huge</span></code> textsizes, but use a stylesheet
+that properly defines <code class="docutils literal notranslate"><span class="pre">normal</span></code> to be a large textsize.</p>
+<p>Ipe comes with a style sheet <code class="file docutils literal notranslate"><span class="pre">presentation.isy</span></code> that can be used
+for presentations.  To create a new presentation, you can simply say:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ipe -sheet presentation</span>
+</pre></div>
+</div>
+<p>Note that <code class="file docutils literal notranslate"><span class="pre">presentation.isy</span></code> is meant to be used <em>instead</em> of
+<code class="file docutils literal notranslate"><span class="pre">basic.isy</span></code> (not in addition to it).</p>
+<p>This presentation stylesheet enlarges all standard sizes by a factor
+2.8.  Note the use of the <code class="docutils literal notranslate"><span class="pre">&lt;textstretch&gt;</span></code> element to magnify text:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">textstretch</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;2.8&quot;</span><span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="n">textstretch</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;large&quot;</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;2.8&quot;</span><span class="o">/&gt;</span>
+</pre></div>
+</div>
+<p>The text size you choose from the Ipe user interface (<em>large</em>, for
+instance) is in fact used for <em>two</em> symbolic attributes, namely
+<code class="docutils literal notranslate"><span class="pre">textsize</span></code> (where <em>large</em> maps to <code class="docutils literal notranslate"><span class="pre">\large</span></code>) and <code class="docutils literal notranslate"><span class="pre">textstretch</span></code>
+(where it maps to no stretch in the standard style sheet).  By setting
+the text stretch, you can magnify fonts.</p>
+<p>In addition, the <code class="docutils literal notranslate"><span class="pre">&lt;layout&gt;</span></code> element in this stylesheet redefines the
+paper size to be of the correct proportions for a projector, and
+defines a smaller area of the paper as the <em>frame</em>.  The frame is the
+area that should be used for the contents. The <em>Insert text box</em>
+function, for instance, creates text objects that fill exactly the
+width of the frame.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;titlestyle&gt;</span></code> element defines the style of the page
+<em>title</em> outside the frame.  You can set the title for each page
+using <span class="menuselection">Page ‣ Edit title &amp; sections</span>.</p>
+<p>The LaTeX-preamble defined in the <code class="docutils literal notranslate"><span class="pre">&lt;preamble&gt;</span></code> element
+redefines the standard font shape to <code class="docutils literal notranslate"><span class="pre">cmss</span></code> (Computer Modern Sans
+Serif).  Many people find sans-serif fonts easier to read on a screen.
+In addition, it redefines the list environments to use less spacing,
+and the text styles to not justify paragraphs (the <code class="docutils literal notranslate"><span class="pre">&lt;textstyle&gt;</span></code>
+elements).</p>
+<p>If you wish to use the page transition effects of Acrobat Reader, you
+can define the effects in the stylesheet (using <code class="docutils literal notranslate"><span class="pre">&lt;effect&gt;</span></code>
+elements), and set them using <span class="menuselection">View ‣ Edit effect</span>.</p>
+<p id="pagenumberstyle">If you want to number the pages of the presentation, you’ll need to
+use the <code class="docutils literal notranslate"><span class="pre">&lt;pagenumberstyle&gt;</span></code> element.  It defines color, size,
+position, and alignment of the page number, and provides a template
+for the page number text.  The template can use the following Latex
+counters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ipePage</span></code> for the current page number,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ipeView</span></code> for the current view number,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ipePages</span></code> for the total number of pages,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ipeViews</span></code> for the number of views of the current page,</p></li>
+</ul>
+<p>and the special macro <code class="docutils literal notranslate"><span class="pre">\ipeNumber{x}{y}</span></code> that evaluates to <code class="docutils literal notranslate"><span class="pre">x</span></code>
+when the page has only one view, and to <code class="docutils literal notranslate"><span class="pre">y</span></code> if there is more than
+one view.</p>
+<p>If the template is empty, this has the same effect as the following
+definition (this is also the default definition):</p>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span><span class="k">\ipeNumber</span><span class="nb">{</span><span class="k">\arabic</span><span class="nb">{</span>ipePage<span class="nb">}}{</span><span class="k">\arabic</span><span class="nb">{</span>ipePage<span class="nb">}</span> - <span class="k">\arabic</span><span class="nb">{</span>ipeView<span class="nb">}}</span>
+</pre></div>
+</div>
+<p>The following example definition indicates the views of a single page
+with letters A, B, C, …:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;pagenumberstyle</span> <span class="na">pos=</span><span class="s">&quot;300 100&quot;</span> <span class="na">size=</span><span class="s">&quot;Huge&quot;</span> <span class="na">color=</span><span class="s">&quot;navy&quot;</span>
+<span class="na">halign=</span><span class="s">&quot;center&quot;</span><span class="nt">&gt;</span>\ipeNumber{\arabic{ipePage}}{\arabic{ipePage}
+\Alph{ipeView}}<span class="nt">&lt;/pagenumberstyle&gt;</span>
+</pre></div>
+</div>
+<p>The following definition uses roman numerals for the pages and does
+not indicate different views at all:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;pagenumberstyle</span> <span class="na">pos=</span><span class="s">&quot;580 20&quot;</span> <span class="na">size=</span><span class="s">&quot;Huge&quot;</span> <span class="na">color=</span><span class="s">&quot;purple&quot;</span>
+<span class="na">halign=</span><span class="s">&quot;right&quot;</span><span class="nt">&gt;</span>\roman{ipePage}<span class="nt">&lt;/pagenumberstyle&gt;</span>
+</pre></div>
+</div>
+<p>And this shows both the current page and the total number of pages:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;pagenumberstyle</span> <span class="na">pos=</span><span class="s">&quot;20 820&quot;</span> <span class="na">size=</span><span class="s">&quot;Huge&quot;</span> <span class="na">color=</span><span class="s">&quot;0.5 0 0&quot;</span>
+<span class="na">valign=</span><span class="s">&quot;top&quot;</span><span class="nt">&gt;</span>\arabic{ipePage}/\arabic{ipePages}<span class="nt">&lt;/pagenumberstyle&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="views">
+<span id="id1"></span><h2>Views<a class="headerlink" href="#views" title="Permalink to this headline">¶</a></h2>
+<p>When making a PDF presentation for a PDF Viewer or for IpePresenter,
+one would often like to present a page incrementally. For instance, I
+would first like to show a polygon, then add its triangulation, and
+finally color the vertices.  <em>Views</em> make it possible to do this
+nicely.</p>
+<p>An Ipe document consists of several pages, each of which can consist
+of an arbitrary number of views.  When saving as PDF, each view
+generates a separate PDF page (if you only look at the result in a PDF
+viewer, you cannot tell whether two pages are actually two views of
+the same Ipe page or two different Ipe pages).</p>
+<p>An Ipe page consists of a number of objects, a number of layers, and a
+number of views.  Each object belongs to exactly one layer.  A layer
+can be shown by any number of views—a view is really just a list of
+layers to be presented. In addition, a view keeps a record of the
+current active layer—this makes it easy to move around your views
+and edit them.</p>
+<p>Views can also give a different meaning to symbolic attributes, so
+that objects that appear in blue on one view will be red on the next
+one.  One can also change the dash pattern and pen width, and can even
+replace one symbol by a different one.</p>
+<p>As a somewhat experimental feature, views can transform individual
+layers of the page.  This allows you to move around or rotate objects
+from view to view, without having to make copies of the objects.</p>
+<p>Finally, views can specify a graphic effect to be used by the PDF
+viewer when proceeding to the following PDF page.</p>
+<div class="section" id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>To return to our polygon triangulation example, let’s create an empty
+page.  We draw a polygon into the default layer <em>alpha</em>.  Now use
+<span class="menuselection">Views ‣ New layer, new view</span>, and draw the
+triangulation into the new layer <em>beta</em>.  Note that the function not
+only created a new layer, but also a second view showing both <em>alpha</em>
+and <em>beta</em>.  Try moving back and forth between the two views (using
+the <kbd class="kbd docutils literal notranslate">PageUp</kbd> and <kbd class="kbd docutils literal notranslate">PageDown</kbd> keys). You’ll see changes in the
+layer list on the left: in view 1, layer <em>alpha</em> is selected and
+active, in view 2, both layers are selected and <em>beta</em> is active.
+Create a third layer and view, and mark the vertices.</p>
+<p>Save in PDF format, and voila, you have a lovely little presentation.
+The result is available <a class="reference external" href="polygon.pdf">here</a>.</p>
+</div>
+<div class="section" id="text-boxes">
+<h3>Text boxes<a class="headerlink" href="#text-boxes" title="Permalink to this headline">¶</a></h3>
+<p>In presentations, one often has slides with mostly text.  The
+<a class="reference internal" href="30_objects.html#text-objects"><span class="std std-ref">textbox</span></a> object is convenient for this, as one
+doesn’t need to use the mouse to create it.  To create a slide where
+several text items appear one by one, one only needs to press F10 to
+create a textbox, then <kbd class="kbd docutils literal notranslate">Shift+Ctrl+I</kbd> to make a new view, F10
+again for the next textbox, and so on.  Finally, one moves the
+textboxes vertically for the most pleasing effect (<em>Shift+Alt+Left
+Mouse</em> does a constrained vertical translation, or <em>Shift+Left Mouse</em>
+in <em>Translate</em> mode).</p>
+</div>
+<div class="section" id="changing-symbolic-values-inside-a-view">
+<h3>Changing symbolic values inside a view<a class="headerlink" href="#changing-symbolic-values-inside-a-view" title="Permalink to this headline">¶</a></h3>
+<p>Imagine you have an object that is shown in dark orange on your
+current page, but on one specific view you want to highlight the
+object in purple.</p>
+<p>To achieve this, go to the view, and open <em>Edit view</em> from the
+<em>Views</em> menu.  In the attribute map field, write this line:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">color</span><span class="p">:</span><span class="n">darkorange</span><span class="o">=</span><span class="n">purple</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>You will notice that all objects on the page that had the
+<code class="docutils literal notranslate"><span class="pre">darkorange</span></code> color now show in purple.</p>
+<p>You can similarly map other attribute values, for instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">color</span><span class="p">:</span><span class="n">navy</span><span class="o">=</span><span class="n">red</span><span class="p">;</span>
+<span class="n">color</span><span class="p">:</span><span class="n">darkorange</span><span class="o">=</span><span class="n">purple</span><span class="p">;</span>
+<span class="n">symbolsize</span><span class="p">:</span><span class="n">large</span><span class="o">=</span><span class="n">tiny</span><span class="p">;</span>
+<span class="n">pen</span><span class="p">:</span><span class="n">ultrafat</span><span class="o">=</span><span class="n">normal</span><span class="p">;</span>
+<span class="n">dashstyle</span><span class="p">:</span><span class="n">dotted</span><span class="o">=</span><span class="n">dashed</span><span class="p">;</span>
+<span class="n">symbol</span><span class="p">:</span><span class="n">mark</span><span class="o">/</span><span class="n">disk</span><span class="p">(</span><span class="n">sx</span><span class="p">)</span><span class="o">=</span><span class="n">mark</span><span class="o">/</span><span class="n">box</span><span class="p">(</span><span class="n">sx</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The attribute kinds you are allowed to modify are “pen”, “symbolsize”,
+“arrowsize”, “opacity”, “color”, “dashstyle”, and “symbol”.  Both the
+original and the new attribute must be symbolic attributes defined in
+your style sheet.</p>
+<p>It’s probably not a good idea to remap common attributes in your
+document—this may quickly become confusing.  A better approach would
+be to create dedicated attribute values like <code class="docutils literal notranslate"><span class="pre">emphasis</span></code>, that
+map to some standard value in the stylesheet, and which you can then
+redefine in the views where you want to emphasize the object.</p>
+</div>
+<div class="section" id="transforming-objects-inside-a-view">
+<h3>Transforming objects inside a view<a class="headerlink" href="#transforming-objects-inside-a-view" title="Permalink to this headline">¶</a></h3>
+<p>The second large text field inside the <em>Edit view</em> dialog allows
+you to specify transformations for each layer of the page.  For
+instance, you could write these definitions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">alpha</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">20</span> <span class="mi">100</span><span class="p">];</span>
+<span class="n">beta</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">0.8</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">];</span>
+</pre></div>
+</div>
+<p>This will translate all objects in layer alpha by the vector (20,
+100) (that is, 20 units to the right and 100 units upwards), while all
+objects in layer beta are scaled in the <em>y</em>-direction by factor 0.8.</p>
+<p>This is somewhat experimental—there is no good UI to figure out the
+right transformation matrices (you may want to draw a helper object,
+apply the transformation, and then use <em>Edit as XML</em> to look at
+the object’s matrix field).</p>
+<p>Also, Ipe still considers the objects to be at their original place,
+it just displays them elsewhere.  For instance, to modify an object
+you have to select it by clicking at its original location. (So, to
+modify an object, it is best is to go back to the original view where
+you made the object.)</p>
+<p>Currently, the layer transformation is not taken into account when
+computing the bounding box of a page, so make sure you have other
+objects creating a suitable bounding box.</p>
+</div>
+<div class="section" id="controlling-the-pdf-bounding-box-of-a-view">
+<h3>Controlling the PDF bounding box of a view<a class="headerlink" href="#controlling-the-pdf-bounding-box-of-a-view" title="Permalink to this headline">¶</a></h3>
+<p>Note that all views of a page receive the same bounding box,
+containing all objects visible on some view, plus all objects in a
+layer named <code class="docutils literal notranslate"><span class="pre">BBOX</span></code> (even if that layer is not visible).  This can be
+used to force a larger bounding box without adding a white rectangle
+or the like.</p>
+<p>If you need independent bounding boxes for each view, create a layer
+named <code class="docutils literal notranslate"><span class="pre">VIEWBBOX</span></code>.  Any view in which this layer is visible will
+receive a bounding box computed for the objects visible in this view
+only.</p>
+</div>
+</div>
+<div class="section" id="bookmarks">
+<h2>Bookmarks<a class="headerlink" href="#bookmarks" title="Permalink to this headline">¶</a></h2>
+<p>You can set a section title and a subsection title for each page of an
+Ipe document.  Theses titles will be shown in the <em>bookmarks list</em>
+(right-click on a toolbar to make it visible).  Double-clicking a
+title brings you directly to its page, making navigation of long
+documents much easier.  The titles are also exported to PDF, and are
+visible in the bookmarks view of PDF viewers.</p>
+<p>You can also use the section title of a page to refer to this page in
+<strong class="program">ipetoipe</strong> and <strong class="program">iperender</strong>.</p>
+</div>
+<div class="section" id="excluding-a-page-from-the-presentation">
+<h2>Excluding a page from the presentation<a class="headerlink" href="#excluding-a-page-from-the-presentation" title="Permalink to this headline">¶</a></h2>
+<p>If you add a layer with name <code class="docutils literal notranslate"><span class="pre">NOPDF</span></code> to a page (it does not need to
+be visible in any view of the page), then the page is not included in
+the PDF representation of the document.  So while Ipe will show the
+page normally, viewing the document with a PDF reader (including
+IpePresenter) will not show that page.</p>
+</div>
+<div class="section" id="gradient-patterns">
+<span id="id2"></span><h2>Gradient patterns<a class="headerlink" href="#gradient-patterns" title="Permalink to this headline">¶</a></h2>
+<p>Gradient patterns allow to shade objects with continuously changing
+colors.  This is often used for backgrounds, or to achieve the
+illusion of three-dimensional spheres or cylinders.</p>
+<p>The intended use of gradients is to allow the creation of attractive
+symbols inside the style sheet, for backgrounds, as bullets in item
+lists (see next section), or simply to define attractive glassy-ball
+symbols and the like that can be used through the <em>Use symbol</em>
+ipelet.</p>
+<p>The Ipe user interface does not offer any way of creating or editing
+gradients.  If your stylesheet defines a gradient, then it is possible
+to fill a path object with this gradient, but getting the gradient
+coordinate system right is not trivial.  (The trick is to draw the
+path object at gradient coordinates, and translate/rotate it to the
+final location afterwards.)</p>
+<p>The definition of a linear (axial) gradient looks like this:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;gradient</span> <span class="na">name=</span><span class="s">&quot;linear&quot;</span> <span class="na">type=</span><span class="s">&quot;axial&quot;</span> <span class="na">extend=</span><span class="s">&quot;yes&quot;</span> <span class="na">coords=</span><span class="s">&quot;75 0 325 0&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;stop</span> <span class="na">offset=</span><span class="s">&quot;0.05&quot;</span> <span class="na">color=</span><span class="s">&quot;1 0.4 0&quot;</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;stop</span> <span class="na">offset=</span><span class="s">&quot;0.95&quot;</span> <span class="na">color=</span><span class="s">&quot;1 1 0.4&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/gradient&gt;</span>
+</pre></div>
+</div>
+<p>If used like this:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;path</span> <span class="na">stroke=</span><span class="s">&quot;0&quot;</span> <span class="na">fill=</span><span class="s">&quot;1&quot;</span> <span class="na">gradient=</span><span class="s">&quot;linear&quot;</span> <span class="na">pen=</span><span class="s">&quot;3&quot;</span><span class="nt">&gt;</span>
+  50 50 m 350 50 l 350 150 l 50 150 l h
+<span class="nt">&lt;/path&gt;</span>
+</pre></div>
+</div>
+<p>it will look like this:</p>
+<img alt="images/lingrad1.*" class="align-center" src="images/lingrad1.*" />
+<p>A radial gradient looks like this:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;gradient</span> <span class="na">name=</span><span class="s">&quot;radial&quot;</span> <span class="na">type=</span><span class="s">&quot;radial&quot;</span> <span class="na">extend=</span><span class="s">&quot;yes&quot;</span>
+          <span class="na">coords=</span><span class="s">&quot;200 100 0 200 100 150&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;stop</span> <span class="na">offset=</span><span class="s">&quot;0&quot;</span> <span class="na">color=</span><span class="s">&quot;1 0 0&quot;</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;stop</span> <span class="na">offset=</span><span class="s">&quot;0.5&quot;</span> <span class="na">color=</span><span class="s">&quot;0 0 1&quot;</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;stop</span> <span class="na">offset=</span><span class="s">&quot;1&quot;</span> <span class="na">color=</span><span class="s">&quot;1 0 0&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/gradient&gt;</span>
+</pre></div>
+</div>
+<p>It will look like this:</p>
+<img alt="images/radgrad1.*" class="align-center" src="images/radgrad1.*" />
+<p>A common use of radial gradients is to define glassy balls like this:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;gradient</span> <span class="na">name=</span><span class="s">&quot;ball&quot;</span> <span class="na">type=</span><span class="s">&quot;radial&quot;</span> <span class="na">coords=</span><span class="s">&quot;-4 10 2 0 0 18&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;stop</span> <span class="na">offset=</span><span class="s">&quot;0&quot;</span> <span class="na">color=</span><span class="s">&quot;1 1 1&quot;</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;stop</span> <span class="na">offset=</span><span class="s">&quot;1&quot;</span> <span class="na">color=</span><span class="s">&quot;0 0 1&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/gradient&gt;</span>
+</pre></div>
+</div>
+<p>Note that the gradient is centered at <em>0 0</em>, so it needs to be
+moved to the location where it is used:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;path</span> <span class="na">matrix=</span><span class="s">&quot;3 0 0 3 100 100&quot;</span> <span class="na">fill=</span><span class="s">&quot;1&quot;</span> <span class="na">gradient=</span><span class="s">&quot;ball&quot;</span><span class="nt">&gt;</span>
+  18 0 0 18 0 0 e
+<span class="nt">&lt;/path&gt;</span>
+</pre></div>
+</div>
+<img alt="images/radgrad2.*" class="align-center" src="images/radgrad2.*" />
+<p>Normally, you would define a symbol looking like a glassy ball in your
+style sheet:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;ipestyle&gt;</span>
+  <span class="nt">&lt;gradient</span> <span class="na">name=</span><span class="s">&quot;ball&quot;</span> <span class="na">type=</span><span class="s">&quot;radial&quot;</span> <span class="na">coords=</span><span class="s">&quot;-4 10 2 0 0 18&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;stop</span> <span class="na">offset=</span><span class="s">&quot;0&quot;</span> <span class="na">color=</span><span class="s">&quot;1 1 1&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;stop</span> <span class="na">offset=</span><span class="s">&quot;1&quot;</span> <span class="na">color=</span><span class="s">&quot;0 0 1&quot;</span><span class="nt">/&gt;</span>
+  <span class="nt">&lt;/gradient&gt;</span>
+  <span class="nt">&lt;symbol</span> <span class="na">name=</span><span class="s">&quot;ball(x)&quot;</span> <span class="na">transformations=</span><span class="s">&quot;translations&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;path</span> <span class="na">fill=</span><span class="s">&quot;1&quot;</span> <span class="na">gradient=</span><span class="s">&quot;ball&quot;</span><span class="nt">&gt;</span> 18 0 0 18 0 0 e <span class="nt">&lt;/path&gt;</span>
+  <span class="nt">&lt;/symbol&gt;</span>
+<span class="nt">&lt;/ipestyle&gt;</span>
+</pre></div>
+</div>
+<p>The glassy ball can then be used in the document using the <em>Use
+symbol</em> ipelet.  Note that <code class="docutils literal notranslate"><span class="pre">transformations=&quot;translations&quot;</span></code> ensures
+that stretching your drawing does not change the glassy ball.  Adding
+the <code class="docutils literal notranslate"><span class="pre">(x)</span></code> suffix to the symbol name allows you to resize the glassy
+ball by changing the symbol size from the properties (the same
+selector used to change the mark size).</p>
+<p>For the precise syntax of the gradient definition see <a class="reference internal" href="90_file_format.html#gradient-element"><span class="std std-ref">here</span></a>.  The easiest method of creating gradients,
+though, is to use an SVG editor such as <strong class="program">Inkscape</strong> and to
+convert the SVG gradient to Ipe format using <strong class="program">svgtoipe</strong>.</p>
+</div>
+<div class="section" id="prettier-bullet-points">
+<h2>Prettier bullet points<a class="headerlink" href="#prettier-bullet-points" title="Permalink to this headline">¶</a></h2>
+<p>Presentations often make use of <code class="docutils literal notranslate"><span class="pre">itemize</span></code> environments.  You can
+make these prettier in a number of ways:</p>
+<p>You can color your bullets:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;preamble&gt;</span>
+\def\labelitemi{\LARGE\textcolor{red}{$\bullet$}}
+<span class="nt">&lt;/preamble&gt;</span>
+</pre></div>
+</div>
+<p>Enumeration numbers could be put in a colored box:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;preamble&gt;</span>
+\newcommand{\labelenumi}{\fbox{\Roman{enumi}}}
+<span class="nt">&lt;/preamble&gt;</span>
+</pre></div>
+</div>
+<p>You could use the Dingbats font for nice enumerations, for instance
+by putting <code class="docutils literal notranslate"><span class="pre">\usepackage{pifont}</span></code> in your preamble, and then having
+text objects with <code class="docutils literal notranslate"><span class="pre">\begin{dinglist}{43}</span></code> or <code class="docutils literal notranslate"><span class="pre">\begin{dingautolist}{172}</span></code>
+(or use 182, 192, 202 for various circled numbers).</p>
+<p>You can mark items as <em>good</em> and <em>bad</em> using these “bullets”:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line"><em>Bad item</em>:  <code class="docutils literal notranslate"><span class="pre">\textcolor{red}{\ding{55}}</span></code></div>
+<div class="line"><em>Good item</em>: <code class="docutils literal notranslate"><span class="pre">\textcolor{green}{\ding{52}}</span></code></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="filming-from-the-canvas">
+<span id="filming"></span><h2>Filming from the canvas<a class="headerlink" href="#filming-from-the-canvas" title="Permalink to this headline">¶</a></h2>
+<p>Some Ipe users make presentation videos directly from Ipe, as follows:</p>
+<ul class="simple">
+<li><p>Make Ipe full-screen (Zoom menu);</p></li>
+<li><p>Turn off the grid (Zoom menu);</p></li>
+<li><p>Enable pretty display (Zoom menu);</p></li>
+<li><p>Mac: Turn off the Snap toolbar and possibly the mode toolbar (Zoom menu);</p></li>
+<li><p>Linux: Turn off or rearrange toolbars and panels to taste;</p></li>
+<li><p>Windows: Turn off or rearrange toolbars by setting <code class="docutils literal notranslate"><span class="pre">prefs.win_toolbar_order</span></code>;</p></li>
+<li><p>Set up your video software to film the canvas area of Ipe (where your document is shown).</p></li>
+</ul>
+<p>You can now go through your presentation, using the <em>Laser pointer</em>
+mode to point to items on your slide, and using ink mode to write
+annotations directly onto the slides.</p>
+<p>For this to work well, it is essential that the width of the canvas
+remains fixed while you step through your document.  Try it before you
+start filming!  You can change the contents of the “View” and “Page”
+buttons by changing the preferences <code class="docutils literal notranslate"><span class="pre">prefs.view_button_prefix</span></code> and
+<code class="docutils literal notranslate"><span class="pre">prefs.page_button_prefix</span></code>.  Furthermore, on MacOS, you can force the
+canvas width to remain fixed by making <code class="docutils literal notranslate"><span class="pre">prefs.osx_properties_width</span></code>
+large enough.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Presentations</a><ul>
+<li><a class="reference internal" href="#presentation-stylesheets">Presentation stylesheets</a></li>
+<li><a class="reference internal" href="#views">Views</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+<li><a class="reference internal" href="#text-boxes">Text boxes</a></li>
+<li><a class="reference internal" href="#changing-symbolic-values-inside-a-view">Changing symbolic values inside a view</a></li>
+<li><a class="reference internal" href="#transforming-objects-inside-a-view">Transforming objects inside a view</a></li>
+<li><a class="reference internal" href="#controlling-the-pdf-bounding-box-of-a-view">Controlling the PDF bounding box of a view</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bookmarks">Bookmarks</a></li>
+<li><a class="reference internal" href="#excluding-a-page-from-the-presentation">Excluding a page from the presentation</a></li>
+<li><a class="reference internal" href="#gradient-patterns">Gradient patterns</a></li>
+<li><a class="reference internal" href="#prettier-bullet-points">Prettier bullet points</a></li>
+<li><a class="reference internal" href="#filming-from-the-canvas">Filming from the canvas</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="66_babel.html"
+                        title="previous chapter">Documents with text that is not in English</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="80_advanced.html"
+                        title="next chapter">Advanced topics</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/70_presentations.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="80_advanced.html" title="Advanced topics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="66_babel.html" title="Documents with text that is not in English"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

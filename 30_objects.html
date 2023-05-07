@@ -1,0 +1,547 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Object types &#8212; Ipe 7.2.27 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Snapping" href="40_snapping.html" />
+    <link rel="prev" title="General Concepts" href="20_concepts.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="40_snapping.html" title="Snapping"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="20_concepts.html" title="General Concepts"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <span class="target" id="index-0"></span><span class="target" id="index-1"></span><div class="section" id="object-types">
+<span id="index-2"></span><h1>Object types<a class="headerlink" href="#object-types" title="Permalink to this headline">¶</a></h1>
+<p>Ipe supports five different types of objects that can be placed on a
+page, namely path objects (which includes all objects with a stroked
+contour and filled interior, such as (poly)lines, polygons, splines,
+splinegons, circles and ellipses, circular and elliptic arcs, and
+rectangles), text objects, image objects, group objects, and reference
+objects (which means that a symbol is used at a certain spot on the
+page).</p>
+<p>Path and text objects are created by clicking the left mouse button
+somewhere on the canvas using the correct Ipe mode.  Group objects are
+created using the <em>Group</em> function in the <em>Edit</em> menu.
+Image objects are added to the document using <em>Insert image</em> in
+the <em>File</em> menu. Reference objects can be created either using
+mark mode, or using the <em>Symbols</em> ipelet.</p>
+<span class="target" id="path-objects"></span><div class="section" id="index-3">
+<span id="id1"></span><h2>Path objects<a class="headerlink" href="#index-3" title="Permalink to this headline">¶</a></h2>
+<p>Path objects are defined by a set of <em>subpaths</em>, that is, curves
+in the plane.  Each subpath is either open or closed, and consists of
+straight line segments, circular or elliptic arc segments, parabola
+segments (or, equivalently, quadratic Bézier splines), cubic Bézier
+splines, and cubic B-spline segments.  The curves are drawn with the
+stroke color, dash style, and line width; the interior of the object
+specified is filled using the fill color.</p>
+<p>The distinction between open and closed subpaths is meaningful for
+stroking only, for filling any open subpath is implicitely closed.
+Stroking a set of subpaths is identical to stroking them individually.
+This is not true for filling: using several subpaths, one can
+construct objects with holes, and more complicated pattern.  The
+filling algorithm is normally the <em>even-odd rule</em> of
+Postscript/PDF: To determine whether a point lies inside the filled
+shape, draw a ray from that point in any direction, and count the
+number of path segments that cross the ray.  If this number is odd,
+the point is inside; if even, the point is outside.</p>
+<p>Ipe can draw arrows on the first and last segment of a path object,
+but only if that segment is part of an open subpath.</p>
+<p>There are several Ipe modes that create path objects in different
+ways.  All modes create an object consisting of a single subpath only.
+To make more complicated path objects, such as objects with holes, you
+create each boundary component separately, then select them all and
+use the <em>Compose paths</em> function in the <em>Edit</em> menu.  The
+reverse operation is <em>Decompose path</em>, you find it in the context
+menu of a path object that has several subpaths.</p>
+<p>You can also create complicated paths by joining curves sequentially.
+For this to work, the endpoint of one path must be (nearly) identical
+to the begin point of the next—easy to achieve using snapping.  You
+select the path objects you wish to join, and call <em>Join paths</em>
+in the <em>Edit</em> menu.  You can also join several open path objects
+into a single closed path this way.</p>
+<span class="target" id="index-4"></span><span class="target" id="index-5"></span><p id="index-6">Circles can be entered in three different ways.  To create an ellipse,
+create a circle and shear or stretch and rotate it.  Circular arcs can
+be entered by clicking three points on the arc or by clicking the
+center of the supporting circle as well as the begin and end vertex of
+the arc. They can be filled in Postscript/PDF fashion, and can have
+arrows. You can stretch a circular arc to create an elliptic arc.</p>
+<p>A common application for arcs is to mark angles in drawings. The snap
+keys are useful to create such arcs: set arc creation to <em>center &amp; 2
+pts</em>, select <em>snap to vertex</em> and <em>snap to boundary</em>, click first on
+the center point of the angle (which is magnetic) and click then on
+the two bounding lines.</p>
+<span class="target" id="index-7"></span><span class="target" id="index-8"></span><span class="target" id="index-9"></span><span class="target" id="index-10"></span><span class="target" id="index-11"></span><span class="target" id="index-12"></span><span class="target" id="index-13"></span><span class="target" id="index-14"></span><span class="target" id="index-15"></span><p id="index-16">There are two modes for creating more complex general path objects.
+The difference between <em>line</em> mode and <em>polygon</em> mode is
+that the first creates an open path, the latter generates a closed
+one.  As a consequence, the <em>line</em> mode uses the current arrow
+settings, while the <em>polygon</em> mode doesn’t.</p>
+<p>The path object created using line or polygon mode consists of
+segments of various types.  The initial setting is to create straight
+segments. By holding the shift-key when pressing the left mouse button
+one can switch to splines.  Ipe offers three different kinds of
+splines: uniform B-splines, cardinal splines, and clothoid splines.
+You can select the type of spline in the <em>Properties</em> menu.
+Quadratic and cubic Bézier spline segments can be created as special
+cases of uniform B-splines with three and four control points.</p>
+<p>Circular arcs can be added as follows: Click twice in polyline mode,
+once on the starting point of the arc, then on a point in the correct
+tangent direction.  Press the <kbd class="kbd docutils literal notranslate">a</kbd> key, and click on the endpoint
+of the arc.</p>
+<p>To make curves where segments of different type are joined with
+identical tangents, you can press the <kbd class="kbd docutils literal notranslate">y</kbd> key whenever you are
+starting a new segment: this will set the coordinate system centered
+at the starting point of the segment, and aligned with the tangent to
+the previous segment.</p>
+<p>For the mathematically inclined, a more precise description of the
+segments that can appear on a subpath follows.</p>
+<p>A subpath consists of a sequence of segments.  Each segment is either
+a straight line segment, an elliptic arc, or a spline of one of the
+three supported types.</p>
+<p>Note that a uniform B-spline with only three control points will be
+drawn as a <em>quadratic</em> Bézier spline.  A B-spline with four
+control points is by definition a cubic Bézier spline.</p>
+<p>The quadratic Bézier spline defined by control points <span class="math notranslate nohighlight">\(p_{0}\)</span>,
+<span class="math notranslate nohighlight">\(p_{1}\)</span>, and <span class="math notranslate nohighlight">\(p_{2}\)</span>, is the curve</p>
+<blockquote>
+<div><p><span class="math notranslate nohighlight">\(P(t) = (1-t)^{2} p_{0} + 2t(1-t) p_{1} + t^{2} p_{2}\)</span>,</p>
+</div></blockquote>
+<p>where <span class="math notranslate nohighlight">\(t\)</span> ranges from 0 to 1. This implies that it starts in
+<span class="math notranslate nohighlight">\(p_{0}\)</span> tangent to the line <span class="math notranslate nohighlight">\(p_{0}p_{1}\)</span>, ends in
+<span class="math notranslate nohighlight">\(p_{2}\)</span> tangent to the line <span class="math notranslate nohighlight">\(p_{1}p_{2}\)</span>, and is contained
+in the convex hull of the three points.  Any segment of any parabola
+can be expressed as a quadratic Bézier spline.</p>
+<p>For instance, the piece of the unit parabola <span class="math notranslate nohighlight">\(y = x^{2}\)</span> between <span class="math notranslate nohighlight">\(x=a\)</span>
+and <span class="math notranslate nohighlight">\(x=b\)</span> can be created with the control points</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line"><span class="math notranslate nohighlight">\(p_{0} = (a, a^{2})\)</span></div>
+<div class="line"><span class="math notranslate nohighlight">\(p_{1} = (\frac{a + b}{2}, ab)\)</span></div>
+<div class="line"><span class="math notranslate nohighlight">\(p_{2} = (b, b^{2})\)</span></div>
+</div>
+</div></blockquote>
+<p>Any piece of any parabola can be created by applying some affine
+transformation to these points.</p>
+<p>The cubic Bézier spline with control points <span class="math notranslate nohighlight">\(p_{0}\)</span>,
+<span class="math notranslate nohighlight">\(p_{1}\)</span>, <span class="math notranslate nohighlight">\(p_{2}\)</span>, and <span class="math notranslate nohighlight">\(p_{3}\)</span>, is the curve</p>
+<blockquote>
+<div><p><span class="math notranslate nohighlight">\(R(t) = (1-t)^{3}p_{0} + 3t(1-t)^{2} p_{1} + 3 t^{2}(1-t) p_{2} + t^{3} p_{3}\)</span>.</p>
+</div></blockquote>
+<p>It starts in <span class="math notranslate nohighlight">\(p_{0}\)</span> being tangent to the line
+<span class="math notranslate nohighlight">\(p_{0}p_{1}\)</span>, ends in <span class="math notranslate nohighlight">\(p_{3}\)</span> being tangent to the line
+<span class="math notranslate nohighlight">\(p_{2}p_{3}\)</span>, and lies in the convex hull of the four control
+points.</p>
+<p>Uniform cubic B-splines approximate a series of <span class="math notranslate nohighlight">\(n\)</span> control
+points <span class="math notranslate nohighlight">\(p_{0}\)</span>, <span class="math notranslate nohighlight">\(p_{1}\)</span>, …, <span class="math notranslate nohighlight">\(p_{n-1}\)</span>, <span class="math notranslate nohighlight">\(n
+\geq 3\)</span>, with a curve consisting of <span class="math notranslate nohighlight">\(n-3\)</span> cubic Bézier
+splines, see, for instance, Sederberg <a class="footnote-reference brackets" href="#id3" id="id2">1</a>. To clamp the spline to
+the first and last control point, the first and last knot are repeated
+three times.  If the curve is closed (a <em>splinegon</em>), there is no
+clamping and <span class="math notranslate nohighlight">\(n\)</span> control points define <span class="math notranslate nohighlight">\(n\)</span> Bézier
+splines.</p>
+<p>Since each point on a Bézier curve is a convex combination of the
+four control points, the curve segment lies in the convex hull of the
+control points. Furthermore, any affine transformation can be applied
+to the curve by applying it to the control points.  Note that a
+control point has influence on only a few Bézier segments, so when
+you edit a spline object and move a control point, only a short piece
+of the spline in the neighborhood of the control point will move.</p>
+<p>A <em>cardinal spline</em> is an <em>interpolating spline</em>—unlike a uniform
+B-spline, it will go <em>through</em> the control points.  Ipe converts a
+sequence of <span class="math notranslate nohighlight">\(n\)</span> control points into <span class="math notranslate nohighlight">\(n-1\)</span> Bézier
+segments, each starting and ending at a control point.  The tangent at
+each control point is parallel to the segment connecting the previous
+and the next control point.</p>
+<p>Finally, a <em>clothoid spline</em> (spline type <code class="docutils literal notranslate"><span class="pre">spiro</span></code>) is created by
+solving an optimization problem that tries to minimize the change in
+curvature (so they look much “rounder” and are generally more
+pleasing).  Details can be found in <a class="reference external" href="http://levien.com">Raph Levien’s thesis</a>.</p>
+<p id="index-17">Existing polygonal objects can be edited, using Ipe’s <em>edit mode</em>. You
+select the object you want to modify, and then press <kbd class="kbd docutils literal notranslate">M-e</kbd> (or
+select <span class="menuselection">Edit ‣ Edit object</span>). The object will be
+placed in edit mode.</p>
+<dl class="footnote brackets">
+<dt class="label" id="id3"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
+<dd><p>Thomas Sederberg, Computer-Aided Geometric Design, Chapter 6.</p>
+</dd>
+</dl>
+<span class="target" id="text-objects"></span><span class="target" id="index-18"></span><span class="target" id="index-19"></span><span class="target" id="index-20"></span><span class="target" id="index-21"></span></div>
+<div class="section" id="index-22">
+<span id="id4"></span><h2>Text objects<a class="headerlink" href="#index-22" title="Permalink to this headline">¶</a></h2>
+<p>Text objects come in two flavors: simple <em>labels</em>, and <em>minipages</em>.
+There are two variants of these: <em>titles</em> (a label that serves as the
+title of the page), and <em>textbox</em> (a minipage that spans the entire
+width of the page).</p>
+<p>The position you have to click to start creating a <em>label</em> object is
+normally the leftmost baseline point (but this can be changed by
+changing the object’s horizontal and vertical alignment).  A popup
+window appears where you can enter Latex source code.</p>
+<p>A <em>minipage</em> object is different from a simple text object in
+that its width is part of its definition. When you create a minipage
+object, you first have to drag out a horizontal segment for the
+minipage.  This is used as the top edge of the minipage—it will
+extend downwards as far as necessary to accomodate all the text.
+Minipages are formatted using, not surprisingly, Latex’s
+<code class="docutils literal notranslate"><span class="pre">minipage</span></code> environment.  Latex tries to fill the given bounding
+box as nicely as possible. It is possible to include center
+environments, lemmas, and much more in minipages.</p>
+<p>To create a <em>textbox</em> object, simply press <kbd class="kbd docutils literal notranslate">F10</kbd>.  Ipe
+automatically places the object so that it spans the entire width of
+the page (the <em>layout</em> settings in the stylesheet determine how much
+space is left on the sides), and places it vertically underneath the
+textboxes already on the page.  This is particularly convenient for
+creating presentations with a lot of text, or with items that appear
+<a class="reference internal" href="70_presentations.html#views"><span class="std std-ref">one by one</span></a>.</p>
+<p><em>Title</em> objects are managed by Ipe automatically.  They are
+special labels that are created using <em>Edit title &amp; sections</em> in
+the <em>Page</em> menu.  Their color, size, alignment, and position on
+the page is determined by the stylesheet.</p>
+<p>You can use any LaTeX-command that is legal inside a <code class="docutils literal notranslate"><span class="pre">\makebox</span></code> (for
+labels) or inside a <code class="docutils literal notranslate"><span class="pre">minipage</span></code> (for minipages).  You cannot use
+certain commands that involve a non-linear translation into PDF.  In
+particular, you cannot use commands to generate hyperlinks (the
+<code class="docutils literal notranslate"><span class="pre">\href</span></code> command from the <code class="docutils literal notranslate"><span class="pre">hyperref</span></code> package will not work).  If
+you need to add links to your Ipe document, you will need to use a
+<a class="reference internal" href="#group-objects"><span class="std std-ref">group object</span></a>.</p>
+<p>You can use color in your text objects, using the <code class="docutils literal notranslate"><span class="pre">\textcolor</span></code>
+command, like this:</p>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span>This is in black. <span class="k">\textcolor</span><span class="nb">{</span>red<span class="nb">}{</span>This is in red.<span class="nb">}</span> This is in black.
+</pre></div>
+</div>
+<p>All the symbolic colors of your current stylesheet are also available
+as arguments to <code class="docutils literal notranslate"><span class="pre">\textcolor</span></code>.  You can also use absolute colors,
+for instance:</p>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span>This is in black. <span class="k">\textcolor</span><span class="na">[rgb]</span><span class="nb">{</span>1,1,0<span class="nb">}{</span>This is in yellow.<span class="nb">}</span> This is in black.
+</pre></div>
+</div>
+<p id="index-23">If you need LaTeX-commands that are defined in additional LaTeX
+packages, you can include (<code class="docutils literal notranslate"><span class="pre">\usepackage</span></code>) those in the LaTeX
+preamble, which can be set in <em>Document properties</em> in the <em>Edit</em>
+menu.</p>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">xcolor</span></code>-package is loaded automatically by Ipe,
+without any options.  If you need to use package options of the
+<code class="docutils literal notranslate"><span class="pre">xcolor</span></code>-package, place the command</p>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span><span class="k">\ipedefinecolors</span><span class="nb">{</span>options<span class="nb">}</span>
+</pre></div>
+</div>
+<p>in your preamble. It has to go before the first use of <code class="docutils literal notranslate"><span class="pre">xcolor</span></code>
+commands in your document.</p>
+<p>After you have created or edited a text object, the Ipe screen display
+will show the beginning of the Latex source.  You can select <em>Run
+Latex</em> from the <em>File</em> menu to create the PDF representation of the
+object.  This converts all the text objects in your document at once,
+and Ipe will display a correct rendition of the text afterwards.</p>
+<p>If the Latex conversion process results in errors, Ipe will
+automatically show you the log file created by the Latex run.  If you
+cannot figure out the problem, look in <a class="reference internal" href="80_advanced.html#troubleshooting"><span class="std std-ref">the section on
+troubleshooting</span></a>.</p>
+<p>You can use Unicode text, such as accented characters, Greek,
+Cyrillic, Chinese, Japanese, or Korean, in your text objects, once
+<a class="reference internal" href="66_babel.html"><span class="doc">you have set up the necessary style files and fonts</span></a>.</p>
+<p>When Ipe computes the bounding box for a piece of text, it relies
+entirely on the dimensions that Latex provides.  Sometimes glyphs are
+larger than their <code class="docutils literal notranslate"><span class="pre">official</span></code> dimensions, and as a result this
+bounding box is too tight.  In the following figure, <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">G</span></code>
+stick out of the golden rectangle (the bounding box computed by Ipe
+based on the Latex dimensions) at the top, <code class="docutils literal notranslate"><span class="pre">y</span></code> sticks out at the
+bottom:</p>
+<img alt="images/fontbbox.*" class="align-center" src="images/fontbbox.*" />
+<p>When you experience that text in your figures is clipped, you may have
+to enlarge the figure’s bounding box using a <code class="docutils literal notranslate"><span class="pre">BBOX</span></code> layer.</p>
+<p>The opposite problem can occur when you use transformed text.  Ipe
+computes the bounding box for the transformed text by transforming the
+bounding box for the original text, and the result can be too large:</p>
+<img alt="images/fontbbox2.*" class="align-center" src="images/fontbbox2.*" />
+<p>If this is a problem, you can put the text object inside a group and
+set a clipping path for the group.</p>
+<span class="target" id="images"></span></div>
+<div class="section" id="image-objects">
+<span id="index-24"></span><h2>Image objects<a class="headerlink" href="#image-objects" title="Permalink to this headline">¶</a></h2>
+<p>Images are inserted using <em>Insert image</em> (in the <em>File</em> menu).  Once
+in a drawing, you can scale, stretch, shear, and rotate an image.  You
+can read in some scanned drawing and draw on top of it within
+Ipe. This is useful if you have a drawing on paper and want to make an
+Ipe version of it.</p>
+<p><em>Insert image</em> can handle images in JPEG and PNG format (and
+possibly others such as GIF, BMP, TIFF, depending on the operating
+system).  JPEG images are stored as is (PDF supports the JPEG
+standard), all other images are stored as a (compressed) bitmap, with
+full-color resolution (24 bits per pixel).</p>
+<p>It is also possible to simply paste an image into Ipe (this should not
+be used for JPEG images, as you would then store the bitmap without
+JPEG compression).</p>
+<p>Images are stored efficiently in PDF format.  It is reasonable to
+create PDF presentations with lots of JPEG photographs in Ipe.</p>
+</div>
+<div class="section" id="group-objects">
+<span id="id5"></span><h2>Group objects<a class="headerlink" href="#group-objects" title="Permalink to this headline">¶</a></h2>
+<p>Group objects are created by selecting any number of objects and using
+the <em>Group</em> function from the <em>Edit</em> menu.  The grouped
+objects then behave like a single object.  To modify a group object,
+it has to be decomposed into its parts using <em>Ungroup</em>.</p>
+<div class="section" id="clipping">
+<h3>Clipping<a class="headerlink" href="#clipping" title="Permalink to this headline">¶</a></h3>
+<p>You can set a <em>clipping path</em> for a group.  The group will then be
+clipped to this path—nothing will be drawn outside the clipping
+path.  This is useful, for instance, to clip out an interesting part
+of an existing drawing or bitmap.</p>
+<p>To add a clipping path, select a group as the primary selection, and a
+path object as the secondary selection.  Then select <em>Add clipping
+path</em> from the group’s context menu.</p>
+</div>
+<div class="section" id="decorations">
+<h3>Decorations<a class="headerlink" href="#decorations" title="Permalink to this headline">¶</a></h3>
+<p>Group objects can be <em>decorated</em>.  A decoration consists of one
+or more path objects that are drawn around the group.  The decoration
+is automatically resized to fit the bounding box of the group.</p>
+<p>To use decorations, you first need to add a <a class="reference internal" href="60_stylesheets.html"><span class="doc">stylesheet</span></a> to your document that defines decoration
+symbols—you may want to start with the provided style sheet
+<em>decorations.isy</em>.  Then use the group’s object menu to choose a
+decoration for the group.</p>
+</div>
+<div class="section" id="editing-text-in-group">
+<h3>Editing text in group<a class="headerlink" href="#editing-text-in-group" title="Permalink to this headline">¶</a></h3>
+<p>Groups often contain some text.  For instance, a graph vertex is
+nicely represented as a group consisting of a text label and either a
+mark symbol such as a disk, or a path object (a circle, rectangle, or
+a more complicated shape).  When drawing a graph, one can place the
+vertices by copying and pasting these vertex objects, but then one
+needs to set the text label in each vertex.</p>
+<p>To make this easy, the <em>Edit object</em> operation (which is
+otherwise used to edit the text in text objects and the shape of path
+objects) can also be used for group objects that contain at lease one
+text object.  It allows you to update the text inside the
+<em>top-most</em> text object of the group.</p>
+</div>
+<div class="section" id="recursive-group-edit">
+<h3>Recursive group edit<a class="headerlink" href="#recursive-group-edit" title="Permalink to this headline">¶</a></h3>
+<p>Often you want to modify the contents of a group without disturbing
+the rest of your drawing.  To make this easy, Ipe provides the
+<em>Edit group</em> operation, available either from the <em>Edit</em>
+menu or from the group’s context menu.</p>
+<p>Group editing is implemented by un-grouping the group into a newly
+created layer whose name will start with <em>EDIT-GROUP</em>.  Ipe locks
+all other layers, so that you can concentrate on editing the objects
+in the group.  When you are done, you select <em>End group edit</em>
+from the <em>Edit</em> menu.  Ipe will take all the objects in the group
+edit layer, group them together, and place the group back in its
+original layer.</p>
+<p>You can edit groups recursively: If your group contains another group
+that you want to modify, you can perform another group edit operation.
+Each <em>End group edit</em> closes one group edit layer, until you
+return to your normal drawing workflow.</p>
+<p>Group edit is not a special mode—all the state needed by Ipe to
+manage editing the group is stored inside the drawing.  This means
+that you can save your drawing during a group edit (also, auto-saving
+works during a group edit).  If you have a document with multiple
+pages, you can also start group edits on several pages in parallel,
+for instance to copy and paste objects between groups.</p>
+<p>It is legal to unlock the other layers of the page so that you can
+move objects into and out of the group.  You should, however, be
+careful with changing anything about the layers of the page—do not
+re-order or rename the layers.  If you need new layers, create them at
+the end of the layer list.</p>
+<p>When you perform the <em>End group edit</em> operation, the group edit
+layer must be the active layer.  If you changed the active layer, you
+will have to change it back to be able to return from the group edit.</p>
+<p>Note that group edit does not currently preserve a clipping path set
+on the group.  It does preserve the group’s decoration and link
+destination.</p>
+</div>
+<div class="section" id="links-to-websites-videos-and-other-pages">
+<h3>Links to websites, videos, and other pages<a class="headerlink" href="#links-to-websites-videos-and-other-pages" title="Permalink to this headline">¶</a></h3>
+<p>Group objects allow you to create <em>active links</em>: when the PDF
+document is viewed in a PDF viewer, one can click inside the bounding
+box of the group to cause some action.</p>
+<p>You add a link to a group by bringing up the object menu, and using
+<em>Set link URL</em>.  Note that only top-level group objects on a page
+(that is, a group object that is not inside another group) are turned
+into active links.</p>
+<p>Ipe supports several types of link actions:</p>
+<p><em>Websites</em></p>
+<p>If you provide a URL such as <code class="docutils literal notranslate"><span class="pre">http://ipe.otfried.org</span></code> as a link
+action, then clicking on the link will open the webpage in a web
+browers.</p>
+<p><em>Launching media</em></p>
+<p>If the link action starts with <code class="docutils literal notranslate"><span class="pre">launch:</span></code>, then the action starts a
+program to view the given file.  For instance, the link action
+<code class="docutils literal notranslate"><span class="pre">launch:apollo17.avi</span></code> would start a video player playing the file
+<code class="file docutils literal notranslate"><span class="pre">apollo17.avi</span></code> in the directory that also contains the PDF file.</p>
+<p>The PDF presentations apps <a class="reference external" href="http://iihm.imag.fr/blanch/software/osx-presentation/">Presentation</a> and <a class="reference external" href="https://pdfpc.github.io/">pdfpc</a> understand these links, and play the
+video inside the presentation app.  Pdfpc will even embed the video
+into the current slide, using the bounding box of the group object to
+place the video.</p>
+<p>Pdfpc allows you to provide a few more parameters: for instance, the
+link action</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>launch:apollo17.avi?autostart&amp;loop&amp;start=5&amp;stop=12
+</pre></div>
+</div>
+<p>will start the movie as soon as the slide is viewed, plays the movie
+in a loop, starting at 5 seconds and ending at 12 seconds into the
+movie.</p>
+<p>You can also launch other types of documents.  For instance, clicking
+on a group object with link action <code class="docutils literal notranslate"><span class="pre">launch:summary.txt</span></code> will open
+the text file <code class="file docutils literal notranslate"><span class="pre">summary.txt</span></code> in a text editor.</p>
+<p><em>Navigating inside the document</em></p>
+<p>If the link action starts with <em>goto:</em>, then clicking on the
+group object will navigate to another page of the same PDF document.
+You identify pages using their <em>section name</em>.  So if you have a
+page with section name <em>chapter3</em> in your document, then the link
+action <em>goto:chapter3</em> will jump to that page.</p>
+<p><em>Standard actions</em></p>
+<p>PDF currently defines four standard actions: <em>NextPage</em>,
+<em>PrevPage</em>, <em>FirstPage</em>, and <em>LastPage</em>.  You use these
+by prefixing them with <em>named:</em>.  For example, the link action
+<em>named:PrevPage</em> creates an action to go to the previous page.
+This can be used, for instance, to place buttons in a background layer
+that appears on every page of a document.</p>
+</div>
+</div>
+<div class="section" id="reference-objects-and-symbols">
+<span id="reference-objects"></span><h2>Reference objects and symbols<a class="headerlink" href="#reference-objects-and-symbols" title="Permalink to this headline">¶</a></h2>
+<p>A symbol is a single Ipe object (which can of course be a group) that
+is defined in a document’s stylesheet.  A reference object is a
+reference to a symbol, placed at a given position on the page.</p>
+<p>Symbols can be parameterized with stroke and fill color, pen width,
+and symbol size.  Whether or not a symbol accepts which parameter is
+visible from the symbol’s name: if it takes any parameter, the name
+must end in a pair of parentheses containing some of the letters
+<code class="docutils literal notranslate"><span class="pre">s</span></code>, <code class="docutils literal notranslate"><span class="pre">f</span></code>, <code class="docutils literal notranslate"><span class="pre">p</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span></code> (in this order), for the parameters stroke,
+fill, pen, and size.  References to parameterized symbols allow all
+the attributes that the symbol accepts.</p>
+<p>All references can be translated around the page. Whether or not the
+symbol can be rotated or stretched depends on the definition of the
+symbol in the stylesheet.</p>
+<p>If a symbol named <code class="docutils literal notranslate"><span class="pre">Background</span></code> exists in your stylesheet, it is
+automatically displayed on each page, at the very back.  To suppress
+the automatic display, create a layer named <code class="docutils literal notranslate"><span class="pre">BACKGROUND</span></code> on the
+page. (If such a layer is present, it suppresses the <code class="docutils literal notranslate"><span class="pre">Background</span></code>
+symbol.  It does not matter if the layer itself is visible or not.)</p>
+<p id="index-25">Marks are symbols with special support from the Ipe user interface.
+They are used to mark points in the drawing, and come in several
+different looks (little circles, discs, squares, boxes, or crosses).
+You can define your own mark shapes by defining appropriate symbols in
+your stylesheet.</p>
+<p>Note that marks behave quite different from path objects. In
+particular, you should not confuse a disc mark with a little disc
+created as a circle object:</p>
+<ul class="simple">
+<li><p>a solid mark (type <em>disk</em> and <em>square</em>) only obeys the
+stroke color (but <em>fdisk</em> and <em>fsquare</em> marks are filled
+with the fill color);</p></li>
+<li><p>when you scale a mark, it will not change its size (you can change
+the mark size from the properties panel, though);</p></li>
+<li><p>when you rotate a mark, it does not change its orientation.</p></li>
+</ul>
+<p>You can change a mark’s shape and size later.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Object types</a><ul>
+<li><a class="reference internal" href="#index-3">Path objects</a></li>
+<li><a class="reference internal" href="#index-22">Text objects</a></li>
+<li><a class="reference internal" href="#image-objects">Image objects</a></li>
+<li><a class="reference internal" href="#group-objects">Group objects</a><ul>
+<li><a class="reference internal" href="#clipping">Clipping</a></li>
+<li><a class="reference internal" href="#decorations">Decorations</a></li>
+<li><a class="reference internal" href="#editing-text-in-group">Editing text in group</a></li>
+<li><a class="reference internal" href="#recursive-group-edit">Recursive group edit</a></li>
+<li><a class="reference internal" href="#links-to-websites-videos-and-other-pages">Links to websites, videos, and other pages</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reference-objects-and-symbols">Reference objects and symbols</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="20_concepts.html"
+                        title="previous chapter">General Concepts</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="40_snapping.html"
+                        title="next chapter">Snapping</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/30_objects.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="40_snapping.html" title="Snapping"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="20_concepts.html" title="General Concepts"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

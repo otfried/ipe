@@ -1,0 +1,183 @@
+History and acknowledgments
+===========================
+
+The name "Ipe" is older than the program itself.  When I made figures
+for my papers using Idraw in 1992, I was annoyed that I had to store
+two versions of each figure: one with Latex text, one with Postscript
+information.  I came up with a file format that I called "Ipe," for
+"Integrated Picture Environment," and which was at the same time legal
+Latex source code and a legal Postscript file.
+
+When I wrote the first version of Ipe at Utrecht University in the
+summer of 1993, it created this file format directly, and inherited
+the name.  The first versions of Ipe (Ipe 2.0 up to 4.1) were based on
+my experiences with Idraw, XFig, and Jean-Pierre Merlet's JPDraw, used
+IRIS-GL and Mark Overmars' FORMS library, and run on SGI workstations
+only.
+
+Due to popular demand, I spent two weeks in the summer of 1994 to
+teach myself Motif and to rewrite Ipe to run under the X window
+system.  Unfortunately, two weeks were really not enough, and the 1994
+X-version of Ipe was somewhat of a hack.  I didn't have time to port
+the code that displayed bitmaps on the screen, it crashed on both
+monochrome and truecolor (24-bit) displays, and was in general quite
+unmaintainable.
+
+These versions of Ipe were supported by the Netherlands'' Organization
+for Scientific Research (NWO), and I would never have started working
+on it without Geert-Jan Giezeman's PLAGEO library.  For testing,
+support, and inspiration in that original period, I'm grateful to Mark
+de Berg, Maarten Pennings, Jules Vleugels, Vincenzo Ferrucci, and Anil
+Rao.  Many students of the department at Utrecht University served as
+alpha-testers (who apparently referred to Ipe as "the cute little
+core-dumper").
+
+I gave a presentation about Ipe at the Dagstuhl Workshop on
+Computational Geometry in 1995, and made a poster presentation at the
+ACM Symposium on Computational Geometry in Vancouver in the same year.
+Both served to create a small but faithful community of Ipe addicts
+within the Computational Geometry community.
+
+Ipe proved itself invaluable to me over the years, especially when we
+used it to make all the illustrations in our book *Computational
+Geometry: Algorithms and Applications* (Springer 1997, with Mark de
+Berg, Marc van Kreveld, and Mark Overmars).  Nevertheless, the
+problems were undeniable: It was hard to compile Ipe on other C++
+compilers and it only worked on 8-bit displays.  It was only due to
+the efforts of Ipe fans such as Tycho Strijk, Robert-Paul Berretty,
+Alexander Wolff, and Sariel Har-Peled that the 1994 version of Ipe
+continued to be used until 2003.
+
+I was teaching myself C++ while writing the first version of Ipe, and
+it showed---Ipe 5 was full of elementary object-oriented design
+mistakes.  When teaching C++ to second-year students at Postech in
+1996 I started to think about a clean rewrite of Ipe.  My first notes
+on such a rewrite stem from evenings spent at a hotel in Machida,
+close to IBM Tokyo in July 1996 (the idea at that time was to embed
+Ipe into Emacs!).  It proved impossible, though, to do a full rewrite
+next to teaching and research, and nothing really happened until the
+Dagstuhl Workshop on Computational Geometry in 2001, where Christian
+Knauer explained to me how to use Pdflatex to create presentations. I
+realized that PDF was ideally suited for a new version of Ipe. 
+
+Ipe 5 figures were at the same time Latex and Postscript files, and
+required special handling to be included into Latex documents, which
+sometimes required a bit of explaining when talking to co-authors or
+publishers.  While editing a figure, Ipe 5 kept a Ghostscript window
+open that would show what the figure looked like after processing by
+Latex.  
+
+Several developments that had happened between 1993 and 2001 allowed
+me to use a completely new approach: First, Hàn Thê Thàn's Pdflatex
+takes Latex source and directly produces a PDF file with a PDF
+representation of the text and all necessary fonts.  Second, Derek
+Noonburg's Xpdf contained an open-source PDF parser that I could use
+to parse this PDF representation and to extract the processed text and
+fonts.  Third, all relevant Latex fonts are now available as scalable
+Type1 fonts, and so it is possible to embed Latex text and formulas in
+figures that may still need to be scaled later.  Finally, the
+Ghostscript window was no longer necessary as Ipe could use the
+beautiful Freetype library to directly display the text on-screen as
+it will appear on paper.
+
+Directly after the Dagstuhl workshop I implemented a proof-of-concept:
+I defined the Ipe XML format (there was no question that Ipe 6 would
+have to be able to communicate in XML, of course), wrote
+:program:`ipe5toxml` (reusing my old Ipe parsing code) and a program
+that runs Pdflatex, parses its PDF output, extracts text objects and
+font data, and creates a PDF file for the whole Ipe figure.
+
+All that remained to be done was to rewrite the user interface.  Mark
+de Berg and the TU Eindhoven made it possible for me to take some time
+off from teaching and research.  The final design changes were made
+during the Second McGill-INRIA Workshop on Computational Geometry in
+Computer Graphics at McGill's Bellairs Research Institute in February
+2003, and much inspiration was due to the atmosphere at the workshop
+and the magnificient cooking by Gwen, Bellair's chef.  An early
+preview of Ipe 6.0 was "formally" released at the Dagstuhl Workshop on
+Computational Geometry in March 2003, to celebrate the Dagstuhl
+influence on Ipe.
+
+Other than the file format, there weren't really that many changes to
+Ipe's functionality between Ipe 5 and Ipe 6.  René van Oostrum
+insisted that no self-respecting drawing program can do without style
+sheets and layers.  Views allow you to incrementally build up a page
+in a PDF presentation. 
+
+I also revised the interface to ipelets (which used to be called
+"Iums" in the good old days when people still thought that "applets"
+were small apples)---it is now based on dynamically loaded libraries
+(a technology that was still somewhat poorly understood in the early
+nineties, at least by me).
+
+And, of course, there was a Windows version of Ipe 6.  Who would have
+thought that ten years earlier!
+
+There were many releases of Ipe 6.0, all of them called "previews,"
+because I never considered that I had reached a stable state.  A
+number of experimental features were tried and either built into Ipe
+or discarded.  Ipe 6 migrated from Qt 2 and Qt 3 to Qt 4, a somewhat
+painful process due to a number of annyoing Qt bugs that cost me a lot
+of time.
+
+When in 2007 I discovered the fantastic Cairo library for rendering, I
+immediately decided to switch Ipe to use this: a small dedicated
+library with a nice API to do the rendering, instead of the buggy
+monster that was Qt.  The Cairo API fit Ipe so well that I could write
+a Cairo painter for Ipe in an hour or so.  Cairo supports Freetype
+directly, instead of Ipe having to render each glyph into a bitmap
+that is then blit onto the canvas. 
+
+I made the huge mistake of announcing on the Ipe discussion list that
+Ipe 6.0 preview 28 was the last version of Ipe 6, and that there would
+soon be a new version, Ipe 7.  I should have known that this was
+impossible during a time where I advised several graduate students,
+taught several new courses, and went through the tenure process.  
+I had to release several bugfix releases of Ipe 6 while really wanting
+to work on Ipe 7.
+
+However, the delay left me with enough time to carefully think about
+another change I wanted to make: It would be nice if Ipe embedded a
+scripting language that could be used to write simple ipelets without
+compilation.  I looked at Scheme/Guile, Python, and Lua, and finally
+decided for Lua: a small, elegant, stable language with a tiny
+footprint, easily embedded with a very nice C interface.
+
+In 2009, I had my first sabbatical ever, which I spent in the group of
+Ulrik Brandes at the University of Konstanz.  Here I finally had the
+time to work on Ipe 7, and I'm very grateful to Ulrik and all members
+of his group for the wonderful time I had in Konstanz.  Next to the
+two big changes mentioned above, Ipe 7 introduced tiling patterns,
+gradients, clipping paths, transparency, user-definable arrows and
+marks, and SVG output.
+
+I wanted to avoid Qt in Ipe 7 as it had caused me quite a bit of pain
+during the life of Ipe 6, but it was hard to find a good replacement
+that would allow Ipe to run on Linux, Windows, and Macs.  During the
+Korean Workshop on Computational Geometry organized by Tetsuo Asano at
+Hakusan seminar house in June 2009, I discussed using Ipe on tablet
+PCs with Vida Dujmovic, Jit Bose, and Stefan Langerman.  It is their
+fault that Ipe 7 comes with a tablet input tool, and finally Stefan
+and Sébastien Collette convinced me that there isn't really an
+alternative to Qt that has the same support for tablets and Macs.  So
+Ipe 7 is still using Qt, but in a much more restricted way than
+before---it turned out that this part of Qt is quite stable and not
+prone to new bugs.
+
+Even though I was only using a small part of Qt to create the UI, I
+still had to bundle the huge Qt library, ten times the size of Ipe
+itself, with Ipe's binary builds for Windows and OSX. This bothered
+me, since of course Windows and OSX already provide all the
+functionality for building UIs natively.  After some experimentation
+with building simple UIs in Windows and GTK, I settled on a new
+architecture where the UI library would only be used in the Ipe
+program itself, in the Ipe canvas, and in the small Lua library ipeui
+that can be used to build dialogs from Lua (and which is entirely
+independent of Ipe).  The native Windows UI was finished while I was
+visiting Emo Welzl in Zurich in early 2015, on a small Windows-tablet,
+and was first released in Ipe 7.1.7.  During my sabbatical at Bayreuth
+University in 2016 Christian Knauer and his group provided me with a
+Mac in my office, providing both the opportunity and the time to learn
+Objective C and Cocoa.  Ipe 7.2.1 was released in Bayreuth with the
+first native OSX UI.
+

@@ -1,0 +1,146 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to the wonderful world of Ipe! &#8212; Ipe 7.2.27 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="About Ipe files" href="10_ipe_files.html" />
+    <link rel="prev" title="Ipe manual" href="index.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="10_ipe_files.html" title="About Ipe files"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Ipe manual"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-the-wonderful-world-of-ipe">
+<h1>Welcome to the wonderful world of Ipe!<a class="headerlink" href="#welcome-to-the-wonderful-world-of-ipe" title="Permalink to this headline">¶</a></h1>
+<p>Preparing figures for a scientific article is a time-consuming
+process.  If you are using the LaTeX document preparation system in
+an environment where you can include PDF figures, then the extensible
+drawing editor Ipe may be able to help you in the task.  Ipe allows
+you to prepare and edit drawings containing a variety of basic
+geometry primitives like lines, splines, polygons, circles etc.</p>
+<p>Ipe also allows you to add text to your drawings, and unlike most
+other drawing programs, Ipe treats these text object as LaTeX
+text. This has the advantage that all usual LaTeX commands can be used
+within the drawing, which makes the inclusion of mathematical formulae
+(or even simple labels like <span class="math notranslate nohighlight">\(q_i\)</span>) much simpler.  Ipe processes
+your LaTeX source and includes the PDF rendering produced by LaTeX in
+the figure.</p>
+<p>In addition, Ipe offers you some editing functions that can usually
+only be found in professional drawing programs or CAD systems. For
+instance, it incorporates a context sensitive snapping mechanism,
+which allows you to draw objects meeting in a point, having parallel
+edges, objects aligned on intersection points of other objects,
+rectilinear and <em>c</em>-oriented objects and the like. Whenever one of the
+snapping modes is enabled, Ipe shows you <em>Fifi</em>, a secondary cursor,
+which keeps track of the current aligning.</p>
+<p>One of the nicest features of Ipe is the fact that it is
+<em>extensible</em>. You can write your own functions, so-called
+<em>ipelets</em>.  Once registered with Ipe by adding them to your
+ipelet path, you can use those functions like Ipe’s own editing
+functions. (In fact, some of the functions in the standard Ipe
+distribution are actually implemented as ipelets.)  Ipelets can be
+written in Lua, an easy-to-learn interpreted language that is embedded
+into Ipe, or also in C++.  Among others, there is an ipelet to compute
+Voronoi diagrams.</p>
+<p>Making a presentation is another task that requires drawing figures.
+You can use Ipe to prepare presentations in PDF format.  Ipe offers
+many features to make attractive presentations.</p>
+<p>Ipe tries to be self-explanatory. There is online help available, and
+most commands tell you about options, shortcuts, or errors.
+Nevertheless, it would probably be wise to read at least a few
+sections of this manual.  The chapter on general concepts and the
+chapter explaining the snapping functions would be a useful read. If
+you want to use Ipe to prepare presentations, you should also read the
+<a class="reference internal" href="70_presentations.html"><span class="doc">Presentations</span></a> section.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Ipe manual</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="10_ipe_files.html"
+                        title="next chapter">About Ipe files</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/01_intro.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="10_ipe_files.html" title="About Ipe files"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Ipe manual"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

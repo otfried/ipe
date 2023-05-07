@@ -1,0 +1,419 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Snapping &#8212; Ipe 7.2.27 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Stylesheets" href="60_stylesheets.html" />
+    <link rel="prev" title="Object types" href="30_objects.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="60_stylesheets.html" title="Stylesheets"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="30_objects.html" title="Object types"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <span class="target" id="index-0"></span><span class="target" id="index-1"></span><span class="target" id="index-2"></span><div class="section" id="snapping">
+<span id="index-3"></span><h1>Snapping<a class="headerlink" href="#snapping" title="Permalink to this headline">¶</a></h1>
+<p>One of the nice features of Ipe is the possibility of having the mouse
+<em>snap</em> to other objects during entry or moving. Certain features on
+the canvas become “magnetic”, and it is very easy to align objects
+to each other, to place new objects properly with respect to the
+present objects and so on.</p>
+<p>Snapping comes in three flavors: <em>grid snapping</em>, <em>context
+snapping</em>, and <em>angular snapping</em>.</p>
+<p>In general, you turn a snapping mode on by pressing one of the buttons
+in the <em>Snap</em> toolbar, or selecting the equivalent functions in
+the Snap menu. The buttons are independent, you can turn them on and
+off independently. (The snapping modes, however, are not
+independent. See below for the precise interaction.)  The keyboard
+shortcuts are rather convenient since you will want to toggle snapping
+modes on and off while in the middle of creating or editing some
+object.</p>
+<p id="index-4">Whenever one of the snapping modes is enabled, you will see a little
+cross near the cursor position. This is the secondary cursor <em>Fifi</em>
+<a class="footnote-reference brackets" href="#id2" id="id1">1</a>. Fifi marks the position the mouse is snapped to.</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Fifi is called after the dog in the <code class="docutils literal notranslate"><span class="pre">rogue</span></code> computer game
+installed on most Unix systems in the 1980’s, because it also
+keeps running around your feet.</p>
+</dd>
+</dl>
+<span class="target" id="grid-snapping"></span><span class="target" id="index-5"></span><span class="target" id="index-6"></span><span class="target" id="index-7"></span><div class="section" id="index-8">
+<span id="id3"></span><h2>Grid snapping<a class="headerlink" href="#index-8" title="Permalink to this headline">¶</a></h2>
+<p><em>Grid snapping</em> is easy to explain. It simply means that the mouse
+position is rounded to the nearest grid point. Grid points are points
+whose coordinates are integer multiples of the <em>grid size</em>, which can
+be set in the box in the <em>Snap</em> field. You have a choice from a set of
+possible grid sizes. The units are Postscript/PDF points (in LaTeX
+called <code class="docutils literal notranslate"><span class="pre">bp</span></code>), which are equal to 1/72 of an inch.</p>
+<p>You can ask Ipe to show the grid points by selecting the function
+<span class="menuselection">View ‣ Grid visible</span>. The same function turns it off
+again.</p>
+<span class="target" id="context-snapping"></span></div>
+<div class="section" id="index-9">
+<span id="id4"></span><h2>Context snapping<a class="headerlink" href="#index-9" title="Permalink to this headline">¶</a></h2>
+<p>When <em>context snapping</em> is enabled, certain features of the
+objects of your current drawing become magnetic. There are three
+buttons to enable three different features of your objects: vertices,
+the boundary, and intersection points.</p>
+<p>When the mouse is too far away from the nearest interesting feature,
+the mouse position will not be “snapped”.  The snapping distance can
+be changed by setting <em>Snapping distance</em> value in the preference
+dialog.  If you use a high setting, you will need to toggle snapping
+on and off during drawing. Some people prefer to set snapping on once
+and for all, and to set the snap distance to a very small value like 3
+or 4.</p>
+<p>The features that you can make “magnetic” are the following:</p>
+<span class="target" id="index-10"></span><dl class="simple" id="index-11">
+<dt>vertices</dt><dd><p>are vertices of polygonal objects, control points of
+multiplicity three of splines, centers of circles and ellipses,
+centers and end points of circular arcs, and mark positions.</p>
+</dd>
+</dl>
+<span class="target" id="index-12"></span><dl class="simple" id="index-13">
+<dt>boundaries</dt><dd><p>are the object boundaries of polygonal objects,
+splines and splinegons, circles and ellipses, and circular arcs.</p>
+</dd>
+</dl>
+<span class="target" id="index-14"></span><dl class="simple" id="index-15">
+<dt>intersections</dt><dd><p>are the intersection points between the
+boundaries of path objects.</p>
+</dd>
+</dl>
+<span class="target" id="custom-grid-snapping"></span><span class="target" id="index-16"></span></div>
+<div class="section" id="index-17">
+<span id="id5"></span><h2>Custom grid snapping<a class="headerlink" href="#index-17" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes you need a special grid, for instance a triangular grid, or
+a grid for making perspective drawings.  Since Ipe cannot offer every
+possible grid under the sun, it instead offers you snapping to custom
+grids.</p>
+<p>To use custom grid snapping, create a layer with name <em>GRID</em>, and
+draw your grid in this layer.  You can then snap to the intersection
+points between the objects in the <em>GRID</em> layer.  It does not
+matter if the layer is visible or not.</p>
+<p>The <em>grid maker</em> ipelet offers a few ready-made grids to be used as
+custom grids.</p>
+<span class="target" id="angular-snapping"></span><span class="target" id="index-18"></span><span class="target" id="index-19"></span><span class="target" id="index-20"></span><span class="target" id="index-21"></span></div>
+<div class="section" id="index-22">
+<span id="id6"></span><h2>Angular snapping<a class="headerlink" href="#index-22" title="Permalink to this headline">¶</a></h2>
+<p>When <em>angular snapping</em> is enabled, the mouse position is restricted
+to lie on a set of lines through the <em>origin</em> of your current <em>axis
+system</em>. The lines are the lines whose angle with the <em>base direction</em>
+is an integer multiple of the snap angle. The snap angle can be set in
+the second box in the Snap toolbar. The values are indicated in
+degrees.  So, for a snapping angle of <span class="math notranslate nohighlight">\(45^{\circ}\)</span>, we get the
+snap lines indicated in the figure below. (In the figure the base
+direction—indicated with the arrow—is assumed horizontal.)</p>
+<img alt="images/snaplines.*" class="align-center" src="images/snaplines.*" />
+<p>For a snap angle of 180 degrees, snapping is to a single line through
+the current origin.</p>
+<p id="index-23">In order to use angular snapping, it is important to set the axis
+system correctly. To set the origin, move the mouse to the correct
+position, and press the <kbd class="kbd docutils literal notranslate">F1</kbd>-key. Note that angular snapping is
+<em>disabled</em> while setting the origin. This way you can set a new
+origin for angular snapping without leaving the mode first.  Once the
+origin has been set, the base direction is set by moving to a point on
+the desired base line, and pressing the <kbd class="kbd docutils literal notranslate">F2</kbd>-key. Again, angular
+snapping is disabled.  Together, origin and base direction determine
+the current <em>axis system</em>. Remember that the origin is also used
+as the fix-point of scale, stretch, and rotate operations, if it is
+set.</p>
+<p>You can hide the current axis system by pressing <kbd class="kbd docutils literal notranslate">Ctrl+F1</kbd>. This
+also turns off angular snapping, but preserves origin and orientation of
+the axes.  To reset the orientation (such that the $x$-axis is
+horizontal, use <kbd class="kbd docutils literal notranslate">Ctrl+F2</kbd>).</p>
+<p>You can set origin and base direction at the same time by pressing
+<kbd class="kbd docutils literal notranslate">F3</kbd> when the mouse is very near (or snapped to) an edge of a
+polygonal object.  The origin is set to an endpoint of the edge, and
+the base direction is aligned with it. This is useful to make objects
+parallel to a given edge.</p>
+<p id="index-24">For drawing rectilinear or c-oriented polygons, the origin should be
+set to the previous vertex at every step. This can be done by pressing
+<kbd class="kbd docutils literal notranslate">F1</kbd> every time you click the left mouse button, but that would
+not be very convenient. Therefore, Ipe offers a second angular snap
+mode, called <em>automatic angular snapping</em>. This mode uses an
+independent origin, which is automatically set every time you add a
+vertex when creating a polygonal object. Note that while the origin is
+independent of the origin set by <kbd class="kbd docutils literal notranslate">F1</kbd>, the base direction and the
+snap angle used by automatic angular snapping is the same as for
+angular snapping.  Hence, you can align the axis system with some edge
+of your drawing using <kbd class="kbd docutils literal notranslate">F3</kbd>, and then use automatic angular
+snapping to draw a new object that is parallel or orthogonal to this
+edge.</p>
+<p>This snapping mode has another advantage: It remains silent and
+ineffective until you start creating a polygonal object. So, even with
+automatic angular snapping already turned on, you can still freely
+place the first point of a polygon, and then the remaining vertices
+will be properly aligned to make a <span class="math notranslate nohighlight">\(c\)</span>-oriented polygon.</p>
+<p>The automatic angular snapping mode is never active for any
+non-polygonal object.  In particular, to <em>move</em> an object in a
+prescribed direction, you have to use normal angular snapping.</p>
+<p>A final note: Many things that can be done with angular snapping can
+also be done by drawing auxiliary lines and using context snapping. It
+is mostly a matter of taste and exercise to figure out which mode
+suits you best.</p>
+</div>
+<div class="section" id="interaction-of-the-snapping-modes">
+<span id="snap-interaction"></span><h2>Interaction of the snapping modes<a class="headerlink" href="#interaction-of-the-snapping-modes" title="Permalink to this headline">¶</a></h2>
+<p>Not all the snapping modes can be active at the same time, even if all
+buttons are pressed. Here we have a close look at the possible
+interactions, and the priorities of snapping.</p>
+<p>The two angular snapping modes restrict the possible mouse positions
+to a <em>one-dimensional</em> subspace of the canvas. Therefore, they are
+incompatible with the modes that try to snap to a zero-dimensional
+subspace, namely vertex snapping, intersection snapping, and grid
+snapping. Consequently, when one of the angular snapping modes is
+<em>on</em>, vertex snapping, intersection snapping, and grid snapping
+are ineffective.</p>
+<p>On the other hand, it is reasonable to snap to boundaries while in an
+angular snapping mode, and this function is actually implemented
+correctly. When both angular and boundary snapping are <em>on</em>, Ipe
+will compute intersections between the snap lines with the boundaries
+of your objects, and whenever the mouse position <em>on</em> the snap
+line comes close enough to an intersection, the mouse is snapped to
+that intersection.</p>
+<p>The two angular snapping modes themselves can also coexist in the same
+fashion. If both angular and automatic angular snapping are enabled,
+Ipe computes the intersection point between the snap lines defined by
+the two origins and snaps there. It the snap lines are parallel or
+coincide, automatic angular snapping is used.</p>
+<p>When no angular snapping mode is active, Ipe has three
+priorities. First, Ipe checks whether the closest vertex or
+intersection point is close enough. If that is not the case, the
+closest boundary edge is determined. If even that is too far away, Ipe
+uses grid snapping (assuming all these modes are enabled).</p>
+<p>Note that this can actually mean that snapping is <em>not</em> to the
+<em>closest</em> point on an object. Especially for intersections of two
+straight edges, the closest point can never be the intersection point,
+as in the figure below!</p>
+<img alt="images/intersection.*" class="align-center" src="images/intersection.*" />
+</div>
+<div class="section" id="examples">
+<span id="snapping-examples"></span><h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>It takes some time and practice to feel fully at ease with the different
+snapping modes, especially angular snapping. Here are some examples
+showing what can be done with angular snapping.</p>
+<div class="section" id="example-1">
+<span id="index-25"></span><h3>Example 1:<a class="headerlink" href="#example-1" title="Permalink to this headline">¶</a></h3>
+<p>We are given segments <span class="math notranslate nohighlight">\(s_1\)</span>, <span class="math notranslate nohighlight">\(s_2\)</span>, and <span class="math notranslate nohighlight">\(e\)</span>, and we
+want to add the dashed vertical extensions through <span class="math notranslate nohighlight">\(p\)</span> and
+<span class="math notranslate nohighlight">\(q\)</span>.</p>
+<img alt="images/example1.*" class="align-center" src="images/example1.*" />
+<ol class="arabic simple">
+<li><p>set <kbd class="kbd docutils literal notranslate">F4</kbd> and <kbd class="kbd docutils literal notranslate">F5</kbd> snapping on, go into <em>line</em> mode, and
+reset axis orientation with <kbd class="kbd docutils literal notranslate">Ctrl+F2</kbd>,</p></li>
+<li><p>go near <span class="math notranslate nohighlight">\(p\)</span>, press <kbd class="kbd docutils literal notranslate">F1</kbd> and <kbd class="kbd docutils literal notranslate">F8</kbd> to set origin and
+to turn on angular snap.</p></li>
+<li><p>go near <span class="math notranslate nohighlight">\(p'\)</span>, click left, and extend segment to <span class="math notranslate nohighlight">\(s_1\)</span>.</p></li>
+<li><p>go near <span class="math notranslate nohighlight">\(q\)</span>, press <kbd class="kbd docutils literal notranslate">F1</kbd> to reset origin, and draw second
+extension in the same way.</p></li>
+</ol>
+</div>
+<div class="section" id="example-2">
+<h3>Example 2:<a class="headerlink" href="#example-2" title="Permalink to this headline">¶</a></h3>
+<p>We are given the polygon <span class="math notranslate nohighlight">\(C\)</span>, and we want to draw the bracket
+<span class="math notranslate nohighlight">\(b\)</span>, indicating its vertical extension.</p>
+<img alt="images/example2.*" class="align-center" src="images/example2.*" />
+<ol class="arabic simple">
+<li><p>set <kbd class="kbd docutils literal notranslate">F4</kbd> and <kbd class="kbd docutils literal notranslate">F9</kbd> snapping on, go into <em>line</em> mode, reset
+axis orientation with <kbd class="kbd docutils literal notranslate">Ctrl+F2</kbd>, set snap angle to
+<span class="math notranslate nohighlight">\(90^{\circ}\)</span>.</p></li>
+<li><p>go near <span class="math notranslate nohighlight">\(p\)</span>, press <kbd class="kbd docutils literal notranslate">F1</kbd> and <kbd class="kbd docutils literal notranslate">F8</kbd> to set origin and
+angular snapping</p></li>
+<li><p>go to <span class="math notranslate nohighlight">\(x\)</span>, click left, extend segment to <span class="math notranslate nohighlight">\(y\)</span>, click left</p></li>
+<li><p>now we want to have <span class="math notranslate nohighlight">\(z\)</span> on a horizontal line through
+<span class="math notranslate nohighlight">\(q\)</span>: go near <span class="math notranslate nohighlight">\(q\)</span>, and press <kbd class="kbd docutils literal notranslate">F1</kbd> and <kbd class="kbd docutils literal notranslate">F8</kbd> to
+reset origin and to turn on angular snapping. Now both angular
+snapping modes are on, the snap lines intersect in <span class="math notranslate nohighlight">\(z\)</span>.
+item click left at <span class="math notranslate nohighlight">\(z\)</span>, goto <span class="math notranslate nohighlight">\(x\)</span> and press <kbd class="kbd docutils literal notranslate">F1</kbd>,
+goto <span class="math notranslate nohighlight">\(t\)</span> and finish bracket.</p></li>
+</ol>
+</div>
+<div class="section" id="example-3">
+<h3>Example 3:<a class="headerlink" href="#example-3" title="Permalink to this headline">¶</a></h3>
+<p>We want to draw the following “skyline”. The only problem is to get
+<span class="math notranslate nohighlight">\(q\)</span> horizontally aligned with <span class="math notranslate nohighlight">\(p\)</span>.</p>
+<img alt="images/example3.*" class="align-center" src="images/example3.*" />
+<ol class="arabic simple">
+<li><p>draw the baseline using automatic angular snapping to get it
+horizontal.</p></li>
+<li><p>place <span class="math notranslate nohighlight">\(p\)</span> with boundary snapping, draw the rectilinear curve
+up to <span class="math notranslate nohighlight">\(r\)</span> with automatic angular snapping in
+<span class="math notranslate nohighlight">\(90^{\circ}\)</span> mode.</p></li>
+<li><p>now go to <span class="math notranslate nohighlight">\(p\)</span> and press <kbd class="kbd docutils literal notranslate">F1</kbd> and <kbd class="kbd docutils literal notranslate">F8</kbd>. The snap
+lines intersect in <span class="math notranslate nohighlight">\(q\)</span>. Click there, turn off angular
+snapping with <kbd class="kbd docutils literal notranslate">Shift-F2</kbd>, and finish curve.  The last point is
+placed with boundary snapping.</p></li>
+</ol>
+</div>
+<div class="section" id="example-4">
+<span id="index-26"></span><h3>Example 4:<a class="headerlink" href="#example-4" title="Permalink to this headline">¶</a></h3>
+<p>We want to draw a line through <span class="math notranslate nohighlight">\(p\)</span>, tangent to <span class="math notranslate nohighlight">\(C\)</span> in
+<span class="math notranslate nohighlight">\(q\)</span>.</p>
+<img alt="images/example4.*" class="align-center" src="images/example4.*" />
+<ol class="arabic simple">
+<li><p>with vertex snapping on, put origin at <span class="math notranslate nohighlight">\(p\)</span> with <kbd class="kbd docutils literal notranslate">F1</kbd></p></li>
+<li><p>go to <span class="math notranslate nohighlight">\(q\)</span> and press <kbd class="kbd docutils literal notranslate">F2</kbd>. This puts the base direction from
+<span class="math notranslate nohighlight">\(p\)</span> to <span class="math notranslate nohighlight">\(q\)</span>.</p></li>
+<li><p>set angular snapping with <kbd class="kbd docutils literal notranslate">F8</kbd> and draw line.</p></li>
+</ol>
+</div>
+<div class="section" id="example-5">
+<h3>Example 5:<a class="headerlink" href="#example-5" title="Permalink to this headline">¶</a></h3>
+<p>We want to draw the following “windmill”.  The angle of the sector and
+between sectors should be <span class="math notranslate nohighlight">\(30^{\circ}\)</span>.</p>
+<img alt="images/example5.*" class="align-center" src="images/example5.*" />
+<ol class="arabic simple">
+<li><p>set vertex snapping, snap angle to <span class="math notranslate nohighlight">\(30^{\circ}\)</span>,
+reset axis orientation with <kbd class="kbd docutils literal notranslate">Ctrl+F2</kbd>,</p></li>
+<li><p>with automatic angular snapping, draw a horizontal segment <span class="math notranslate nohighlight">\(pq\)</span>.</p></li>
+<li><p>go to <span class="math notranslate nohighlight">\(p\)</span>, place origin and turn on angular snapping with <kbd class="kbd docutils literal notranslate">F1</kbd> and <kbd class="kbd docutils literal notranslate">F8</kbd>,</p></li>
+<li><p>duplicate segment with <kbd class="kbd docutils literal notranslate">d</kbd>, go to <span class="math notranslate nohighlight">\(q\)</span> and pick up
+<span class="math notranslate nohighlight">\(q\)</span> for rotation (with <kbd class="kbd docutils literal notranslate">Alt</kbd> and the right mouse button,
+or by switching to rotate mode).  Rotate until segment falls on the
+next snap line.</p></li>
+<li><p>turn off angular snapping with <kbd class="kbd docutils literal notranslate">F8</kbd>. Choose arc mode, variant
+<em>center &amp; two points</em>,</p></li>
+<li><p>go to <span class="math notranslate nohighlight">\(p\)</span>, click for center. Go to <span class="math notranslate nohighlight">\(q\)</span>, click for first
+endpoint of arc, and at <span class="math notranslate nohighlight">\(r\)</span> for the second endpoint. Select all,
+and group.</p></li>
+<li><p>turn angular snapping on again. Duplicate sector, and rotate by
+<span class="math notranslate nohighlight">\(60^{\circ}\)</span>, using angular snapping.</p></li>
+<li><p>duplicate and rotate four more times.</p></li>
+</ol>
+</div>
+<div class="section" id="example-6">
+<span id="index-27"></span><h3>Example 6:<a class="headerlink" href="#example-6" title="Permalink to this headline">¶</a></h3>
+<p>We want to draw a <span class="math notranslate nohighlight">\(c\)</span>-oriented polygon, where the angles between
+successive segments are multiples of <span class="math notranslate nohighlight">\(30^{\circ}\)</span>.
+The automatic angular snapping mode makes this pretty easy, but there is a
+little catch: How do we place the ultimate vertex such that it is at the
+same time properly aligned to the penultimate and to the very first vertex?</p>
+<img alt="images/example6.*" class="align-center" src="images/example6.*" />
+<ol class="arabic simple">
+<li><p>set snap angle to <span class="math notranslate nohighlight">\(30^{\circ}\)</span>,
+and turn on automatic angular snapping.</p></li>
+<li><p>click first vertex <span class="math notranslate nohighlight">\(p\)</span> and draw the polygon up to the penultimate
+vertex <span class="math notranslate nohighlight">\(q\)</span>.</p></li>
+<li><p>it remains to place <span class="math notranslate nohighlight">\(r\)</span> such that it is in a legal position
+both with respect to <span class="math notranslate nohighlight">\(q\)</span> and <span class="math notranslate nohighlight">\(p\)</span>. The automatic angular
+snapping mode ensures the position with respect to <span class="math notranslate nohighlight">\(q\)</span>. We
+will use angular snapping from <span class="math notranslate nohighlight">\(p\)</span> to get it right: Go near
+<span class="math notranslate nohighlight">\(p\)</span> and turn on vertex snapping. Press <kbd class="kbd docutils literal notranslate">F1</kbd> to place the
+origin at <span class="math notranslate nohighlight">\(p\)</span> and <kbd class="kbd docutils literal notranslate">F8</kbd> to turn on angular snapping. Now
+it is trivial to place <span class="math notranslate nohighlight">\(r\)</span>.</p></li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Snapping</a><ul>
+<li><a class="reference internal" href="#index-8">Grid snapping</a></li>
+<li><a class="reference internal" href="#index-9">Context snapping</a></li>
+<li><a class="reference internal" href="#index-17">Custom grid snapping</a></li>
+<li><a class="reference internal" href="#index-22">Angular snapping</a></li>
+<li><a class="reference internal" href="#interaction-of-the-snapping-modes">Interaction of the snapping modes</a></li>
+<li><a class="reference internal" href="#examples">Examples</a><ul>
+<li><a class="reference internal" href="#example-1">Example 1:</a></li>
+<li><a class="reference internal" href="#example-2">Example 2:</a></li>
+<li><a class="reference internal" href="#example-3">Example 3:</a></li>
+<li><a class="reference internal" href="#example-4">Example 4:</a></li>
+<li><a class="reference internal" href="#example-5">Example 5:</a></li>
+<li><a class="reference internal" href="#example-6">Example 6:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="30_objects.html"
+                        title="previous chapter">Object types</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="60_stylesheets.html"
+                        title="next chapter">Stylesheets</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/40_snapping.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="60_stylesheets.html" title="Stylesheets"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="30_objects.html" title="Object types"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

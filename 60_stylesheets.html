@@ -1,0 +1,341 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Stylesheets &#8212; Ipe 7.2.27 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Documents with text that is not in English" href="66_babel.html" />
+    <link rel="prev" title="Snapping" href="40_snapping.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="66_babel.html" title="Documents with text that is not in English"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="40_snapping.html" title="Snapping"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="stylesheets">
+<h1>Stylesheets<a class="headerlink" href="#stylesheets" title="Permalink to this headline">¶</a></h1>
+<p>The symbolic attributes appearing in an Ipe document are translated to
+absolute values for rendering by a <em>stylesheet</em> that is attached to
+the document.  Documents can have multiple <em>cascaded</em> stylesheets, the
+sheets form a stack, and symbols are looked up from top to bottom.  At
+the bottom of any stylesheet cascade is always the minimal <em>standard</em>
+style sheet, which is built into Ipe.</p>
+<p>When you create a new empty document, it automatically gets a copy of
+this standard style sheet (which does little more than define the
+<em>normal</em> attribute for each kind of attribute).  In addition, Ipe
+inserts a predefined list of stylesheets.  The list of these
+stylesheets can be <a class="reference internal" href="80_advanced.html#customize"><span class="std std-ref">customized</span></a> using an ipelet,
+using Ipe’s command line options, or an environment variable.  By
+default, a new document gets the stylesheet <em>basic</em> that comes with
+Ipe.</p>
+<p>The stylesheet dialog (in <span class="menuselection">Edit ‣ Stylesheets</span>)
+allows you to inspect the cascade of stylesheets associated with your
+document, to add and remove stylesheets, and to change their order.
+You can also save individual stylesheets.</p>
+<p>The stylesheets of your document also determine the symbolic choices
+you have in the Ipe user interface.  If you feel that Ipe does not
+offer you the right choice of colors, pen widths, etc., you are ready
+to make your own style sheet!</p>
+<div class="section" id="make-your-own-stylesheet">
+<h2>Make your own stylesheet!<a class="headerlink" href="#make-your-own-stylesheet" title="Permalink to this headline">¶</a></h2>
+<p>So you are ready to roll your own stylesheet, to have the colors and
+pen widths you’ve always wanted?  Here you go:</p>
+<p>First, decide on a name for your stylesheet.  In this section, let’s
+pick the name <em>personal</em>.</p>
+<p>Open an Ipe document (or make a new one and save it in a file), then
+start up your favorite text editor and create the file
+<code class="file docutils literal notranslate"><span class="pre">personal.isy</span></code>.  The file must be in the <strong>same folder</strong> as your
+Ipe document!</p>
+<p>Enter the following contents into the file, and save it:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;ipestyle</span> <span class="na">name=</span><span class="s">&quot;personal&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;color</span> <span class="na">name=</span><span class="s">&quot;yellowgreen&quot;</span> <span class="na">value=</span><span class="s">&quot;0.604 0.804 0.196&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/ipestyle&gt;</span>
+</pre></div>
+</div>
+<p>(The <code class="docutils literal notranslate"><span class="pre">name</span></code> attribute in the first line must match the filename,
+without the extension <code class="docutils literal notranslate"><span class="pre">.isy</span></code>.)</p>
+<p>In Ipe, use <span class="menuselection">Edit ‣ Style sheets</span> to bring up the
+stylesheet dialog.  Press the <span class="guilabel">Add</span> button, and select
+your file <code class="file docutils literal notranslate"><span class="pre">personal.isy</span></code>.  You’ll see <em>personal</em> appear at the
+top of the list of stylesheets.  Click <span class="guilabel">Ok</span> to confirm
+adding the stylesheet.</p>
+<p>You will notice that a new color named <code class="docutils literal notranslate"><span class="pre">yellowgreen</span></code> is now
+available in the dropdown for stroke and fill color.
+Congratulations—you made your first stylesheet!</p>
+<p>You can now add colors, pen widths, and sizes for symbols (markers),
+arrows, and the grids, by imitating the following examples:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;pen</span> <span class="na">name=</span><span class="s">&quot;light&quot;</span> <span class="na">value=</span><span class="s">&quot;0.7&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;symbolsize</span> <span class="na">name=</span><span class="s">&quot;giant&quot;</span> <span class="na">value=</span><span class="s">&quot;20&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;arrowsize</span> <span class="na">name=</span><span class="s">&quot;small&quot;</span> <span class="na">value=</span><span class="s">&quot;6&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;gridsize</span> <span class="na">name=</span><span class="s">&quot;10 pts&quot;</span> <span class="na">value=</span><span class="s">&quot;10&quot;</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;anglesize</span> <span class="na">name=</span><span class="s">&quot;20 deg&quot;</span> <span class="na">value=</span><span class="s">&quot;20&quot;</span><span class="nt">/&gt;</span>
+</pre></div>
+</div>
+<p>Each line contains the symbolic <code class="docutils literal notranslate"><span class="pre">name</span></code>, and an absolute numeric
+value in <code class="docutils literal notranslate"><span class="pre">value</span></code>.  The name must start with a letter (grid size
+and angle size are exceptions).</p>
+<p>To add a definition, update the file <code class="file docutils literal notranslate"><span class="pre">personal.isy</span></code> in your text
+editor, then use <span class="menuselection">Edit ‣ Update style sheets</span>. This
+will cause Ipe to read the file again, and to replace the copy of the
+stylesheet inside your document with this newest version.</p>
+<p>This way, you can quickly test out new definitions by editing the
+stylesheet in your text editor, and pressing <kbd class="kbd docutils literal notranslate">Ctrl+Shift+U</kbd> in
+Ipe to try out the new definitions.</p>
+<p>You may wonder how to get your favorite colors right, so here is a
+little trick: draw a small box in Ipe, then press the absolute stroke
+color button (the top-left button in the <em>Properties</em> panel).  It will
+allow you to select a color using a graphical user interface.  Once
+you have found the right color, apply it to the box (by selecting
+<code class="docutils literal notranslate"><span class="pre">&lt;absolute&gt;</span></code> in the stroke color selector), then right-click on the
+box and select <span class="guilabel">Edit as XML</span>. A dialog will appear showing
+the current definition of the box in Ipe’s internal XML format, like
+this:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;path</span> <span class="na">stroke=</span><span class="s">&quot;0.561 0.349 0.008&quot;</span> <span class="na">pen=</span><span class="s">&quot;ultrafat&quot;</span><span class="nt">&gt;</span>
+64 816 m
+64 800 l
+80 800 l
+80 816 l
+h
+<span class="nt">&lt;/path&gt;</span>
+</pre></div>
+</div>
+<p>You can now copy the color definition (in this case <code class="docutils literal notranslate"><span class="pre">&quot;0.561</span> <span class="pre">0.349</span>
+<span class="pre">0.008&quot;</span></code>, a nice shade of brown) to your stylesheet.</p>
+<p>You can find inspiration for more colors in the <code class="file docutils literal notranslate"><span class="pre">colors.isy</span></code>
+stylesheet in Ipe’s <code class="file docutils literal notranslate"><span class="pre">styles</span></code> folder. It defines all the colors
+of the X11 color database—you could make a selection of these for
+your own use.</p>
+<p>There is much more you can do with stylesheets.  Have a look in the
+stylesheets that come with Ipe for some inspiration, or keep reading
+this chapter and the <a class="reference internal" href="70_presentations.html"><span class="doc">next</span></a>.  The ultimate
+reference is, of course, the <a class="reference internal" href="90_file_format.html#ipestyle"><span class="std std-ref">description of the stylesheet file
+format</span></a>.</p>
+</div>
+<div class="section" id="stylesheet-theory">
+<h2>Stylesheet theory<a class="headerlink" href="#stylesheet-theory" title="Permalink to this headline">¶</a></h2>
+<p>When a stylesheet is “added” to an Ipe document, the contents of the
+stylesheet file is copied into the Ipe document.  Subsequent
+modification of the stylesheet file has no effect on the Ipe document.
+The right way to modify your stylesheet is to either “add” it again,
+and then to delete the <em>old</em> copy from your stylesheet cascade (the
+one further down in the list), or to use the <em>Update stylesheets</em>
+function in the <em>Edit</em> menu.  This function assumes that the
+stylesheet file is in the same directory as the document and that the
+filename coincides with the name of the stylesheet (plus the extension
+<code class="docutils literal notranslate"><span class="pre">.isy</span></code>).</p>
+<p>Removing or replacing a stylesheet can cause some of the symbolic
+attributes in your document to become undefined.  This is not a
+disaster—Ipe will simply use some default value for any undefined
+symbolic attribute.  To allow you to diagnose the problem, Ipe will
+show a warning listing all undefined symbolic attributes.</p>
+<p>We discuss a few stylesheet topics in this chapter.  Other stylesheet
+definitions that are (mostly) meant for PDF presentations are
+discussed in the next chapter.</p>
+</div>
+<div class="section" id="symbols">
+<h2>Symbols<a class="headerlink" href="#symbols" title="Permalink to this headline">¶</a></h2>
+<p>Style sheets can also contain <em>symbols</em>, such as marks and
+arrows, background patterns, or logos.  These are named Ipe objects
+that can be referenced by the document. If your document’s stylesheets
+define a symbol named <em>Background</em>, it will be displayed
+automatically on all pages. (If a layer named <code class="docutils literal notranslate"><span class="pre">BACKGROUND</span></code> is
+present on a page, it suppresses the <code class="docutils literal notranslate"><span class="pre">Background</span></code> symbol for that
+page.  It does not matter if the layer itself is visible or not.) You
+can create and use symbols using the <em>Symbols</em> ipelet.  Here is a
+(silly) example of a style sheet that defines such a background:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;ipestyle</span> <span class="na">name=</span><span class="s">&quot;background&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;symbol</span> <span class="na">name=</span><span class="s">&quot;Background&quot;</span> <span class="na">xform=</span><span class="s">&quot;yes&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;text</span> <span class="na">pos=</span><span class="s">&quot;10 10&quot;</span> <span class="na">stroke=</span><span class="s">&quot;black&quot;</span> <span class="na">size=</span><span class="s">&quot;LARGE&quot;</span><span class="nt">&gt;</span>
+Background text
+<span class="nt">&lt;/text&gt;</span>
+<span class="nt">&lt;/symbol&gt;</span>
+<span class="nt">&lt;/ipestyle&gt;</span>
+</pre></div>
+</div>
+<p>Note the use of the <code class="docutils literal notranslate"><span class="pre">xform</span></code> attribute—it ensures that the
+background is embedded only once into PDF document.  This can make a
+huge difference if your background is a complicated object.</p>
+<p>Symbols can be parameterized with a stroke color, fill color, pen
+size, and symbol size.  This means that the actual value of these
+attributes is only set when the symbol is used in the document (not in
+the symbol definition).  The name of a parameterized symbol must end
+with a pair of parentheses containing some of the letters <code class="docutils literal notranslate"><span class="pre">s</span></code>
+(stroke), <code class="docutils literal notranslate"><span class="pre">f</span></code> (fill), <code class="docutils literal notranslate"><span class="pre">p</span></code> (pen), <code class="docutils literal notranslate"><span class="pre">x</span></code> (symbol size), in this
+order.  The symbol definition can then use the special attribute
+values <code class="docutils literal notranslate"><span class="pre">sym-stroke</span></code>, <code class="docutils literal notranslate"><span class="pre">sym-fill</span></code>, and <code class="docutils literal notranslate"><span class="pre">sym-pen</span></code>.  A
+resizable symbol is automatically magnified by the symbol size set in
+the symbol reference.</p>
+<p>A symbol can define several snap positions for the symbol
+object. These positions are then active in vertex snap mode.  Symbols
+with snap positions are also presented differently in the current
+selection (the entire symbol is outlined, like a group, rather than
+just showing a cross at the symbol location), and you can select such
+symbols by clicking near any of the snap positions.</p>
+<p>You can also use a stylesheet to define additional mark shapes, arrow
+shapes, or tiling patterns.</p>
+</div>
+<div class="section" id="decorations">
+<h2>Decorations<a class="headerlink" href="#decorations" title="Permalink to this headline">¶</a></h2>
+<p>A <em>decoration</em> is a symbol that can be used to decorate a group
+object.  Its name must start with the string <em>decoration/</em>, and
+it should contain either a path object or a group of path objects.</p>
+<p>Ipe resizes these path objects so that they fit nicely around the
+bounding box of the group object being decorated.  For this to work
+correctly, the decoration object must be drawn such that it decorates
+the rectangle with corners at $(100, 100)$ and $(300, 200)$.</p>
+<p>To make a decoration symbol, follow these steps:</p>
+<ol class="arabic">
+<li><p>Draw a rectangle. Select <em>Edit as XML</em> from its context
+menu, and change the coordinates to look as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">path</span> <span class="n">stroke</span><span class="o">=</span><span class="s2">&quot;black&quot;</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;lightblue&quot;</span><span class="o">&gt;</span>
+<span class="mi">100</span> <span class="mi">100</span> <span class="n">m</span>
+<span class="mi">300</span> <span class="mi">100</span> <span class="n">l</span>
+<span class="mi">300</span> <span class="mi">200</span> <span class="n">l</span>
+<span class="mi">100</span> <span class="mi">200</span> <span class="n">l</span>
+<span class="n">h</span>
+<span class="o">&lt;/</span><span class="n">path</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Draw your decoration so that it fits this rectangle.  You should draw only path objects.</p></li>
+<li><p>Delete the rectangle from the first step.</p></li>
+<li><p>If the decoration consists of more than one object, group them all together.</p></li>
+<li><p>Save this object as a symbol whose name starts with <em>decoration/</em>
+(including the slash).  You can do this either using <em>create new
+symbol</em> in the <em>symbols</em> ipelet, or by selecting <em>Edit as XML</em> from
+the object’s context menu and copying the code into a stylesheet
+open in your text editor.</p></li>
+</ol>
+<p>For inspiration, have a look at the decoration symbols in the
+stylesheet <code class="file docutils literal notranslate"><span class="pre">decorations.isy</span></code> that comes with Ipe.</p>
+</div>
+<div class="section" id="more-about-stylesheets">
+<h2>More about stylesheets<a class="headerlink" href="#more-about-stylesheets" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="paper-size">
+<h3>Paper size<a class="headerlink" href="#paper-size" title="Permalink to this headline">¶</a></h3>
+<p>The style sheet is also responsible for determining the paper and
+frame size.  Ipe’s default paper size is the ISO standard A4.  If you
+wish to use letter size paper instead, include this style sheet:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">ipestyle</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;letterpaper&quot;</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="n">layout</span> <span class="n">paper</span><span class="o">=</span><span class="s2">&quot;612 792&quot;</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;0 0&quot;</span> <span class="n">frame</span><span class="o">=</span><span class="s2">&quot;612 792&quot;</span><span class="o">/&gt;</span>
+<span class="o">&lt;/</span><span class="n">ipestyle</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="latex-preamble">
+<h3>Latex preamble.<a class="headerlink" href="#latex-preamble" title="Permalink to this headline">¶</a></h3>
+<p>Stylesheets can also define a piece of LaTeX-preamble for your
+document.  When your text objects are processed by LaTeX, the
+preamble used consists of the pieces on the style sheet cascade, from
+bottom to top, followed by the preamble set for the document itself.</p>
+<p>Note that when putting LaTeX code in your style sheet, you have to
+escape the characters that are special in XML.  For instance, for
+<code class="docutils literal notranslate"><span class="pre">&lt;</span></code> you would have to write <code class="docutils literal notranslate"><span class="pre">&amp;lt;</span></code>.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Stylesheets</a><ul>
+<li><a class="reference internal" href="#make-your-own-stylesheet">Make your own stylesheet!</a></li>
+<li><a class="reference internal" href="#stylesheet-theory">Stylesheet theory</a></li>
+<li><a class="reference internal" href="#symbols">Symbols</a></li>
+<li><a class="reference internal" href="#decorations">Decorations</a></li>
+<li><a class="reference internal" href="#more-about-stylesheets">More about stylesheets</a><ul>
+<li><a class="reference internal" href="#paper-size">Paper size</a></li>
+<li><a class="reference internal" href="#latex-preamble">Latex preamble.</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="40_snapping.html"
+                        title="previous chapter">Snapping</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="66_babel.html"
+                        title="next chapter">Documents with text that is not in English</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/60_stylesheets.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="66_babel.html" title="Documents with text that is not in English"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="40_snapping.html" title="Snapping"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

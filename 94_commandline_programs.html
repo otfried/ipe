@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>The command line programs &#8212; Ipe 7.2.27 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="History and acknowledgments" href="98_history.html" />
+    <link rel="prev" title="Using Ipe figures in Latex" href="92_using_ipe_figures.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="98_history.html" title="History and acknowledgments"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="92_using_ipe_figures.html" title="Using Ipe figures in Latex"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="the-command-line-programs">
+<h1>The command line programs<a class="headerlink" href="#the-command-line-programs" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ipe">
+<h2>Ipe<a class="headerlink" href="#ipe" title="Permalink to this headline">¶</a></h2>
+<p>Ipe supports the following command line options:</p>
+<dl class="simple">
+<dt><code class="samp docutils literal notranslate"><span class="pre">-sheet</span> <em><span class="pre">style_sheet_name</span></em></code></dt><dd><p>Adds the designated style sheet to any newly created documents.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-show-configuration</span></code></dt><dd><p>With this option, Ipe will display the current configuration options
+on stdout, and terminate.</p>
+</dd>
+</dl>
+<p>In addition, you can specify the name of an Ipe file to open on the
+command line.</p>
+</div>
+<div class="section" id="ipetoipe-converting-ipe-file-formats">
+<h2>Ipetoipe: converting Ipe file formats<a class="headerlink" href="#ipetoipe-converting-ipe-file-formats" title="Permalink to this headline">¶</a></h2>
+<p>The auxiliary program <strong class="program">ipetoipe</strong> converts between the different
+Ipe file formats:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ipetoipe</span> <span class="p">(</span> <span class="o">-</span><span class="n">xml</span> <span class="o">|</span> <span class="o">-</span><span class="n">pdf</span> <span class="p">)</span> <span class="p">{</span> <span class="o">&lt;</span><span class="n">options</span><span class="o">&gt;</span> <span class="p">}</span> <span class="n">infile</span> <span class="p">[</span> <span class="n">outfile</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>The first argument determines the format of the output file.  If no
+output filename is provided, Ipe will try to guess it by appending one
+of the extensions <code class="docutils literal notranslate"><span class="pre">ipe</span></code> or <code class="docutils literal notranslate"><span class="pre">pdf</span></code> to the input file’s basename.</p>
+<p>For example, the command line syntax</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ipetoipe</span> <span class="o">-</span><span class="n">pdf</span> <span class="n">figure1</span><span class="o">.</span><span class="n">ipe</span>
+</pre></div>
+</div>
+<p>converts <code class="file docutils literal notranslate"><span class="pre">figure1.ipe</span></code> to <code class="file docutils literal notranslate"><span class="pre">figure1.pdf</span></code>.</p>
+<p>Ipetoipe understands the following options:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">-export</span></code></dt><dd><p>No Ipe markup is included in the resulting
+output file.  Ipe will not be able to open a file created that way,
+so make sure you keep your original!</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-markedview</span></code> (PDF only)</dt><dd><p>Only the marked views of marked Ipe pages will be created in PDF
+format.  If all views of a marked page are unmarked, the last view
+is exported. This is convenient to make handouts for slides.</p>
+</dd>
+<dt><code class="samp docutils literal notranslate"><span class="pre">-pages</span> <em><span class="pre">from-to</span></em></code> (PDF only)</dt><dd><p>Restrict exporting to PDF to this page range.  This implies  the
+<code class="docutils literal notranslate"><span class="pre">-export</span></code> option.</p>
+</dd>
+<dt><code class="samp docutils literal notranslate"><span class="pre">-view</span> <em><span class="pre">page-view</span></em></code></dt><dd><p>Only export this single view from the  document.   This  implies
+the <code class="docutils literal notranslate"><span class="pre">-export</span></code> option.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-runlatex</span></code></dt><dd><p>Run  Latex even for XML output. This has the effect of including
+the dimensions of each text object in the XML file.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-nozip</span></code></dt><dd><p>Do not compress streams in PDF output.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="iperender-exporting-to-a-bitmap-eps-or-svg">
+<span id="iperender"></span><h2>Iperender: exporting to a bitmap, EPS, or SVG<a class="headerlink" href="#iperender-exporting-to-a-bitmap-eps-or-svg" title="Permalink to this headline">¶</a></h2>
+<p>The program <strong class="program">iperender</strong> exports a page of the document to a
+bitmap in PNG format, to a figure in Encapsulated Postscript (EPS), or
+to scalable vector graphics in SVG format.  (Of course the result
+contains no Ipe markup, so make sure you keep your original!)  For
+instance, the following command line</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">iperender</span> <span class="o">-</span><span class="n">png</span> <span class="o">-</span><span class="n">page</span> <span class="mi">3</span> <span class="o">-</span><span class="n">resolution</span> <span class="mi">150</span> <span class="n">presentation</span><span class="o">.</span><span class="n">pdf</span> <span class="n">pres3</span><span class="o">.</span><span class="n">png</span>
+</pre></div>
+</div>
+<p>converts page 3 of the Ipe document <code class="file docutils literal notranslate"><span class="pre">presentation.pdf</span></code> to a
+bitmap, with resolution 150 pixels per inch.</p>
+</div>
+<div class="section" id="ipescript-running-ipe-scripts">
+<h2>Ipescript: running Ipe scripts<a class="headerlink" href="#ipescript-running-ipe-scripts" title="Permalink to this headline">¶</a></h2>
+<p>Ipescript runs an Ipe script written in the Lua language with bindings
+for the Ipe objects, such as the script <em>update-master</em>.  Ipescript
+automatically finds the script in Ipe’s script directories.  On Unix,
+you can place your own scripts in <code class="file docutils literal notranslate"><span class="pre">~/.ipe/scripts</span></code>.</p>
+<p>The Ipe distribution contains the following scripts:</p>
+<ul class="simple">
+<li><p><em>update-master</em>, explained <a class="reference internal" href="80_advanced.html#sharing"><span class="std std-ref">earlier</span></a>;</p></li>
+<li><p><em>page-labels</em>, explained <a class="reference internal" href="80_advanced.html#multiple"><span class="std std-ref">earlier</span></a>;</p></li>
+<li><p><em>onepage</em> collapses pages of an Ipe document into layers of a single
+page;</p></li>
+<li><p><em>add-style</em> to add a stylesheet to Ipe figures;</p></li>
+<li><p><em>update-styles</em> to update the stylesheets in Ipe figures (in the
+same way that Ipe does it using the <em>Update stylesheets</em> function).</p></li>
+</ul>
+</div>
+<div class="section" id="ipeextract-extract-xml-stream-from-ipe-file">
+<h2>Ipeextract: extract XML stream from Ipe file<a class="headerlink" href="#ipeextract-extract-xml-stream-from-ipe-file" title="Permalink to this headline">¶</a></h2>
+<p>Ipeextract extracts the XML stream from an PDF or EPS file made by
+Ipe 6 or 7 and saves it in a file.  It will work even if Ipe cannot
+actually parse the file, so you can use this tool to debug problems
+where Ipe fails to open your document.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ipeextract</span> <span class="n">infile</span> <span class="p">[</span> <span class="n">outfile</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>If not provided, the outfile is guessed by appending <code class="docutils literal notranslate"><span class="pre">xml</span></code> to the
+infile’s basename.</p>
+</div>
+<div class="section" id="ipe6upgrade-convert-ipe-6-files-to-ipe-7-file-format">
+<h2>Ipe6upgrade: convert Ipe 6 files to Ipe 7 file format<a class="headerlink" href="#ipe6upgrade-convert-ipe-6-files-to-ipe-7-file-format" title="Permalink to this headline">¶</a></h2>
+<p>Ipe6upgrade takes as input a file created by any version of Ipe 6, and
+saves in the format of Ipe 7.0.0.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ipe6upgrade</span> <span class="n">infile</span> <span class="p">[</span> <span class="n">outfile</span> <span class="p">]</span>
+</pre></div>
+</div>
+<p>If not provided, the outfile is guessed by adding the extension
+<code class="docutils literal notranslate"><span class="pre">ipe</span></code> to the infile’s basename.</p>
+<p>To reuse an Ipe 6 document in EPS or PDF format, you first run
+<strong class="program">ipeextract</strong>, which extracts the XML stream inside the
+document and saves it as an XML file.  The Ipe 6 XML document can then
+be converted to Ipe 7 format using <strong class="program">ipe6upgrade</strong>.</p>
+<p>If your old figure is <code class="file docutils literal notranslate"><span class="pre">figure.pdf</span></code>, then the command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ipeextract</span> <span class="n">figure</span><span class="o">.</span><span class="n">pdf</span>
+</pre></div>
+</div>
+<p>will save the XML stream as <code class="file docutils literal notranslate"><span class="pre">figure.xml</span></code>.  Then run</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ipe6upgrade</span> <span class="n">figure</span><span class="o">.</span><span class="n">xml</span>
+</pre></div>
+</div>
+<p>which will save your document in Ipe 7 format as <code class="file docutils literal notranslate"><span class="pre">figure.ipe</span></code>.
+All contents of the original document should have been preserved.</p>
+</div>
+<div class="section" id="importing-other-formats">
+<h2>Importing other formats<a class="headerlink" href="#importing-other-formats" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="svgtoipe-importing-svg-figures">
+<h3>Svgtoipe: Importing SVG figures<a class="headerlink" href="#svgtoipe-importing-svg-figures" title="Permalink to this headline">¶</a></h3>
+<p>The auxiliary program <strong class="program">svgtoipe</strong> converts an SVG figure to Ipe
+format. It cannot handle all SVG features (many SVG features are not
+supported by Ipe anyway), but it works for gradients.</p>
+<p><strong class="program">svgtoipe</strong> is not part of the Ipe source distribution. You can
+download it separately.</p>
+</div>
+<div class="section" id="pdftoipe-importing-postscript-and-pdf">
+<h3>Pdftoipe: Importing Postscript and PDF<a class="headerlink" href="#pdftoipe-importing-postscript-and-pdf" title="Permalink to this headline">¶</a></h3>
+<p>You can convert arbitrary Postscript or PDF files into Ipe documents,
+making them editable.  The auxiliary program <strong class="program">pdftoipe</strong>
+converts (pages from) a PDF file into an Ipe XML-file. (If your source
+is Postscript, you have to first convert it to PDF using Acrobat
+Distiller or <strong class="command">ps2pdf</strong>.)  Once converted to XML, the file can
+be opened from Ipe as usual.</p>
+<p>The conversion process handles many kinds of graphics in the PDF file
+fine, but doesn’t do very well on text—Ipe’s text model is just too
+different.</p>
+<p><strong class="program">pdftoipe</strong> is not part of the Ipe source distribution. You can
+download and build it separately.</p>
+</div>
+<div class="section" id="ipe5toxml-convert-ipe-5-files-to-ipe-6-file-format">
+<h3>Ipe5toxml: convert Ipe 5 files to Ipe 6 file format<a class="headerlink" href="#ipe5toxml-convert-ipe-5-files-to-ipe-6-file-format" title="Permalink to this headline">¶</a></h3>
+<p>If you still have figures that were created with Ipe 5, you can use
+<strong class="program">ipe5toxml</strong> to convert them to Ipe 6 format.  You can then use
+<strong class="program">ipe6upgrade</strong> to convert them to Ipe 7 format.</p>
+<p><strong class="program">ipe5toxml</strong> is not part of the Ipe distribution, but available as
+a separate download.</p>
+</div>
+<div class="section" id="figtoipe-importing-fig-figures">
+<h3>Figtoipe: Importing FIG figures<a class="headerlink" href="#figtoipe-importing-fig-figures" title="Permalink to this headline">¶</a></h3>
+<p>The auxiliary program <strong class="program">figtoipe</strong> converts a figure in FIG format
+into an Ipe XML-file.  This is useful if you used to make figures with
+Xfig before discovering Ipe, of if your co-authors made figures for
+your article with Xfig (converting them will have the added benefit of
+forcing your co-authors to learn to use Ipe).  Finally, there are
+quite a number of programs that can export to FIG format, and
+<strong class="program">figtoipe</strong> effectively turns that into the possibility of
+exporting to Ipe.</p>
+<p>However, <strong class="program">figtoipe</strong> is not quite complete.  The drawing models of
+FIG and Ipe are also somewhat different, which makes it impossible to
+properly render some FIG files in Ipe.  In particular, Ipe does not
+support FIG’s interpolating splines, depth ordering independent of
+grouping, pattern fill, and Postscript fonts.</p>
+<p>You may therefore have to edit the file after conversion.</p>
+<p><strong class="program">figtoipe</strong> is not part of the Ipe distribution. You can download
+and build it separately. <strong class="program">figtoipe</strong> is now maintained by
+Alexander Bürger.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">The command line programs</a><ul>
+<li><a class="reference internal" href="#ipe">Ipe</a></li>
+<li><a class="reference internal" href="#ipetoipe-converting-ipe-file-formats">Ipetoipe: converting Ipe file formats</a></li>
+<li><a class="reference internal" href="#iperender-exporting-to-a-bitmap-eps-or-svg">Iperender: exporting to a bitmap, EPS, or SVG</a></li>
+<li><a class="reference internal" href="#ipescript-running-ipe-scripts">Ipescript: running Ipe scripts</a></li>
+<li><a class="reference internal" href="#ipeextract-extract-xml-stream-from-ipe-file">Ipeextract: extract XML stream from Ipe file</a></li>
+<li><a class="reference internal" href="#ipe6upgrade-convert-ipe-6-files-to-ipe-7-file-format">Ipe6upgrade: convert Ipe 6 files to Ipe 7 file format</a></li>
+<li><a class="reference internal" href="#importing-other-formats">Importing other formats</a><ul>
+<li><a class="reference internal" href="#svgtoipe-importing-svg-figures">Svgtoipe: Importing SVG figures</a></li>
+<li><a class="reference internal" href="#pdftoipe-importing-postscript-and-pdf">Pdftoipe: Importing Postscript and PDF</a></li>
+<li><a class="reference internal" href="#ipe5toxml-convert-ipe-5-files-to-ipe-6-file-format">Ipe5toxml: convert Ipe 5 files to Ipe 6 file format</a></li>
+<li><a class="reference internal" href="#figtoipe-importing-fig-figures">Figtoipe: Importing FIG figures</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="92_using_ipe_figures.html"
+                        title="previous chapter">Using Ipe figures in Latex</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="98_history.html"
+                        title="next chapter">History and acknowledgments</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/94_commandline_programs.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="98_history.html" title="History and acknowledgments"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="92_using_ipe_figures.html" title="Using Ipe figures in Latex"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

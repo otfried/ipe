@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Documents with text that is not in English &#8212; Ipe 7.2.27 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Presentations" href="70_presentations.html" />
+    <link rel="prev" title="Stylesheets" href="60_stylesheets.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="70_presentations.html" title="Presentations"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="60_stylesheets.html" title="Stylesheets"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="documents-with-text-that-is-not-in-english">
+<span id="index-0"></span><h1>Documents with text that is not in English<a class="headerlink" href="#documents-with-text-that-is-not-in-english" title="Permalink to this headline">¶</a></h1>
+<p>If you make figures containing text objects in languages other than
+English, you will need to enter accented characters, or characters
+from other scripts such as Greek, Cyrillic, Farsi, Arabic, Hangul,
+Kana, or Chinese characters.</p>
+<p>Of course you can still use the LaTeX syntax <code class="docutils literal notranslate"><span class="pre">K\&quot;onig</span></code> to enter the
+German word “König”, but for larger runs of text it’s more convenient
+to enter text in a script supported by your system.  When Ipe writes
+the LaTeX source file, it writes the text in UTF-8 encoded Unicode.
+You have to make sure that your LaTeX setup can handle this file.</p>
+<div class="section" id="pdflatex-for-latin-and-cyrillic-scripts">
+<span id="index-1"></span><h2>Pdflatex for latin and cyrillic scripts<a class="headerlink" href="#pdflatex-for-latin-and-cyrillic-scripts" title="Permalink to this headline">¶</a></h2>
+<p>An easy solution, sufficient for German, French, and other languages
+for which support is already in a standard LaTeX-setup, is to add
+the line</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">usepackage</span><span class="p">[</span><span class="n">utf8</span><span class="p">]{</span><span class="n">inputenc</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>in your <em>Latex preamble</em> (set in the <em>Document properties</em>
+dialog, available on the <em>Edit</em> menu).</p>
+<p>In addition, you may need to setup your document language. So, to use
+UTF-8 encoded Russian in LaTeX, your preamble would look like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">usepackage</span><span class="p">[</span><span class="n">utf8</span><span class="p">]{</span><span class="n">inputenc</span><span class="p">}</span>
+\<span class="n">usepackage</span><span class="p">[</span><span class="n">russian</span><span class="p">]{</span><span class="n">babel</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>When setting this up, you have to keep in mind that Ipe can only
+handle scalable fonts, such as Postscript Type1 fonts.  You’ll have to
+choose a setup that uses such scalable fonts.  Quite often it is
+sufficient to install the package <code class="docutils literal notranslate"><span class="pre">cm-super</span></code>, which contains
+Type1 versions of standard fonts.</p>
+<p>If your LaTeX setup does not contain scalable fonts for your
+document, it will often fall back on Metafont fonts in bitmapped Type3
+format.  Ipe will show an error message informing you about Type3
+fonts in your LaTeX output.  In that case, try installing
+<code class="docutils literal notranslate"><span class="pre">cm-super</span></code>, or use a package that explicitly uses Postscript
+fonts.  For instance, for Russian you could install the <em>PsCyr</em>
+package, and the following preamble:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">usepackage</span><span class="p">[</span><span class="n">utf8</span><span class="p">]{</span><span class="n">inputenc</span><span class="p">}</span>
+\<span class="n">usepackage</span><span class="p">[</span><span class="n">russian</span><span class="p">]{</span><span class="n">babel</span><span class="p">}</span>
+\<span class="n">usepackage</span><span class="p">{</span><span class="n">pscyr</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-xetex">
+<span id="index-2"></span><h2>Using Xetex<a class="headerlink" href="#using-xetex" title="Permalink to this headline">¶</a></h2>
+<p>If you set the LaTeX engine to <code class="docutils literal notranslate"><span class="pre">xetex</span></code> (you set this in the
+<em>Document properties</em> dialog, available on the <em>Edit</em> menu), then Ipe
+will use Xelatex to convert your text objects to PDF.  Xetex supports
+Unicode natively, and will give you access to many scalable fonts on
+your system.</p>
+<p>For instance, to use Thai in your Ipe document, it suffices to set the
+Latex engine to <code class="docutils literal notranslate"><span class="pre">xetex</span></code>, and to select a Thai font in the
+preamble:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">usepackage</span><span class="p">{</span><span class="n">fontspec</span><span class="p">}</span>
+\<span class="n">setmainfont</span><span class="p">{</span><span class="n">Garuda</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>(On a Unix-system, you can determine which fonts on your system
+support Thai by saying <code class="docutils literal notranslate"><span class="pre">fc-list</span> <span class="pre">:lang=th</span></code> on the command line.)</p>
+<p>Unfortunately, running Xetex is significantly slower than Pdflatex, so
+you may want to turn off the automatic running of LaTeX in the <em>File</em>
+menu.</p>
+<p>If your script uses right-to-left writing, you will need <a class="reference internal" href="#rtl"><span class="std std-ref">some
+more effort</span></a>.</p>
+</div>
+<div class="section" id="chinese-japanese-and-korean">
+<span id="index-3"></span><h2>Chinese, Japanese, and Korean<a class="headerlink" href="#chinese-japanese-and-korean" title="Permalink to this headline">¶</a></h2>
+<p>Using Korean Hangul and Hanja in Ipe is quite easy, by placing this in your
+preamble:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">usepackage</span><span class="p">[</span><span class="n">utf</span><span class="p">]{</span><span class="n">kotex</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Japanese LaTeX-users had long used a specialized version of TeX.
+Fortunately, the new <code class="docutils literal notranslate"><span class="pre">luatex</span></code> implementation makes this unnecessary,
+so we can now typeset Japanese by setting the <em>Latex engine</em> to
+<code class="docutils literal notranslate"><span class="pre">luatex</span></code> and including the <code class="docutils literal notranslate"><span class="pre">luatexja</span></code> package in the preamble:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">usepackage</span><span class="p">{</span><span class="n">luatexja</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>To typeset Chinese, the <em>xeCJK</em> package of CTeX also works with
+Ipe.  Set the <em>Latex engine</em> to <code class="docutils literal notranslate"><span class="pre">xetex</span></code>, and include the
+package in your preamble:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">usepackage</span><span class="p">{</span><span class="n">xeCJK</span><span class="p">}</span>
+</pre></div>
+</div>
+<span class="target" id="rtl"></span></div>
+<div class="section" id="right-to-left-writing-farsi-hebrew-and-arabic">
+<span id="index-4"></span><h2>Right-to-left writing: Farsi, Hebrew, and Arabic<a class="headerlink" href="#right-to-left-writing-farsi-hebrew-and-arabic" title="Permalink to this headline">¶</a></h2>
+<p>Scripts with right-to-left writing require some extra care.  The main
+document needs to be processed left-to-right for Ipe to work
+correctly.  Only individual text objects can be translated using
+right-to-left mode.</p>
+<p>Here are solutions that work for Farsi (Persian),  Hebrew, and
+Arabic.</p>
+<div class="section" id="persian">
+<h3>Persian<a class="headerlink" href="#persian" title="Permalink to this headline">¶</a></h3>
+<p>Include the stylesheet <em>right-to-left.isy</em> from the Ipe
+stylesheet folder.  It defines a text style <code class="docutils literal notranslate"><span class="pre">rtl</span></code> for
+right-to-left text objects.</p>
+<p>In the document properties (that is, in the <em>Document properties</em>
+dialog, available on the <em>Edit</em> menu), set <code class="docutils literal notranslate"><span class="pre">Latex</span> <span class="pre">engine</span></code> to
+<code class="docutils literal notranslate"><span class="pre">xetex</span></code>, and the <code class="docutils literal notranslate"><span class="pre">Latex</span> <span class="pre">preamble</span></code> to</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">usepackage</span><span class="p">[</span><span class="n">documentdirection</span><span class="o">=</span><span class="n">lefttoright</span><span class="p">]{</span><span class="n">xepersian</span><span class="p">}</span>
+\<span class="n">settextfont</span><span class="p">{</span><span class="n">FreeFarsi</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>I needed to install the packages <code class="docutils literal notranslate"><span class="pre">texlive-lang-arabic</span></code> and
+<code class="docutils literal notranslate"><span class="pre">fonts-freefarsi</span></code> on my Linux system to use this.  On a
+Unix-system, you can determine which fonts on your system support
+Farsi by saying <code class="docutils literal notranslate"><span class="pre">fc-list</span> <span class="pre">:lang=fa</span></code> on the command line.</p>
+<p>It is important to set the option <code class="docutils literal notranslate"><span class="pre">documentdirection=lefttoright</span></code>
+for the <em>xepersian</em> package, to make sure the main document is
+processed in left-to-right mode.</p>
+<p>You can now have text objects with Latin script using the
+<code class="docutils literal notranslate"><span class="pre">normal</span></code> text style, and text objects with Persian script using
+the <code class="docutils literal notranslate"><span class="pre">rtl</span></code> text style.</p>
+<p>If you want, you can make <code class="docutils literal notranslate"><span class="pre">rtl</span></code> the default text style, with the
+following <a class="reference internal" href="80_advanced.html#customize"><span class="std std-ref">customization</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">prefs</span><span class="o">.</span><span class="n">initial_attributes</span><span class="o">.</span><span class="n">textstyle</span> <span class="o">=</span> <span class="s2">&quot;rtl&quot;</span>
+</pre></div>
+</div>
+<p>If you do not use the <em>right-to-left.isy</em> stylesheet, then you
+have to put one more line in the preamble:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">ipedefinecolors</span><span class="p">{}</span>
+\<span class="n">usepackage</span><span class="p">[</span><span class="n">documentdirection</span><span class="o">=</span><span class="n">lefttoright</span><span class="p">]{</span><span class="n">xepersian</span><span class="p">}</span>
+\<span class="n">settextfont</span><span class="p">{</span><span class="n">FreeFarsi</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>This is necessary, because Ipe normally loads the <code class="docutils literal notranslate"><span class="pre">xcolors</span></code> package
+after processing the document preamble.  Some packages (like <code class="docutils literal notranslate"><span class="pre">bidi</span></code>
+and <code class="docutils literal notranslate"><span class="pre">xepersian</span></code>) require to be loaded <em>after</em> <code class="docutils literal notranslate"><span class="pre">xcolors</span></code>, so you
+need to use <code class="docutils literal notranslate"><span class="pre">\ipedefinecolors{}</span></code> to load <code class="docutils literal notranslate"><span class="pre">xcolors</span></code> early.  We
+didn’t need this above, because the stylesheet <code class="file docutils literal notranslate"><span class="pre">right-to-left.isy</span></code>
+already contains the command.</p>
+</div>
+<div class="section" id="hebrew">
+<h3>Hebrew<a class="headerlink" href="#hebrew" title="Permalink to this headline">¶</a></h3>
+<p>Include the stylesheet <em>right-to-left.isy</em> from the Ipe
+stylesheet folder.  It defines a text style <code class="docutils literal notranslate"><span class="pre">rtl</span></code> for
+right-to-left text objects.</p>
+<p>In the document properties (that is, in the <em>Document properties</em>
+dialog, available on the <em>Edit</em> menu), set <code class="docutils literal notranslate"><span class="pre">Latex</span> <span class="pre">engine</span></code> to
+<code class="docutils literal notranslate"><span class="pre">xetex</span></code>, and the <code class="docutils literal notranslate"><span class="pre">Latex</span> <span class="pre">preamble</span></code> to</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">ipedefinecolors</span><span class="p">{}</span>
+\<span class="n">usepackage</span><span class="p">{</span><span class="n">fontspec</span><span class="p">}</span>
+\<span class="n">setmainfont</span><span class="p">{</span><span class="n">Liberation</span> <span class="n">Serif</span><span class="p">}</span>
+\<span class="n">setmonofont</span><span class="p">{</span><span class="n">Liberation</span> <span class="n">Mono</span><span class="p">}</span>
+\<span class="n">setsansfont</span><span class="p">{</span><span class="n">Liberation</span> <span class="n">Sans</span><span class="p">}</span>
+\<span class="n">usepackage</span><span class="p">{</span><span class="n">bidi</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>I needed to install the package <code class="docutils literal notranslate"><span class="pre">texlive-lang-arabic</span></code> to use the
+<code class="docutils literal notranslate"><span class="pre">bidi</span></code> package.  On a Unix-system, you can determine which fonts
+on your system support Hebrew by saying <code class="docutils literal notranslate"><span class="pre">fc-list</span> <span class="pre">:lang=he</span></code> on the
+command line.</p>
+<p>You can now have text objects with Latin script using the
+<code class="docutils literal notranslate"><span class="pre">normal</span></code> text style, and text objects in Hebrew using the
+<code class="docutils literal notranslate"><span class="pre">rtl</span></code> text style.</p>
+<p>If you want, you can make <code class="docutils literal notranslate"><span class="pre">rtl</span></code> the default text style, with the
+following <a class="reference internal" href="80_advanced.html#customize"><span class="std std-ref">customization</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">prefs</span><span class="o">.</span><span class="n">initial_attributes</span><span class="o">.</span><span class="n">textstyle</span> <span class="o">=</span> <span class="s2">&quot;rtl&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="arabic">
+<h3>Arabic<a class="headerlink" href="#arabic" title="Permalink to this headline">¶</a></h3>
+<p>In the document properties (that is, in the <em>Document properties</em>
+dialog, available on the <em>Edit</em> menu), set <code class="docutils literal notranslate"><span class="pre">Latex</span> <span class="pre">engine</span></code> to
+<code class="docutils literal notranslate"><span class="pre">luatex</span></code>, and the <code class="docutils literal notranslate"><span class="pre">Latex</span> <span class="pre">preamble</span></code> to</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">usepackage</span><span class="p">{</span><span class="n">arabluatex</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>If you don’t want to use the standard Amiri font, select another font
+in the preamble:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>\<span class="n">newfontfamily</span>\<span class="n">arabicfont</span><span class="p">[</span><span class="n">Script</span><span class="o">=</span><span class="n">Arabic</span><span class="p">]{</span><span class="n">KacstLetter</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>On a Unix-system, you can list the fonts on your system supporting
+Arabic by saying <code class="docutils literal notranslate"><span class="pre">fc-list</span> <span class="pre">:lang=ar</span></code> on the command line.</p>
+<p>You can now create text objects in Arabic using the macro verb+arb+
+and the environment <code class="docutils literal notranslate"><span class="pre">arab</span></code>.</p>
+<p>The following stylesheet <em>arabic.isy</em> makes this more
+comfortable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">ipestyle</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;arabic&quot;</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">textstyle</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;arabic&quot;</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;minipage&quot;</span> <span class="n">begin</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\b</span><span class="s2">egin</span><span class="si">{arab}</span><span class="s2">&quot;</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;\end</span><span class="si">{arab}</span><span class="s2">&quot;</span><span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="n">textstyle</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;arabic&quot;</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;label&quot;</span> <span class="n">begin</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\a</span><span class="s2">rb{&quot;</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;}&quot;</span><span class="o">/&gt;</span>
+<span class="o">&lt;/</span><span class="n">ipestyle</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>If you add this stylesheet to your document, you can select the
+<code class="docutils literal notranslate"><span class="pre">arabic</span></code> style for text objects, and directly write in Arabic
+inside these objects.</p>
+<p>If you want, you can make <code class="docutils literal notranslate"><span class="pre">arabic</span></code> the default text style, with the
+following <a class="reference internal" href="80_advanced.html#customize"><span class="std std-ref">customization</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">prefs</span><span class="o">.</span><span class="n">initial_attributes</span><span class="o">.</span><span class="n">textstyle</span> <span class="o">=</span> <span class="s2">&quot;arabic&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Documents with text that is not in English</a><ul>
+<li><a class="reference internal" href="#pdflatex-for-latin-and-cyrillic-scripts">Pdflatex for latin and cyrillic scripts</a></li>
+<li><a class="reference internal" href="#using-xetex">Using Xetex</a></li>
+<li><a class="reference internal" href="#chinese-japanese-and-korean">Chinese, Japanese, and Korean</a></li>
+<li><a class="reference internal" href="#right-to-left-writing-farsi-hebrew-and-arabic">Right-to-left writing: Farsi, Hebrew, and Arabic</a><ul>
+<li><a class="reference internal" href="#persian">Persian</a></li>
+<li><a class="reference internal" href="#hebrew">Hebrew</a></li>
+<li><a class="reference internal" href="#arabic">Arabic</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="60_stylesheets.html"
+                        title="previous chapter">Stylesheets</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="70_presentations.html"
+                        title="next chapter">Presentations</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/66_babel.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="70_presentations.html" title="Presentations"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="60_stylesheets.html" title="Stylesheets"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

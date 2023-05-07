@@ -1,0 +1,955 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>The Ipe file format &#8212; Ipe 7.2.27 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Using Ipe figures in Latex" href="92_using_ipe_figures.html" />
+    <link rel="prev" title="Advanced topics" href="80_advanced.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="92_using_ipe_figures.html" title="Using Ipe figures in Latex"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="80_advanced.html" title="Advanced topics"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="the-ipe-file-format">
+<h1>The Ipe file format<a class="headerlink" href="#the-ipe-file-format" title="Permalink to this headline">¶</a></h1>
+<p>Ipe can store documents in two different formats.  One of them is
+standard PDF, which can be read by any application capable of opening
+PDF files.  (Ipe embeds its own information inside PDF files.  The way
+this is done is not documented here, and may change between releases
+of Ipe.)</p>
+<p>The second Ipe file format is a pure XML implementation.  Files stored
+in this format can be parsed with any XML-aware application, and you
+can create XML files for Ipe from your own applications.</p>
+<p>A DTD for the Ipe format is available as <a class="reference external" href="https://github.com/otfried/ipe/raw/master/doc/ipe.dtd">ipe.dtd</a>. For
+instance, you can use this to validate an Ipe document using</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xmllint</span> <span class="o">--</span><span class="n">dtdvalid</span> <span class="n">ipe</span><span class="o">.</span><span class="n">dtd</span> <span class="o">--</span><span class="n">noout</span> <span class="n">file</span><span class="o">.</span><span class="n">ipe</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xmlstarlet</span> <span class="n">val</span> <span class="o">-</span><span class="n">d</span> <span class="n">ipe</span><span class="o">.</span><span class="n">dtd</span> <span class="n">file</span><span class="o">.</span><span class="n">ipe</span>
+</pre></div>
+</div>
+<p>The tags understood by Ipe are described informally in this section.</p>
+<p>Ipe does not use a full XML-parser, in particular it does not
+understand namespaces and doesn’t allow certain elements that have no
+contents to be expanded (you cannot, for instance, write
+<code class="docutils literal notranslate"><span class="pre">&lt;info&gt;&lt;/info&gt;</span></code> instead of <code class="docutils literal notranslate"><span class="pre">&lt;info</span> <span class="pre">/&gt;</span></code>).</p>
+<p>Tags in the XML file can carry attributes other than the ones
+documented here.  Ipe ignores all attributes it doesn’t understand, and
+they will be lost if the document is saved again from Ipe.  Ipe will
+complain about any XML elements not described here, with the exception
+that you can use elements whose name starts with <code class="docutils literal notranslate"><span class="pre">x-</span></code> freely to add
+your own information inside an Ipe file.</p>
+<p>An Ipe XML file must contain exactly one <code class="docutils literal notranslate"><span class="pre">&lt;ipe&gt;</span></code> element, while
+an Ipe stylesheet file must contain exactly one <code class="docutils literal notranslate"><span class="pre">&lt;ipestyle&gt;</span></code>
+element (both types of files are allowed to start with an
+<code class="docutils literal notranslate"><span class="pre">&lt;?xml&gt;</span></code> tag, which is simply ignored by Ipe).  An Ipe file may
+also contain a <code class="docutils literal notranslate"><span class="pre">&lt;!DOCTYPE&gt;</span></code> tag.</p>
+<p>All elements are documented below.</p>
+<div class="section" id="the-ipe-element">
+<h2>The <code class="docutils literal notranslate"><span class="pre">&lt;ipe&gt;</span></code> element<a class="headerlink" href="#the-ipe-element" title="Permalink to this headline">¶</a></h2>
+<p><em>Attributes</em></p>
+<p><code class="docutils literal notranslate"><span class="pre">version</span></code> (required)</p>
+<blockquote>
+<div><p>The value (a number, e.g. 70103 for Ipelib 7.1.3) indicates the
+earliest Ipelib version that can interpret the document. Ipe will
+refuse to load documents that require a version larger than its own,
+and may refuse to load documents that are too old (and which will
+have to be converted using a separate program).</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">creator</span></code> (optional)</p>
+<blockquote>
+<div><p>indicates the program that created the file.  This information is
+not interpreted by Ipe at all.</p>
+</div></blockquote>
+<p><em>Contents</em></p>
+<ol class="arabic simple">
+<li><p>An <code class="docutils literal notranslate"><span class="pre">&lt;info&gt;</span></code> element (optional),</p></li>
+<li><p>a <code class="docutils literal notranslate"><span class="pre">&lt;preamble&gt;</span></code> element (optional),</p></li>
+<li><p>a series of <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;ipestyle&gt;</span></code> elements (optional),</p></li>
+<li><p>a series of <code class="docutils literal notranslate"><span class="pre">page</span></code> elements.</p></li>
+</ol>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;ipestyle&gt;</span></code> elements form a <em>cascade</em>, with the <em>last</em>
+<code class="docutils literal notranslate"><span class="pre">&lt;ipestyle&gt;</span></code> element becoming the <em>top-level</em> style sheet.  When
+symbolic names are looked up, the style sheets are checked from top to
+bottom.  Ipe always appends the built-in standard style sheet at the
+bottom of the stack.</p>
+<div class="section" id="the-info-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;info&gt;</span></code> element<a class="headerlink" href="#the-info-element" title="Permalink to this headline">¶</a></h3>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">title</span></code> (optional)</dt><dd><p>document title,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">author</span></code> (optional)</dt><dd><p>document author,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">subject</span></code> (optional)</dt><dd><p>document subject,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">keywords</span></code> (optional)</dt><dd><p>document keywords,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pagemode</span></code> (optional)</dt><dd><p>the only value understood by Ipe is
+<code class="docutils literal notranslate"><span class="pre">fullscreen</span></code>, which causes the document to be opened in full
+screen mode in PDF readers.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">created</span></code> (optional)</dt><dd><p>creation time in PDF format, e.g. <code class="docutils literal notranslate"><span class="pre">D:20030127204100</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">modified</span></code> (optional)</dt><dd><p>modification time in PDF format,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">numberpages</span></code> (optional)</dt><dd><p>if the value is <code class="docutils literal notranslate"><span class="pre">yes</span></code>, then Ipe will save PDF documents with
+visible page numbers on each page.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">sequentialtext</span></code> (optional)</dt><dd><p>if the value is <code class="docutils literal notranslate"><span class="pre">yes</span></code>, then Ipe will typeset all text objects one
+by one, even if they are identical, in the order in which they
+appear in the document.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">tex</span></code> (optional)</dt><dd><p>determines the TeX-engine used to translate your text.  The
+possible values are <code class="docutils literal notranslate"><span class="pre">pdftex</span></code>, <code class="docutils literal notranslate"><span class="pre">xetex</span></code>, and <code class="docutils literal notranslate"><span class="pre">luatex</span></code>.</p>
+</dd>
+</dl>
+<p>This element must be empty.</p>
+</div>
+<div class="section" id="the-preamble-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;preamble&gt;</span></code> element<a class="headerlink" href="#the-preamble-element" title="Permalink to this headline">¶</a></h3>
+<p>The contents of this element is LaTeX source code, to be used as
+the LaTeX preamble when running LaTeX to process the text
+objects in the document. It should <em>not</em> contain a
+<code class="docutils literal notranslate"><span class="pre">\documentclass</span></code> command, but can contain <code class="docutils literal notranslate"><span class="pre">\usepackage</span></code>
+commands and macro definitions.</p>
+</div>
+<div class="section" id="the-bitmap-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code> element<a class="headerlink" href="#the-bitmap-element" title="Permalink to this headline">¶</a></h3>
+<p>Each <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code> element defines a bitmap to be used by
+<code class="docutils literal notranslate"><span class="pre">&lt;image&gt;</span></code> objects.</p>
+<p>Attributes</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">id</span></code> (required)</dt><dd><p>the value must be an integer that will define the bitmap throughout
+the Ipe document,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">width</span></code> (required)</dt><dd><p>integer width in pixels,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">height</span></code> (required)</dt><dd><p>integer height in pixels,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">ColorSpace</span></code> (optional)</dt><dd><p>possible values are <code class="docutils literal notranslate"><span class="pre">DeviceGray</span></code>, <code class="docutils literal notranslate"><span class="pre">DeviceGrayAlpha</span></code>, <code class="docutils literal notranslate"><span class="pre">DeviceRGB</span></code> (default value), and
+<code class="docutils literal notranslate"><span class="pre">DeviceRGBAlpha</span></code>. The suffix <code class="docutils literal notranslate"><span class="pre">Alpha</span></code> indicates the presence of
+an alpha channel.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">ColorKey</span></code> (optional)</dt><dd><p>an RGB color in hexadecimal, indicating the
+transparent color (not supported for JPEG images and for images with
+alpha channel),</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">length</span></code> (required unless there is no filter and no alpha channel)</dt><dd><p>the number of bytes of image data,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Filter</span></code> (optional)</dt><dd><p>possible values are <code class="docutils literal notranslate"><span class="pre">FlateDecode</span></code> or
+<code class="docutils literal notranslate"><span class="pre">DCTDecode</span></code> to indicate a compressed image (the latter is used for
+JPEG images),</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">encoding</span></code> (optional)</dt><dd><p>possible value is <code class="docutils literal notranslate"><span class="pre">base64</span></code> to indicate
+that the image data is base64-encoded (not in hexadecimal),</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">alphaLength</span></code> (optional)</dt><dd><p>indicates that the alpha channel is
+provided separately.</p>
+</dd>
+</dl>
+<p>The contents of the <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code> element is the image data, either
+base64-encoded or in hexadecimal format.  White space between bytes is
+ignored.  If no filter is specified, pixels are stored row by row.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">alphaLength</span></code> present, then the alpha channel follows the
+image data.  If the data is deflated, image data and alpha channel are
+deflated separately.  If no <code class="docutils literal notranslate"><span class="pre">alphaLength</span></code> is present, then the
+alpha component is part of each pixel before the color components.</p>
+<p>Bitmaps use 8-bit color and alpha components.  Bitmaps with color maps
+or with a different number of bits per component are not supported,
+and such support is not planned. (The <em>Insert image</em> function
+does allow you to insert arbitrary image formats, but they are stored
+as 8-bit per component images.  Since the data is compressed, this
+does not seriously increase the image data size.)</p>
+</div>
+</div>
+<div class="section" id="the-page-element">
+<h2>The <code class="docutils literal notranslate"><span class="pre">&lt;page&gt;</span></code> element<a class="headerlink" href="#the-page-element" title="Permalink to this headline">¶</a></h2>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">title</span></code> (optional)</dt><dd><p>title of this page (displayed at a fixed
+location in a format specified by the style sheet),</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">section</span></code> (optional)</dt><dd><p>Title of document section starting with this
+page. If the attribute is not present, this page continues the
+section of the previous page.  If the attribute is present, but its
+value is an empty string, then the contents of the <code class="docutils literal notranslate"><span class="pre">title</span></code>
+attribute is used instead.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">subsection</span></code> (optional)</dt><dd><p>Title of document subsection starting
+with this page. If the attribute is not present, this page continues
+the subsection of the previous page.  If the attribute is present,
+but its value is an empty string, then the contents of the
+<code class="docutils literal notranslate"><span class="pre">title</span></code> attribute is used instead.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">marked</span></code> (optional)</dt><dd><p>The page is marked for printing unless the
+value of this attribute is <code class="docutils literal notranslate"><span class="pre">no</span></code>.</p>
+</dd>
+</dl>
+<p><em>Contents</em></p>
+<ol class="arabic simple">
+<li><p>An optional <code class="docutils literal notranslate"><span class="pre">&lt;notes&gt;</span></code> element,</p></li>
+<li><p>a possibly empty sequence of <code class="docutils literal notranslate"><span class="pre">&lt;layer&gt;</span></code> elements,</p></li>
+<li><p>a possibly empty sequence of <code class="docutils literal notranslate"><span class="pre">&lt;view&gt;</span></code> elements,</p></li>
+<li><p>a possibly empty sequence of Ipe object elements.</p></li>
+</ol>
+<p>If a page contains no layer element, Ipe automatically adds a default
+layer named <code class="docutils literal notranslate"><span class="pre">alpha</span></code>, visible and editable.</p>
+<p>If a page contains no view element, a single view where all layers are
+visible is assumed.</p>
+<div class="section" id="the-notes-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;notes&gt;</span></code> element<a class="headerlink" href="#the-notes-element" title="Permalink to this headline">¶</a></h3>
+<p>This element has no attributes.  Its contents is plain text,
+containing notes for this page.</p>
+</div>
+<div class="section" id="the-layer-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;layer&gt;</span></code> element<a class="headerlink" href="#the-layer-element" title="Permalink to this headline">¶</a></h3>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (required)</dt><dd><p>Name of the layer.  It must not contain white
+space.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">edit</span></code> (optional)</dt><dd><p>The value should be <code class="docutils literal notranslate"><span class="pre">yes</span></code> or
+<code class="docutils literal notranslate"><span class="pre">no</span></code> and indicates whether the user can select and modify the
+contents of the layer in the Ipe user interface (of course the user
+can always modify the setting of the attribute).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">snap</span></code> (optional)</dt><dd><p>The value should be <code class="docutils literal notranslate"><span class="pre">never</span></code>,
+<code class="docutils literal notranslate"><span class="pre">visible</span></code>, or <code class="docutils literal notranslate"><span class="pre">always</span></code>, and indicates whether snapping to
+this layer is enabled.  The default is <code class="docutils literal notranslate"><span class="pre">visible</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">data</span></code> (optional)</dt><dd><p>A free-use string associated with the
+layer. Ipe makes no use of this string, except for layers it creates
+itself for group edits.</p>
+</dd>
+</dl>
+<p>The layer element must be empty.</p>
+</div>
+<div class="section" id="the-view-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;view&gt;</span></code> element<a class="headerlink" href="#the-view-element" title="Permalink to this headline">¶</a></h3>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">layers</span></code> (required)</dt><dd><p>The value must be a sequence of layer names
+defined in this page, separated by white space.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">active</span></code> (required)</dt><dd><p>The layer that is the active layer in this view.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">effect</span></code> (optional)</dt><dd><p>The symbolic name of a graphics effect to be
+used during the PDF page transition.  The effect must be defined in
+the style sheet.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (optional)</dt><dd><p>The name of the view.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">marked</span></code> (optional)</dt><dd><p>The view is marked for printing if the value
+of this attribute is <code class="docutils literal notranslate"><span class="pre">yes</span></code>.</p>
+</dd>
+</dl>
+<p>The view element may be empty, or it may contain a sequence of
+attribute mappings and layer transformations.</p>
+<p>An attribute mapping is a <code class="docutils literal notranslate"><span class="pre">&lt;map&gt;</span></code> element with three attributes</p>
+<p><code class="docutils literal notranslate"><span class="pre">kind</span></code>, <code class="docutils literal notranslate"><span class="pre">from</span></code>, and <code class="docutils literal notranslate"><span class="pre">to</span></code>. The <code class="docutils literal notranslate"><span class="pre">kind</span></code> attribute must have one
+of the following values:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pen</span><span class="p">,</span> <span class="n">symbolsize</span><span class="p">,</span> <span class="n">arrowsize</span><span class="p">,</span> <span class="n">opacity</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">dashstyle</span><span class="p">,</span> <span class="n">symbol</span>
+</pre></div>
+</div>
+<p>The attributes <code class="docutils literal notranslate"><span class="pre">from</span></code> and <code class="docutils literal notranslate"><span class="pre">to</span></code> must both be names of symbolic
+attribute values.  The effect is that in this view, the symbolic
+attribute <code class="docutils literal notranslate"><span class="pre">from</span></code> is replaced by the symbolic attribute <code class="docutils literal notranslate"><span class="pre">to</span></code> for
+attributes of the given kind.</p>
+<p>A layer transformation is a <code class="docutils literal notranslate"><span class="pre">&lt;transform&gt;</span></code> element. It must have two
+attributes: <code class="docutils literal notranslate"><span class="pre">layer</span></code> is the name of a layer of the page, <code class="docutils literal notranslate"><span class="pre">matrix</span></code>
+is a transformation matrix.  In the view, all objects on that layer
+are transformed with this matrix.</p>
+</div>
+</div>
+<div class="section" id="ipe-object-elements">
+<h2>Ipe object elements<a class="headerlink" href="#ipe-object-elements" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="common-attributes">
+<h3>Common attributes<a class="headerlink" href="#common-attributes" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">layer</span></code> (optional)</dt><dd><p>Only allowed on <code class="docutils literal notranslate"><span class="pre">top-level</span></code> objects, that
+is, objects directly inside a <code class="docutils literal notranslate"><span class="pre">&lt;page&gt;</span></code> element.  The value
+indicates into which layer the object goes.  If the attribute is
+missing, the object goes into the same layer as the preceding
+object.  If the first object has no layer attribute, it goes into
+the layer defined first in the page, or the default <code class="docutils literal notranslate"><span class="pre">alpha</span></code> layer.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">matrix</span></code> (optional)</dt><dd><p>A sequence of six real numbers,
+separated by white space, indicating a transformation matrix for all
+coordinates inside the element (including embedded elements if this is
+a <code class="docutils literal notranslate"><span class="pre">&lt;group&gt;</span></code> element).  A missing <code class="docutils literal notranslate"><span class="pre">matrix</span></code> attribute is
+interpreted as the identity matrix.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pin</span></code> (optional)</dt><dd><p>Possible values are <code class="docutils literal notranslate"><span class="pre">yes</span></code> (object is fixed
+on the page), <code class="docutils literal notranslate"><span class="pre">h</span></code> (object is pinned horizontally, but can move
+in the vertical direction), and <code class="docutils literal notranslate"><span class="pre">v</span></code> (the opposite).  The
+default is no pinning.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">transformations</span></code> (optional)</dt><dd><p>This attribute determines how
+objects can be deformed by transformations. Possible values are
+<em>affine</em> (the default), <em>rigid</em>, and <em>translations</em>.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="color-attribute-values">
+<h3>Color attribute values<a class="headerlink" href="#color-attribute-values" title="Permalink to this headline">¶</a></h3>
+<p>A color attribute value is either a symbolic name defined in one of
+the style sheets of the document, one of the predefined names</p>
+<p><code class="docutils literal notranslate"><span class="pre">black</span></code> or <code class="docutils literal notranslate"><span class="pre">white</span></code>, a single real number between $0$ (black) and
+$1$ (white) indicating a gray level, or three real numbers in the
+range $[0,1]$ indicating the red, green, and blue component (in this
+order), separated by white space.</p>
+</div>
+<div class="section" id="path-construction-operators">
+<h3>Path construction operators<a class="headerlink" href="#path-construction-operators" title="Permalink to this headline">¶</a></h3>
+<p>Graphical shapes in Ipe are described using a series of <code class="docutils literal notranslate"><span class="pre">path</span>
+<span class="pre">construction</span> <span class="pre">operators</span></code> with arguments. This generalizes the PDF path
+construction syntax.</p>
+<p>Each operator follows its arguments.  The operators are</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">m</span></code> (moveto) (1 point argument):</dt><dd><p>begin new subpath.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">l</span></code> (lineto) (1 point argument):</dt><dd><p>add straight segment to subpath.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">c</span></code> (cubic B-spline) ($n$ point arguments):</dt><dd><p>add a uniform cubic B-spline with $n+1$ control points (the current
+position plus the $n$ arguments).  If $n = 3$, this is equivalent to
+a single cubic Bézier spline, if $n = 2$ it is equivalent to a
+single quadratic Bézier spline.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">q</span></code> (deprecated) (2 point arguments):</dt><dd><p>identical to ‘c’.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">e</span></code> (ellipse) (1 matrix argument):</dt><dd><p>add a closed subpath
+consisting of an ellipse, the ellipse is the image of the unit
+circle under the transformation described by the matrix.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">a</span></code> (arcto) (1 matrix argument, 1 point argument):</dt><dd><p>add an
+elliptic arc, on the ellipse describe by the matrix, from current
+position to given point.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">s</span></code> (deprecated) ($n$ point arguments):</dt><dd><p>add an <code class="docutils literal notranslate"><span class="pre">old</span>
+<span class="pre">style</span></code>  uniform cubic B-spline as used by Ipe up to version 7.1.6.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">C</span></code> ($n$ point arguments plus one tension argument):</dt><dd><p>add a
+cardinal cubic spline through the given points and the given
+tension. (The definition of the tension in the literature
+varies.  Ipe’s tangent is the factor by which the vector from
+previous to next point is multiplied to obtain the tangent vector at
+this point. So 0.5 corresponds to the Catmull-Rom spline.)</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">L</span></code> ($n$ point arguments):</dt><dd><p>add a clothoid spline as
+computed by the libspiro library by Raph Levien.
+When Ipe writes clothoid splines, it includes the control points of
+the computed Bezier approximation in the path description, separated
+from the defining points by a <code class="docutils literal notranslate"><span class="pre">*</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">u</span></code> (closed spline) ($n$ point arguments):</dt><dd><p>add a closed
+subpath consisting of a closed uniform B-spline with $n$ control
+points,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">h</span></code> (closepath) (no arguments):</dt><dd><p>close the current subpath.
+No more segments can be added to this subpath, so the next operator
+(if there is one) must start a new subpath.</p>
+</dd>
+</dl>
+<p>Paths consisting of more than one closed loop are allowed.  A subpath
+can consist of any mix of straight segments, elliptic arcs, and
+B-splines.</p>
+</div>
+<div class="section" id="the-group-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;group&gt;</span></code> element<a class="headerlink" href="#the-group-element" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;group&gt;</span></code> element allows to group objects together, so that
+they appear as one in the user interface.</p>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">clip</span></code> (optional)</dt><dd><p>The value is a sequence of path construction
+operators, forming a clipping path for the objects inside the group.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">url</span></code> (optional)</dt><dd><p>The value is a link action (and the attribute
+name is somewhat of a misnomer, as actions do not need to be
+URLs—see the description of group objects).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">decoration</span></code> (optional)</dt><dd><p>The name of a decoration symbol.  The
+default is <em>normal</em>, meaning no decoration.</p>
+</dd>
+</dl>
+<p>The contents of the <code class="docutils literal notranslate"><span class="pre">&lt;group&gt;</span></code> element is a series of Ipe object
+elements.</p>
+</div>
+<div class="section" id="the-image-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;image&gt;</span></code> element<a class="headerlink" href="#the-image-element" title="Permalink to this headline">¶</a></h3>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">bitmap</span></code> (required)</dt><dd><p>Value is an integer referring
+to a bitmap defined in a <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code> element in the document,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">rect</span></code> (required)</dt><dd><p>Four real coordinates separated by white space,
+in the order $x_{1}$, $y_{1}$, $x_{2}$, $y_{2}$, indicating two
+opposite corners of the image in Ipe coordinates).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">opacity</span></code> (optional)</dt><dd><p>Opacity of the image.  This must be a
+symbolic name. The default is <code class="docutils literal notranslate"><span class="pre">normal</span></code>, meaning fully opaque.</p>
+</dd>
+</dl>
+<p>The image element is normally empty.  However, it is allowed to omit
+the <code class="docutils literal notranslate"><span class="pre">bitmap</span></code> attribute.  In this case, the <code class="docutils literal notranslate"><span class="pre">&lt;image&gt;</span></code> must
+carry all the attributes of the <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code> element, with the
+exception of <code class="docutils literal notranslate"><span class="pre">id</span></code>.  The element contents is then the bitmap data,
+as described for <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code>.</p>
+</div>
+<div class="section" id="the-use-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;use&gt;</span></code> element<a class="headerlink" href="#the-use-element" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;use&gt;</span></code> element refers to a symbol (an Ipe object) defined in
+the style sheet.  The attributes <code class="docutils literal notranslate"><span class="pre">stroke</span></code>, <code class="docutils literal notranslate"><span class="pre">fill</span></code>, <code class="docutils literal notranslate"><span class="pre">pen</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">size</span></code> make sense only when the symbol accepts these parameters.</p>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (required)</dt><dd><p>The name of a <code class="docutils literal notranslate"><span class="pre">symbol</span></code> defined in a style
+sheet of the document.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pos</span></code> (optional)</dt><dd><p>Position of the symbol on the page (two real
+numbers, separated by white space).  This is the location of the
+origin of the symbol coordinate system.  The default is the origin.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">stroke</span></code> (optional)</dt><dd><p>A stroke color (used whereever the symbol
+uses the symbolic color <code class="docutils literal notranslate"><span class="pre">sym-stroke</span></code>).  The default is black.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">fill</span></code> (optional)</dt><dd><p>A fill color (used whereever the symbol uses
+the symbolic color <code class="docutils literal notranslate"><span class="pre">sym-fill</span></code>).  The default is white.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pen</span></code> (optional)</dt><dd><p>A line width (used whereever the symbol uses
+the symbolic value <code class="docutils literal notranslate"><span class="pre">sym-pen</span></code>).  The default is <code class="docutils literal notranslate"><span class="pre">normal</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">size</span></code> (optional)</dt><dd><p>The size of the symbol, either a symbolic size
+(of type <code class="docutils literal notranslate"><span class="pre">symbol</span> <span class="pre">size</span></code>), or an absolute scaling factor.  The
+default is $1.0$.</p>
+</dd>
+</dl>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;use&gt;</span></code> element must be empty.</p>
+</div>
+<div class="section" id="the-text-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;text&gt;</span></code> element<a class="headerlink" href="#the-text-element" title="Permalink to this headline">¶</a></h3>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">stroke</span></code> (optional)</dt><dd><p>The stroke color. If the attribute is
+missing, black will be used.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">type</span></code> (optional)</dt><dd><p>Possible values are <em>label</em> (the default)
+and <em>minipage</em>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">size</span></code> (optional)</dt><dd><p>The font size—either a symbolic name defined
+in a style sheet, or a real number.  The default is <code class="docutils literal notranslate"><span class="pre">normal</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pos</span></code> (required)</dt><dd><p>Two real numbers separated by white space,
+defining the position of the text on the paper.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">width</span></code> (required for minipage objects, optional for label objects)</dt><dd><p>The width of the object in points.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">height</span></code> (optional)</dt><dd><p>The total height of the object in points.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">depth</span></code> (optional)</dt><dd><p>The depth of the object in points.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">valign</span></code> (optional)</dt><dd><p>Possible values are <em>top</em> (default
+for a minipage object), <em>bottom</em> (default for a label object),
+<em>center</em>, and <em>baseline</em>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">halign</span></code> (optional)</dt><dd><p>Possible values are <em>left</em>,
+<em>right</em>, and <em>center</em>. <em>left</em> is the default.  This
+determines the position of the reference point with respect to the
+text box.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">style</span></code> (optional)</dt><dd><p>Selects a LaTeX <code class="docutils literal notranslate"><span class="pre">style</span></code> to be used for
+formatting the text, and must be a symbolic name defined in a style
+sheet.  There are separate definitions for minipages and for labels.
+For minipages, the standard style sheet defines the styles
+<code class="docutils literal notranslate"><span class="pre">normal</span></code>, <code class="docutils literal notranslate"><span class="pre">center</span></code>, <code class="docutils literal notranslate"><span class="pre">itemize</span></code>, and <code class="docutils literal notranslate"><span class="pre">item</span></code>.  If the attribute
+is not present, the <code class="docutils literal notranslate"><span class="pre">normal</span></code> style is applied.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">opacity</span></code> (optional)</dt><dd><p>Opacity of the element.  This must be a
+symbolic name. The default is <code class="docutils literal notranslate"><span class="pre">normal</span></code>, meaning fully opaque.</p>
+</dd>
+</dl>
+<p>The dimensions are recomputed by Ipe when running LaTeX, with the
+exception of <code class="docutils literal notranslate"><span class="pre">width</span></code> for minipage objects whose width is fixed.</p>
+<p>The contents of the <code class="docutils literal notranslate"><span class="pre">&lt;text&gt;</span></code> element must be a legal LaTeX fragment
+that can be interpreted by LaTeX inside <code class="docutils literal notranslate"><span class="pre">\hbox</span></code>, possibly using the
+macros or packages defined in the preamble.</p>
+</div>
+<div class="section" id="the-path-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> element<a class="headerlink" href="#the-path-element" title="Permalink to this headline">¶</a></h3>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">stroke</span></code> (optional)</dt><dd><p>The stroke color. If the attribute is
+missing, the shape will not be stroked.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">fill</span></code> (optional)</dt><dd><p>The fill color.  If the attribute is missing,
+the shape will not be filled.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">dash</span></code> (optional)</dt><dd><p>Either a symbolic name defined in a style
+sheet, or a dash pattern in PDF format, such as <code class="docutils literal notranslate"><span class="pre">[3</span> <span class="pre">1]</span> <span class="pre">0</span></code> for
+<code class="docutils literal notranslate"><span class="pre">three</span> <span class="pre">pixels</span> <span class="pre">on,</span> <span class="pre">one</span> <span class="pre">off,</span> <span class="pre">starting</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">first</span> <span class="pre">pixel</span></code>.
+If the attribute is missing, a solid line is drawn.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pen</span></code> (optional)</dt><dd><p>The line width, either symbolic (defined in
+a style sheet), or as a single real number.  The default value is
+<code class="docutils literal notranslate"><span class="pre">normal</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">cap</span></code> (optional)</dt><dd><p>The <em>line cap</em> setting of PDF as an
+integer.  If the argument is missing, the setting from the style
+sheet is used.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">join</span></code> (optional)</dt><dd><p>The <em>line join</em> setting of PDF as an
+integer. If the argument is missing, the setting from the style
+sheet is used.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">fillrule</span></code> (optional)</dt><dd><p>Possible values are <code class="docutils literal notranslate"><span class="pre">wind</span></code> and
+<code class="docutils literal notranslate"><span class="pre">eofill</span></code>, selecting one of two algorithms for determining
+whether a point lies inside a filled object. If the argument is
+missing, the setting from the style sheet is used.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">arrow</span></code> (optional)</dt><dd><p>The value consists of a symbolic name, say
+<code class="docutils literal notranslate"><span class="pre">triangle</span></code> for an arrow type (a symbol with name
+<code class="docutils literal notranslate"><span class="pre">arrow/triangle(spx)</span></code>), followed by a slash and the size of the arrow.
+The size is either a symbolic name (of type <code class="docutils literal notranslate"><span class="pre">arrowsize</span></code>) defined
+in a style sheet, or a real number.  If the attribute is missing, no
+arrow is drawn.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">rarrow</span></code> (optional)</dt><dd><p>Same for an arrow in the reverse direction
+(at the beginning of the first subpath).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">opacity</span></code> (optional)</dt><dd><p>Opacity of the element.  This must be a
+symbolic name. The default is <code class="docutils literal notranslate"><span class="pre">normal</span></code>, meaning fully opaque.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">stroke-opacity</span></code> (optional)</dt><dd><p>Opacity of the stroked part of the
+element.  This must be a symbolic name. The default is to use the
+opacity attribute.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">tiling</span></code> (optional)</dt><dd><p>A tiling pattern to be used to fill the
+element.  The default is not to tile the element.  If the element is
+not filled, then the tiling pattern is ignored.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">gradient</span></code> (optional)</dt><dd><p>A gradient pattern to be used to fill the
+element.  If the element is not filled, then the gradient pattern is
+ignored.  If <code class="docutils literal notranslate"><span class="pre">gradient</span></code> is set, then <code class="docutils literal notranslate"><span class="pre">tiling</span></code> is ignored.</p>
+</dd>
+</dl>
+<p>The contents of the <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> element is a sequence of path
+construction operators. The entire shape will be stroked and/or filled
+with a single stroke and fill operation.</p>
+</div>
+</div>
+<div class="section" id="the-ipestyle-element">
+<span id="ipestyle"></span><h2>The <code class="docutils literal notranslate"><span class="pre">&lt;ipestyle&gt;</span></code> element<a class="headerlink" href="#the-ipestyle-element" title="Permalink to this headline">¶</a></h2>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (optional)</dt><dd><p>The name serves to identify the style sheet
+informally, and can be used to automatically update the style sheet
+from a file with the matching name.</p>
+</dd>
+</dl>
+<p>The contents of the <code class="docutils literal notranslate"><span class="pre">&lt;ipestyle&gt;</span></code> element is a series of style
+definition elements, in no particular order.  These elements are
+described below.</p>
+<div class="section" id="the-symbol-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;symbol&gt;</span></code> element<a class="headerlink" href="#the-symbol-element" title="Permalink to this headline">¶</a></h3>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (required)</dt><dd><p>The name identifies the symbol and must
+be unique in the style sheet.  For parameterized symbols, the name
+must end with the pattern <code class="docutils literal notranslate"><span class="pre">(s?f?p?x?)</span></code>, where <code class="docutils literal notranslate"><span class="pre">s</span></code> stands for
+stroke, <code class="docutils literal notranslate"><span class="pre">f</span></code> for fill, <code class="docutils literal notranslate"><span class="pre">p</span></code> for pen, and <code class="docutils literal notranslate"><span class="pre">x</span></code> for size.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">transformations</span></code> (optional)</dt><dd><p>As for objects.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">xform</span></code> (optional)</dt><dd><p>If this attribute is set, a PDF XForm will be
+created for this symbol when saving or exporting to PDF. It implies
+<code class="docutils literal notranslate"><span class="pre">transformations=&quot;translations&quot;</span></code>, and will be ignored if
+any of the symbol parameters (that is, stroke, fill, pen, or size)
+are used.  Setting this attribute will cause the PDF output to be
+significantly smaller for a complicated symbol that is used often
+(for instance, a complicated background used on every page).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">snap</span></code> (optional)</dt><dd><p>A list of space-separated coordinates for the
+snap positions of the symbol.</p>
+</dd>
+</dl>
+<p>The contents of the <code class="docutils literal notranslate"><span class="pre">&lt;symbol&gt;</span></code> element is a single Ipe object.</p>
+</div>
+<div class="section" id="id1">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;preamble&gt;</span></code> element<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>See the <code class="docutils literal notranslate"><span class="pre">&lt;preamble&gt;</span></code> elements inside <code class="docutils literal notranslate"><span class="pre">&lt;ipe&gt;</span></code> elements.</p>
+</div>
+<div class="section" id="the-textstyle-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;textstyle&gt;</span></code> element<a class="headerlink" href="#the-textstyle-element" title="Permalink to this headline">¶</a></h3>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (required)</dt><dd><p>The symbolic name (to be used in the <code class="docutils literal notranslate"><span class="pre">style</span></code>
+attribute of <code class="docutils literal notranslate"><span class="pre">&lt;text&gt;</span></code> elements),</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">begin</span></code> (required)</dt><dd><p>LaTeX code to be placed before the text of
+the object when it is formatted,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">end</span></code> (required)</dt><dd><p>LaTeX code to be placed after the text of
+the object when it is formatted.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">type</span></code> (optional)</dt><dd><p>Either <code class="docutils literal notranslate"><span class="pre">label</span></code> or <code class="docutils literal notranslate"><span class="pre">minipage</span></code> (the default).</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="the-layout-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;layout&gt;</span></code> element<a class="headerlink" href="#the-layout-element" title="Permalink to this headline">¶</a></h3>
+<p>It defines the layout of the frame on the paper and the paper size.</p>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">paper</span></code> (required)</dt><dd><p>The size of the paper.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">origin</span></code> (required)</dt><dd><p>The lower left corner of the frame
+in the paper coordinate system.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">frame</span></code> (required)</dt><dd><p>The size of the frame.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">skip</span></code> (optional)</dt><dd><p>The default paragraph skip between textboxes.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">crop</span></code> (optional)</dt><dd><p>If the value of <code class="docutils literal notranslate"><span class="pre">crop</span></code> is <code class="docutils literal notranslate"><span class="pre">yes</span></code>, Ipe
+will create a <code class="docutils literal notranslate"><span class="pre">CropBox</span></code> attribute when saving to PDF.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="the-titlestyle-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;titlestyle&gt;</span></code> element<a class="headerlink" href="#the-titlestyle-element" title="Permalink to this headline">¶</a></h3>
+<p>It defines the appearance of the page title on the page.</p>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">pos</span></code> (required)</dt><dd><p>The position of the title reference point in the
+frame coordinate system.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">color</span></code> (required)</dt><dd><p>The color of the title.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">size</span></code> (required)</dt><dd><p>The title font size (same as for <code class="docutils literal notranslate"><span class="pre">&lt;text&gt;</span></code>
+elements).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">halign</span></code> (optional)</dt><dd><p>The horizontal alignment (same as for <code class="docutils literal notranslate"><span class="pre">&lt;text&gt;</span></code>
+elements).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">valign</span></code> (optional)</dt><dd><p>The vertical alignment (same as for <code class="docutils literal notranslate"><span class="pre">&lt;text&gt;</span></code>
+elements).</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="the-pagenumberstyle-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;pagenumberstyle&gt;</span></code> element<a class="headerlink" href="#the-pagenumberstyle-element" title="Permalink to this headline">¶</a></h3>
+<p>It defines the appearance of page numbers on the page.  The contents
+of the element is a <a class="reference internal" href="70_presentations.html#pagenumberstyle"><span class="std std-ref">template for a text object</span></a>.</p>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">pos</span></code> (required)</dt><dd><p>The position of the page number on the page.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">color</span></code> (optional)</dt><dd><p>The color of the page number.  The default is black.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">size</span></code> (optional)</dt><dd><p>The font size (same as for <code class="docutils literal notranslate"><span class="pre">&lt;text&gt;</span></code>
+elements).  The default is <code class="docutils literal notranslate"><span class="pre">normal</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">halign</span></code> (optional)</dt><dd><p>The horizontal alignment (same as for <code class="docutils literal notranslate"><span class="pre">&lt;text&gt;</span></code>
+elements).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">valign</span></code> (optional)</dt><dd><p>The vertical alignment (same as for <code class="docutils literal notranslate"><span class="pre">&lt;text&gt;</span></code>
+elements).</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="the-textpad-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;textpad&gt;</span></code> element<a class="headerlink" href="#the-textpad-element" title="Permalink to this headline">¶</a></h3>
+<p>It defines padding around text objects for the computation of bounding
+boxes.  The four required attributes are <code class="docutils literal notranslate"><span class="pre">left</span></code>,</p>
+<p><code class="docutils literal notranslate"><span class="pre">right</span></code>, <code class="docutils literal notranslate"><span class="pre">top</span></code>, and  <code class="docutils literal notranslate"><span class="pre">bottom</span></code>.</p>
+</div>
+<div class="section" id="the-pathstyle-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;pathstyle&gt;</span></code> element<a class="headerlink" href="#the-pathstyle-element" title="Permalink to this headline">¶</a></h3>
+<p>It defines the default setting for path objects.</p>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">cap</span></code> (optional)</dt><dd><p>Same as for <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> elements.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">join</span></code> (optional)</dt><dd><p>Same as for <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> elements.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">fillrule</span></code> (optional)</dt><dd><p>Same as for <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> elements.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="the-opacity-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;opacity&gt;</span></code> element<a class="headerlink" href="#the-opacity-element" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">opacity</span></code> element defines a possible opacity value (also
+known as an alpha-value).  All opacity values used in a document must
+be defined in the style sheet.</p>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (required)</dt><dd><p>A symbolic name, to be used in the
+<code class="docutils literal notranslate"><span class="pre">opacity</span></code> attribute of a <code class="docutils literal notranslate"><span class="pre">text</span></code> or <code class="docutils literal notranslate"><span class="pre">path</span></code> element.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">value</span></code> (required)</dt><dd><p>An absolute value for the opacity, between
+0.001 and 1.000. A value of 1.0 implies that the element is fully
+opaque.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="the-gradient-element">
+<span id="gradient-element"></span><h3>The <code class="docutils literal notranslate"><span class="pre">&lt;gradient&gt;</span></code> element<a class="headerlink" href="#the-gradient-element" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">gradient</span></code> element defines a gradient pattern.</p>
+<p><em>Attributes of</em> <code class="docutils literal notranslate"><span class="pre">&lt;gradient&gt;</span></code></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (required)</dt><dd><p>The symbolic name (to be used in the <code class="docutils literal notranslate"><span class="pre">gradient</span></code> attribute of <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> elements).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">type</span></code> (required)</dt><dd><p>Possible values are <code class="docutils literal notranslate"><span class="pre">axial</span></code> and <code class="docutils literal notranslate"><span class="pre">radial</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">extend</span></code> (optional)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">yes</span></code> or <code class="docutils literal notranslate"><span class="pre">no</span></code> (the default).
+Indicates whether the gradient is extended beyond the boundaries.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">coords</span></code> (required)</dt><dd><p>For axial shading: the coordinates of the endpoints of the axis (in
+the order <code class="docutils literal notranslate"><span class="pre">x1</span> <span class="pre">y1</span> <span class="pre">x2</span> <span class="pre">y2</span></code>). For radial shading: the center and
+radius of both circles (in the order <code class="docutils literal notranslate"><span class="pre">cx1</span> <span class="pre">cy1</span> <span class="pre">r1</span> <span class="pre">cx2</span> <span class="pre">cy2</span> <span class="pre">r2</span></code>).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">matrix</span></code> (optional)</dt><dd><p>A transformation that transforms the gradient
+coordinate system into the coordinate system of the path object
+using the gradient. The default is the identity matrix.</p>
+</dd>
+</dl>
+<p>The contents of the <code class="docutils literal notranslate"><span class="pre">&lt;gradient&gt;</span></code> element are <code class="docutils literal notranslate"><span class="pre">&lt;stop&gt;</span></code>
+elements defining the color stops of the gradient.  There must be at
+least two stops.  Stops must be defined in increasing offset order.
+It is not necessary that the first offset is 0.0 and the last one
+is 1.0.</p>
+<p><em>Attributes of</em> <code class="docutils literal notranslate"><span class="pre">&lt;stop&gt;</span></code></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">offset</span></code> (required)</dt><dd><p>Offset of the color stop (a number between
+0.0 and 1.0).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">color</span></code> (required)</dt><dd><p>Color at this color stop (three
+numbers). Symbolic names are not allowed.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="the-tiling-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;tiling&gt;</span></code> element<a class="headerlink" href="#the-tiling-element" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">tiling</span></code> element defines a tiling pattern.  Only very simple
+patterns that hatch the area with a line are supported.</p>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (required)</dt><dd><p>The symbolic name (to be used in the <code class="docutils literal notranslate"><span class="pre">tiling</span></code> attribute of <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> elements).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">angle</span></code> (required)</dt><dd><p>Slope of the hatching line in degrees, between
+-90 and +90 degrees.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">width</span></code> (required)</dt><dd><p>Width of the hatching line.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">step</span></code> (required)</dt><dd><p>Distance from one hatching line to the next.</p>
+</dd>
+</dl>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">width</span></code> and <code class="docutils literal notranslate"><span class="pre">step</span></code> are measured in the <em>y</em>-direction if the
+absolute value of <code class="docutils literal notranslate"><span class="pre">angle</span></code> is less than 45 degrees, and in the
+<em>x</em>-direction otherwise.</p>
+</div>
+<div class="section" id="the-effect-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;effect&gt;</span></code> element<a class="headerlink" href="#the-effect-element" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">effect</span></code> element defines a graphic effect to be used during a
+PDF page transition.  Acrobat Reader supports these effects, but not
+all PDF viewers do.</p>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (required)</dt><dd><p>The symbolic name (to be used in the <code class="docutils literal notranslate"><span class="pre">effect</span></code>
+attribute of <code class="docutils literal notranslate"><span class="pre">&lt;view&gt;</span></code> elements).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">duration</span></code> (optional)</dt><dd><p>Value must be a real number, indicating the
+duration of display in seconds.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">transition</span></code> (optional)</dt><dd><p>Value must be a real number, indicating the
+duration of the transition effect in seconds.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">effect</span></code> (optional)</dt><dd><p>a number indicated the desired effect.  The
+value must be an integer between 0 and 27 (see
+<code class="docutils literal notranslate"><span class="pre">ipe::Effect::TEffect</span></code> for the exact meaning).</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="other-style-definition-elements">
+<h3>Other style definition elements<a class="headerlink" href="#other-style-definition-elements" title="Permalink to this headline">¶</a></h3>
+<p>The remaining style definition elements are:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">&lt;color&gt;</span></code></dt><dd><p>Defines a symbolic color.  The value must be an
+absolute color, that is either a single gray value (between 0 and
+1), or three components (red, green, blue) separated by space.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&lt;dashstyle&gt;</span></code></dt><dd><p>Defines a symbolic dashstyle. The value must
+be a correct dashstyle description, e.g. <code class="docutils literal notranslate"><span class="pre">[3</span> <span class="pre">5</span> <span class="pre">2</span> <span class="pre">5]</span> <span class="pre">0</span></code>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&lt;pen&gt;</span></code></dt><dd><p>Defines a symbolic pen width. The value is a single
+real number.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&lt;textsize&gt;</span></code></dt><dd><p>Defines a symbolic text size.  The value is a
+piece of LaTeX source code selecting the desired font size.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&lt;textstretch&gt;</span></code></dt><dd><p>Defines a symbolic text stretch factor. The symbolic name is shared
+with <code class="docutils literal notranslate"><span class="pre">&lt;textsize&gt;</span></code> elements. The value is a single real number.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&lt;symbolsize&gt;</span></code></dt><dd><p>Defines a symbolic size for symbols. The value
+is a single real number, and indicates the scaling factor used for
+the symbol.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&lt;arrowsize&gt;</span></code></dt><dd><p>Defines a symbolic size for arrows. The value
+is a single real number.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&lt;gridsize&gt;</span></code></dt><dd><p>Defines a grid size.  The symbolic name cannot
+actually be used by objects in the document — it is only used to
+fill the grid size selector in the user interface.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&lt;anglesize&gt;</span></code></dt><dd><p>Defines an angular snap angle.  The symbolic
+name cannot actually be used by objects in the document — it is
+only used to fill the angle selector in the user interface.</p>
+</dd>
+</dl>
+<p><em>Common attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (required)</dt><dd><p>A symbolic name, which must start with a letter “a” to “z” or “A” to “Z”.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">value</span></code> (required)</dt><dd><p>A legal absolute value for the type of attribute.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">The Ipe file format</a><ul>
+<li><a class="reference internal" href="#the-ipe-element">The <code class="docutils literal notranslate"><span class="pre">&lt;ipe&gt;</span></code> element</a><ul>
+<li><a class="reference internal" href="#the-info-element">The <code class="docutils literal notranslate"><span class="pre">&lt;info&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-preamble-element">The <code class="docutils literal notranslate"><span class="pre">&lt;preamble&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-bitmap-element">The <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code> element</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-page-element">The <code class="docutils literal notranslate"><span class="pre">&lt;page&gt;</span></code> element</a><ul>
+<li><a class="reference internal" href="#the-notes-element">The <code class="docutils literal notranslate"><span class="pre">&lt;notes&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-layer-element">The <code class="docutils literal notranslate"><span class="pre">&lt;layer&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-view-element">The <code class="docutils literal notranslate"><span class="pre">&lt;view&gt;</span></code> element</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ipe-object-elements">Ipe object elements</a><ul>
+<li><a class="reference internal" href="#common-attributes">Common attributes</a></li>
+<li><a class="reference internal" href="#color-attribute-values">Color attribute values</a></li>
+<li><a class="reference internal" href="#path-construction-operators">Path construction operators</a></li>
+<li><a class="reference internal" href="#the-group-element">The <code class="docutils literal notranslate"><span class="pre">&lt;group&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-image-element">The <code class="docutils literal notranslate"><span class="pre">&lt;image&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-use-element">The <code class="docutils literal notranslate"><span class="pre">&lt;use&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-text-element">The <code class="docutils literal notranslate"><span class="pre">&lt;text&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-path-element">The <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> element</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-ipestyle-element">The <code class="docutils literal notranslate"><span class="pre">&lt;ipestyle&gt;</span></code> element</a><ul>
+<li><a class="reference internal" href="#the-symbol-element">The <code class="docutils literal notranslate"><span class="pre">&lt;symbol&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#id1">The <code class="docutils literal notranslate"><span class="pre">&lt;preamble&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-textstyle-element">The <code class="docutils literal notranslate"><span class="pre">&lt;textstyle&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-layout-element">The <code class="docutils literal notranslate"><span class="pre">&lt;layout&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-titlestyle-element">The <code class="docutils literal notranslate"><span class="pre">&lt;titlestyle&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-pagenumberstyle-element">The <code class="docutils literal notranslate"><span class="pre">&lt;pagenumberstyle&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-textpad-element">The <code class="docutils literal notranslate"><span class="pre">&lt;textpad&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-pathstyle-element">The <code class="docutils literal notranslate"><span class="pre">&lt;pathstyle&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-opacity-element">The <code class="docutils literal notranslate"><span class="pre">&lt;opacity&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-gradient-element">The <code class="docutils literal notranslate"><span class="pre">&lt;gradient&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-tiling-element">The <code class="docutils literal notranslate"><span class="pre">&lt;tiling&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#the-effect-element">The <code class="docutils literal notranslate"><span class="pre">&lt;effect&gt;</span></code> element</a></li>
+<li><a class="reference internal" href="#other-style-definition-elements">Other style definition elements</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="80_advanced.html"
+                        title="previous chapter">Advanced topics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="92_using_ipe_figures.html"
+                        title="next chapter">Using Ipe figures in Latex</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/90_file_format.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="92_using_ipe_figures.html" title="Using Ipe figures in Latex"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="80_advanced.html" title="Advanced topics"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

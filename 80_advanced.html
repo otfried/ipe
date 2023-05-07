@@ -1,0 +1,392 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Advanced topics &#8212; Ipe 7.2.27 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The Ipe file format" href="90_file_format.html" />
+    <link rel="prev" title="Presentations" href="70_presentations.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="90_file_format.html" title="The Ipe file format"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="70_presentations.html" title="Presentations"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="advanced-topics">
+<h1>Advanced topics<a class="headerlink" href="#advanced-topics" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="multiple-figures-in-one-ipe-document">
+<span id="multiple"></span><h2>Multiple figures in one Ipe document<a class="headerlink" href="#multiple-figures-in-one-ipe-document" title="Permalink to this headline">¶</a></h2>
+<p>When writing an article in Latex, you can store all the figures in a
+single Ipe document, by placing each figure on its own page.  In
+Latex, each figure can then be included by saying, for instance,</p>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span><span class="k">\includegraphics</span><span class="na">[page=7]</span><span class="nb">{</span>figs<span class="nb">}</span>
+</pre></div>
+</div>
+<p>to include the figure on page 7 of the Ipe document <code class="file docutils literal notranslate"><span class="pre">figs.pdf</span></code>.</p>
+<p>To avoid having to remember which figure is on which page (and having
+to renumber all figures when you insert or delete a figure), you can
+give <em>names</em> to the pages (figures) in your Ipe document, using
+<span class="menuselection">Pages ‣ Edit title &amp; sections</span>. Enter the name in
+the <em>Section</em> field, using only letters.</p>
+<p>Then, run the <em>page-labels</em> script on your document, as follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ipescript page-labels figs.pdf</span>
+</pre></div>
+</div>
+<p>This reads the document <code class="file docutils literal notranslate"><span class="pre">figs.pdf</span></code> and writes a new file
+<code class="file docutils literal notranslate"><span class="pre">figsLabels.tex</span></code>.</p>
+<p>In your Latex document, include this file in the preamble:</p>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span><span class="k">\input</span><span class="nb">{</span>figsLabels<span class="nb">}</span>
+</pre></div>
+</div>
+<p>You can now include a figure using its symbolic name, like this:</p>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span><span class="k">\includegraphics</span><span class="na">[page=\ipeFigXXX]</span><span class="nb">{</span>figs<span class="nb">}</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">XXX</span></code> is the symbolic name of the figure.</p>
+<p>Whenever you add or delete a figure to the document, just run the
+<em>page-labels</em> script again, and your symbolic names will remain up to
+date.</p>
+</div>
+<div class="section" id="sharing-latex-definitions-with-your-latex-document">
+<span id="sharing"></span><h2>Sharing Latex definitions with your Latex document<a class="headerlink" href="#sharing-latex-definitions-with-your-latex-document" title="Permalink to this headline">¶</a></h2>
+<p>When using Ipe figures in a Latex document, it is convenient to have
+access to some of the definitions from the document.</p>
+<p>Ipe comes with a Lua script <em>update-master</em> that makes this easy.</p>
+<p>In your Latex document, say <code class="file docutils literal notranslate"><span class="pre">master.tex</span></code>, surround the
+interesting definitions using <code class="docutils literal notranslate"><span class="pre">%%BeginIpePreamble</span></code> and
+<code class="docutils literal notranslate"><span class="pre">%%EndIpePreamble</span></code>, for instance like this:</p>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span><span class="c">%%BeginIpePreamble</span>
+<span class="k">\usepackage</span><span class="nb">{</span>amsfonts<span class="nb">}</span>
+<span class="k">\newcommand</span><span class="nb">{</span><span class="k">\R</span><span class="nb">}{</span><span class="k">\mathbb</span><span class="nb">{</span>R<span class="nb">}}</span>
+<span class="c">%%EndIpePreamble</span>
+</pre></div>
+</div>
+<p>Running the script as</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ipescript update-master master.tex</span>
+</pre></div>
+</div>
+<p>extracts these definitions and saves them as a stylesheet
+<code class="file docutils literal notranslate"><span class="pre">master-preamble.isy</span></code>. (This filename is fixed, and does not
+depend on the document name.)</p>
+<p>Running this script as</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ipescript update-master master.tex figures/*.ipe</span>
+</pre></div>
+</div>
+<p>creates the stylesheet <code class="file docutils literal notranslate"><span class="pre">master-preamble.isy</span></code> as above.  In
+addition, it looks at all the Ipe figures mentioned on the command
+line. The script adds the new stylesheet to each figure, or updates
+the stylesheet to the newest version (if the figure already contains a
+stylesheet named <code class="docutils literal notranslate"><span class="pre">master-preamble</span></code>).</p>
+</div>
+<div class="section" id="writing-ipelets">
+<span id="id1"></span><h2>Writing ipelets<a class="headerlink" href="#writing-ipelets" title="Permalink to this headline">¶</a></h2>
+<p>An ipelet is an extension to Ipe.  Ipe 7 uses the scripting language
+<a class="reference external" href="http://www.lua.org">Lua</a> (in fact, most of the Ipe program itself
+is written in Lua), and loads ipelets written in Lua when it starts
+up.  It is also possible to write ipelets in C++, using a small Lua
+wrapper that declares the methods available inside the ipelet.</p>
+<p>Documentation about writing ipelets can be found in the <a class="reference external" href="https://ipe.otfried.org/manual/">Ipelib
+documentation</a>.</p>
+</div>
+<div class="section" id="troubleshooting-the-latex-conversion">
+<span id="troubleshooting"></span><h2>Troubleshooting the LaTeX-conversion<a class="headerlink" href="#troubleshooting-the-latex-conversion" title="Permalink to this headline">¶</a></h2>
+<p>Ipe converts text objects from their Latex source representation to a
+representation that can be rendered and included the PDF output by
+creating a Latex source file and running Pdflatex.  This happens in a
+dedicated directory, which Ipe creates the first time it is used.  The
+Latex source and output files are left in that directory and not
+deleted even when you close Ipe, to make it easy to solve problems
+with the Latex conversion process.</p>
+<p>You can determine the directory used by Ipe using <span class="menuselection">Help
+‣ Show configuration</span>.  If you’d prefer to use a different
+directory, set the environment variable <code class="docutils literal notranslate"><span class="pre">IPELATEXDIR</span></code> before
+starting Ipe.</p>
+<p>If Ipe fails to translate your text objects, and you cannot find the
+problem by looking at the log file displayed by Ipe (or Ipe doesn’t
+even display the log file), you can terminate Ipe, go to the
+conversion directory, and run Pdflatex manually:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pdflatex ipetemp.tex</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="customizing-ipe">
+<span id="customize"></span><h2>Customizing Ipe<a class="headerlink" href="#customizing-ipe" title="Permalink to this headline">¶</a></h2>
+<p>Since most of Ipe is writing in Lua, an interpreted language, much of
+Ipe’s behavior can be changed without recompilation.</p>
+<p>The main customization options are in the files <code class="file docutils literal notranslate"><span class="pre">prefs.lua</span></code>
+(general settings), <code class="file docutils literal notranslate"><span class="pre">shortcuts.lua</span></code> (keyboard shortcuts), and
+<code class="file docutils literal notranslate"><span class="pre">mouse.lua</span></code> (mouse shortcuts).  (Check the Lua code path in
+<span class="menuselection">Help ‣ Show configuration</span> if you can’t locate the
+files.)</p>
+<p>If you have installed Ipe for your personal use only (for instance
+under Windows), you can simply modify the original Lua file.  In all
+other cases, you need to provide a small Lua ipelet that will change
+the setting you wish to change.</p>
+<p>A small example is the following ipelet that changes a keyboard
+shortcut and the maximum zoom:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">----------------------------------------------------------------------</span>
+<span class="o">--</span> <span class="n">My</span> <span class="n">customization</span> <span class="n">ipelet</span><span class="p">:</span> <span class="n">customize</span><span class="o">.</span><span class="n">lua</span>
+<span class="o">----------------------------------------------------------------------</span>
+<span class="n">prefs</span><span class="o">.</span><span class="n">max_zoom</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">shortcuts</span><span class="o">.</span><span class="n">insert_text_box</span> <span class="o">=</span> <span class="s2">&quot;I&quot;</span>
+<span class="n">shortcuts</span><span class="o">.</span><span class="n">mode_splines</span> <span class="o">=</span> <span class="s2">&quot;Alt+Ctrl+I&quot;</span>
+</pre></div>
+</div>
+<p>The ipelet needs to be placed with the extension <code class="docutils literal notranslate"><span class="pre">.lua</span></code> somewhere
+on the ipelet path (check <em>Show configuration</em> again).  On Unix,
+the directory <code class="file docutils literal notranslate"><span class="pre">~/.ipe/ipelets</span></code> will do nicely.  On Windows,
+you will have to set the environment variable IPELETPATH, see the
+next section.</p>
+</div>
+<div class="section" id="environment-variables">
+<span id="environment"></span><h2>Environment variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h2>
+<p>Ipe, <strong class="program">ipetoipe</strong>, <strong class="program">iperender</strong>, and
+<strong class="program">ipescript</strong> respect the following environment variables:</p>
+<dl class="simple">
+<dt>IPELATEXDIR</dt><dd><p>the directory where Ipe runs Latex.</p>
+</dd>
+<dt>IPELATEXPATH</dt><dd><p>the directory that contains the <em>pdflatex</em>, <em>xelatex</em>, and
+<em>lualatex</em> commands.  If not set, Ipe assumes the commands are on
+your path.</p>
+</dd>
+<dt>IPEDEBUG</dt><dd><p>set to 1 for debugging output.</p>
+</dd>
+<dt>IPETEXFORMAT</dt><dd><p>if set, Ipe will not call pdflatex but pdftex requesting the
+pdflatex format (and similarly for xetex and luatex).</p>
+</dd>
+</dl>
+<p>The Ipe program uses several additional environment variables:</p>
+<dl class="simple">
+<dt>EDITOR</dt><dd><p>external editor to use for editing text objects.</p>
+</dd>
+<dt>IPESTYLES</dt><dd><p>a list of directories, separated by semicolons on Windows and colons
+otherwise, where Ipe looks for stylesheets, for instance for the
+standard stylesheet <code class="file docutils literal notranslate"><span class="pre">basic.isy</span></code>. You can write <code class="docutils literal notranslate"><span class="pre">_</span></code> (a single
+underscore) for the system-wide stylesheet directory.  If this
+variable is not set, the default consists of the system-wide
+stylesheet directory, plus <code class="file docutils literal notranslate"><span class="pre">~/.ipe/styles</span></code> on Unix, plus
+<code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/Styles</span></code> on OS X.</p>
+</dd>
+<dt>IPELETPATH</dt><dd><p>a list of directories, separated by semicolons on Windows and colons
+otherwise, containing ipelets. You can write <code class="docutils literal notranslate"><span class="pre">_</span></code> (a single
+underscore) for the system-wide ipelet directory. If this variable
+is not set, the default consists of the system-wide ipelet
+directory, plus <code class="file docutils literal notranslate"><span class="pre">~/.ipe/ipelets</span></code> on Unix, plus
+<code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/Ipelets</span></code> on OS X.</p>
+</dd>
+<dt>IPEICONDIR</dt><dd><p>directory containing icons for the Ipe user interface.</p>
+</dd>
+<dt>IPEDOCDIR</dt><dd><p>directory containing Ipe documentation.</p>
+</dd>
+<dt>IPELUAPATH</dt><dd><p>path for searching for Ipe Lua code.</p>
+</dd>
+</dl>
+<p>The <strong class="program">ipescript</strong> program uses the following environment
+variable:</p>
+<dl class="simple">
+<dt>IPESCRIPTS</dt><dd><p>a list of directories, separated by semicolons on Windows and colons
+otherwise, where <em>ipescript</em> looks for scripts. You can write <code class="docutils literal notranslate"><span class="pre">_</span></code>
+(a single underscore) for the system-wide script directory.  If this
+variable is not set, the default consists of the current directory
+and the system-wide script directory, plus <code class="file docutils literal notranslate"><span class="pre">~/.ipe/scripts</span></code> on
+Unix, plus <code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/Scripts</span></code> on OS X.</p>
+</dd>
+</dl>
+<p>On Windows, you can use the special drive “letter” <code class="docutils literal notranslate"><span class="pre">ipe:</span></code> inside
+environment variables.  Ipe translates it into the drive letter for
+the drive containing your Ipe executables.</p>
+<div class="section" id="ipe-conf">
+<span id="id2"></span><h3>ipe.conf<a class="headerlink" href="#ipe-conf" title="Permalink to this headline">¶</a></h3>
+<p>Ipe allows you to set environment variables by writing the definitions
+in a file <em>ipe.conf</em>.  On Windows, the file has to be in the top
+level of the Ipe directory (the same place that contains the
+<em>readme.txt</em> and <em>gpl.txt</em> files), on Linux and OSX it is
+simply <em>.ipe/ipe.conf</em> in your home directory.  Each line of the
+file contains a setting for one environment variable, for instance
+like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IPEDEBUG</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">IPELATEXDIR</span><span class="o">=</span><span class="n">C</span><span class="p">:</span>\<span class="n">latexrun</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="ipe-on-a-usb-stick">
+<span id="usb-stick"></span><h2>Ipe on a USB-stick<a class="headerlink" href="#ipe-on-a-usb-stick" title="Permalink to this headline">¶</a></h2>
+<p>Ipe for Windows is entirely self-contained—you can unzip the package
+anywhere, including on a USB-stick, and run Ipe from there.  However,
+Ipe needs access to a LaTeX installation.  One option is to use LaTeX
+online—you can enable this from the <em>Help</em> menu.</p>
+<p>The other option is to install LaTeX as a portable installation on
+the same USB-stick:</p>
+<ul class="simple">
+<li><p>You can use the <a class="reference external" href="https://miktex.org/howto/portable-edition">MiKTeX portable edition</a>.</p></li>
+<li><p>The alternative is to use <a class="reference external" href="https://www.tug.org/texlive/">texlive</a>. Download <em>install-tl-windows.exe</em>
+and run it, selecting the option for <em>Custom install</em>.  When the
+full installer starts, change <em>Portable setup</em> to <em>Yes</em>, and change
+the <em>TEXDIR</em> directory to <code class="docutils literal notranslate"><span class="pre">X:\texlive</span></code>, where <em>X</em> is the drive
+letter of the USB-stick.  You can also decrease the size of your
+installation by unselecting unnecessary packages and languages.</p></li>
+</ul>
+<p>Installing LaTeX on the USB-stick will take quite a while.  When it is
+done, unzip the Ipe package for Windows onto the root of the
+USB-stick.  You should have the Ipe binary in
+<code class="docutils literal notranslate"><span class="pre">X:\ipe-7.x.y\bin\ipe.exe</span></code>.</p>
+<p>Now create a directory <code class="docutils literal notranslate"><span class="pre">X:\latexrun</span></code> (it will be used by Ipe to run
+Latex).</p>
+<p>Finally, you need to create a small <a class="reference internal" href="#ipe-conf"><span class="std std-ref">configuration file</span></a> as <code class="docutils literal notranslate"><span class="pre">X:\ipe-7.x.y\ipe.conf</span></code>.  The contents of the file
+should be (for MiKTeX):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IPELATEXPATH</span><span class="o">=</span><span class="n">ipe</span><span class="p">:</span>\<span class="n">miktex</span><span class="o">-</span><span class="n">portable</span>\<span class="n">texmfs</span>\<span class="n">install</span>\<span class="n">miktex</span>\<span class="nb">bin</span>\<span class="n">x64</span>
+<span class="n">IPELATEXDIR</span><span class="o">=</span><span class="n">ipe</span><span class="p">:</span>\<span class="n">latexrun</span>
+</pre></div>
+</div>
+<p>or (for texlive):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IPELATEXPATH</span><span class="o">=</span><span class="n">ipe</span><span class="p">:</span>\<span class="n">texlive</span>\<span class="nb">bin</span>\<span class="n">win32</span>
+<span class="n">IPELATEXDIR</span><span class="o">=</span><span class="n">ipe</span><span class="p">:</span>\<span class="n">latexrun</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">ipe:</span></code> part is translated by Ipe into the drive letter for
+the drive that Ipe is executed from, so it will correctly point to
+your USB-stick.</p>
+<p>Double-check the setting for the <code class="docutils literal notranslate"><span class="pre">IPELATEXPATH</span></code>—it should be the
+directory that contains the <code class="docutils literal notranslate"><span class="pre">pdflatex.exe</span></code> program.  Open Ipe and
+look <span class="menuselection">Help ‣ Show configuration</span>, and check that all
+settings are correct.</p>
+<p>It should now work to run Ipe from the USB-stick, whenever you plug it
+into a Windows computer.</p>
+<p>If you want to make further <a class="reference internal" href="#customize"><span class="std std-ref">customization settings</span></a>,
+you can use the variable <code class="docutils literal notranslate"><span class="pre">config.ipedir</span></code> in your Lua code to refer
+to the USB-stick drive.</p>
+</div>
+<div class="section" id="running-ipe-under-wine-on-linux">
+<span id="wine"></span><h2>Running Ipe under Wine on Linux<a class="headerlink" href="#running-ipe-under-wine-on-linux" title="Permalink to this headline">¶</a></h2>
+<p>Ipe itself works fine under Wine, but there is an issue: We don’t want
+to create a new tex installation for Windows under Wine, we want to
+reuse the Linux tex installation!</p>
+<p>So first we need to make the pdflatex program available to Wine, by
+putting a symbolic link in the simulated <code class="docutils literal notranslate"><span class="pre">C:</span></code> drive.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">cd</span>  /.wine/drive_c/windows/
+<span class="gp">$</span> ln -s /usr/bin/pdflatex pdflatex.exe
+</pre></div>
+</div>
+<p>The second problem is that Ipe is not able to wait for the completion
+of the pdflatex call—it starts pdflatex, and then immediately tries
+to read the pdflatex output, which of course fails.  The solution is
+to make Ipe wait for a specified number of milliseconds before trying
+to read the pdflatex output.</p>
+<p>You achieve this by creating a small text file called <a class="reference internal" href="#ipe-conf"><span class="std std-ref">ipe.conf</span></a> and placing it in the top-level Ipe directory (that is,
+the directory that contains <em>readme.txt</em> and <em>gpl.txt</em>).  The contents
+of the file should be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IPEWINE</span><span class="o">=</span><span class="mi">1000</span>
+<span class="n">IPELATEXPATH</span><span class="o">=</span><span class="n">c</span><span class="p">:</span>\<span class="n">windows</span>
+</pre></div>
+</div>
+<p>(You can define any other environment variable in the same file.)</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Advanced topics</a><ul>
+<li><a class="reference internal" href="#multiple-figures-in-one-ipe-document">Multiple figures in one Ipe document</a></li>
+<li><a class="reference internal" href="#sharing-latex-definitions-with-your-latex-document">Sharing Latex definitions with your Latex document</a></li>
+<li><a class="reference internal" href="#writing-ipelets">Writing ipelets</a></li>
+<li><a class="reference internal" href="#troubleshooting-the-latex-conversion">Troubleshooting the LaTeX-conversion</a></li>
+<li><a class="reference internal" href="#customizing-ipe">Customizing Ipe</a></li>
+<li><a class="reference internal" href="#environment-variables">Environment variables</a><ul>
+<li><a class="reference internal" href="#ipe-conf">ipe.conf</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ipe-on-a-usb-stick">Ipe on a USB-stick</a></li>
+<li><a class="reference internal" href="#running-ipe-under-wine-on-linux">Running Ipe under Wine on Linux</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="70_presentations.html"
+                        title="previous chapter">Presentations</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="90_file_format.html"
+                        title="next chapter">The Ipe file format</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/80_advanced.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="90_file_format.html" title="The Ipe file format"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="70_presentations.html" title="Presentations"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

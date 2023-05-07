@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>About Ipe files &#8212; Ipe 7.2.27 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="General Concepts" href="20_concepts.html" />
+    <link rel="prev" title="Welcome to the wonderful world of Ipe!" href="01_intro.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="20_concepts.html" title="General Concepts"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="01_intro.html" title="Welcome to the wonderful world of Ipe!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="about-ipe-files">
+<h1>About Ipe files<a class="headerlink" href="#about-ipe-files" title="Permalink to this headline">¶</a></h1>
+<p>Ipe 7 creates PDF files.  These files can be used in any way that PDF
+files are used, such as viewed with a PDF viewer, edited with a PDF
+editor, or included in Latex/Pdflatex documents.  However, Ipe cannot
+read arbitrary PDF files, only files it has created itself.  This is
+because files created by Ipe contain a special hidden stream that
+describes the Ipe objects.  (So if you edit your Ipe-generated PDF
+file in a different program such as Adobe Acrobat or MacOS Preview,
+Ipe will not be able to read the file again afterwards.)</p>
+<p>You decide in what format to store a figure when saving it for the
+first time. Ipe gives you the option of saving with extensions <code class="docutils literal notranslate"><span class="pre">pdf</span></code>
+(PDF), and <code class="docutils literal notranslate"><span class="pre">ipe</span></code> (XML).  Files saved with extension <code class="docutils literal notranslate"><span class="pre">ipe</span></code> are XML
+files and contain no PDF information.  The precise XML format used by
+Ipe is documented <a class="reference internal" href="90_file_format.html"><span class="doc">later in this manual</span></a>.  XML
+files can be read by any XML-aware parser, and it is easy for other
+programs to generate XML output to be read by Ipe.  You probably don’t
+want to keep your figures in XML format, but it is excellent for
+communicating with other programs, and for converting figures between
+programs.</p>
+<p>There are a few interesting uses for Ipe documents:</p>
+<div class="section" id="figures-for-latex-documents">
+<h2>Figures for Latex documents<a class="headerlink" href="#figures-for-latex-documents" title="Permalink to this headline">¶</a></h2>
+<p>Ipe was originally written to make it easy to make figures for Latex
+documents.  If you are not familiar with including figures in Latex,
+you can find details in the <a class="reference internal" href="92_using_ipe_figures.html"><span class="doc">Using Ipe figures in Latex</span></a> section.</p>
+</div>
+<div class="section" id="presentations">
+<h2>Presentations<a class="headerlink" href="#presentations" title="Permalink to this headline">¶</a></h2>
+<p>Ipe is not a presentation tool like Powerpoint or Keynote.  An Ipe
+presentation is simply a PDF file that has been created by Ipe, and
+which you present during your talk using any PDF reader (for instance
+Acrobat Reader).</p>
+<p>However, Ipe now comes with a presentation tool IpePresenter to make
+presentations more comfortable.  The <a class="reference internal" href="70_presentations.html"><span class="doc">Presentations</span></a> section
+explains Ipe features meant for making presentations.</p>
+</div>
+<div class="section" id="svg-files">
+<h2>SVG files<a class="headerlink" href="#svg-files" title="Permalink to this headline">¶</a></h2>
+<p>Figures in SVG format can be used to include scalable figures in web
+pages.  Ipe does not save in SVG format directly, but the tool
+<strong class="program">iperender</strong> allows you to convert an Ipe document to SVG format.  This
+conversion is one-way, although the auxiliary tool <strong class="program">svgtoipe</strong> also
+allows you to convert SVG figures to Ipe format.</p>
+</div>
+<div class="section" id="bitmaps">
+<h2>Bitmaps<a class="headerlink" href="#bitmaps" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes Ipe can be useful for creating bitmap images.  Again, the
+<strong class="program">iperender</strong> tool can render an Ipe document as a bitmap in
+PNG format.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">About Ipe files</a><ul>
+<li><a class="reference internal" href="#figures-for-latex-documents">Figures for Latex documents</a></li>
+<li><a class="reference internal" href="#presentations">Presentations</a></li>
+<li><a class="reference internal" href="#svg-files">SVG files</a></li>
+<li><a class="reference internal" href="#bitmaps">Bitmaps</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="01_intro.html"
+                        title="previous chapter">Welcome to the wonderful world of Ipe!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="20_concepts.html"
+                        title="next chapter">General Concepts</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/10_ipe_files.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="20_concepts.html" title="General Concepts"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="01_intro.html" title="Welcome to the wonderful world of Ipe!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>
