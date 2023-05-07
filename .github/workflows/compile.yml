@@ -1,5 +1,8 @@
 name: Build Ipe
-on: [push]
+on:
+  push:
+    paths:
+      - 'src/**'
 jobs:
   Build:
     runs-on: ubuntu-latest

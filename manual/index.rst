@@ -1,10 +1,12 @@
-Ipe manual
-==========
+.. only:: html
 
-This manual is for Ipe |version|.
+   Ipe manual
+   ==========
 
-For writing ipelets, also see the
-`Ipe library documentation <https://ipe.otfried.org/manual/index.html>`_.
+   This manual is for Ipe |version|.
+
+   For writing Ipe scripts and ipelets, see the
+   `Ipe library documentation <https://ipe.otfried.org/ipelib>`_.
 
 .. toctree::
    :maxdepth: 2
