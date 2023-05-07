@@ -5,6 +5,11 @@
 
    This manual is for Ipe |version|.
 
+   It is also available as a book in
+   `epub format <https://ipe.otfried.org/ipe-manual.epub>`_
+   and
+   `pdf format <https://ipe.otfried.org/ipe-manual.pdf>`_.
+
    For writing Ipe scripts and ipelets, see the
    `Ipe library documentation <https://ipe.otfried.org/ipelib>`_.
 
