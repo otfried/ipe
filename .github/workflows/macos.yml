@@ -1,0 +1,27 @@
+name: Build Ipe on MacOS
+on: workflow_dispatch
+jobs:
+  Build:
+    runs-on: macos-latest
+    env:
+      IPECONFIGMAK: macos-homebrew.mak
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Install libraries
+        run: |
+          brew install lua gsl libspiro
+      - name: Pkg-config
+        run: |
+          pkg-config --cflags --libs lua
+          pkg-config --cflags --libs gsl
+          pkg-config --cflags --libs libspiro
+          pkg-config --cflags --libs libpng
+          pkg-config --cflags --libs cairo
+          pkg-config --cflags --libs freetype2
+      - name: Compile
+        run: |
+          cd src
+          make
+          make app
+      - run: 'echo "Status ${{ job.status }}"'
