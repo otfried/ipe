@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400pt" height="200pt" viewBox="0 0 400 200" version="1.1">
+<defs>
+<radialGradient id="radial0" gradientUnits="userSpaceOnUse" cx="200" cy="100" fx="200" fy="100" r="150" >
+<stop offset="0" style="stop-color:rgb(100%,0%,0%);stop-opacity:1;"/>
+<stop offset="0.5" style="stop-color:rgb(0%,0%,100%);stop-opacity:1;"/>
+<stop offset="1" style="stop-color:rgb(100%,0%,0%);stop-opacity:1;"/>
+</radialGradient>
+</defs>
+<g id="surface1">
+<path style="fill:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke:rgb(0%,0%,100%);stroke-opacity:1;stroke-miterlimit:10;" d="M 1 1 L 399 1 L 399 199 L 1 199 Z M 1 1 " transform="matrix(1,0,0,-1,0,200)"/>
+<path style="fill-rule:evenodd;fill:url(#radial0);stroke-width:3;stroke-linecap:butt;stroke-linejoin:round;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;" d="M 50 50 L 350 50 L 350 150 L 50 150 Z M 50 50 " transform="matrix(1,0,0,-1,0,200)"/>
+<path style="fill:none;stroke-width:3;stroke-linecap:butt;stroke-linejoin:round;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;" d="M 50 50 L 350 50 L 350 150 L 50 150 Z M 50 50 " transform="matrix(1,0,0,-1,0,200)"/>
+</g>
+</svg>
