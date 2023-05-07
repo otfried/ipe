@@ -80,7 +80,7 @@ $(IPEICO): $(ICONSET)
 clean:
 	$(MAKE)	GOAL=clean
 
-install: all $(ICONSET)
+install: all
 	$(MAKE) GOAL=install
 
 app: all

@@ -120,6 +120,6 @@ install: $(TARGET)
 	$(INSTALL_FILES) lua/*.lua $(INSTALL_ROOT)$(IPELUADIR)
 	$(INSTALL_FILES) ../../styles/*.isy $(INSTALL_ROOT)$(IPESTYLEDIR)
 	$(INSTALL_FILES) ../../artwork/icons.ipe $(INSTALL_ROOT)$(IPEICONDIR)
-	$(INSTALL_FILES) $(ICONSET)/icon_128x128.png $(INSTALL_ROOT)$(IPEICONDIR)
+	$(INSTALL_FILES) ../../artwork/ipe_logo.ipe $(INSTALL_ROOT)$(IPEICONDIR)
 
 # --------------------------------------------------------------------

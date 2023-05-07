@@ -17,7 +17,7 @@ steps will install the necessary libraries and tools:
     sudo apt-get install libqt6svg6
     sudo apt-get install libfreetype6-dev libcairo2-dev libjpeg8-dev
     sudo apt-get install libpng-dev liblua5.4-dev zlib1g-dev
-    sudo apt-get install libspiro-dev libgsl-dev curl doxygen
+    sudo apt-get install libspiro-dev libgsl-dev curl
 
 Now you can compile and install Ipe into /usr/local:
 (Note that 7.x.y has to be replaced by the current Ipe version!)
