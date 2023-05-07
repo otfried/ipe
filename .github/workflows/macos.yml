@@ -5,6 +5,7 @@ jobs:
     runs-on: macos-latest
     env:
       IPECONFIGMAK: macos-homebrew.mak
+      IPERENDER: ../build/Ipe.app/Contents/MacOS/iperender
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -13,6 +14,7 @@ jobs:
           brew install lua gsl libspiro
       - name: Pkg-config
         run: |
+          uname -a
           pkg-config --cflags --libs lua
           pkg-config --cflags --libs gsl
           pkg-config --cflags --libs libspiro

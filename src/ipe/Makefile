@@ -95,7 +95,7 @@ app:
 	$(INSTALL_FILES) ../../styles/right-to-left.isy $(RESOURCEDIR)/styles
 	$(INSTALL_FILES) ../../styles/arabic.isy $(RESOURCEDIR)/styles
 	$(INSTALL_FILES) Info.plist $(BUNDLEDIR)
-	iconutil -c icns -o ipe.icns ../../icons/ipe.iconset
+	iconutil -c icns -o ipe.icns $(ICONSET)
 	$(INSTALL_FILES) ipe.icns $(RESOURCEDIR)
 	$(INSTALL_FILES) ../../icons/icons.ipe $(RESOURCEDIR)/icons
 #	$(INSTALL_FILES) $(manualdir)/* $(BUNDLEDIR)/SharedSupport/doc

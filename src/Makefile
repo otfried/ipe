@@ -36,6 +36,9 @@ else
 IPEICO =
 endif
 
+# Calling iperender to create the iconset
+IPERENDER ?= iperender
+
 .PHONY: all manual epub book documentation $(subdirs)
 
 all: $(subdirs)
@@ -60,13 +63,13 @@ $(subdirs):
 
 $(ICONSET): $(ipelogo)
 	mkdir -p $(ICONSET)
-	iperender -png -resolution 41 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_16x16.png
-	iperender -png -resolution 82 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_32x32.png
-	iperender -png -resolution 162 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_64x64.png
-	iperender -png -resolution 322 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_128x128.png
-	iperender -png -resolution 644 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_256x256.png
-	iperender -png -resolution 1286 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_512x512.png
-	iperender -png -resolution 2570 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_512x512@2x.png
+	$(IPERENDER) -png -resolution 41 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_16x16.png
+	$(IPERENDER) -png -resolution 82 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_32x32.png
+	$(IPERENDER) -png -resolution 162 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_64x64.png
+	$(IPERENDER) -png -resolution 322 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_128x128.png
+	$(IPERENDER) -png -resolution 644 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_256x256.png
+	$(IPERENDER) -png -resolution 1286 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_512x512.png
+	$(IPERENDER) -png -resolution 2570 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_512x512@2x.png
 
 $(IPEICO): $(ICONSET)
 	icotool -c $(ICONSET)/icon_16x16.png \
@@ -83,7 +86,7 @@ clean:
 install: all
 	$(MAKE) GOAL=install
 
-app: all
+app: all $(ICONSET)
 	$(MAKE) --directory=ipe app
 	$(MAKE) --directory=ipelets/lua app
 ifdef IPEQVORONOI
