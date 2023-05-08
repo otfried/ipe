@@ -13,13 +13,12 @@ jobs:
       - name: Download dependencies
         run: |
           wget https://ipe.otfried.org/osxlibs-intel.tar.gz
-          tar xzvf osxlibs-intel.tar.gz
-          ls -l
+          tar xzf osxlibs-intel.tar.gz
       - name: Compile
         run: |
           export IPEDEPS=`pwd`/osxlibs
           cd src
-          make
+          make -j
           make app
       - name: Add dependencies
         run: |
