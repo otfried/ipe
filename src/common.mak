@@ -177,7 +177,7 @@ ifdef MACOS
   # -------------------- Mac OS X --------------------
   CXXFLAGS	  += -g -Os
   IPEOBJCPP       = -x objective-c++ -fobjc-arc
-  OSXTARGET       = -mmacosx-version-min=10.10
+  OSXTARGET       ?= -mmacosx-version-min=10.10
   CXXFLAGS        += $(OSXTARGET) -Wdeprecated-declarations
   CFLAGS          += $(OSXTARGET)
   LDFLAGS         += $(OSXTARGET)

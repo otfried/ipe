@@ -3,6 +3,8 @@ on: workflow_dispatch
 jobs:
   Build:
     runs-on: macos-latest
+    env:
+      OSXTARGET: -mmacosx-version-min=12.00 -target arm64-apple-macos12
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
