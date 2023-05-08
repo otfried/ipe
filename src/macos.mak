@@ -1,14 +1,7 @@
 # -*- makefile -*-
 # --------------------------------------------------------------------
 #
-# Ipe configuration for Mac OS X
-#
-# --------------------------------------------------------------------
-#
-# Where are the dependencies?
-#
-# Setting to use Macports libraries:
-IPEDEPS	 ?= /opt/local
+# Ipe configuration for Mac OS with pkg-config (e.g. with homebrew)
 #
 # --------------------------------------------------------------------
 #
@@ -21,18 +14,20 @@ IPEBUNDLE  = 1
 #
 # --------------------------------------------------------------------
 #
-PNG_CFLAGS      ?= -I$(IPEDEPS)/include/libpng16
-PNG_LIBS        ?= -L$(IPEDEPS)/lib -lpng16
-FREETYPE_CFLAGS ?= -I$(IPEDEPS)/include/freetype2 -I$(IPEDEPS)/include
-FREETYPE_LIBS   ?= -L$(IPEDEPS)/lib -lfreetype
-CAIRO_CFLAGS    ?= -I$(IPEDEPS)/include/cairo
-CAIRO_LIBS      ?= -L$(IPEDEPS)/lib -lcairo
-LUA_CFLAGS      ?= -I$(IPEDEPS)/include
-LUA_LIBS        ?= -L$(IPEDEPS)/lib -llua.5.3 -lm
-SPIRO_CFLAGS    ?=
-SPIRO_LIBS      ?= -L$(IPEDEPS)/lib -lspiro
-GSL_CFLAGS      ?= $(shell gsl-config --cflags)
-GSL_LIBS        ?= $(shell gsl-config --libs)
+PKG_CONFIG   ?= pkg-config
+#
+PNG_CFLAGS    ?= $(shell $(PKG_CONFIG) --cflags libpng)
+PNG_LIBS      ?= $(shell $(PKG_CONFIG) --libs libpng)
+FREETYPE_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags freetype2)
+FREETYPE_LIBS ?= $(shell $(PKG_CONFIG) --libs freetype2)
+CAIRO_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags cairo)
+CAIRO_LIBS    ?= $(shell $(PKG_CONFIG) --libs cairo)
+LUA_CFLAGS    ?= $(shell $(PKG_CONFIG) --cflags lua)
+LUA_LIBS      ?= $(shell $(PKG_CONFIG) --libs lua)
+SPIRO_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags libspiro)
+SPIRO_LIBS    ?= $(shell $(PKG_CONFIG) --libs libspiro)
+GSL_CFLAGS    ?= $(shell $(PKG_CONFIG) --cflags gsl)
+GSL_LIBS      ?= $(shell $(PKG_CONFIG) --libs gsl)
 #
 IPEVERS = 7.2.27
 #

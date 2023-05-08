@@ -3,9 +3,6 @@ on: workflow_dispatch
 jobs:
   Build:
     runs-on: macos-latest
-    env:
-      IPECONFIGMAK: macos-homebrew.mak
-      IPERENDER: ../build/Ipe.app/Contents/MacOS/iperender
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3

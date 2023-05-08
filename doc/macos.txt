@@ -5,13 +5,17 @@
 Ipe runs on Mac OS 10.10 (Yosemite) and higher.
 
 
-If you have Macports...
------------------------
+If you have homebrew or macports...
+-----------------------------------
 
 ... then you can install the libraries that Ipe depends on simply by
 saying:
 
-  sudo port install libpng lua cairo freetype gsl libspiro doxygen
+  (for homebrew)
+  sudo brew install libpng lua cairo freetype gsl libspiro
+
+  (for macports)
+  sudo port install libpng lua cairo freetype gsl libspiro
 
 Then continue below under "Now you can compile Ipe".
 
@@ -39,8 +43,7 @@ Detailed instructions
  * Get libpng, Freetype, and Cairo
 
    If you don't want to install these through macports or homebrew,
-   you can install the three libraries from sources, and set the
-   corresponding CFLAG and LIBS variables in 'macos.mak'.
+   you can install the three libraries from sources.
    
    + The libpng library 
 
@@ -97,8 +100,8 @@ Detailed instructions
    You can find GSL at "https://www.gnu.org/software/gsl/".  It
    compiles cleanly on MacOS using 'configure' and 'make'.
 
-   Set GSL_CFLAGS and GSL_LIBS in "src/macos.mak".  You can use either
-   the static or the shared library version of libgsl.
+   You can use either the static or the shared library version of
+   libgsl.
 
  * The spiro library
 
@@ -117,6 +120,15 @@ Detailed instructions
    computer.  You don't need to install LaTeX to compile and try out
    Ipe.  If you decide to install LaTeX later, most people seem to use
    MacTeX (https://www.tug.org/mactex/).
+
+--------------------------------------------------------------------
+
+ * The Makefile assumes that pkg-config is available and can determine
+   the compilation flags and libraries for the dependencies.
+
+   If this is not the case, you'll need to edit 'src/macos.mak' and
+   fill in the correct values. (You may prefer to start with
+   'macos-manual.mak'.)
 
 --------------------------------------------------------------------
 
@@ -140,11 +152,11 @@ Detailed instructions
    /Applications, or anywhere else.
 
    Note that "Ipe.app" is linked dynamically against the libraries
-   liblua, libpng, Freetype, Cairo, (perhaps) libgsl, and libspiro.
-   It will not work if you copy the bundle to a different computer
-   that does not have (compatible versions of) the libraries in the
-   same locations.  If you used macports to install the libraries,
-   make sure you don't accidentally remove those macports packages.
+   liblua, libpng, Freetype, Cairo, libgsl, and libspiro.  It will not
+   work if you copy the bundle to a different computer that does not
+   have (compatible versions of) the libraries in the same locations.
+   If you used homebrew or macports to install the libraries, make
+   sure you don't accidentally remove those packages.
 
  * You will want to add the "/Applications/Ipe.app/Contents/MacOS"
    directory to your path, so that you can start Ipe and use the tools
