@@ -21,6 +21,19 @@ jobs:
           cd src
           make
           make app
+      - name: Add dependencies
+        run: |
+          FW1=build/Ipe.app/Contents/Frameworks
+          FW2=build/IpePresenter.app/Contents/Frameworks
+          install -m 0755 osxlibs/lib/libpng16.16.dylib $FW1
+          install -m 0755 osxlibs/lib/libpng16.16.dylib $FW2
+          install -m 0755 osxlibs/lib/libpixman-1.0.dylib $FW1
+          install -m 0755 osxlibs/lib/libpixman-1.0.dylib $FW2
+          install -m 0755 osxlibs/lib/libfreetype.6.dylib $FW1
+          install -m 0755 osxlibs/lib/libfreetype.6.dylib $FW2
+          install -m 0755 osxlibs/lib/libcairo.2.dylib $FW1
+          install -m 0755 osxlibs/lib/libcairo.2.dylib $FW2
+          install -m 0755 osxlibs/lib/liblua54.dylib $FW1
       - name: Create archive
         run: tar czvf ipe-mac-intel.tar.gz build/Ipe.app build/IpePresenter.app
       - name: Upload result
