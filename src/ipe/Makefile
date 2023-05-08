@@ -95,7 +95,7 @@ app:
 	$(INSTALL_FILES) ../../styles/arabic.isy $(RESOURCEDIR)/styles
 	$(INSTALL_FILES) Info.plist $(BUNDLEDIR)
 	$(INSTALL_FILES) $(BUILDDIR)/ipe.icns $(RESOURCEDIR)
-	$(INSTALL_FILES) ../../icons/icons.ipe $(RESOURCEDIR)/icons
+	$(INSTALL_FILES) ../../artwork/icons.ipe $(RESOURCEDIR)/icons
 #	$(INSTALL_FILES) $(manualdir)/* $(BUNDLEDIR)/SharedSupport/doc
 #	$(INSTALL_FILES) $(doxydir)/* $(BUNDLEDIR)/SharedSupport/doc
 
