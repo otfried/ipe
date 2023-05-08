@@ -1,4 +1,4 @@
-name: Build Ipe on MacOS
+name: Build Ipe on MacOS with Homebrew
 on: workflow_dispatch
 jobs:
   Build:

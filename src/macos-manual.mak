@@ -26,12 +26,12 @@ FREETYPE_CFLAGS ?= -I$(IPEDEPS)/include/freetype2 -I$(IPEDEPS)/include
 FREETYPE_LIBS   ?= -L$(IPEDEPS)/lib -lfreetype
 CAIRO_CFLAGS    ?= -I$(IPEDEPS)/include/cairo
 CAIRO_LIBS      ?= -L$(IPEDEPS)/lib -lcairo
-LUA_CFLAGS      ?= -I$(IPEDEPS)/include
-LUA_LIBS        ?= -L$(IPEDEPS)/lib -llua.5.3 -lm
-SPIRO_CFLAGS    ?=
+LUA_CFLAGS      ?= -I$(IPEDEPS)/include/lua
+LUA_LIBS        ?= -L$(IPEDEPS)/lib -llua54 -lm
+SPIRO_CFLAGS    ?= -I$(IPEDEPS)/include
 SPIRO_LIBS      ?= -L$(IPEDEPS)/lib -lspiro
-GSL_CFLAGS      ?= $(shell gsl-config --cflags)
-GSL_LIBS        ?= $(shell gsl-config --libs)
+GSL_CFLAGS      ?= -I$(IPEDEPS)/include
+GSL_LIBS        ?= -L$(IPEDEPS)/lib -lgsl -lgslcblas -lm
 #
 IPEVERS = 7.2.27
 #
