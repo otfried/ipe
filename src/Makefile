@@ -59,6 +59,7 @@ $(subdirs):
 	$(MAKE) --directory=$@ $(GOAL)
 
 $(IPEICO):
+	mkdir -p ../build
 	icotool -c $(ICONSET)/icon_16x16.png \
 		$(ICONSET)/icon_32x32.png \
 		$(ICONSET)/icon_64x64.png \
@@ -67,6 +68,7 @@ $(IPEICO):
 		$(ICONSET)/icon_512x512.png -o $(IPEICO)
 
 $(IPEICNS):
+	mkdir -p ../build
 	iconutil -c icns -o $(IPEICNS) $(ICONSET)
 
 .PHONY: clean install
