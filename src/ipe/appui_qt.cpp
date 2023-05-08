@@ -69,6 +69,12 @@ inline QSize adapt_size(const QSize &size, int factor)
 
 QIcon AppUi::prefsIcon(String name)
 {
+  if (name == "ipe") {
+    String fname = ipeIconDirectory() + "icon_128x128.png";
+    if (Platform::fileExists(fname))
+      return QIcon(QIpe(fname));
+  }
+
   String svgdir = Platform::latexDirectory() + "/icons/";
   if (!Platform::fileExists(svgdir) && mkdir(svgdir.z(), 0700) != 0)
     return QIcon();
@@ -78,9 +84,8 @@ QIcon AppUi::prefsIcon(String name)
     if (!Platform::fileExists(png)) {
       String fname = ipeIconDirectory() + "ipe_logo.ipe";
       std::unique_ptr<Document> doc(Document::loadWithErrorReport(fname.z()));
-      if (!doc)
+      if (!doc || doc->runLatex(fname) != Document::ErrNone)
 	return QIcon();
-      doc->runLatex(fname);
       Thumbnail thumbs(doc.get(), 128);
       thumbs.setNoCrop(true);
       thumbs.saveRender(Thumbnail::EPNG, png.z(), doc->page(0), 0, 4.47);

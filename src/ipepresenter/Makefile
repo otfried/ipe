@@ -72,8 +72,7 @@ app:
 	$(INSTALL_DIR) $(RESOURCEDIR)
 	$(INSTALL_DIR) $(APPLIBS)
 	$(INSTALL_FILES) Info.plist $(BUNDLEDIR)
-	iconutil -c icns -o ipe.icns ../../icons/ipe.iconset
-	$(INSTALL_FILES) ipe.icns $(RESOURCEDIR)
+	$(INSTALL_FILES) $(BUILDDIR)/ipe.icns $(RESOURCEDIR)
 	$(INSTALL_PROGRAMS) $(IPELIBS)/libipe.$(IPEVERS).dylib $(APPLIBS)
 	$(INSTALL_PROGRAMS) $(IPELIBS)/libipecairo.$(IPEVERS).dylib $(APPLIBS)
 	$(INSTALL_PROGRAMS) $(IPELIBS)/libipecanvas.$(IPEVERS).dylib $(APPLIBS)

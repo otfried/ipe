@@ -28,16 +28,13 @@ ifdef IPEQVORONOI
 subdirs += ipelets/qvoronoi
 endif
 
-ipelogo = ../artwork/ipe_logo.ipe
-ICONSET = ../build/ipe.iconset
+ICONSET = ../artwork/ipe.iconset
 ifdef IPECROSS
 IPEICO = ../build/ipe.ico
 else
 IPEICO =
 endif
-
-# Calling iperender to create the iconset
-IPERENDER ?= iperender
+IPEICNS = ../build/ipe.icns
 
 .PHONY: all manual epub book documentation $(subdirs)
 
@@ -61,23 +58,16 @@ ipecurl: ipelib
 $(subdirs):
 	$(MAKE) --directory=$@ $(GOAL)
 
-$(ICONSET): $(ipelogo)
-	mkdir -p $(ICONSET)
-	$(IPERENDER) -png -resolution 41 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_16x16.png
-	$(IPERENDER) -png -resolution 82 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_32x32.png
-	$(IPERENDER) -png -resolution 162 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_64x64.png
-	$(IPERENDER) -png -resolution 322 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_128x128.png
-	$(IPERENDER) -png -resolution 644 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_256x256.png
-	$(IPERENDER) -png -resolution 1286 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_512x512.png
-	$(IPERENDER) -png -resolution 2570 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_512x512@2x.png
-
-$(IPEICO): $(ICONSET)
+$(IPEICO):
 	icotool -c $(ICONSET)/icon_16x16.png \
 		$(ICONSET)/icon_32x32.png \
 		$(ICONSET)/icon_64x64.png \
 		$(ICONSET)/icon_128x128.png \
 		$(ICONSET)/icon_256x256.png \
 		$(ICONSET)/icon_512x512.png -o $(IPEICO)
+
+$(IPEICNS):
+	iconutil -c icns -o $(IPEICNS) $(ICONSET)
 
 .PHONY: clean install
 clean:
@@ -86,7 +76,7 @@ clean:
 install: all
 	$(MAKE) GOAL=install
 
-app: all $(ICONSET)
+app: all $(IPEICNS)
 	$(MAKE) --directory=ipe app
 	$(MAKE) --directory=ipelets/lua app
 ifdef IPEQVORONOI

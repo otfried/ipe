@@ -15,7 +15,6 @@ LIBS += -L$(buildlib) -lipecanvas -lipecairo -lipelua -lipe -lipeui \
 
 manualdir = ../../build/doc
 doxydir = ../../build/doxygen/ipelib/html
-ICONSET = ../../build/ipe.iconset
 
 ifdef IPEBUNDLE
 CPPFLAGS += -DIPEBUNDLE
@@ -95,8 +94,7 @@ app:
 	$(INSTALL_FILES) ../../styles/right-to-left.isy $(RESOURCEDIR)/styles
 	$(INSTALL_FILES) ../../styles/arabic.isy $(RESOURCEDIR)/styles
 	$(INSTALL_FILES) Info.plist $(BUNDLEDIR)
-	iconutil -c icns -o ipe.icns $(ICONSET)
-	$(INSTALL_FILES) ipe.icns $(RESOURCEDIR)
+	$(INSTALL_FILES) $(BUILDDIR)/ipe.icns $(RESOURCEDIR)
 	$(INSTALL_FILES) ../../icons/icons.ipe $(RESOURCEDIR)/icons
 #	$(INSTALL_FILES) $(manualdir)/* $(BUNDLEDIR)/SharedSupport/doc
 #	$(INSTALL_FILES) $(doxydir)/* $(BUNDLEDIR)/SharedSupport/doc
@@ -121,5 +119,6 @@ install: $(TARGET)
 	$(INSTALL_FILES) ../../styles/*.isy $(INSTALL_ROOT)$(IPESTYLEDIR)
 	$(INSTALL_FILES) ../../artwork/icons.ipe $(INSTALL_ROOT)$(IPEICONDIR)
 	$(INSTALL_FILES) ../../artwork/ipe_logo.ipe $(INSTALL_ROOT)$(IPEICONDIR)
+	$(INSTALL_FILES) ../../artwork/ipe.iconset/icon_128x128.png $(INSTALL_ROOT)$(IPEICONDIR)
 
 # --------------------------------------------------------------------
