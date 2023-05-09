@@ -1,8 +1,6 @@
-Ipe extensible drawing editor
-=============================
+## Ipe extensible drawing editor
 
-Introduction
-------------
+### Introduction
 
 This is the extensible drawing editor Ipe.  Ipe allows you to create
 figures in PDF format, for inclusion into LaTeX (or plain TeX)
@@ -12,13 +10,31 @@ transparencies or for on-line presentations.
 See the [home page](https://ipe.otfried.org/) or the
 [manual](https://otfried.github.io/ipe/) for an introduction.
 
-The file "doc/install.txt" explains how to build and install Ipe
-on Unix.  Ipe is also available for Windows and MacOS in precompiled form.
-All you need to do is unpack the archive, and you
-are ready to run.
+### Download Ipe
 
-Copyright
----------
+#### Windows
+
+A Windows package for Ipe is available on the [home page](https://ipe.otfried.org/). 
+You only need to unpack the archive, and you are ready to run.
+
+#### MacOS
+
+If you have homebrew, you can install Ipe by saying
+```
+brew install --cask ipe
+```
+You can also download the application directly from the 
+[home page](https://ipe.otfried.org/).
+Open it, drag `Ipe.app` to your computer, and you are ready to run.
+
+#### Linux
+
+The file "doc/install.txt" explains how to build and install Ipe
+on Unix.  You can also find precompiled packages for some popular 
+Linux distributions on the [home page](https://ipe.otfried.org/).
+
+
+### Copyright
 
 Ipe is copyright (c) 1993-2023 Otfried Cheong
 
@@ -43,8 +59,7 @@ along with Ipe; if not, you can find it at
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
-Acknowledgements
-----------------
+### Acknowledgements
 
 Ipe uses the Zlib library (www.gzip.org/zlib), the Freetype 2 library
 (www.freetype.org), the Cairo library (www.cairographics.org), the
@@ -54,8 +69,7 @@ interpreter (www.lua.org), and relies on Pdflatex for rendering text,
 either locally on your computer or in a cloud service.
 
 
-Reporting bugs
---------------
+### Reporting bugs
 
 Before reporting a bug, check that you have the latest Ipe version,
 and check that it is not yet mentioned in the FAQ on the [Ipe
@@ -70,8 +84,7 @@ Please do not send bug reports directly to me (the first thing I would
 do with the report is to enter it into the bug tracking system).
 
 
-Getting in contact
-------------------
+### Getting in contact
 
 Suggestions for features, or random comments on Ipe can be sent to the
 Ipe discussion mailing list at <ipe-discuss@lists.science.uu.nl>.  If
@@ -91,10 +104,4 @@ please put a link or copy (as you prefer) on the [Ipe
 wiki](https://github.com/otfried/ipe-wiki/wiki).  Feel free to
 advertise them on the Ipe discussion list!
 
-Otfried Cheong
-
-Email: ipe@otfried.org
-
-Ipe webpage: http://ipe.otfried.org
-
---------------------------------------------------------------------
+Otfried Cheong <ipe@otfried.org>
