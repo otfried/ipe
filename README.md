@@ -64,10 +64,14 @@ wiki](https://github.com/otfried/ipe-wiki/wiki).
 You can report bugs on the [Ipe issue
 tracker](https://github.com/otfried/ipe/issues).  Check the existing
 reports to see whether your bug has already been reported.  Please
-include your operating system (Linux, Windows, MacOS) in your report.
+**include your operating system** (Linux, Windows, MacOS) in your report.
 
 Please do not send bug reports directly to me (the first thing I would
 do with the report is to enter it into the bug tracking system).
+
+
+Getting in contact
+------------------
 
 Suggestions for features, or random comments on Ipe can be sent to the
 Ipe discussion mailing list at <ipe-discuss@lists.science.uu.nl>.  If
@@ -87,8 +91,10 @@ please put a link or copy (as you prefer) on the [Ipe
 wiki](https://github.com/otfried/ipe-wiki/wiki).  Feel free to
 advertise them on the Ipe discussion list!
 
-	Otfried Cheong
-	Email: ipe@otfried.org
-	Ipe webpage: http://ipe.otfried.org
+Otfried Cheong
+
+Email: ipe@otfried.org
+
+Ipe webpage: http://ipe.otfried.org
 
 --------------------------------------------------------------------
