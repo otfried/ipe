@@ -87,6 +87,8 @@ please put a link or copy (as you prefer) on the [Ipe
 wiki](https://github.com/otfried/ipe-wiki/wiki).  Feel free to
 advertise them on the Ipe discussion list!
 
+	Otfried Cheong
+	Email: ipe@otfried.org
+	Ipe webpage: http://ipe.otfried.org
+
 --------------------------------------------------------------------
-
-
