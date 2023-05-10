@@ -4,6 +4,8 @@ Ipe 7.2.28
 
  * Add "sequential text" option.
 
+ * Fix centering of title in presentation stylesheet (bug #464).
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.27 (2023-05-05)

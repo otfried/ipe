@@ -164,6 +164,6 @@
 \makeatother
 </preamble>
 <layout paper="1280 720" origin="32 0" frame="1216 648" skip="32" crop="no"/>
-<titlestyle pos="640 674" size="large" color="title"
+<titlestyle pos="608 674" size="large" color="title"
 	    halign="center" valign="baseline"/>
 </ipestyle>
