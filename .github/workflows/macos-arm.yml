@@ -1,10 +1,10 @@
-name: Build Ipe on MacOS with Intel processor
+name: Build Ipe on MacOS with ARM processor
 on: workflow_dispatch
 jobs:
   Build:
     runs-on: macos-latest
     env:
-      OSXTARGET: -mmacosx-version-min=10.10 -target x86_64-apple-macos10.10
+      OSXTARGET: -mmacosx-version-min=11.00 -target arm64-apple-macos11
       IPECONFIGMAK: macos-manual.mak
       IPEQVORONOI: 1
     steps:
@@ -12,8 +12,8 @@ jobs:
         uses: actions/checkout@v3
       - name: Download dependencies
         run: |
-          wget https://ipe.otfried.org/osxlibs-intel.tar.gz
-          tar xzf osxlibs-intel.tar.gz
+          wget https://ipe.otfried.org/osxlibs-arm.tar.gz
+          tar xzf osxlibs-arm.tar.gz
       - name: Compile
         run: |
           export IPEDEPS=`pwd`/osxlibs
@@ -36,11 +36,11 @@ jobs:
       - name: Create archive
         run: |
           cd build
-          tar czvf ../ipe-mac-intel.tar.gz Ipe.app IpePresenter.app
+          tar czvf ../ipe-mac-arm.tar.gz Ipe.app IpePresenter.app
       - name: Upload result
         uses: actions/upload-artifact@v3
         with:
-          name: ipe-mac-intel
-          path: ipe-mac-intel.tar.gz
+          name: ipe-mac-arm
+          path: ipe-mac-arm.tar.gz
           retention-days: 2
       - run: 'echo "Status ${{ job.status }}"'
