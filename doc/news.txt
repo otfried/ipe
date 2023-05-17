@@ -6,6 +6,9 @@ Ipe 7.2.28
 
  * Fix centering of title in presentation stylesheet (bug #464).
 
+ * Link to manual and Ipelib documentation online instead of
+   installing it locally by default.
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.27 (2023-05-05)
