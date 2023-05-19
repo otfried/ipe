@@ -19,6 +19,11 @@ PKG_CONFIG ?= pkg-config
 #
 LUA_PACKAGE   ?= lua5.4
 #
+# Add spell checking? (you'll need to set SPELL_CFLAGS and SPELL_LIBS below)
+#
+#IPE_SPELLCHECK = 1
+#
+#
 ZLIB_CFLAGS   ?=
 ZLIB_LIBS     ?= -lz
 JPEG_CFLAGS   ?=
@@ -59,12 +64,10 @@ QT_LIBS	      ?= $(subst Qt5,Qt6,$(QT_LIBS1))
 endif
 endif
 #
-# QtSpell is not yet available for Qt6
-#
-#ifndef IPE_NO_SPELLCHECK
-#SPELL_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags QtSpell-qt5)
-#SPELL_LIBS    ?= $(shell $(PKG_CONFIG) --libs QtSpell-qt5)
-#endif
+ifdef IPE_SPELLCHECK
+SPELL_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags QtSpell-qt6)
+SPELL_LIBS    ?= $(shell $(PKG_CONFIG) --libs QtSpell-qt6)
+endif
 #
 # Library needed to use dlopen/dlsym/dlclose calls
 #

@@ -63,8 +63,8 @@ static const struct luaL_Reg winid_methods[] = {
 
 // --------------------------------------------------------------------
 
-Dialog::Dialog(lua_State *L0, WINID parent, const char *caption)
-  : iCaption(caption)
+Dialog::Dialog(lua_State *L0, WINID parent, const char *caption, const char *language)
+  : iCaption(caption), iLanguage(language)
 {
   L = L0;
   iParent = parent;

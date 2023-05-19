@@ -426,6 +426,11 @@ void Document::saveAsXml(Stream &stream, bool usePdfBitmaps) const
     infoStr.putXmlString(iProperties.iKeywords);
     infoStr << "\"";
   }
+  if (!iProperties.iLanguage.empty()) {
+    infoStr << " language=\"";
+    infoStr.putXmlString(iProperties.iLanguage);
+    infoStr << "\"";
+  }
   if (iProperties.iFullScreen) {
     infoStr << " pagemode=\"fullscreen\"";
   }

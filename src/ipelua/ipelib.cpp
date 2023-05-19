@@ -419,6 +419,8 @@ static int document_properties(lua_State *L)
   lua_setfield(L, -2, "subject");
   push_string(L, prop.iKeywords);
   lua_setfield(L, -2, "keywords");
+  push_string(L, prop.iLanguage);
+  lua_setfield(L, -2, "language");
   push_string(L, prop.iPreamble);
   lua_setfield(L, -2, "preamble");
   push_string(L, prop.iCreated);
@@ -467,6 +469,7 @@ static int document_setProperties(lua_State *L)
   propString(L, "author", prop.iAuthor);
   propString(L, "subject", prop.iSubject);
   propString(L, "keywords", prop.iKeywords);
+  propString(L, "language", prop.iLanguage);
   propString(L, "preamble", prop.iPreamble);
   propString(L, "created", prop.iCreated);
   propString(L, "modified", prop.iModified);

@@ -11,9 +11,9 @@ SONAME = $(call soname,ipeui)
 INSTALL_SYMLINKS = $(call install_symlinks,ipeui)
 
 # QtSpell is not yet available for Qt6
-#ifdef IPE_NO_SPELLCHECK
-CPPFLAGS += -DIPE_NO_SPELLCHECK
-#endif
+ifdef IPE_SPELLCHECK
+CPPFLAGS += -DIPE_SPELLCHECK
+endif
 CXXFLAGS += $(UI_CFLAGS) $(LUA_CFLAGS) $(DLL_CFLAGS) $(SPELL_CFLAGS)
 LIBS += $(UI_LIBS) $(LUA_LIBS) $(SPELL_LIBS)
 

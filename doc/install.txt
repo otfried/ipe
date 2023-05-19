@@ -9,6 +9,11 @@
 Quickstart for Linux
 --------------------
 
+Note: the following quick instructions will not compile support for
+spell checking, because there doesn't seem to be a Debian package for
+QtSpell on Qt6 yet.  You would need to compile that yourself if you
+want that, see below.
+
 If you have a recent Mint, Ubuntu, or Debian system, the following
 steps will install the necessary libraries and tools:
 
@@ -118,6 +123,16 @@ and libraries:
    You can also download binaries or sources at "www.qt.io/".  You
    only need the Qt6Core, Qt6Gui, and Qt6Widgets libraries.
 
+ * The QtSpell widget
+
+   If you want spell checking in your text edit fields, you'd need to
+   compile the QtSpell widget from sources at
+   "https://github.com/manisandro/qtspell".  (There does not currently
+   seem to be a Debian/Ubuntu package for the Qt6 version.)
+
+   You then need to set IPE_SPELLCHECK, SPELL_CFLAGS, and SPELL_LIBS
+   in config.mak.
+   
  * The GNU Scientific Library
 
    This library is used to improve the precision of intersections of

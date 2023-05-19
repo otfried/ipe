@@ -85,7 +85,7 @@ inline void luacall(lua_State *L, int nargs, int nresults) {
 
 class Dialog {
 public:
-  Dialog(lua_State *L0, WINID parent, const char *caption);
+  Dialog(lua_State *L0, WINID parent, const char *caption, const char *language);
   virtual ~Dialog();
 
   // Lua methods
@@ -153,6 +153,7 @@ protected:
   int iLuaDialog;
   int iIgnoreEscapeField;
   std::string iIgnoreEscapeText;
+  std::string iLanguage;
 
   int iBaseX, iBaseY;
   int iNoRows, iNoCols;

@@ -922,7 +922,7 @@ function MODEL:createText(mode, pos, width, pinned)
   end
   local styles = self.doc:sheets():allNames(stylekind)
   local sizes = self.doc:sheets():allNames("textsize")
-  local d = ipeui.Dialog(self.ui:win(), "Create text object")
+  local d = ipeui.Dialog(self.ui:win(), "Create text object", self.doc:properties().language)
   d:add("label", "label", { label=prompt }, 1, 1, 1, 2)
   d:add("style", "combo", styles, -1, 3)
   d:add("size", "combo", sizes, -1, 4)
@@ -1388,7 +1388,7 @@ function MODEL:action_edit_text(prim, obj)
   local mp = obj:get("minipage")
   local stylekind = "labelstyle"
   if mp then stylekind = "textstyle" end
-  local d = ipeui.Dialog(self.ui:win(), "Edit text object")
+  local d = ipeui.Dialog(self.ui:win(), "Edit text object", self.doc:properties().language)
   local data = { model=self,
 		 stylekind = stylekind,
 		 styles = self.doc:sheets():allNames(stylekind),
@@ -1467,7 +1467,7 @@ function MODEL:action_edit_group_text(prim, obj)
     return
   end
   local tobj = obj:element(t)
-  local d = ipeui.Dialog(self.ui:win(), "Edit text in group object")
+  local d = ipeui.Dialog(self.ui:win(), "Edit text in group object", self.doc:properties().language)
   d:add("label", "label", { label="Edit latex source" }, 1, 1, 1, 2)
   d:add("text", "text", { syntax="latex", focus=true,
 			  spell_check=prefs.spell_check}, 0, 1, 1, 4)

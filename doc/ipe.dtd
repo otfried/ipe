@@ -11,8 +11,10 @@
 	  author CDATA #IMPLIED
 	  subject CDATA #IMPLIED
 	  keywords CDATA #IMPLIED
+	  language CDATA #IMPLIED
 	  pagemode CDATA #FIXED "fullscreen"
 	  numberpages (yes|no) #IMPLIED
+	  sequentialtext (yes|no) "no"
 	  tex (pdftex|xetex|luatex) "pdftex" >
 
 <!ELEMENT preamble (#PCDATA)>

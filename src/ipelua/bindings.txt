@@ -627,7 +627,7 @@ doc:setProperties(t)  -- changes properties set in table
 \c doc:properties() returns a table with the following fields (all
 fields exist even if their contents is an empty string):
 \verbatim
-title author subject keywords preamble created modified creator
+title author subject keywords language preamble created modified creator
 fullscreen cropbox numberpages sequentialtext tex
 \endverbatim
 
@@ -876,6 +876,7 @@ read_only=bool
 syntax="logfile" or "xml" or "latex"
 select_all=bool
 spell_check=bool
+language=str
 
 -- list and combo:
 array of list items (strings)

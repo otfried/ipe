@@ -54,7 +54,7 @@
 #include <QThread>
 #include <QTimer>
 
-#ifndef IPE_NO_SPELLCHECK
+#ifdef IPE_SPELLCHECK
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 #include <QtSpell.hpp>
@@ -80,11 +80,13 @@ inline QString checkqstring(lua_State *L, int i)
 
 // --------------------------------------------------------------------
 
-#ifndef IPE_NO_SPELLCHECK
+#ifdef IPE_SPELLCHECK
 class TextEdit : public QTextEdit {
 public:
-  TextEdit(QWidget *parent) : QTextEdit(parent) {
+  TextEdit(QWidget *parent, const std::string &language) : QTextEdit(parent) {
     checker.setTextEdit(this);
+    if (!language.empty())
+      checker.setLanguage(QString::fromUtf8(language.c_str()));
   }
 
 private:
@@ -185,8 +187,8 @@ LatexHighlighter::LatexHighlighter(QTextEdit *textEdit)
 
 // --------------------------------------------------------------------
 
-PDialog::PDialog(lua_State *L0, WINID parent, const char *caption)
-  : QDialog(parent), Dialog(L0, parent, caption)
+PDialog::PDialog(lua_State *L0, WINID parent, const char *caption, const char *language)
+  : QDialog(parent), Dialog(L0, parent, caption, language)
 {
   setWindowTitle(caption);
   QVBoxLayout *vlo = new QVBoxLayout;
@@ -347,11 +349,11 @@ bool PDialog::buildAndRun(int w, int h)
 	break;
       case ETextEdit:
 	{
-#ifdef IPE_NO_SPELLCHECK
-	  QTextEdit *t = new QTextEdit(this);
-#else
+#ifdef IPE_SPELLCHECK
 	  QTextEdit *t = (m.flags & ELogFile) ?
-	    new QTextEdit(this) : new TextEdit(this);
+	    new QTextEdit(this) : new TextEdit(this, this->iLanguage);
+#else
+	  QTextEdit *t = new QTextEdit(this);
 #endif
 	  t->setAcceptRichText(false);
 	  if (m.flags & EReadOnly)
@@ -462,12 +464,15 @@ static int dialog_constructor(lua_State *L)
 {
   QWidget *parent = check_winid(L, 1);
   const char *s = luaL_checkstring(L, 2);
+  const char *language = "";
+  if (lua_isstring(L, 3))
+    language = luaL_checkstring(L, 3);
 
   Dialog **dlg = (Dialog **) lua_newuserdata(L, sizeof(Dialog *));
   *dlg = nullptr;
   luaL_getmetatable(L, "Ipe.dialog");
   lua_setmetatable(L, -2);
-  *dlg = new PDialog(L, parent, s);
+  *dlg = new PDialog(L, parent, s, language);
   return 1;
 }
 

@@ -110,6 +110,7 @@ int ImlParser::parseDocument(Document &doc)
     properties.iAuthor = att["author"];
     properties.iSubject = att["subject"];
     properties.iKeywords = att["keywords"];
+    properties.iLanguage = att["language"];
     properties.iFullScreen = (att["pagemode"] == "fullscreen");
     properties.iNumberPages = (att["numberpages"] == "yes");
     properties.iSequentialText = (att["sequentialtext"] == "yes");

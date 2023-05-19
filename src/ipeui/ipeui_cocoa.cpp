@@ -171,7 +171,7 @@ NSString *ipeui_set_mnemonic(NSString *title, NSButton *button)
 
 class PDialog : public Dialog {
 public:
-  PDialog(lua_State *L0, WINID parent, const char *caption);
+  PDialog(lua_State *L0, WINID parent, const char *caption, const char *language);
   virtual ~PDialog();
 
   void itemAction(int idx);
@@ -247,8 +247,8 @@ objectValueForTableColumn:(NSTableColumn *) col
 
 // --------------------------------------------------------------------
 
-PDialog::PDialog(lua_State *L0, WINID parent, const char *caption)
-  : Dialog(L0, parent, caption)
+PDialog::PDialog(lua_State *L0, WINID parent, const char *caption, const char * language)
+: Dialog(L0, parent, caption, language)
 {
   //
 }
@@ -665,12 +665,15 @@ static int dialog_constructor(lua_State *L)
 {
   WINID parent = check_winid(L, 1);
   const char *s = luaL_checkstring(L, 2);
+  const char *language = "";
+  if (lua_isstring(L, 3))
+    language = luaL_checkstring(L, 3);
 
   Dialog **dlg = (Dialog **) lua_newuserdata(L, sizeof(Dialog *));
   *dlg = nullptr;
   luaL_getmetatable(L, "Ipe.dialog");
   lua_setmetatable(L, -2);
-  *dlg = new PDialog(L, parent, s);
+  *dlg = new PDialog(L, parent, s, language);
   return 1;
 }
 

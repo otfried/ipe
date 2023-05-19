@@ -72,6 +72,7 @@ namespace ipe {
       String iAuthor;
       String iSubject;
       String iKeywords;
+      String iLanguage;
       String iPreamble;
       LatexType iTexEngine { LatexType::Default };
       bool iFullScreen { false };

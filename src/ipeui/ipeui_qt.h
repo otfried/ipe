@@ -92,7 +92,7 @@ class PDialog : public QDialog, public Dialog {
   Q_OBJECT
 
 public:
-  PDialog(lua_State *L0, WINID parent, const char *caption);
+  PDialog(lua_State *L0, WINID parent, const char *caption, const char * language);
   ~PDialog();
 
   QGridLayout *gridlayout() { return iGrid; }
