@@ -99,6 +99,11 @@ The ``<info>`` element
 ``keywords`` (optional)
   document keywords,
 
+``language`` (optional)
+  the document language, to be used for spell checking.  E.g. `de_DE`
+  for German spell checking.  Currently has an effect only on Linux
+  when spell checking is compiled in.
+
 ``pagemode`` (optional)
   the only value understood by Ipe is
   ``fullscreen``, which causes the document to be opened in full
