@@ -89,9 +89,14 @@ void Canvas::motionHandler(GdkEventMotion *event)
 void Canvas::scrollHandler(GdkEventScroll *event)
 {
   int zDelta = (event->direction == GDK_SCROLL_UP) ? 120 : -120;
+  int kind = (event->state & GDK_CONTROL_MASK) ? 2 : 0;
   // ipeDebug("Canvas::wheel %d", zDelta);
-  if (iObserver)
-    iObserver->canvasObserverWheelMoved(zDelta);
+  if (iObserver) {
+    if (event->state & GDK_SHIFT_MASK)
+      iObserver->canvasObserverWheelMoved(zDelta, 0.0, kind);
+    else
+      iObserver->canvasObserverWheelMoved(0.0, zDelta, kind);
+  }
 }
 
 #if GTK_MAJOR_VERSION >= 3
@@ -122,7 +127,7 @@ void Canvas::exposeHandler(GdkEventExpose *event)
     drawFifi(cr);
 
   if (iPage) {
-    CairoPainter cp(iCascade, iFonts, cr, iZoom, false);
+      CairoPainter cp(iCascade, iFonts.get(), cr, iZoom, false, false);
     cp.transform(canvasTfm());
     cp.pushMatrix();
     drawTool(cp);

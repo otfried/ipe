@@ -20,6 +20,7 @@ win_sources = ipepresenter_win.cpp
 cocoa_sources = ipepresenter_cocoa.cpp
 qt_sources = ipepresenter_qt.cpp timelabel_qt.cpp
 moc_headers = ipepresenter_qt.h timelabel_qt.h
+gtk_sources = ipepresenter_gtk.cpp
 
 ifdef WIN32
 CXXFLAGS += -mwindows

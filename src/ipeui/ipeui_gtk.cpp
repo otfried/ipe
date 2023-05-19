@@ -29,12 +29,13 @@
 */
 
 #include "ipeui_common.h"
+using String = std::string;
 
 // --------------------------------------------------------------------
 
 class PDialog : public Dialog {
 public:
-  PDialog(lua_State *L0, WINID parent, const char *caption);
+  PDialog(lua_State *L0, WINID parent, const char *caption, const char *language);
   virtual ~PDialog();
 
   virtual void setMapped(lua_State *L, int idx);
@@ -52,8 +53,8 @@ private:
   std::vector<GtkWidget *> iWidgets;
 };
 
-PDialog::PDialog(lua_State *L0, WINID parent, const char *caption)
-  : Dialog(L0, parent, caption)
+PDialog::PDialog(lua_State *L0, WINID parent, const char *caption, const char *language)
+  : Dialog(L0, parent, caption, language)
 {
   //
 }
@@ -86,17 +87,17 @@ void PDialog::setMapped(lua_State *L, int idx)
   GtkWidget *w = iWidgets[idx];
   switch (m.type) {
   case ELabel:
-    gtk_label_set_text(GTK_LABEL(w), m.text.z());
+    gtk_label_set_text(GTK_LABEL(w), m.text.c_str());
     break;
   case ECheckBox:
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), m.value);
     break;
   case ETextEdit:
     gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(w)),
-			     m.text.z(), -1);
+			     m.text.c_str(), -1);
     break;
   case EInput:
-    gtk_entry_set_text(GTK_ENTRY(w), m.text.z());
+    gtk_entry_set_text(GTK_ENTRY(w), m.text.c_str());
     break;
   case EList:
     if (lua_istable(L, 3)) {
@@ -184,7 +185,7 @@ void PDialog::fillListStore(GtkListStore *store, const SElement &m)
   gtk_list_store_clear(store);
   for (int k = 0; k < int(m.items.size()); ++k) {
     gtk_list_store_append(store, &iter);
-    gtk_list_store_set(store, &iter, 0, m.items[k].z(), -1);
+    gtk_list_store_set(store, &iter, 0, m.items[k].c_str(), -1);
   }
 }
 
@@ -231,7 +232,7 @@ static void escapeResponse(GtkWidget *, GtkDialog *dlg)
 bool PDialog::buildAndRun(int w, int h)
 {
   hDialog = gtk_dialog_new();
-  gtk_window_set_title(GTK_WINDOW(hDialog), iCaption.z());
+  gtk_window_set_title(GTK_WINDOW(hDialog), iCaption.c_str());
 
   GtkAccelGroup *accel_group = gtk_accel_group_new();
   gtk_window_add_accel_group(GTK_WINDOW(hDialog), accel_group);
@@ -241,7 +242,7 @@ bool PDialog::buildAndRun(int w, int h)
   gtk_accel_group_connect(accel_group, accel_key, accel_mods, GtkAccelFlags(0),
 			  g_cclosure_new(G_CALLBACK(ctrlEnterResponse),
 					 hDialog, NULL));
-  if (iIgnoreEscape) {
+  if (iIgnoreEscapeField >= 0) {
     gtk_accelerator_parse("Escape", &accel_key, &accel_mods);
     gtk_accel_group_connect(accel_group, accel_key, accel_mods,
 			    GtkAccelFlags(0),
@@ -265,21 +266,21 @@ bool PDialog::buildAndRun(int w, int h)
 
   for (int i = 0; i < int(iElements.size()); ++i) {
     SElement &m = iElements[i];
-    GtkWidget *w = 0;
-    GtkWidget *ww = 0; // for alignment
+    GtkWidget *w = nullptr;
+    GtkWidget *ww = nullptr; // for alignment
     int xOptions = 0; // GTK_EXPAND|GTK_SHRINK|GTK_FILL
     int yOptions = 0; // GTK_EXPAND|GTK_SHRINK|GTK_FILL
     if (m.row < 0) {
       if (m.flags & EAccept) {
-	w = gtk_dialog_add_button(GTK_DIALOG(hDialog), m.text.z(),
+	w = gtk_dialog_add_button(GTK_DIALOG(hDialog), m.text.c_str(),
 				  GTK_RESPONSE_ACCEPT);
 	gtk_widget_set_can_default(w, TRUE);
 	gtk_widget_grab_default(w);
       } else if (m.flags & EReject)
-	w = gtk_dialog_add_button(GTK_DIALOG(hDialog), m.text.z(),
+	w = gtk_dialog_add_button(GTK_DIALOG(hDialog), m.text.c_str(),
 				  GTK_RESPONSE_ACCEPT);
       else {
-	w = gtk_button_new_with_label(m.text.z());
+	w = gtk_button_new_with_label(m.text.c_str());
 	gtk_box_pack_start(GTK_BOX(aa), w, FALSE, FALSE, 0);
 	gtk_widget_show(w);
 	if (m.lua_method)
@@ -289,15 +290,15 @@ bool PDialog::buildAndRun(int w, int h)
       switch (m.type) {
       case ELabel:
 	ww = gtk_alignment_new(0.0, 0.5, 0.0, 1.0);
-	w = gtk_label_new(m.text.z());
+	w = gtk_label_new(m.text.c_str());
 	gtk_container_add(GTK_CONTAINER(ww), w);
 	xOptions |= GTK_FILL; // left align in cell
 	break;
       case EButton:
-	w = gtk_button_new_with_label(m.text.z());
+	w = gtk_button_new_with_label(m.text.c_str());
 	break;
       case ECheckBox:
-	w = gtk_check_button_new_with_label(m.text.z());
+	w = gtk_check_button_new_with_label(m.text.c_str());
 	if (m.lua_method)
 	  g_signal_connect(w, "toggled", G_CALLBACK(itemResponse), this);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), m.value);
@@ -311,7 +312,7 @@ bool PDialog::buildAndRun(int w, int h)
 	w = gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(w), !(m.flags & EReadOnly));
 	gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(w)),
-				 m.text.z(), -1);
+				 m.text.c_str(), -1);
 	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(w), GTK_WRAP_WORD);
 	ww = addScrollBar(w);
 	xOptions |= GTK_FILL;
@@ -348,9 +349,9 @@ bool PDialog::buildAndRun(int w, int h)
       for (int c = m.col; c < m.col + m.colspan; ++c)
 	if (iColStretch[c] > 0)
 	  xOptions |= GTK_EXPAND;
-      if (ww == 0)
+      if (ww == nullptr)
 	ww = w;
-      if (ww != 0) {
+      if (ww != nullptr) {
 	gtk_table_attach(GTK_TABLE(grid), ww,
 			 m.col, m.col+m.colspan, m.row, m.row+m.rowspan,
 			 GtkAttachOptions(xOptions),
@@ -376,12 +377,15 @@ static int dialog_constructor(lua_State *L)
 {
   WINID parent = check_winid(L, 1);
   const char *s = luaL_checkstring(L, 2);
+  const char *language = "";
+  if (lua_isstring(L, 3))
+    language = luaL_checkstring(L, 3);
 
   Dialog **dlg = (Dialog **) lua_newuserdata(L, sizeof(Dialog *));
-  *dlg = 0;
+  *dlg = nullptr;
   luaL_getmetatable(L, "Ipe.dialog");
   lua_setmetatable(L, -2);
-  *dlg = new PDialog(L, parent, s);
+  *dlg = new PDialog(L, parent, s, language);
   return 1;
 }
 
@@ -503,7 +507,7 @@ int PMenu::add(lua_State *L)
     gtk_widget_show(w);
     Item item;
     item.name = g_strdup(name);
-    item.itemName = 0;
+    item.itemName = nullptr;
     item.itemIndex = 0;
     item.widget = w;
     items.push_back(item);
@@ -516,7 +520,7 @@ int PMenu::add(lua_State *L)
     if (hastable)
       luaL_argcheck(L, lua_istable(L, 5), 5,
 		    "argument is not a function or table");
-    const char *current = 0;
+    const char *current = nullptr;
     if (hascheck) {
       luaL_argcheck(L, lua_isstring(L, 6), 6,
 		    "argument is not a function or string");
@@ -545,7 +549,7 @@ int PMenu::add(lua_State *L)
 
       const char *text = lua_tostring(L, -1);
 
-      GtkWidget *w = 0;
+      GtkWidget *w = nullptr;
       if (hascheck)
 	w = gtk_check_menu_item_new_with_label(text);
       else if (hascolor)
@@ -596,7 +600,7 @@ static int menu_constructor(lua_State *L)
 {
   GtkWidget *parent = check_winid(L, 1);
   Menu **m = (Menu **) lua_newuserdata(L, sizeof(Menu *));
-  *m = 0;
+  *m = nullptr;
   luaL_getmetatable(L, "Ipe.menu");
   lua_setmetatable(L, -2);
   *m = new PMenu(parent);
@@ -640,15 +644,15 @@ static int ipeui_getColor(lua_State *L)
 
 static int ipeui_fileDialog(lua_State *L)
 {
-  static const char * const typenames[] = { "open", "save", 0 };
+  static const char * const typenames[] = { "open", "save", nullptr };
   GtkWindow *parent = GTK_WINDOW(check_winid(L, 1));
-  int type = luaL_checkoption(L, 2, 0, typenames);
+  int type = luaL_checkoption(L, 2, nullptr, typenames);
   const char *caption = luaL_checkstring(L, 3);
   // GTK dialog uses no filters: args 4 and 7 are not used
-  const char *dir = 0;
+  const char *dir = nullptr;
   if (!lua_isnoneornil(L, 5))
     dir = luaL_checkstring(L, 5);
-  const char *name = 0;
+  const char *name = nullptr;
   if (!lua_isnoneornil(L, 6))
     name = luaL_checkstring(L, 6);
 
@@ -684,22 +688,22 @@ static int ipeui_fileDialog(lua_State *L)
 static int ipeui_messageBox(lua_State *L)
 {
   static const char * const options[] =  {
-    "none", "warning", "information", "question", "critical", 0 };
+    "none", "warning", "information", "question", "critical", nullptr };
   static const char * const buttontype[] = {
     "ok", "okcancel", "yesnocancel", "discardcancel",
-    "savediscardcancel", 0 };
+    "savediscardcancel", nullptr };
 
   GtkWidget *parent = check_winid(L, 1);
   int type = luaL_checkoption(L, 2, "none", options);
   const char *text = luaL_checkstring(L, 3);
-  const char *details = 0;
+  const char *details = nullptr;
   if (!lua_isnoneornil(L, 4))
     details = luaL_checkstring(L, 4);
   int buttons = 0;
   if (lua_isnumber(L, 5))
     buttons = (int)luaL_checkinteger(L, 5);
   else if (!lua_isnoneornil(L, 5))
-    buttons = luaL_checkoption(L, 5, 0, buttontype);
+    buttons = luaL_checkoption(L, 5, nullptr, buttontype);
 
   GtkMessageType t = GTK_MESSAGE_OTHER;
   switch (type) {
@@ -864,7 +868,7 @@ static int timer_constructor(lua_State *L)
   const char *method = luaL_checkstring(L, 2);
 
   Timer **t = (Timer **) lua_newuserdata(L, sizeof(Timer *));
-  *t = 0;
+  *t = nullptr;
   luaL_getmetatable(L, "Ipe.timer");
   lua_setmetatable(L, -2);
 
@@ -899,9 +903,7 @@ static int ipeui_currentDateTime(lua_State *L)
     return 0;
 
   char buf[16];
-  sprintf(buf, "%04d%02d%02d%02d%02d%02d",
-	  1900 + tmp->tm_year, 1 + tmp->tm_mon, tmp->tm_mday,
-	  tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
+  strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", tmp);
   lua_pushstring(L, buf);
   return 1;
 }
@@ -917,7 +919,7 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "messageBox", ipeui_messageBox },
   { "waitDialog", ipeui_wait },
   { "currentDateTime", ipeui_currentDateTime },
-  { 0, 0},
+  { nullptr, nullptr },
 };
 
 // --------------------------------------------------------------------
