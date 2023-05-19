@@ -111,6 +111,26 @@ instance, the following command line</p>
 </div>
 <p>converts page 3 of the Ipe document <code class="file docutils literal notranslate"><span class="pre">presentation.pdf</span></code> to a
 bitmap, with resolution 150 pixels per inch.</p>
+<p>Iperender understands the following options:</p>
+<dl class="simple">
+<dt><code class="samp docutils literal notranslate"><span class="pre">-page</span> <em><span class="pre">page</span></em></code></dt><dd><p>The page to export.  This can be a page number, or a page <em>name</em>
+(which you can set as the <em>Section name</em> in the page properties).</p>
+</dd>
+<dt><code class="samp docutils literal notranslate"><span class="pre">-view</span> <em><span class="pre">view</span></em></code></dt><dd><p>The view to save. This can be a view number, or a view <em>name</em>,
+which you can set with <span class="menuselection">Views -&gt; Edit view</span>.</p>
+</dd>
+<dt><code class="samp docutils literal notranslate"><span class="pre">-resolution</span> <em><span class="pre">resolution</span></em></code></dt><dd><p>The bitmap resolution in pixels per inch when exporting to png
+format. The default is 72ppi.</p>
+</dd>
+<dt><code class="samp docutils literal notranslate"><span class="pre">-tolerance</span> <em><span class="pre">tolerance</span></em></code></dt><dd><p>The tolerance determines the precision used when rendering curves
+using straight line segments.  The default is 0.1.  Use a smaller
+value for higher precision.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-transparent</span></code></dt><dd><p>Use transparent background when exporting to png format.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">-nocrop</span></code></dt><dd><p>Do not crop page to the page bounding box.</p>
+</dd>
+</dl>
 </div>
 <div class="section" id="ipescript-running-ipe-scripts">
 <h2>Ipescript: running Ipe scripts<a class="headerlink" href="#ipescript-running-ipe-scripts" title="Permalink to this headline">¶</a></h2>

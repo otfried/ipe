@@ -84,6 +84,32 @@ instance, the following command line
 converts page 3 of the Ipe document :file:`presentation.pdf` to a
 bitmap, with resolution 150 pixels per inch.
 
+Iperender understands the following options:
+
+:samp:`-page {page}`
+  The page to export.  This can be a page number, or a page *name*
+  (which you can set as the *Section name* in the page properties).
+  
+:samp:`-view {view}`
+  The view to save. This can be a view number, or a view *name*,
+  which you can set with :menuselection:`Views -> Edit view`.
+  
+:samp:`-resolution {resolution}`
+  The bitmap resolution in pixels per inch when exporting to png
+  format. The default is 72ppi.
+
+:samp:`-tolerance {tolerance}`
+  The tolerance determines the precision used when rendering curves
+  using straight line segments.  The default is 0.1.  Use a smaller
+  value for higher precision.
+
+``-transparent``
+  Use transparent background when exporting to png format.
+
+``-nocrop``
+  Do not crop page to the page bounding box.
+
+
 Ipescript: running Ipe scripts
 ------------------------------
 
