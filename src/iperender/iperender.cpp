@@ -43,7 +43,8 @@ using ipe::Thumbnail;
 
 static int renderPage(Thumbnail::TargetFormat fm,
 		      const char *src, const char *dst,
-		      const char *pageSpec, const char *viewSpec, double zoom,
+		      const char *pageSpec, const char *viewSpec,
+		      double zoom, double tolerance,
 		      bool transparent, bool nocrop)
 {
   Document *doc = Document::loadWithErrorReport(src);
@@ -75,7 +76,7 @@ static int renderPage(Thumbnail::TargetFormat fm,
   Thumbnail tn(doc, 0);
   tn.setTransparent(transparent);
   tn.setNoCrop(nocrop);
-  if (!tn.saveRender(fm, dst, page, viewIdx, zoom))
+  if (!tn.saveRender(fm, dst, page, viewIdx, zoom, tolerance))
     fprintf(stderr, "Failure to render page.\n");
   delete doc;
   return 0;
@@ -103,6 +104,7 @@ static void usage()
 	  " -page       : page to save (default 1).\n"
 	  " -view       : view to save (default 1).\n"
 	  " -resolution : resolution for png format (default 72.0 ppi).\n"
+	  " -tolerance  : tolerance when rendering curves (default 0.1).\n"
 	  " -transparent: use transparent background in png format.\n"
 	  " -nocrop     : do not crop page.\n"
 	  "<page> can be a page number or a page name.\n"
@@ -139,6 +141,7 @@ int main(int argc, char *argv[])
   const char *page = nullptr;
   const char *view = nullptr;
   double dpi = 72.0;
+  double tolerance = 0.1;
   bool transparent = false;
   bool nocrop = false;
 
@@ -159,6 +162,11 @@ int main(int argc, char *argv[])
 	usage();
       dpi = ipe::Lex(ipe::String(argv[i+1])).getDouble();
       i += 2;
+    } else if (!strcmp(argv[i], "-tolerance")) {
+      if (i + 1 == argc)
+	usage();
+      tolerance = ipe::Lex(ipe::String(argv[i+1])).getDouble();
+      i += 2;
     } else if (!strcmp(argv[i], "-transparent")) {
       transparent = true;
       ++i;
@@ -174,7 +182,7 @@ int main(int argc, char *argv[])
   const char *dst = argv[i+1];
 
   return renderPage(fm, src, dst, page, view, dpi / 72.0,
-		    transparent, nocrop);
+		    tolerance, transparent, nocrop);
 }
 
 // --------------------------------------------------------------------

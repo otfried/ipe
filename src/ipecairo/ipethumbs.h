@@ -52,7 +52,8 @@ namespace ipe {
     int height() const { return iHeight; }
     Buffer render(const Page *page, int view);
     bool saveRender(TargetFormat fm, const char *dst,
-		    const Page *page, int view, double zoom);
+		    const Page *page, int view, double zoom,
+		    double tolerance = 0.1);
   private:
     const Document *iDoc;
     bool iTransparent;

@@ -103,7 +103,8 @@ static cairo_status_t stream_writer(void *closure, const unsigned char *data, un
 
 // zoom and transparent are ignored for formats other than EPNG
 bool Thumbnail::saveRender(TargetFormat fm, const char *dst,
-			   const Page *page, int view, double zoom)
+			   const Page *page, int view, double zoom,
+			   double tolerance)
 {
   if (fm != EPNG)
     zoom = 1.0;
@@ -159,6 +160,7 @@ bool Thumbnail::saveRender(TargetFormat fm, const char *dst,
   }
   cairo_translate(cc, -offset.x, -offset.y);
 
+  cairo_set_tolerance(cc, tolerance);
   CairoPainter painter(iDoc->cascade(), iFonts.get(), cc, zoom, true, true);
   painter.setAttributeMap(&page->viewMap(view));
   std::vector<Matrix> layerMatrices = page->layerMatrices(view);
