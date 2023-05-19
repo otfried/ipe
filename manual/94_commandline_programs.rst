@@ -92,7 +92,7 @@ Iperender understands the following options:
   
 :samp:`-view {view}`
   The view to save. This can be a view number, or a view *name*,
-  which you can set with :menuselection:`Views -> Edit view`.
+  which you can set with :menuselection:`Views --> Edit view`.
   
 :samp:`-resolution {resolution}`
   The bitmap resolution in pixels per inch when exporting to png
