@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Frequently asked questions &#8212; Ipe 7.2.27 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="History and acknowledgments" href="98_history.html" />
+    <link rel="prev" title="The command line programs" href="94_commandline_programs.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="98_history.html" title="History and acknowledgments"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="94_commandline_programs.html" title="The command line programs"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="frequently-asked-questions">
+<h1>Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="where-can-i-get-support-for-ipe">
+<h2>Where can I get support for Ipe?<a class="headerlink" href="#where-can-i-get-support-for-ipe" title="Permalink to this headline">¶</a></h2>
+<p>You are already looking at the FAQ - good!</p>
+<p>Have you looked at the <a class="reference external" href="https://otfried.github.io/ipe">manual</a>?</p>
+<p>If you need help compiling or using Ipe, please post on the <a class="reference external" href="https://mailman.science.uu.nl/mailman/listinfo/ipe-discuss">Ipe
+discussion list</a>.</p>
+<p>If you have found a bug in Ipe, please go to <a class="reference external" href="https://github.com/otfried/ipe/issues">Ipe issues</a>. Verify that the bug has not
+been reported before, and file a bug report. (If the bug has been
+reported before but is not fixed yet, you can add additional
+information to the existing bug report that would help solve the
+problem.)</p>
+<p>If you want to say how much you love Ipe, you can send email to the
+author. But please note that he hardly ever replies directly to Email
+about Ipe (he has a day job).</p>
+</div>
+<div class="section" id="macos-says-the-developer-cannot-be-verified">
+<h2>MacOS says “the developer cannot be verified”<a class="headerlink" href="#macos-says-the-developer-cannot-be-verified" title="Permalink to this headline">¶</a></h2>
+<p>This is the normal behaviour of macOS when you install an app by a
+developer who is not a registered Apple developer.  Apple shamelessly
+asks for $99 per year just so you can sign your application, and this
+is simply not realistic for an open-source application that is
+distributed for free.</p>
+<p>Apple explains how to start an application anyway at
+<a class="reference external" href="https://support.apple.com/en-au/guide/mac-help/mh40616/mac">https://support.apple.com/en-au/guide/mac-help/mh40616/mac</a></p>
+<p>The other alternative is to compile Ipe yourself.</p>
+</div>
+<div class="section" id="i-want-more-other-choices-for-colors">
+<h2>I want more/other choices for colors!<a class="headerlink" href="#i-want-more-other-choices-for-colors" title="Permalink to this headline">¶</a></h2>
+<p>The colors available in the drop-down box are taken from your
+document’s <a class="reference internal" href="60_stylesheets.html"><span class="doc">stylesheets</span></a> (like any other
+<a class="reference internal" href="20_concepts.html#symbolic-and-absolute-attributes"><span class="std std-ref">symbolic attribute</span></a>).</p>
+<p>To have more colors available, you can either add a new stylesheet, or
+modify the basic stylesheet added to new documents by Ipe.</p>
+</div>
+<div class="section" id="attributes-do-not-update">
+<h2>Attributes do not update<a class="headerlink" href="#attributes-do-not-update" title="Permalink to this headline">¶</a></h2>
+<p>When you click on a line, the line attributes (thickness, arrow head
+etc.) don’t update in the Properties - they remain as they were set.</p>
+<p>In Microsoft software like Word the user interface automatically picks
+up the settings from the current spot in the document. I don’t like
+this behavior, and Ipe won’t adopt this. It would cause users to
+inadvertently reuse the properties of objects they had previously
+selected, instead of the standard settings they started with (and
+wanted).</p>
+<p>Note that this is not a problem in, say, Microsoft Word: When you
+click somewhere to start typing text, the toolbar will revert to the
+settings active at this spot of the document. This ‘reverting’
+wouldn’t be possible in Ipe.</p>
+<p>You can, however, copy object properties from an object to the user
+interface and from there to other objects with the operations
+<span class="menuselection">Edit ‣ Pick properties</span> and
+<span class="menuselection">Edit ‣ Apply properties</span>.</p>
+</div>
+<div class="section" id="how-do-i-use-ipe-figures-in-beamer">
+<h2>How do I use Ipe figures in beamer?<a class="headerlink" href="#how-do-i-use-ipe-figures-in-beamer" title="Permalink to this headline">¶</a></h2>
+<p>If you make an animated figure in Ipe (that is, an Ipe page with
+several views), you can use it in beamer like this:</p>
+<div class="highlight-latex notranslate"><div class="highlight"><pre><span></span><span class="k">\includegraphics</span>&lt;1&gt;[page=1]<span class="nb">{</span>ipefig<span class="nb">}</span>
+<span class="k">\includegraphics</span>&lt;2&gt;[page=2]<span class="nb">{</span>ipefig<span class="nb">}</span>
+</pre></div>
+</div>
+<p>You may also like <a class="reference external" href="http://geomblog.blogspot.com/2009/09/beamer-ipe-views.html">Suresh’s tip</a> on this
+topic.</p>
+</div>
+<div class="section" id="when-ipe-refuses-to-open-a-pdf-file-you-created-with-ipe">
+<h2>When Ipe refuses to open a PDF file you created with Ipe<a class="headerlink" href="#when-ipe-refuses-to-open-a-pdf-file-you-created-with-ipe" title="Permalink to this headline">¶</a></h2>
+<p>This usually happens because you have been previewing the PDF
+document, and the previewer took the liberty to overwrite the original
+file.</p>
+<p>Ipe PDF files contain Ipe markup hidden inside the PDF structure. When
+the file is modified by any other tool, this markup is lost, and Ipe
+will no longer be able to read it.</p>
+<p>So please be careful with PDF viewers that have the capability to
+overwrite the file being viewed, in particular the Preview.app on
+recent version of MacOS.</p>
+<p>Fortunately, the Preview.app has inbuilt versioning. So from within
+Preview.app, try <span class="menuselection">File ‣ Revert To ‣ Browse All
+Versions</span>, select the earliest available version, hit “Restore” and
+close the document. And voila, Ipe should be able to open the file
+again.</p>
+</div>
+<div class="section" id="online-latex-compilation-does-not-work">
+<h2>Online Latex-compilation does not work<a class="headerlink" href="#online-latex-compilation-does-not-work" title="Permalink to this headline">¶</a></h2>
+<p>If you get authentication errors for the online Latex compilation
+service, try using the HTTP protocol instead of HTTPS. You would need
+change the preference</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="n">prefs</span><span class="p">.</span><span class="n">latex_service_url</span> <span class="o">=</span> <span class="s2">&quot;http://latexonline.cc&quot;</span>
+</pre></div>
+</div>
+<p>(So change https to http - see <a class="reference internal" href="80_advanced.html#customize"><span class="std std-ref">customizing Ipe</span></a>.)</p>
+<p>You will need to disable and again enable online compilation from the
+Help menu for the change to take effect.)</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Frequently asked questions</a><ul>
+<li><a class="reference internal" href="#where-can-i-get-support-for-ipe">Where can I get support for Ipe?</a></li>
+<li><a class="reference internal" href="#macos-says-the-developer-cannot-be-verified">MacOS says “the developer cannot be verified”</a></li>
+<li><a class="reference internal" href="#i-want-more-other-choices-for-colors">I want more/other choices for colors!</a></li>
+<li><a class="reference internal" href="#attributes-do-not-update">Attributes do not update</a></li>
+<li><a class="reference internal" href="#how-do-i-use-ipe-figures-in-beamer">How do I use Ipe figures in beamer?</a></li>
+<li><a class="reference internal" href="#when-ipe-refuses-to-open-a-pdf-file-you-created-with-ipe">When Ipe refuses to open a PDF file you created with Ipe</a></li>
+<li><a class="reference internal" href="#online-latex-compilation-does-not-work">Online Latex-compilation does not work</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="94_commandline_programs.html"
+                        title="previous chapter">The command line programs</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="98_history.html"
+                        title="next chapter">History and acknowledgments</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/96_faq.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="98_history.html" title="History and acknowledgments"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="94_commandline_programs.html" title="The command line programs"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.2.27 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>
