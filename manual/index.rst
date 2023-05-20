@@ -29,5 +29,6 @@
    90_file_format
    92_using_ipe_figures
    94_commandline_programs
+   96_faq
    98_history
    99_copyright

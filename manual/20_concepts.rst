@@ -234,6 +234,8 @@ must be defined in its stylesheet.
 .. index:: color, line width, dash style
 
 
+.. _symbolic-and-absolute-attributes:
+
 Symbolic and absolute attributes
 --------------------------------
 
