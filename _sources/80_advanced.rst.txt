@@ -49,6 +49,12 @@ Whenever you add or delete a figure to the document, just run the
 *page-labels* script again, and your symbolic names will remain up to
 date.
 
+If you want to refer to a specific view of a page, give the view a
+name (:menuselection:`Views --> Edit view`). The *page-labels* script
+will then generate a label consisting of first the page name and the
+view name.  For instance, for the view named *YYY* on the page named
+*XXX*, the label will be ``\ipeFigXXXYYY``.
+
 
 .. _sharing:
 
