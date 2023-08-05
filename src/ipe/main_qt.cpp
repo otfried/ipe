@@ -46,7 +46,7 @@ using namespace ipelua;
 
 // --------------------------------------------------------------------
 
-static void setup_globals(lua_State *L, int width, int height)
+static void setup_globals(lua_State *L, int width, int height, double devicePixelRatio)
 {
   lua_getglobal(L, "package");
   const char *luapath = getenv("IPELUAPATH");
@@ -88,6 +88,9 @@ static void setup_globals(lua_State *L, int width, int height)
   lua_rawseti(L, -2, 2);
   lua_setfield(L, -2, "screen_geometry");
 
+  lua_pushnumber(L, devicePixelRatio);
+  lua_setfield(L, -2, "device_pixel_ratio");
+
   lua_setglobal(L, "config");
 
   lua_pushcfunction(L, ipe_tonumber);
@@ -104,13 +107,6 @@ int mainloop(lua_State *L)
 
 int main(int argc, char *argv[])
 {
-  // removing this old work-around for a bug in Ubuntu, see issue #42.
-  // unsetenv("QT_QPA_PLATFORMTHEME");
-  // unsetenv("UBUNTU_MENUPROXY");
-
-  // for HiDPI displays, this is one crude solution
-  // setenv("QT_SCALE_FACTOR", "1.2", false);
-
   Platform::initLib(IPELIB_VERSION);
   lua_State *L = setup_lua();
 
@@ -125,8 +121,9 @@ int main(int argc, char *argv[])
   }
   lua_setglobal(L, "argv");
 
-  QRect r = a.screens().at(0)->availableGeometry();
-  setup_globals(L, r.width(), r.height());
+  auto & screen = a.screens().at(0);
+  QRect r = screen->availableGeometry();
+  setup_globals(L, r.width(), r.height(), screen->devicePixelRatio());
 
   lua_run_ipe(L, mainloop);
 

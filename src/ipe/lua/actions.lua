@@ -907,7 +907,7 @@ function action_show_libraries(win)
 end
 
 -- this function is called without arguments on OSX from ipeAlwaysAction
-function action_show_configuration(win, dpi)
+function action_show_configuration(win)
   local s = ""
   s = s .. " * Lua code: " .. package.path
   s = s .. "\n * Style directories:\n  - " ..
@@ -923,15 +923,18 @@ function action_show_configuration(win, dpi)
   s = s .. "\n * Icons: " .. config.icons
   s = s .. "\n * Screen geometry: " .. config.screen_geometry[1] .. " x " .. config.screen_geometry[2]
   if config.platform == "win" then
+    local cs, dpi = self.ui:canvasSize()
     s = s .. "\n * Monitor resolution: " .. dpi .. " dpi"
+  end
+  if config.toolkit == "qt" then
+    s = s .. "\n * Device pixel ratio: " .. config.device_pixel_ratio
   end
   s = s .. "\n * External editor: " .. (prefs.external_editor or "none")
   messageBox(win, "information", "Ipe configuration", s)
 end
 
 function MODEL:action_show_configuration()
-  local cs, dpi = self.ui:canvasSize()
-  action_show_configuration(self.ui:win(), dpi)
+  action_show_configuration(self.ui:win())
 end
 
 function MODEL:action_show_libraries()

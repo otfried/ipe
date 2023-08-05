@@ -388,19 +388,22 @@ void Canvas::drawFifi(QPainter &q)
 
 void Canvas::paintEvent(QPaintEvent * ev)
 {
-  iBWidth = iWidth = width();
-  iBHeight = iHeight = height();
+  iWidth = width();
+  iHeight = height();
+
+  double dpr = devicePixelRatio();
+  iBWidth = iWidth * dpr;
+  iBHeight = iHeight * dpr;
 
   refreshSurface();
 
   QPainter qPainter;
   qPainter.begin(this);
   QRect r = ev->rect();
-  QRect source(r.left(), r.top(), r.width(), r.height());
+  QRect source(r.left() * dpr, r.top() * dpr, r.width() * dpr, r.height() * dpr);
   QImage bits(cairo_image_surface_get_data(iSurface),
-	      iWidth, iHeight, QImage::Format_RGB32);
+	      iBWidth, iBHeight, QImage::Format_RGB32);
   qPainter.drawImage(r, bits, source);
-  qPainter.translate(-1, -1);
   if (iFifiVisible)
     drawFifi(qPainter);
   if (iPage) {
