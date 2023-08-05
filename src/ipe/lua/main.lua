@@ -156,6 +156,7 @@ function recomputeArcMatrix(seg, cpno)
   local p = ipe.Direction(alpha)
   local q = ipe.Direction(beta)
   local cl
+  if (seg[2]-seg[1]):sqLen() == 0 then return end
   if cpno == 1 then
     cl = ipe.LineThrough(V(0,0), q)
     p = seg.arc:matrix():inverse() * seg[cpno]

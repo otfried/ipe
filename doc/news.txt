@@ -15,6 +15,10 @@ Ipe 7.2.28
    (#451).
 
  * Fix HiDPI handling on Qt6 (#470).
+
+ * Fix error editing arcs (#472).
+
+ * Fix error editing ellipses (#473).
  
 ----------------------------------------------------------------------
 

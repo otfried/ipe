@@ -109,7 +109,7 @@ m * arc		  -- matrix * arc
 m:elements()      -- returns six-element array with elements
 
 m:isIdentity()
-m:isSingular()
+m:isSingular(threshold)
 m:inverse()
 m:translation()   -- return translation component
 m:linear()        -- returns matrix without the translation component

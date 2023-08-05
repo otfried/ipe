@@ -288,8 +288,9 @@ static int matrix_isIdentity(lua_State *L)
 static int matrix_isSingular(lua_State *L)
 {
   Matrix *m = check_matrix(L, 1);
+  double x = luaL_checknumber(L, 2);
   double t = m->a[0]*m->a[3]-m->a[1]*m->a[2];
-  lua_pushboolean(L, t == 0);
+  lua_pushboolean(L, t < 0 ? -t <= x : t <= x);
   return 1;
 }
 
