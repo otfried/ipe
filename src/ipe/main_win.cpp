@@ -176,6 +176,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   setup_globals(L);
 
+  lua_getglobal(L, "package");
+  lua_getfield(L, -1, "path");
+  const char *s = lua_tolstring(L, -1, nullptr);
+  lua_pop(L, 3);
+  ipeDebug("package.path: %s", s);
+  for (const char *t = s; *t; ++t) {
+    if (*t < 0 || *t >= 0x80) {
+      MessageBoxA(nullptr,
+		  "Ipe has been installed on a path containing non-ASCII characters.\n\n"
+		  "Unfortunately, the Lua library does not support this.",
+		  "Error!",
+		  MB_ICONEXCLAMATION | MB_OK);
+      return 9;
+    }
+  }
+
   lua_run_ipe(L, mainloop);
 
   lua_close(L);
