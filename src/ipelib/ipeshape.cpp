@@ -1074,7 +1074,10 @@ bool Shape::load(String data)
       stream.nextToken();
       sp = nullptr;
       mid = -1;
-      Ellipse *e = new Ellipse(getMatrix(args));
+      Matrix m = getMatrix(args);
+      if (m.determinant() == 0)
+	return false; // don't accept zero-radius arc
+      Ellipse *e = new Ellipse(m);
       appendSubPath(e);
     } else if (stream.token() == "u") {
       if (args.size() < 6 || (args.size() % 2 != 0))
