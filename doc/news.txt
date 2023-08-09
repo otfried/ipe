@@ -26,6 +26,9 @@ Ipe 7.2.28
 
  * Show error message when parsing an Ipe file containing a singular
    ellipse (#437).
+
+ * Don't perform stretch transformation that would create a singular
+   transformation matrix (#477).
  
 ----------------------------------------------------------------------
 

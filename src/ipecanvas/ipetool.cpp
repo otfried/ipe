@@ -411,18 +411,22 @@ void TransformTool::compute(const Vector &v1)
     auto v1 = rot * u1;
     double xfactor = (abs(u0.x) < EPS) ? 1.0 : v1.x / v0.x;
     double yfactor = (abs(u0.y) < EPS) ? 1.0 : v1.y / v0.y;
-    iTransform = (Matrix(iOrigin) * Linear(iDir) *
-		  Linear(xfactor, 0, 0, yfactor) * rot *
-		  Matrix(-iOrigin));
+    Matrix m = (Matrix(iOrigin) * Linear(iDir) *
+		Linear(xfactor, 0, 0, yfactor) * rot *
+		Matrix(-iOrigin));
+    if (std::fabs(m.determinant()) > 0.0001)
+      iTransform = m;
     break; }
   case EShear: {
     auto rot = Linear(-iDir);
     auto v0 = rot * u0;
     auto v1 = rot * u1;
     double s = (v1.x - v0.x) / v0.y;
-    iTransform = (Matrix(iOrigin) * Linear(iDir) *
-		  Linear(1.0, 0, s, 1.0) * rot *
-		  Matrix(-iOrigin));
+    Matrix m = (Matrix(iOrigin) * Linear(iDir) *
+		Linear(1.0, 0, s, 1.0) * rot *
+		Matrix(-iOrigin));
+    if (std::fabs(m.determinant()) > 0.0001)
+      iTransform = m;
     break; }
   }
 }
