@@ -9,8 +9,8 @@
 project = 'Ipe'
 copyright = '2023, Otfried Cheong'
 author = 'Otfried Cheong'
-version = '7.2.27'
-release = '7.2.27'
+version = '7.2.28'
+release = '7.2.28'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
