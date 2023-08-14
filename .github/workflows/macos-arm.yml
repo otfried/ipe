@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Download dependencies
         run: |
-          wget https://ipe.otfried.org/osxlibs-arm.tar.gz
+          wget https://github.com/otfried/osx-ipe/releases/download/2023.08.14/osxlibs-arm.tar.gz
           tar xzf osxlibs-arm.tar.gz
       - name: Compile
         run: |
