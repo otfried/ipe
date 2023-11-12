@@ -33,6 +33,8 @@ jobs:
           install -m 0755 osxlibs/lib/libcairo.2.dylib $FW1
           install -m 0755 osxlibs/lib/libcairo.2.dylib $FW2
           install -m 0755 osxlibs/lib/liblua54.dylib $FW1
+          codesign --force --deep -s - build/Ipe.app
+          codesign --force --deep -s - build/IpePresenter.app
       - name: Create archive
         run: |
           cd build
