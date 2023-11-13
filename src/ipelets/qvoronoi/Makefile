@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------
 # Makefile for qvoronoi ipelet
 # Needs reentrant qhull library (www.qhull.org)
-# On Ubuntu/Debian:  apt install libqhull-r7 libqhull-dev
+# On Ubuntu/Debian:  apt install libqhull-r8 libqhull-dev
 # --------------------------------------------------------------------
 
 IPESRCDIR = ../..

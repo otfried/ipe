@@ -65,7 +65,6 @@ shortcuts = {
   duplicate = "D",
   select_all = "Ctrl+A",
   deselect_all = "Alt+Ctrl+A",
-  join_paths = "Ctrl+J",
   pick_properties = "Q",
   apply_properties = "Ctrl+Q",
   insert_text_box = "F10",

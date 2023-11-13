@@ -17,7 +17,7 @@ want that, see below.
 If you have a recent Mint, Ubuntu, or Debian system, the following
 steps will install the necessary libraries and tools:
 
-    sudo apt-get install build-essentials checkinstall
+    sudo apt-get install build-essential checkinstall
     sudo apt-get install qt6-base-dev qt6-base-dev-tools
     sudo apt-get install libqt6svg6
     sudo apt-get install libfreetype6-dev libcairo2-dev libjpeg8-dev
