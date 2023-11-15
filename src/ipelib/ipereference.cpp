@@ -162,9 +162,9 @@ void Reference::draw(Painter &painter) const
 {
   const Symbol *symbol = painter.cascade()->findSymbol(iName);
   if (symbol) {
-    iSnap = symbol->iSnap;  // cache snap point information
     Attribute si = painter.lookup(ESymbolSize, iSize);
     double s = si.number().toDouble();
+    cacheSnaps(symbol, (iFlags & EHasSize) ? s : 1.0);
     painter.pushMatrix();
     painter.transform(matrix());
     painter.translate(iPos);
@@ -239,7 +239,9 @@ void Reference::checkStyle(const Cascade *sheet, AttributeSeq &seq) const
     if (std::find(seq.begin(), seq.end(), iName) == seq.end())
       seq.push_back(iName);
   } else {
-    iSnap = symbol->iSnap;  // cache snap positions
+    Attribute si = sheet->find(ESymbolSize, iSize);
+    double s = si.number().toDouble();
+    cacheSnaps(symbol, (iFlags & EHasSize) ? s : 1.0);
   }
   if (iFlags & EHasStroke)
     checkSymbol(EColor, iStroke, sheet, seq);
@@ -379,6 +381,15 @@ Attribute Reference::getAttribute(Property prop) const noexcept
     break;
   }
   return Object::getAttribute(prop);
+}
+
+// --------------------------------------------------------------------
+
+void Reference::cacheSnaps(const Symbol *symbol, double size) const
+{
+  iSnap.clear();
+  for (const Vector & v : symbol->iSnap)
+    iSnap.push_back(size * v);
 }
 
 // --------------------------------------------------------------------

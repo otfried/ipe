@@ -39,6 +39,7 @@
 namespace ipe {
 
   class Cascade;
+  struct Symbol;
 
   class Reference : public Object {
   public:
@@ -96,6 +97,9 @@ namespace ipe {
     inline uint32_t flags() const { return iFlags; }
     static uint32_t flagsFromName(String name);
 
+  private:
+    void cacheSnaps(const Symbol *symbol, double size) const;
+    
   private:
     Attribute iName;
     Vector iPos;
