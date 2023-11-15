@@ -414,7 +414,7 @@ static int rect_topLeft(lua_State *L)
 static int rect_bottomRight(lua_State *L)
 {
   Rect *r = check_rect(L, 1);
-  push_vector(L, r->bottomLeft());
+  push_vector(L, r->bottomRight());
   return 1;
 }
 

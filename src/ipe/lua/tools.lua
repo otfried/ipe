@@ -1094,6 +1094,14 @@ function GRAPHTOOL:new(model, moveInvisibleEdges)
   tool.model = model
   tool.orig = model.ui:pos()
   tool.box = p:bbox(self.prim)
+  if tool.box:width() < 6 then
+    tool.box:add(tool.box:topLeft() + V(-3, 0))
+    tool.box:add(tool.box:topRight() + V(3, 0))
+  end
+  if tool.box:height() < 6 then
+    tool.box:add(tool.box:topLeft() + V(0, 3))
+    tool.box:add(tool.box:bottomLeft() + V(0, -3))
+  end
   tool.edges = collect_edges(p, tool.box, view)
   model.ui:shapeTool(tool)
   tool.setColor(1.0, 0.0, 0.0)

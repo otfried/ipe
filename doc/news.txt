@@ -2,6 +2,8 @@ Ipe 7.2.29
 
  * Fix symbol snap points not scaling with symbol size (bug #486).
 
+ * Fix edges not always following when a node is moved (bug #487).
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.28 (2023-08-13)
