@@ -7,7 +7,7 @@ jobs:
       OSXTARGET: -mmacosx-version-min=12.00 -target arm64-apple-macos12
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install libraries
         run: |
           brew install lua gsl libspiro

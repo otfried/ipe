@@ -9,10 +9,10 @@ jobs:
       IPEQVORONOI: 1
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download dependencies
         run: |
-          wget https://github.com/otfried/osx-ipe/releases/download/2023.12.10/osxlibs-intel.tar.gz
+          wget https://github.com/otfried/osx-ipe/releases/download/2024.02.25/osxlibs-intel.tar.gz
           tar xzf osxlibs-intel.tar.gz
       - name: Compile
         run: |
@@ -43,7 +43,7 @@ jobs:
           cd build
           tar czvf ../ipe-mac-intel.tar.gz Ipe.app IpePresenter.app
       - name: Upload result
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ipe-mac-intel
           path: ipe-mac-intel.tar.gz
