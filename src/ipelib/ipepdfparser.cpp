@@ -173,6 +173,16 @@ void PdfString::write(Stream &stream, const PdfRenumber *, bool infl)
 //! Return value of string after decoding binary strings.
 String PdfString::decode() const noexcept
 {
+  if (!iBinary && iValue.hasPrefix("\376\377")) {
+    String result;
+    int i = 2;
+    while (i + 1 < iValue.size()) {
+      int ch = iValue[i++] << 8;
+      ch |= iValue[i++];
+      result.appendUtf8(ch);
+    }
+    return result;
+  }
   if (!iBinary)
     return iValue;
   String result;

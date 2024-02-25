@@ -180,7 +180,7 @@ void Presenter::collectPageLabels(const PdfDict *d)
       const PdfObj *p = label->dict()->get("P", iPdf.get());
       String newLabel;
       if (p && p->string())
-	newLabel = p->string()->value();
+	newLabel = p->string()->decode();
       bool moreThanOne = (newNum - prevNum) > 1;
       while (size(iPageLabels) < newNum)
 	iPageLabels.push_back(std::make_pair(prevLabel, moreThanOne ?
