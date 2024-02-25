@@ -9,7 +9,7 @@ jobs:
       IPEQVORONOI: 1
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download dependencies
         run: |
           wget https://github.com/otfried/osx-ipe/releases/download/2024.02.24/osxlibs-arm.tar.gz
@@ -43,7 +43,7 @@ jobs:
           cd build
           tar czvf ../ipe-mac-arm.tar.gz Ipe.app IpePresenter.app
       - name: Upload result
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ipe-mac-arm
           path: ipe-mac-arm.tar.gz
