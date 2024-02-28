@@ -1698,6 +1698,7 @@ function PASTETOOL:mouseButton(button, modifiers, press)
 	   end
   self.model:page():deselectAll()
   self.model:register(t)
+  self.model:autoRunLatex()
 end
 
 function PASTETOOL:mouseMove()
