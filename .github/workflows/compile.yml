@@ -19,7 +19,7 @@ jobs:
       IPEQVORONOI: 1
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install build tools
         run: |
           sudo apt-get install \
@@ -39,7 +39,7 @@ jobs:
       IPEUI: GTK
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install build tools
         run: |
           sudo apt-get install \
