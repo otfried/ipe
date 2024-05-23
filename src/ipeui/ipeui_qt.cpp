@@ -45,13 +45,13 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QMessageBox>
+#include <QMutex>
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QShortcut>
 #include <QSyntaxHighlighter>
 #include <QTextEdit>
 #include <QTextStream>
-#include <QThread>
 #include <QTimer>
 
 #ifdef IPE_SPELLCHECK
@@ -611,18 +611,6 @@ static int menu_constructor(lua_State *L)
 
 // --------------------------------------------------------------------
 
-class EditorThread : public QThread
-{
-public:
-  EditorThread(lua_State *L, const QString &cmd);
-
-protected:
-  virtual void run();
-private:
-  lua_State *L;
-  QString iCommand;
-};
-
 EditorThread::EditorThread(lua_State *L, const QString &cmd)
   : QThread(), L{L}, iCommand{cmd}
 {
@@ -640,6 +628,7 @@ void EditorThread::run()
     int result = std::system(iCommand.toUtf8());
     (void) result;
   }
+  emit done();
 }
 
 class EditorDialog : public QDialog
@@ -689,25 +678,40 @@ static int ipeui_wait(lua_State *L)
 
   EditorThread *thread = new EditorThread(L, cmd);
   EditorDialog *dialog = new EditorDialog(label);
+  bool running = true; // the thread has not yet signaled 
+  QMutex mutex; // locked when there is a modal dialog waiting
+
+  QObject::connect(thread, &EditorThread::done, [&]() {
+    if (mutex.tryLock()) {
+      // the mutex was free, so there is no waiting dialog
+      running = false;
+      mutex.unlock();
+    } else
+      dialog->done(0);
+  });
+  // start dialog if the thread has not yet signaled and keep mutex locked
+  const auto startDialog = [&]() {
+    mutex.lock();
+    if (running)
+      dialog->exec();
+    mutex.unlock();
+  };
+  QObject::connect(thread, &EditorThread::finished, thread, &QObject::deleteLater);
 
   if (cmd.isEmpty()) {
     // call Lua function
     lua_pushvalue(L, 2);
     thread->start();
-    if (!thread->wait(300)) {
-      dialog->connect(thread, &QThread::finished, dialog, &QDialog::accept);
-      dialog->exec();
-    }
+    if (!thread->wait(300))
+      // not finished after slight wait
+      startDialog();
   } else {
-    dialog->connect(thread, &QThread::finished, dialog, &QDialog::accept);
     thread->start();
-    dialog->exec();
+    startDialog();
     if (parent)
       parent->activateWindow();
   }
-
   delete dialog;
-  delete thread;
   return 0;
 }
 

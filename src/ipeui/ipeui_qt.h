@@ -38,6 +38,7 @@
 #include <QGridLayout>
 #include <QAction>
 #include <QMenu>
+#include <QThread>
 
 class QTimer;
 class QTextEdit;
@@ -111,6 +112,24 @@ private:
   std::vector<QWidget *> iWidgets;
   QGridLayout *iGrid;
   QHBoxLayout *iButtonArea;
+};
+
+// --------------------------------------------------------------------
+
+class EditorThread : public QThread
+{
+  Q_OBJECT
+
+public:
+  EditorThread(lua_State *L, const QString &cmd);
+
+signals:
+  void done();
+protected:
+  void run() override;
+private:
+  lua_State *L;
+  QString iCommand;
 };
 
 // --------------------------------------------------------------------
