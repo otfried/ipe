@@ -12,6 +12,9 @@ Ipe 7.2.29
  * Cleanup Qt version of wait dialog (when Latex runs), using an
    explicit mutex.
 
+ * Make F10 behave a bit nicer by ignoring text outside the frame and
+   in locked layers.
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.28 (2023-08-13)

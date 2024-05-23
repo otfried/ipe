@@ -967,12 +967,15 @@ end
 
 function MODEL:action_insert_text_box()
   local layout = self.doc:sheets():find("layout")
+  local frame = ipe.Rect()
+  frame:add(V(-3, -3))
+  frame:add(layout.framesize + V(3, 3))
   local p = self:page()
   local r = ipe.Rect()
-  local m = ipe.Matrix()
   for i, obj, sel, layer in p:objects() do
-    if p:visible(self.vno, i) and obj:type() == "text" then
-      obj:addToBBox(r, m)
+    if p:visible(self.vno, i) and obj:type() == "text" and not p:isLocked(layer) then
+      local b = p:bbox(i)
+      if frame:contains(b) then r:add(b) end
     end
   end
   local y = layout.framesize.y
