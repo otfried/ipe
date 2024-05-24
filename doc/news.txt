@@ -20,6 +20,8 @@ Ipe 7.2.29
  * Make F10 behave a bit nicer by ignoring text outside the frame and
    in locked layers.
 
+ * When the LaTeX preamble starts with "#&", then the first line of
+   the preamble is placed at the top of the LaTeX source (#494).
 
 ----------------------------------------------------------------------
 

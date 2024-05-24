@@ -183,6 +183,16 @@ void Latex::addPageNumber(int pno, int vno, int npages, int nviews)
 int Latex::createLatexSource(Stream &stream, String preamble)
 {
   int count = 0;
+  if (preamble.hasPrefix("%&")) {
+    int i = preamble.find('\n');
+    if (i < 0) {
+      stream << preamble << "\n";
+      preamble.erase();
+    } else {
+      stream << preamble.left(i+1);
+      preamble = preamble.substr(i+1);
+    }
+  }
   stream << "\\nonstopmode\n";
   if (!iXetex) {
     // for parser testing: \\pdfobjcompresslevel2\\pdfminorversion5
