@@ -226,7 +226,9 @@ void PdfPainter::doDrawText(const Text *text)
 
 void PdfPainter::doDrawSymbol(Attribute symbol)
 {
-  const Symbol *sym = cascade()->findSymbol(symbol);
+  const Symbol *sym = iAttributeMap ?
+    cascade()->findSymbol(iAttributeMap->map(ESymbol, symbol)) :
+    cascade()->findSymbol(symbol);
   if (!sym)
     return;
   if (sym->iXForm)

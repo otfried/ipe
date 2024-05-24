@@ -15,6 +15,8 @@ Ipe 7.2.29
  * Make F10 behave a bit nicer by ignoring text outside the frame and
    in locked layers.
 
+ * Fix remapped symbol not changing in PDF output (bug #503).
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.28 (2023-08-13)
