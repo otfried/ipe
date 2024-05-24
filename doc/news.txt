@@ -15,7 +15,7 @@ Ipe 7.2.29
  * Fix remapped symbol not changing in PDF output (bug #503).
 
  * Cleanup Qt version of wait dialog (when Latex runs), using an
-   explicit mutex.
+   explicit mutex.  Hoping this will fix #495 and #504.
 
  * Make F10 behave a bit nicer by ignoring text outside the frame and
    in locked layers.
@@ -23,7 +23,10 @@ Ipe 7.2.29
  * When the LaTeX preamble starts with "#&", then the first line of
    the preamble is placed at the top of the LaTeX source (#494).
 
- * Fix bounding box for SVG exports (bug #496).
+ * Fix bounding box for SVG exports (bug #498).
+
+ * Fix setting grid size and angle size through the Snap menu on
+   Windows (bug #496).
 
 ----------------------------------------------------------------------
 

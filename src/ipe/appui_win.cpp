@@ -1319,11 +1319,9 @@ void AppUi::cmd(int id, int notification)
   } else if (ID_MOVETOLAYER_BASE <= id && id < ID_MOVETOLAYER_BASE + size(iLayerNames)) {
     action(String("movetolayer-") + iLayerNames[id - ID_MOVETOLAYER_BASE]);
   } else if (ID_GRIDSIZE_BASE <= id && id < ID_GRIDSIZE_BASE + size(iComboContents[EUiGridSize])) {
-    if (notification == CBN_SELCHANGE)
-      luaSelector("gridsize", iComboContents[EUiGridSize][id - ID_GRIDSIZE_BASE]);
+    luaSelector("gridsize", iComboContents[EUiGridSize][id - ID_GRIDSIZE_BASE]);
   } else if (ID_ANGLESIZE_BASE <= id && id < ID_ANGLESIZE_BASE + size(iComboContents[EUiAngleSize])) {
-    if (notification == CBN_SELCHANGE)
-      luaSelector("anglesize", iComboContents[EUiAngleSize][id - ID_ANGLESIZE_BASE]);
+    luaSelector("anglesize", iComboContents[EUiAngleSize][id - ID_ANGLESIZE_BASE]);
   } else if (id == ID_PATHVIEW) {
     luaShowPathStylePopup(Vector(iPathView->popupPos().x,
 				 iPathView->popupPos().y));
