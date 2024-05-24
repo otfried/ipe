@@ -4,7 +4,7 @@
 /*
 
     This file is part of the extensible drawing editor Ipe.
-    Copyright (c) 1993-2023 Otfried Cheong
+    Copyright (c) 1993-2024 Otfried Cheong
 
     Ipe is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -522,7 +522,7 @@ void AppUi::browseLaunch(bool launch, String dest)
 
 static const char * const aboutText =
   "IpePresenter %d.%d.%d\n\n"
-  "Copyright (c) 2020-2023 Otfried Cheong\n\n"
+  "Copyright (c) 2020-2024 Otfried Cheong\n\n"
   "A presentation tool for giving PDF presentations "
   "created in Ipe or using beamer.\n"
   "Originally invented by Dmitriy Morozov, "

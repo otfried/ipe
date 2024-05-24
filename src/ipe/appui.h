@@ -5,7 +5,7 @@
 /*
 
     This file is part of the extensible drawing editor Ipe.
-    Copyright (c) 1993-2023 Otfried Cheong
+    Copyright (c) 1993-2024 Otfried Cheong
 
     Ipe is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ typedef NSMenu *MENUHANDLE;
 
 using namespace ipe;
 
-constexpr int COPYRIGHT_YEAR = 2023;
+constexpr int COPYRIGHT_YEAR = 2024;
 
 #define IPEABSOLUTE "<absolute>"
 

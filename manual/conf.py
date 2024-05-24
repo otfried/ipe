@@ -7,10 +7,10 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Ipe'
-copyright = '2023, Otfried Cheong'
+copyright = '2024, Otfried Cheong'
 author = 'Otfried Cheong'
-version = '7.2.28'
-release = '7.2.28'
+version = '7.2.29'
+release = '7.2.29'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

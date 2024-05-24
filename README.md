@@ -36,7 +36,7 @@ Linux distributions on the [home page](https://ipe.otfried.org/).
 
 ### Copyright
 
-Ipe is copyright (c) 1993-2023 Otfried Cheong
+Ipe is copyright (c) 1993-2024 Otfried Cheong
 
 Ipe is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free

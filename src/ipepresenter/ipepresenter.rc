@@ -9,8 +9,8 @@
 IDI_MYICON ICON DISCARDABLE "../../build/ipe.ico"
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 7,2,28,1
- PRODUCTVERSION 7,2,28,1
+ FILEVERSION 7,2,29,1
+ PRODUCTVERSION 7,2,29,1
  FILEFLAGSMASK VS_FF_PRERELEASE
  FILEFLAGS VS_FF_PRERELEASE
  FILEOS VOS__WINDOWS32
@@ -23,12 +23,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "Otfried Cheong\0"
       VALUE "FileDescription", "Ipe presentation tool\0"
-      VALUE "FileVersion", "7.2.28\0"
+      VALUE "FileVersion", "7.2.29\0"
       VALUE "InternalName", "IpePresenter\0"
-      VALUE "LegalCopyright", "Copyright (c) 2023\0"
+      VALUE "LegalCopyright", "Copyright (c) 2024\0"
       VALUE "OriginalFilename", "IpePresenter.exe\0"
       VALUE "ProductName", "IpePresenter\0"
-      VALUE "ProductVersion", "7.2.28\0"
+      VALUE "ProductVersion", "7.2.29\0"
     END
   END
 END
