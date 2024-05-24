@@ -903,10 +903,12 @@ void Bezier::spiroSpline(int n,  const Vector *v, std::vector<Bezier> &result)
       // moving the spiroSpline might appear different if moved around.
       SpiroCPsToBezier0(spiroCp.data(), spiroCp.size(), false, (bezctx *) &context)
 #endif
-        != 1 ) {
+      != 1 ) {
     // spiro failed to resolve, use another spline instead
     Bezier::spline(n, v, result);
   }
+}
+
 //! Return distance to Bezier spline.
 /*! But may just return \a bound if actual distance is larger.  The
   Bezier spline is approximated to a precision of 1.0, and the
