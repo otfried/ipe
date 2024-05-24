@@ -140,6 +140,11 @@ objects in the document. It should *not* contain a
 ``\documentclass`` command, but can contain ``\usepackage``
 commands and macro definitions.
 
+If the preamble starts with `%&`, then the first line of the preamble
+will be placed at the **top** of the LaTeX source that Ipe produces to
+process text objects.
+
+
 The ``<bitmap>`` element
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -364,9 +369,9 @@ Color attribute values
 A color attribute value is either a symbolic name defined in one of
 the style sheets of the document, one of the predefined names
 
-``black`` or ``white``, a single real number between $0$ (black) and
-$1$ (white) indicating a gray level, or three real numbers in the
-range $[0,1]$ indicating the red, green, and blue component (in this
+``black`` or ``white``, a single real number between :math:`0` (black) and
+:math:`1` (white) indicating a gray level, or three real numbers in the
+range :math:`[0,1]` indicating the red, green, and blue component (in this
 order), separated by white space.
 
 
@@ -385,10 +390,10 @@ Each operator follows its arguments.  The operators are
 ``l`` (lineto) (1 point argument):
   add straight segment to subpath.
 
-``c`` (cubic B-spline) ($n$ point arguments): 
-  add a uniform cubic B-spline with $n+1$ control points (the current
-  position plus the $n$ arguments).  If $n = 3$, this is equivalent to
-  a single cubic |bezier| spline, if $n = 2$ it is equivalent to a
+``c`` (cubic B-spline) (:math:`n` point arguments): 
+  add a uniform cubic B-spline with :math:`n+1` control points (the current
+  position plus the $n$ arguments).  If :math:`n = 3`, this is equivalent to
+  a single cubic |bezier| spline, if :math:`n = 2` it is equivalent to a
   single quadratic |bezier| spline.
 
 ``q`` (deprecated) (2 point arguments):
@@ -400,38 +405,43 @@ Each operator follows its arguments.  The operators are
   circle under the transformation described by the matrix.
 
 ``a`` (arcto) (1 matrix argument, 1 point argument):
-  add an
-  elliptic arc, on the ellipse describe by the matrix, from current
+  add an elliptic arc, on the ellipse described by the matrix, from current
   position to given point.
 
-``s`` (deprecated) ($n$ point arguments):
-  add an ``old
-  style``  uniform cubic B-spline as used by Ipe up to version 7.1.6.
+``s`` (deprecated) (:math:`n` point arguments):
+  add an "old style" uniform cubic B-spline as used by Ipe up to version 7.1.6.
 
-``C`` ($n$ point arguments plus one tension argument):
-  add a
-  cardinal cubic spline through the given points and the given
+``C`` (:math:`n` point arguments plus one tension argument):
+  add a cardinal cubic spline through the given points and the given
   tension. (The definition of the tension in the literature
   varies.  Ipe's tangent is the factor by which the vector from
   previous to next point is multiplied to obtain the tangent vector at
   this point. So 0.5 corresponds to the Catmull-Rom spline.)
 
-``L`` ($n$ point arguments):
-  add a clothoid spline as
-  computed by the libspiro library by Raph Levien.
+``L`` (:math:`n` point arguments):
+  add a clothoid spline as computed by the libspiro library by Raph Levien.
   When Ipe writes clothoid splines, it includes the control points of
   the computed Bezier approximation in the path description, separated
   from the defining points by a ``*``.
 
-``u`` (closed spline) ($n$ point arguments):
-  add a closed
-  subpath consisting of a closed uniform B-spline with $n$ control
+``u`` (closed spline) (:math:`n` point arguments):
+  add a closed subpath consisting of a closed uniform B-spline with :math:`n` control
   points,
 
 ``h`` (closepath) (no arguments):
   close the current subpath.
   No more segments can be added to this subpath, so the next operator
   (if there is one) must start a new subpath.
+
+A *point* argument is a pair of :math:`x` and :math:`y` coordinates.
+
+A *matrix* argument is a sequence of 6 numbers :math:`a, b, c, d, s, t`.
+They describe the affine transformation
+
+  | :math:`x' = a x + c y + s`
+  | :math:`y' = b x + d y + t`
+
+Note that you write the matrix column by column!
 
 Paths consisting of more than one closed loop are allowed.  A subpath
 can consist of any mix of straight segments, elliptic arcs, and
@@ -475,7 +485,7 @@ The ``<image>`` element
 
 ``rect`` (required)
   Four real coordinates separated by white space,
-  in the order $x_{1}$, $y_{1}$, $x_{2}$, $y_{2}$, indicating two
+  in the order :math:`x_{1}, y_{1}, x_{2}, y_{2}`, indicating two
   opposite corners of the image in Ipe coordinates).
 
 ``opacity`` (optional)
@@ -524,7 +534,7 @@ the style sheet.  The attributes ``stroke``, ``fill``, ``pen``, and
 ``size`` (optional)
   The size of the symbol, either a symbolic size
   (of type ``symbol size``), or an absolute scaling factor.  The
-  default is $1.0$.
+  default is :math:`1.0`.
 
 The ``<use>`` element must be empty.
 
