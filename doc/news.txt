@@ -23,6 +23,8 @@ Ipe 7.2.29
  * When the LaTeX preamble starts with "#&", then the first line of
    the preamble is placed at the top of the LaTeX source (#494).
 
+ * Fix bounding box for SVG exports (bug #496).
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.28 (2023-08-13)

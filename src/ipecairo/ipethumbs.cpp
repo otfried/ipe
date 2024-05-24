@@ -109,14 +109,19 @@ bool Thumbnail::saveRender(TargetFormat fm, const char *dst,
   if (fm != EPNG)
     zoom = 1.0;
 
-  Rect bbox;
   int wid, ht;
+  Vector offset;
   if (iNoCrop) {
-    bbox = iLayout->paper();
-    wid = int(bbox.width() * zoom);
-    ht = int(bbox.height() * zoom);
+    offset = iLayout->paper().topLeft();
+    wid = int(iLayout->paper().width() * zoom);
+    ht = int(iLayout->paper().height() * zoom);
   } else {
-    bbox = page->pageBBox(iDoc->cascade());
+    Rect bbox = page->pageBBox(iDoc->cascade());
+    if (fm != EPNG) {
+      // make sure integer coordinates remain integer
+      bbox.addPoint(Vector{floor(bbox.left()), ceil(bbox.top())});
+    }
+    offset = bbox.topLeft();
     wid = int(bbox.width() * zoom + 1);
     ht = int(bbox.height() * zoom + 1);
   }
@@ -152,12 +157,6 @@ bool Thumbnail::saveRender(TargetFormat fm, const char *dst,
 
   cairo_t *cc = cairo_create(surface);
   cairo_scale(cc, zoom, -zoom);
-  Vector offset = bbox.topLeft();
-  if (fm != EPNG) {
-    // make sure integer coordinates remain integer
-    offset.x = floor(offset.x);
-    offset.y = ceil(offset.y);
-  }
   cairo_translate(cc, -offset.x, -offset.y);
 
   cairo_set_tolerance(cc, tolerance);
