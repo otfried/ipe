@@ -1,5 +1,8 @@
 Ipe 7.2.29
 
+ * Fix crash on MacOS when moving Ipe to another screen by updating
+   Cairo (bug #480).
+
  * Fix symbol snap points not scaling with symbol size (bug #486).
 
  * Fix edges not always following when a node is moved (bug #487).
@@ -9,13 +12,14 @@ Ipe 7.2.29
 
  * Fix Latex not being run automatically after paste (# 497).
 
+ * Fix remapped symbol not changing in PDF output (bug #503).
+
  * Cleanup Qt version of wait dialog (when Latex runs), using an
    explicit mutex.
 
  * Make F10 behave a bit nicer by ignoring text outside the frame and
    in locked layers.
 
- * Fix remapped symbol not changing in PDF output (bug #503).
 
 ----------------------------------------------------------------------
 

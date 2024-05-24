@@ -323,15 +323,15 @@ arrowsize  -- symbolic or number
 symbolsize -- symbolic or number
 symbolshape -- symbolic
 textsize   -- symbolic or number
-transformableText -- boolean
+transformabletext -- boolean
 textstyle  -- symbolic
 opacity    -- symbolic
 tiling     -- symbolic
 decoration -- symbolic ("normal" means no decoration)
 minipage   -- boolean	   
 width 	   -- number
-horizontalAlignment -- "left", "right", "hcenter"
-verticalAlignment   -- "bottom", "baseline", "top", "vcenter"
+horizontalalignment -- "left", "right", "hcenter"
+verticalalignment   -- "bottom", "baseline", "top", "vcenter"
 linejoin            -- "normal", "miter", "round", "bevel"
 linecap             -- "normal", "butt", "round", "square"
 fillrule            -- "normal", "wind", "evenodd"
