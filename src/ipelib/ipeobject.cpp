@@ -311,6 +311,21 @@ void Object::setTransformations(TTransformations trans)
   iTransformations = trans;
 }
 
+//! Return the matrix transforming the object's geometry.
+/*! This takes into account the object's transformations */
+Matrix Object::effectiveMatrix(const Matrix & m, const Vector &pos) const noexcept {
+  Matrix m1 = m * matrix() * Matrix(pos);
+  switch (transformations()) {
+  case ETransformationsAffine:
+    return m1;
+  case ETransformationsTranslations:
+    return Matrix(m1.translation());
+  case ETransformationsRigidMotions:
+    return Matrix(Linear(Vector(m1.a[0], m1.a[1]).angle()),
+		  m1.translation());
+  }
+}
+
 //! Set an attribute on this object.
 /*! Returns true if an attribute was actually changed.  */
 bool Object::setAttribute(Property prop, Attribute value)

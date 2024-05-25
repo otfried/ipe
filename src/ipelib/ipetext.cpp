@@ -575,17 +575,7 @@ void Text::quadrilateral(const Matrix &m, Vector v[4]) const
   v[1] = offset + Vector(wid, 0);
   v[2] = offset + Vector(wid, ht);
   v[3] = offset + Vector(0, ht);
-
-  Matrix m1 = m * matrix() * Matrix(iPos);
-
-  if (iTransformations == ETransformationsTranslations) {
-    m1 = Matrix(m1.translation());
-  } else if (iTransformations == ETransformationsRigidMotions) {
-    Angle alpha = Vector(m1.a[0], m1.a[1]).angle();
-    // ensure that (1,0) is rotated into this orientation
-    m1 = Matrix(m1.translation()) * Linear(alpha);
-  }
-
+  Matrix m1 = effectiveMatrix(m, iPos);
   for (int i = 0; i < 4; ++i)
     v[i] = m1 * v[i];
 }

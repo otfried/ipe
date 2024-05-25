@@ -146,7 +146,7 @@ void Image::drawSimple(Painter &painter) const
 
 double Image::distance(const Vector &v, const Matrix &m, double bound) const
 {
-  Matrix m1 = m * matrix();
+  Matrix m1 = effectiveMatrix(m);
   Vector u[5];
   u[0] = m1 * iRect.bottomLeft();
   u[1] = m1 * iRect.bottomRight();
@@ -169,7 +169,7 @@ double Image::distance(const Vector &v, const Matrix &m, double bound) const
 
 void Image::addToBBox(Rect &box, const Matrix &m, bool) const
 {
-  Matrix m1 = m * matrix();
+  Matrix m1 = effectiveMatrix(m);
   box.addPoint(m1 * iRect.bottomLeft());
   box.addPoint(m1 * iRect.bottomRight());
   box.addPoint(m1 * iRect.topRight());
@@ -179,7 +179,7 @@ void Image::addToBBox(Rect &box, const Matrix &m, bool) const
 void Image::snapCtl(const Vector &mouse, const Matrix &m,
 		    Vector &pos, double &bound) const
 {
-  Matrix m1 = m * matrix();
+  Matrix m1 = effectiveMatrix(m);
   (m1 * iRect.bottomLeft()).snap(mouse, pos, bound);
   (m1 * iRect.bottomRight()).snap(mouse, pos, bound);
   (m1 * iRect.topRight()).snap(mouse, pos, bound);

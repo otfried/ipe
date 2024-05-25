@@ -140,7 +140,6 @@ void Painter::untransform(TTransformations trans)
   Matrix m = matrix();
   Vector org = m.translation();
   Vector dx = Vector(m.a[0], m.a[1]);
-  // Vector dy = Vector(m.a[2], m.a[3]);
   Linear m1(iMatrix.front().linear());
   if (trans == ETransformationsRigidMotions) {
     // compute what direction is transformed to dx by original matrix

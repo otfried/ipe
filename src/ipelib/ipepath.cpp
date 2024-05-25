@@ -514,30 +514,30 @@ void Path::drawSimple(Painter &painter) const
 
 void Path::addToBBox(Rect &box, const Matrix &m, bool cp) const
 {
-  iShape.addToBBox(box, m * matrix(), cp);
+  iShape.addToBBox(box, effectiveMatrix(m), cp);
 }
 
 double Path::distance(const Vector &v, const Matrix &m, double bound) const
 {
-  return iShape.distance(v, m * matrix(), bound);
+  return iShape.distance(v, effectiveMatrix(m), bound);
 }
 
 void Path::snapVtx(const Vector &mouse, const Matrix &m,
 		   Vector &pos, double &bound) const
 {
-  iShape.snapVtx(mouse, m * matrix(), pos, bound, false);
+  iShape.snapVtx(mouse, effectiveMatrix(m), pos, bound, false);
 }
 
 void Path::snapCtl(const Vector &mouse, const Matrix &m,
 		   Vector &pos, double &bound) const
 {
-  iShape.snapVtx(mouse, m * matrix(), pos, bound, true);
+  iShape.snapVtx(mouse, effectiveMatrix(m), pos, bound, true);
 }
 
 void Path::snapBnd(const Vector &mouse, const Matrix &m,
 		   Vector &pos, double &bound) const
 {
-  iShape.snapBnd(mouse, m * matrix(), pos, bound);
+  iShape.snapBnd(mouse, effectiveMatrix(m), pos, bound);
 }
 
 void Path::setMatrix(const Matrix &matrix)

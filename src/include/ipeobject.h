@@ -139,6 +139,7 @@ namespace ipe {
     void saveAttributesAsXml(Stream &stream, String layer) const;
     static void checkSymbol(Kind kind, Attribute attr,
 			    const Cascade *sheet, AttributeSeq &seq);
+    Matrix effectiveMatrix(const Matrix & m, const Vector &pos = Vector::ZERO) const noexcept;
 
   protected:
     Matrix iMatrix;

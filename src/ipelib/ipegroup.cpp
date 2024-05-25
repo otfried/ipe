@@ -317,7 +317,7 @@ void Group::drawSimple(Painter &painter) const
 
 void Group::addToBBox(Rect &box, const Matrix &m, bool cp) const
 {
-  Matrix m1 = m * matrix();
+  Matrix m1 = effectiveMatrix(m);
   Rect tbox;
   for (const_iterator it = begin(); it != end(); ++it) {
     (*it)->addToBBox(tbox, m1, cp);
@@ -341,7 +341,7 @@ double Group::distance(const Vector &v, const Matrix &m, double bound) const
 {
   double d = bound;
   double d1;
-  Matrix m1 = m * matrix();
+  Matrix m1 = effectiveMatrix(m);
   for (const_iterator it = begin(); it != end(); ++it) {
     if ((d1 = (*it)->distance(v, m1, d)) < d)
       d = d1;
@@ -352,7 +352,7 @@ double Group::distance(const Vector &v, const Matrix &m, double bound) const
 void Group::snapVtx(const Vector &mouse, const Matrix &m,
 		    Vector &pos, double &bound) const
 {
-  Matrix m1 = m * matrix();
+  Matrix m1 = effectiveMatrix(m);
   for (const_iterator it = begin(); it != end(); ++it)
     (*it)->snapVtx(mouse, m1, pos, bound);
 }
@@ -360,7 +360,7 @@ void Group::snapVtx(const Vector &mouse, const Matrix &m,
 void Group::snapCtl(const Vector &mouse, const Matrix &m,
 		    Vector &pos, double &bound) const
 {
-  Matrix m1 = m * matrix();
+  Matrix m1 = effectiveMatrix(m);
   for (const_iterator it = begin(); it != end(); ++it)
     (*it)->snapCtl(mouse, m1, pos, bound);
 }
@@ -368,7 +368,7 @@ void Group::snapCtl(const Vector &mouse, const Matrix &m,
 void Group::snapBnd(const Vector &mouse, const Matrix &m,
 		    Vector &pos, double &bound) const
 {
-  Matrix m1 = m * matrix();
+  Matrix m1 = effectiveMatrix(m);
   for (const_iterator it = begin(); it != end(); ++it)
     (*it)->snapBnd(mouse, m1, pos, bound);
 }
