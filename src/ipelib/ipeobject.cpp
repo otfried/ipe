@@ -317,6 +317,7 @@ Matrix Object::effectiveMatrix(const Matrix & m, const Vector &pos) const noexce
   Matrix m1 = m * matrix() * Matrix(pos);
   switch (transformations()) {
   case ETransformationsAffine:
+  default:
     return m1;
   case ETransformationsTranslations:
     return Matrix(m1.translation());
