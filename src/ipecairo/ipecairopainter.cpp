@@ -726,6 +726,11 @@ void CairoPainter::execute(const PdfDict *xform, const PdfDict *resources, bool 
       mx.a[i] = m[i];
     cairoTransform(iCairo, mx);
   }
+  std::vector<double> bbox;
+  if (xform->getNumberArray("BBox", nullptr, bbox) && bbox.size() == 4) {
+    cairo_rectangle(iCairo, bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1]);
+    cairo_clip(iCairo);
+  }
   Buffer buffer = xform->inflate();
   BufferSource source(buffer);
   PdfParser parser(source);
