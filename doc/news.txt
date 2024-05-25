@@ -1,4 +1,4 @@
-Ipe 7.2.29
+Ipe 7.2.29 (2024-05-25)
 
  * Fix crash on MacOS when moving Ipe to another screen by updating
    Cairo (bug #480).
@@ -10,7 +10,7 @@ Ipe 7.2.29
  * Interpret strings in PDF documents that are in UTF-16 (ipepresenter
    bug #11).
 
- * Fix Latex not being run automatically after paste (# 497).
+ * Fix Latex not being run automatically after paste (#497).
 
  * Fix remapped symbol not changing in PDF output (bug #503).
 
