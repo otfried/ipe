@@ -38,7 +38,7 @@
 #include <QGridLayout>
 #include <QAction>
 #include <QMenu>
-#include <QThread>
+#include <QMutex>
 
 class QTimer;
 class QTextEdit;
@@ -116,20 +116,38 @@ private:
 
 // --------------------------------------------------------------------
 
-class EditorThread : public QThread
+class Waiter : public QObject
 {
   Q_OBJECT
 
 public:
-  EditorThread(lua_State *L, const QString &cmd);
+  Waiter(lua_State *L, const QString &cmd);
 
 signals:
-  void done();
-protected:
-  void run() override;
+  void completed();
+public slots:
+  void process();
 private:
   lua_State *L;
   QString iCommand;
+};
+
+class WaitDialog : public QDialog
+{
+  Q_OBJECT
+
+public:
+  WaitDialog(QString label, QWidget *parent = nullptr);
+  void startDialog();
+  bool isRunning() const noexcept { return running; }
+public slots:
+  void completed();
+protected:
+  void keyPressEvent(QKeyEvent *e);
+  void closeEvent(QCloseEvent *ev);
+private:
+  bool running; // the waiter has not yet signaled completed
+  QMutex mutex; // locked when dialog is waiting modally
 };
 
 // --------------------------------------------------------------------

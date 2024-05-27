@@ -1,3 +1,9 @@
+Ipe 7.2.30
+
+ * Rewrite wait dialog again to make it work with Qt 6.7 (bug #506).
+
+----------------------------------------------------------------------
+
 Ipe 7.2.29 (2024-05-25)
 
  * Fix crash on MacOS when moving Ipe to another screen by updating
