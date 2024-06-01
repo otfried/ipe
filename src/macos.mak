@@ -29,7 +29,7 @@ SPIRO_LIBS    ?= $(shell $(PKG_CONFIG) --libs libspiro)
 GSL_CFLAGS    ?= $(shell $(PKG_CONFIG) --cflags gsl)
 GSL_LIBS      ?= $(shell $(PKG_CONFIG) --libs gsl)
 #
-IPEVERS = 7.2.29
+IPEVERS = 7.2.30
 #
 CXX = clang++
 #

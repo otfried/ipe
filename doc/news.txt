@@ -1,4 +1,6 @@
-Ipe 7.2.30
+----------------------------------------------------------------------
+
+Ipe 7.2.30 (2024-06-01: mini-release, source only)
 
  * Rewrite wait dialog again to make it work with Qt 6.7 (bug #506).
 
