@@ -4,6 +4,8 @@ Ipe 7.2.30
 
  * Do not run Latex for each small undo/redo step (#508).
 
+ * Fix view map getting lost in view sorter (bug #507).
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.29 (2024-05-25)

@@ -1997,6 +1997,7 @@ function arrange_views(p, arr, marks)
       active=p:active(i),
       effect=p:effect(i),
       visible=visible,
+      map=p:viewMap(i),
     }
     views[#views+1] = v
   end
@@ -2008,6 +2009,7 @@ function arrange_views(p, arr, marks)
     p:setEffect(i, v.effect)
     p:setMarkedView(i, v.marked)
     p:setViewName(i, v.name)
+    p:setViewMap(i, v.map)
     for _,l in ipairs(layers) do
       p:setVisible(i, l, v.visible[l])
     end
