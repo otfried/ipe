@@ -939,7 +939,6 @@ function MODEL:action_undo()
     self.ui:setAttributes(self.doc:sheets(), self.attributes)
     self:resetGridSize()
   end
-  self:autoRunLatex()
 end
 
 function MODEL:action_redo()
@@ -969,7 +968,6 @@ function MODEL:action_redo()
     self.ui:setAttributes(self.doc:sheets(), self.attributes)
     self:resetGridSize()
   end
-  self:autoRunLatex()
 end
 
 ----------------------------------------------------------------------
