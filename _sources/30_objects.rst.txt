@@ -313,6 +313,13 @@ Latex* from the *File* menu to create the PDF representation of the
 object.  This converts all the text objects in your document at once,
 and Ipe will display a correct rendition of the text afterwards.
 
+Most Ipe users turn on *Automatically run Latex* in the *File* menu.
+If this is activated, Ipe will run Latex in *most* 
+situations where a text object or a style has changed and the text
+representation needs to be updated.  There are some exceptions, for
+instance undo and redo---just press :kbd:`Ctrl-L` to run Latex
+manually. 
+
 If the Latex conversion process results in errors, Ipe will
 automatically show you the log file created by the Latex run.  If you
 cannot figure out the problem, look in :ref:`the section on
