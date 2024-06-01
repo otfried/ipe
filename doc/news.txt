@@ -6,6 +6,8 @@ Ipe 7.2.30
 
  * Fix view map getting lost in view sorter (bug #507).
 
+ * Add ipelet to create an ellipse from two foci and one point.
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.29 (2024-05-25)

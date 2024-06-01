@@ -363,6 +363,41 @@ function regularKGon(model)
   model:creation("create regular k-gon", kgon)
 end
 
+function ellipse(model)
+  local p = model:page()
+  local foci = {}
+  local pt
+  for i,obj,sel,layer in p:objects() do
+    if sel then
+      if obj:type() ~= "reference" or obj:symbol():sub(1,5) ~= "mark/" then
+	model:warning("Cannot create ellipse", "You must select exactly three marks")
+	return
+      end
+      local v = obj:matrix() * obj:position()
+      if sel == 1 then
+	pt = v
+      else
+	foci[#foci + 1] = v
+      end
+    end
+  end
+
+  if #foci ~= 2 then
+    model:warning("Cannot create ellipse", "You must select exactly three marks")
+    return
+  end
+
+  local center = 0.5 * (foci[1] + foci[2])
+  local c = (foci[1] - foci[2]):len() / 2
+  local a = ((pt - foci[1]):len() + (pt - foci[2]):len()) / 2
+  local b = math.sqrt(a*a - c*c)
+  local m = ipe.Translation(center) * ipe.Rotation((foci[2] - foci[1]):angle()) * ipe.Matrix(a, 0, 0, b)
+  
+  local curve = { type="ellipse", m }
+  local ellipse = ipe.Path(model.attributes, { curve } )
+  model:creation("create ellipse from foci and third point", ellipse)
+end
+
 methods = {
   { label = "Mirror horizontal", run=preciseTransform },
   { label = "Mirror vertical", run=preciseTransform },
@@ -380,6 +415,7 @@ methods = {
   { label = "Mark circle center", run=markCircleCenter },
   { label = "Make parabolas", run=parabola },
   { label = "Regular k-gon", run=regularKGon },
+  { label = "Ellipse from foci", run=ellipse },
 }
 
 ----------------------------------------------------------------------
