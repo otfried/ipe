@@ -50,9 +50,19 @@ first_model = nil
 
 ----------------------------------------------------------------------
 
-function printTable(t)
+function printTable(t, indent)
+  if not indent then
+    io.write("---\n")
+    indent = 0
+  end
   for k in pairs(t) do
-    print(k, t[k])
+    for i = 1,indent do io.write("> ") end
+    if type(t[k]) == "table" then
+      io.write(tostring(k) .. "\n")
+      printTable(t[k], indent+1)
+    else
+      io.write(tostring(k) .. ": " .. tostring(t[k]) .. "\n")
+    end
   end
 end
 

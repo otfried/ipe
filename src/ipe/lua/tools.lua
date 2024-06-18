@@ -1151,6 +1151,7 @@ local function apply_node_mode(t, doc)
   for _,e in ipairs(t.edges) do
     p[e.objno]:setShape(moveEndpoint(p[e.objno], e.head, t.translation))
     p[e.objno]:setMatrix(ipe.Matrix())
+    p:invalidateBBox(e.objno)
   end
 end
 
@@ -1158,7 +1159,6 @@ function GRAPHTOOL:mouseButton(button, modifiers, press)
   if press then return end
   self:compute()
   self.model.ui:finishTool()
-  local edges = {}
   for i = 1,#self.edges do
     self.edges[i].obj = nil
   end

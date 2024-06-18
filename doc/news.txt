@@ -1,3 +1,7 @@
+Ipe 7.2.31
+
+ * Fix graph node moving tool leaving edges in a weird state (bug #512).
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.30 (2024-06-01: mini-release, source only)
