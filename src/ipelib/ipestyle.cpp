@@ -241,6 +241,23 @@ const Effect *StyleSheet::findEffect(Attribute sym) const
     return nullptr;
 }
 
+void StyleSheet::addPageStyle(Attribute name, const PageStyle &e)
+{
+  assert(name.isSymbolic());
+  iPageStyles[name.index()] = e;
+}
+
+const PageStyle *StyleSheet::findPageStyle(Attribute sym) const
+{
+  if (!sym.isSymbolic())
+    return nullptr;
+  PageStyleMap::const_iterator it = iPageStyles.find(sym.index());
+  if (it != iPageStyles.end())
+    return &it->second;
+  else
+    return nullptr;
+}
+
 // --------------------------------------------------------------------
 
 //! Set line cap.
@@ -587,6 +604,20 @@ void StyleSheet::saveAsXml(Stream &stream, bool saveBitmaps) const
     stream << " effect=\"" << int(e.iEffect) << "\"/>\n";
   }
 
+  for (PageStyleMap::const_iterator it = iPageStyles.begin();
+       it != iPageStyles.end(); ++it) {
+    stream << "<pagestyle name=\"" << rep->toString(it->first) << "\"";
+    const PageStyle &ps = it->second;
+    if (!ps.iBackground.isNormal())
+      stream << " background=\"" << ps.iBackground.string() << "\"";
+    if (ps.iMapping.count() > 0) {
+      stream << ">\n";
+      ps.iMapping.saveAsXml(stream);
+      stream << "</pagestyle>\n";
+    } else
+      stream << "/>\n";
+  }
+
   stream << "</ipestyle>\n";
 }
 
@@ -724,6 +755,15 @@ const Effect *Cascade::findEffect(Attribute sym) const
   for (int i = 0; i < count(); ++i) {
     const Effect *s = iSheets[i]->findEffect(sym);
     if (s) return s;
+  }
+  return nullptr;
+}
+
+const PageStyle *Cascade::findPageStyle(Attribute sym) const
+{
+  for (int i = 0; i < count(); ++i) {
+    if (const PageStyle *s = iSheets[i]->findPageStyle(sym))
+      return s;
   }
   return nullptr;
 }

@@ -78,6 +78,7 @@ Page::Page() : iTitle()
 {
   iUseTitle[0] = iUseTitle[1] = false;
   iMarked = true;
+  iStyle = Attribute::NORMAL();
 }
 
 //! Create a new empty page with standard settings.
@@ -119,6 +120,8 @@ void Page::saveAsXml(Stream &stream) const
   }
   if (!iMarked)
     stream << " marked=\"no\"";
+  if (!iStyle.isNormal())
+    stream << " style=\"" << iStyle.string() << "\"";
 
   stream << ">\n";
   if (!iNotes.empty()) {
@@ -159,7 +162,7 @@ void Page::saveAsXml(Stream &stream) const
       stream << " marked=\"yes\"";
     if (!viewName(i).empty())
       stream << " name=\"" << viewName(i) << "\"";
-    const AttributeMap &map = viewMap(i);
+    const AttributeMap &map = iViews[i].iAttributeMap;
     if (map.count() == 0 && iViews[i].iLayerMatrices.empty()) {
       stream << "/>\n";
     } else {
@@ -494,6 +497,25 @@ void Page::setLayerMatrix(int view, int layer, const Matrix &m)
   }
 }
 
+//! Return the (combined) attribute mapping for the page style and view. 
+const AttributeMap Page::viewMap(int index, const Cascade *sheet) const
+{
+  if (const auto *ps = sheet->findPageStyle(iStyle)) {
+    AttributeMap m = ps->iMapping;
+    std::copy(iViews[index].iAttributeMap.iMap.begin(),
+	      iViews[index].iAttributeMap.iMap.end(),
+	      std::back_inserter(m.iMap));
+    return m;
+  } else
+    return iViews[index].iAttributeMap;
+}
+
+//! Return the attribute mapping for the view only. 
+const AttributeMap & Page::pureViewMap(int index) const
+{
+  return iViews[index].iAttributeMap;
+}
+
 //! Set the attribute mapping for the view.
 void Page::setViewMap(int index, const AttributeMap &map)
 {
@@ -739,6 +761,16 @@ void Page::applyTitleStyle(const Cascade *sheet)
   iTitleObject.setStroke(ts->iColor);
   iTitleObject.setHorizontalAlignment(ts->iHorizontalAlignment);
   iTitleObject.setVerticalAlignment(ts->iVerticalAlignment);
+}
+
+void Page::setStyle(Attribute style) {
+  iStyle = style;
+}
+
+Attribute Page::backgroundSymbol(const Cascade *sheet) const {
+  if (const auto *ps = sheet->findPageStyle(iStyle))
+    return ps->iBackground;
+  return Attribute::BACKGROUND();
 }
 
 // --------------------------------------------------------------------

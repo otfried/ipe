@@ -105,6 +105,9 @@ namespace ipe {
     void addEffect(Attribute name, const Effect &e);
     const Effect *findEffect(Attribute sym) const;
 
+    void addPageStyle(Attribute name, const PageStyle &s);
+    const PageStyle *findPageStyle(Attribute sym) const;
+
     void add(Kind kind, Attribute name, Attribute value);
     bool has(Kind kind, Attribute sym) const;
     Attribute find(Kind, Attribute sym) const;
@@ -155,6 +158,7 @@ namespace ipe {
     typedef std::map<int, Gradient> GradientMap;
     typedef std::map<int, Tiling> TilingMap;
     typedef std::map<int, Effect> EffectMap;
+    typedef std::map<int, PageStyle> PageStyleMap;
     typedef std::map<int, Attribute> Map;
 
     bool iStandard;
@@ -163,6 +167,7 @@ namespace ipe {
     GradientMap iGradients;
     TilingMap iTilings;
     EffectMap iEffects;
+    PageStyleMap iPageStyles;
     Map iMap;
     String iPreamble;
     Layout iLayout;
@@ -201,6 +206,7 @@ namespace ipe {
     const Gradient *findGradient(Attribute sym) const;
     const Tiling *findTiling(Attribute sym) const;
     const Effect *findEffect(Attribute sym) const;
+    const PageStyle *findPageStyle(Attribute sym) const;
     const Layout *findLayout() const;
     const TextPadding *findTextPadding() const;
     const StyleSheet::TitleStyle *findTitleStyle() const;

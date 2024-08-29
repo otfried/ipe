@@ -104,7 +104,8 @@ namespace ipe {
 
     int findView(String viewNumberOrName) const;
 
-    const AttributeMap &viewMap(int index) const { return iViews[index].iAttributeMap; }
+    const AttributeMap &pureViewMap(int index) const;
+    const AttributeMap viewMap(int index, const Cascade *sheet) const;
     void setViewMap(int index, const AttributeMap &map);
 
     //! Is \a layer visible in \a view?
@@ -130,6 +131,11 @@ namespace ipe {
     const Text *titleText() const;
     void applyTitleStyle(const Cascade *sheet);
 
+    //! Return page style.
+    Attribute style() const { return iStyle; }
+    void setStyle(Attribute style);
+    Attribute backgroundSymbol(const Cascade *sheet) const;
+    
     //! Return if page is marked for printing.
     bool marked() const { return iMarked; }
     void setMarked(bool marked);
@@ -235,6 +241,7 @@ namespace ipe {
     ObjSeq iObjects;
     String iNotes;
     bool iMarked;
+    Attribute iStyle;
   };
 
 } // namespace

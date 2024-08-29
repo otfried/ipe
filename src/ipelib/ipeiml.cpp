@@ -221,6 +221,9 @@ bool ImlParser::parsePage(Page &page)
   if (att["marked"] == "no")
     page.setMarked(false);
 
+  if (att.has("style", str))
+    page.setStyle(Attribute(true, str));
+
   String tag = parseToTag();
 
   if (tag == "notes") {
@@ -430,6 +433,38 @@ static inline bool symbolName(String s)
 			 ('A' <= s[0] && s[0] <= 'Z')));
 }
 
+
+bool ImlParser::parseAttributeMapping(AttributeMap &map)
+{
+  XmlAttributes att;
+  if (!parseAttributes(att) || !att.slash())
+    return false;
+  String from = att["from"];
+  String kindStr = att["kind"];
+  Kind kind;
+  if (kindStr == "pen")
+    kind = EPen;
+  else if (kindStr == "symbolsize")
+    kind = ESymbolSize;
+  else if (kindStr == "arrowsize")
+    kind = EArrowSize;
+  else if (kindStr == "opacity")
+    kind = EOpacity;
+  else if (kindStr == "color")
+    kind = EColor;
+  else if (kindStr == "dashstyle")
+    kind = EDashStyle;
+  else if (kindStr == "symbol")
+    kind = ESymbol;
+  else
+    return false; // error
+  String to = att["to"];
+  if (from.empty() || to.empty())
+    return false;
+  map.add({ kind, Attribute(true, from), Attribute(true, to) });
+  return true;
+}
+
 //! Parse an attribute map.
 /*! On calling, stream must be before the first mapping element. */
 bool ImlParser::parseView(Page &page, AttributeMap &map)
@@ -449,36 +484,8 @@ bool ImlParser::parseView(Page &page, AttributeMap &map)
 	return false;
       page.setLayerMatrix(page.countViews() - 1, layerNum, Matrix(mstr));
     } else {
-      XmlAttributes att;
-      if (!parseAttributes(att) || !att.slash())
+      if (!parseAttributeMapping(map))
 	return false;
-      String from = att["from"];
-      String kindStr = att["kind"];
-      Kind kind;
-      if (tag != "map") {  // deprecated format (briefly allowed in 7.2.16)
-	kindStr = tag;
-	from = att["map"];
-      }
-      if (kindStr == "pen")
-	kind = EPen;
-      else if (kindStr == "symbolsize")
-	kind = ESymbolSize;
-      else if (kindStr == "arrowsize")
-	kind = EArrowSize;
-      else if (kindStr == "opacity")
-	kind = EOpacity;
-      else if (kindStr == "color")
-	kind = EColor;
-      else if (kindStr == "dashstyle")
-	kind = EDashStyle;
-      else if (kindStr == "symbol")
-	kind = ESymbol;
-      else
-	return false; // error
-      String to = att["to"];
-      if (from.empty() || to.empty())
-	return false;
-      map.add({ kind, Attribute(true, from), Attribute(true, to) });
     }
     tag = parseToTag();
   }
@@ -728,6 +735,28 @@ bool ImlParser::parseStyle(StyleSheet &sheet)
       value += att["end"];
       Kind k = (att["type"] == "label") ? ELabelStyle : ETextStyle;
       sheet.add(k, Attribute(true, name), Attribute(false, value));
+    } else if (tag == "pagestyle") {
+      if (!parseAttributes(att))
+	return false;
+      PageStyle pageStyle;
+      String name = att["name"];
+      if (!symbolName(name))
+	return false;
+      pageStyle.iBackground = Attribute::NORMAL();
+      String bg;
+      if (att.has("background", bg))
+	pageStyle.iBackground = Attribute(true, bg);
+      if (!att.slash()) {
+	tag = parseToTag();
+	while (tag == "map") {
+	  if (!parseAttributeMapping(pageStyle.iMapping))
+	    return false;
+	  tag = parseToTag();
+	}
+	if (tag != "/pagestyle")
+	  return false;
+      }
+      sheet.addPageStyle(Attribute(true, name), pageStyle);
     } else {
       Kind kind;
       if (tag == "pen")

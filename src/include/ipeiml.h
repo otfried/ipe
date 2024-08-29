@@ -58,6 +58,7 @@ namespace ipe {
     Page *parsePageSelection();
     virtual Buffer pdfStream(int objNum);
     bool parseBitmap();
+    bool parseAttributeMapping(AttributeMap &map);
   private:
     std::vector<Bitmap> iBitmaps;
   };

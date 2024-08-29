@@ -746,13 +746,14 @@ void PdfWriter::paintView(Stream &stream, int pno, int view)
 {
   const Page *page = iDoc->page(pno);
   PdfPainter painter(iDoc->cascade(), stream);
-  painter.setAttributeMap(&page->viewMap(view));
+  const auto viewMap = page->viewMap(view, iDoc->cascade());
+  painter.setAttributeMap(&viewMap);
   std::vector<Matrix> layerMatrices = page->layerMatrices(view);
 
-  const Symbol *background =
-    iDoc->cascade()->findSymbol(Attribute::BACKGROUND());
+  Attribute bg = page->backgroundSymbol(iDoc->cascade());
+  const Symbol *background = iDoc->cascade()->findSymbol(bg);
   if (background && page->findLayer("BACKGROUND") < 0)
-    painter.drawSymbol(Attribute::BACKGROUND());
+    painter.drawSymbol(bg);
 
   if (iDoc->properties().iNumberPages && iResources) {
     const Text *pn = iResources->pageNumber(pno, view);
@@ -780,8 +781,8 @@ void PdfWriter::createPageView(int pno, int view)
   const Page *page = iDoc->page(pno);
   // Find bitmaps to embed
   BitmapFinder bm;
-  const Symbol *background =
-    iDoc->cascade()->findSymbol(Attribute::BACKGROUND());
+  Attribute bg = page->backgroundSymbol(iDoc->cascade());
+  const Symbol *background = iDoc->cascade()->findSymbol(bg);
   if (background && page->findLayer("BACKGROUND") < 0)
     background->iObject->accept(bm);
   bm.scanPage(page);

@@ -636,7 +636,7 @@ static int page_viewMap(lua_State *L)
 {
   Page *p = check_page(L, 1)->page;
   int n = check_viewno(L, 2, p);
-  const AttributeMap &map = p->viewMap(n);
+  const AttributeMap &map = p->pureViewMap(n);
   lua_createtable(L, map.count(), 0);
   for (int i = 0; i < map.count(); ++i) {
     lua_createtable(L, 0, 3);

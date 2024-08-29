@@ -374,12 +374,12 @@ void CanvasBase::drawObjects(cairo_t *cc)
 
   CairoPainter painter(iCascade, iFonts.get(), cc, iZoom, iStyle.pretty, false);
   painter.setDimmed(iDimmed);
-  painter.setAttributeMap(&iPage->viewMap(iView));
+  const auto viewMap = iPage->viewMap(iView, iCascade);
+  painter.setAttributeMap(&viewMap);
   std::vector<Matrix> layerMatrices = iPage->layerMatrices(iView);
   painter.pushMatrix();
 
-  const Symbol *background =
-    iCascade->findSymbol(Attribute::BACKGROUND());
+  const Symbol *background = iCascade->findSymbol(iPage->backgroundSymbol(iCascade));
   if (background && iPage->findLayer("BACKGROUND") < 0)
     background->iObject->draw(painter);
 

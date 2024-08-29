@@ -74,7 +74,8 @@ Buffer Thumbnail::render(const Page *page, int view)
   cairo_translate(cc, offset.x, offset.y);
 
   CairoPainter painter(iDoc->cascade(), iFonts.get(), cc, iZoom, true, false);
-  painter.setAttributeMap(&page->viewMap(view));
+  const auto viewMap = page->viewMap(view, iDoc->cascade());
+  painter.setAttributeMap(&viewMap);
   std::vector<Matrix> layerMatrices = page->layerMatrices(view);
   painter.pushMatrix();
   for (int i = 0; i < page->count(); ++i) {
@@ -161,15 +162,16 @@ bool Thumbnail::saveRender(TargetFormat fm, const char *dst,
 
   cairo_set_tolerance(cc, tolerance);
   CairoPainter painter(iDoc->cascade(), iFonts.get(), cc, zoom, true, true);
-  painter.setAttributeMap(&page->viewMap(view));
+  const auto viewMap = page->viewMap(view, iDoc->cascade());
+  painter.setAttributeMap(&viewMap);
   std::vector<Matrix> layerMatrices = page->layerMatrices(view);
   painter.pushMatrix();
 
   if (iNoCrop) {
-    const Symbol *background =
-      iDoc->cascade()->findSymbol(Attribute::BACKGROUND());
+    Attribute bg = page->backgroundSymbol(iDoc->cascade());
+    const Symbol *background = iDoc->cascade()->findSymbol(bg);
     if (background && page->findLayer("BACKGROUND") < 0)
-      painter.drawSymbol(Attribute::BACKGROUND());
+      painter.drawSymbol(bg);
 
     const Text *title = page->titleText();
     if (title)

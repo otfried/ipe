@@ -415,6 +415,13 @@ namespace ipe {
     std::vector<AttributeMapping> iMap;
   };
 
+  //! A page style.
+  /*! \ingroup attr */
+  struct PageStyle {
+    Attribute iBackground;
+    AttributeMap iMapping;
+  };
+
   // --------------------------------------------------------------------
 
   class AllAttributes {
