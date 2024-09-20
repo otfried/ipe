@@ -2590,7 +2590,7 @@ local function sheets_add(d, dd)
   local i = d:get("list")
   if not i then i = 1 end
   local s, f = ipeui.fileDialog(dd.model.ui:win(), "open", "Add stylesheet",
-				filter_stylesheets)
+				filter_stylesheets, config.styleDirs[1])
   if not s then return end
   local sheet, msg = ipe.Sheet(s)
   if not sheet then
