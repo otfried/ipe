@@ -596,7 +596,7 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
     s += ":$TEXINPUTS\"; ";
   }
   if (online) {
-#ifdef __APPLE__
+#if defined(__APPLE__) && defined(IPEBUNDLE)
     s += "\"";
     s += ipeDir("../MacOS", "ipecurl");
     s += "\" ";
