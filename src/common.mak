@@ -233,10 +233,8 @@ ifdef IPEWASM
   CXXFLAGS	 += -g -O2
   ZLIB_CFLAGS    =
   ZLIB_LIBS      = -lz
-  GSL_CFLAGS	 :=
-  GSL_LIBS	 := -lgsl -lgslcblas -lm
-  PNG_CFLAGS     := --use-port=libpng
-  PNG_LIBS       := -lpng -lz
+  PNG_CFLAGS     := -I$(IPEDEPS)/libpng16
+  PNG_LIBS       := -L$(IPEDEPS)/lib -lpng16 -lz
   JPEG_CFLAGS    := --use-port=libjpeg
   JPEG_LIBS      := -ljpeg
   SPIRO_CFLAGS   := -I$(IPEDEPS)/include/spiro
@@ -245,6 +243,11 @@ ifdef IPEWASM
   GSL_LIBS       := -L$(IPEDEPS)/lib -lgsl -lgslcblas -lm
   LUA_CFLAGS     := -I$(IPEDEPS)/include/lua
   LUA_LIBS       := -L$(IPEDEPS)/lib -llua
+  FREETYPE_CFLAGS := -I$(IPEDEPS)/include/freetype2 \
+       -I$(IPEDEPS)/include
+  FREETYPE_LIBS := -L$(IPEDEPS)/lib -lfreetype
+  CAIRO_CFLAGS   := -I$(IPEDEPS)/include/cairo
+  CAIRO_LIBS     := -L$(IPEDEPS)/lib -lcairo -lpixman-1
 else
   # -------------------- Unix --------------------
   CXXFLAGS	 += -g -O2
