@@ -13,9 +13,10 @@ else ifdef IPECROSS
   WIN32 = 1
   IPEBUNDLE = 1
   IPEUI = WIN32
-else ifdef IPEWASM
-  # IPEBUNDLE = 1
+else ifdef IPENODEJS
+  IPEBUNDLE = 1
   IPEUI = QT
+  CPPFLAGS += -DIPENODEJS
 else
   UNAME = $(shell uname)
   ifeq "$(UNAME)" "Darwin"
@@ -38,7 +39,7 @@ IPESRCDIR ?= ..
 # Read configuration options (not used for Win32 and Wasm)
 
 ifndef WIN32
-ifndef IPEWASM
+ifndef IPENODEJS
   include $(IPESRCDIR)/$(IPECONFIGMAK)
   BUILDDIR = $(IPESRCDIR)/../build
 endif
@@ -221,8 +222,8 @@ ifdef MACOS
   install_symlinks = ln -sf lib$1.$(IPEVERS).dylib \
 		$(INSTALL_ROOT)$(IPELIBDIR)/lib$1.dylib
 else
-ifdef IPEWASM
-  # -------------------- Wasm --------------------
+ifdef IPENODEJS
+  # -------------------- emscripten --------------------
   BUILDDIR       = $(IPESRCDIR)/../emscripten
   IPEDEPS	 ?= /sw/emscripten
   # this is a bit weird, as wasm doesn't really have shared libraries

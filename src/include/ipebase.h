@@ -372,6 +372,8 @@ namespace ipe {
     static int toNumber(String s, int &iValue, double &dValue);
     static String spiroVersion();
     static String gslVersion();
+    static std::pair<int, std::vector<const char *>> setupNodeJs();
+    static String dotIpe();
   };
 
   // --------------------------------------------------------------------

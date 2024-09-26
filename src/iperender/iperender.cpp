@@ -112,8 +112,12 @@ static void usage()
   exit(1);
 }
 
-int main(int argc, char *argv[])
-{
+#ifdef __EMSCRIPTEN__
+int main() {
+  auto [ argc, argv ] = ipe::Platform::setupNodeJs();
+#else
+int main(int argc, char *argv[]) {
+#endif
   ipe::Platform::initLib(ipe::IPELIB_VERSION);
 
   // ensure at least three arguments (handles -help as well :-)

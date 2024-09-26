@@ -107,7 +107,7 @@ locale_t ipeLocale;
 #endif
 
 #ifndef WIN32
-static String dotIpe()
+String Platform::dotIpe()
 {
   const char *home = getenv("HOME");
   if (!home)
@@ -137,7 +137,7 @@ static void readIpeConf()
 #else
 static void readIpeConf()
 {
-  String fname = dotIpe() + "/ipe.conf";
+  String fname = Platform::dotIpe() + "ipe.conf";
   String conf = Platform::readFile(fname);
   if (conf.empty())
     return;
@@ -300,7 +300,7 @@ String Platform::ipeDir(const char *suffix, const char *fname)
   wchar_t exename[OFS_MAXPATHNAME];
   GetModuleFileNameW(nullptr, exename, OFS_MAXPATHNAME);
   String exe(exename);
-#else
+#elif defined(__APPLE__)
   char path[PATH_MAX], rpath[PATH_MAX];
   uint32_t size = sizeof(path);
   String exe;
@@ -308,6 +308,8 @@ String Platform::ipeDir(const char *suffix, const char *fname)
     exe = String(rpath);
   else
     ipeDebug("ipeDir: buffer too small; need size %u", size);
+#elif defined(IPENODEJS)
+  String exe("/root/ipe.js");
 #endif
   int i = exe.rfind(IPESEP);
   if (i >= 0) {
@@ -483,7 +485,8 @@ String Platform::readFile(String fname)
   return s;
 }
 
-#ifndef __EMSCRIPTEN__  // wasm version is elsewhere
+#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
+// amazingly, this actually works for a CLI in NodeJS in wasm.
 //! Runs latex on file ipetemp.tex in given directory.
 /*! directory of docname is added to TEXINPUTS if its non-empty. */
 int Platform::runLatex(String dir, LatexType engine, String docname) noexcept

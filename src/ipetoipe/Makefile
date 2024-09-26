@@ -8,6 +8,10 @@ include ../common.mak
 TARGET = $(call exe_target,ipetoipe)
 
 CPPFLAGS += -I../include
+ifdef IPENODEJS
+LDFLAGS += -sEXPORTED_RUNTIME_METHODS=stringToNewUTF8
+LDFLAGS += -lnoderawfs.js -lnodefs.js
+endif
 LIBS += -L$(buildlib) -lipe
 
 all: $(TARGET)
