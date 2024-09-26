@@ -4,7 +4,7 @@
 # Building Ipe --- common definitions
 #
 # --------------------------------------------------------------------
-# Are we compiling for Windows?  For Mac OS X?
+# Are we compiling for Windows?  For Mac OS X? For webasm?
 ifdef COMSPEC
   WIN32	=  1
   IPEBUNDLE = 1
@@ -13,6 +13,9 @@ else ifdef IPECROSS
   WIN32 = 1
   IPEBUNDLE = 1
   IPEUI = WIN32
+else ifdef IPEWASM
+  # IPEBUNDLE = 1
+  IPEUI = QT
 else
   UNAME = $(shell uname)
   ifeq "$(UNAME)" "Darwin"
@@ -32,11 +35,13 @@ endif
 IPESRCDIR ?= ..
 
 # --------------------------------------------------------------------
-# Read configuration options (not used on Win32)
+# Read configuration options (not used for Win32 and Wasm)
 
 ifndef WIN32
+ifndef IPEWASM
   include $(IPESRCDIR)/$(IPECONFIGMAK)
   BUILDDIR = $(IPESRCDIR)/../build
+endif
 endif
 
 # --------------------------------------------------------------------
@@ -215,7 +220,32 @@ ifdef MACOS
   dll_symlinks    = ln -sf lib$1.$(IPEVERS).dylib $(buildlib)/lib$1.dylib
   install_symlinks = ln -sf lib$1.$(IPEVERS).dylib \
 		$(INSTALL_ROOT)$(IPELIBDIR)/lib$1.dylib
-else	
+else
+ifdef IPEWASM
+  # -------------------- Wasm --------------------
+  BUILDDIR       = $(IPESRCDIR)/../emscripten
+  IPEDEPS	 ?= /sw/emscripten
+  # this is a bit weird, as wasm doesn't really have shared libraries
+  DLL_LDFLAGS	 += -shared
+  dll_target     = $(buildlib)/lib$1.so
+  CXX            = em++
+  CC             = emcc
+  CXXFLAGS	 += -g -O2
+  ZLIB_CFLAGS    =
+  ZLIB_LIBS      = -lz
+  GSL_CFLAGS	 :=
+  GSL_LIBS	 := -lgsl -lgslcblas -lm
+  PNG_CFLAGS     := --use-port=libpng
+  PNG_LIBS       := -lpng -lz
+  JPEG_CFLAGS    := --use-port=libjpeg
+  JPEG_LIBS      := -ljpeg
+  SPIRO_CFLAGS   := -I$(IPEDEPS)/include/spiro
+  SPIRO_LIBS     := -L$(IPEDEPS)/lib -lspiro
+  GSL_CFLAGS     := -I$(IPEDEPS)/include
+  GSL_LIBS       := -L$(IPEDEPS)/lib -lgsl -lgslcblas -lm
+  LUA_CFLAGS     := -I$(IPEDEPS)/include/lua
+  LUA_LIBS       := -L$(IPEDEPS)/lib -llua
+else
   # -------------------- Unix --------------------
   CXXFLAGS	 += -g -O2
   DLL_LDFLAGS	 += -shared 
@@ -225,6 +255,7 @@ else
   dll_symlinks   = ln -sf lib$1.so.$(IPEVERS) $(buildlib)/lib$1.so
   install_symlinks = ln -sf lib$1.so.$(IPEVERS) \
 		$(INSTALL_ROOT)$(IPELIBDIR)/lib$1.so
+endif
   buildlib	 = $(BUILDDIR)/lib
   buildbin       = $(BUILDDIR)/bin
   buildipelets   = $(BUILDDIR)/ipelets

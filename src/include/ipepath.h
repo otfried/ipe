@@ -130,18 +130,18 @@ namespace ipe {
 
   private:
     TPathMode iPathMode : 2;
-    int iHasFArrow : 1;
-    int iHasRArrow : 1;
+    unsigned int iHasFArrow : 1;
+    unsigned int iHasRArrow : 1;
     TLineJoin iLineJoin : 3;
     TLineCap iLineCap : 3;
     TFillRule iFillRule : 2;
-    int iFArrowOk : 1;
-    int iRArrowOk : 1;
-    int iFArrowArc : 1;
-    int iRArrowArc : 1;
-    int iMArrowOk : 1;
-    int iFArrowIsM : 1;
-    int iRArrowIsM : 1;
+    unsigned int iFArrowOk : 1;
+    unsigned int iRArrowOk : 1;
+    unsigned int iFArrowArc : 1;
+    unsigned int iRArrowArc : 1;
+    unsigned int iMArrowOk : 1;
+    unsigned int iFArrowIsM : 1;
+    unsigned int iRArrowIsM : 1;
 
     Attribute iStroke;
     Attribute iFill;

@@ -146,7 +146,7 @@ bool dctDecode(Buffer dctData, Buffer pixelData)
   // Decompression:
   jpeg_create_decompress(&cinfo);
   jpeg_mem_src(&cinfo, (unsigned char *) dctData.data(), dctData.size());
-  jpeg_read_header(&cinfo, 1);
+  jpeg_read_header(&cinfo, TRUE);
   cinfo.out_color_space = JCS_RGB;
   jpeg_start_decompress(&cinfo);
   uint32_t *p = (uint32_t *) pixelData.data();
@@ -269,10 +269,10 @@ Bitmap Bitmap::readPNG(const char *fname, Vector &dotsPerInch, const char * &err
 		       mpi * png_get_y_pixels_per_meter(png_ptr, info_ptr));
 
   Buffer pixels(4 * width * height);
-  png_bytep row[height];
+  std::vector<png_bytep> row(height);
   for (int y = 0; y < height; ++y)
     row[y] = (png_bytep) pixels.data() + 4 * width * y;
-  png_read_image(png_ptr, row);
+  png_read_image(png_ptr, row.data());
 
   png_read_end(png_ptr, (png_infop) nullptr);
   png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) nullptr);
