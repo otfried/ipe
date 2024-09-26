@@ -39,7 +39,7 @@ using namespace ipe;
 
 enum TFormat {EXml, EPdf, EEps, EIpe5, EUnknown};
 
-String readLine(DataSource &source)
+String readALine(DataSource &source)
 {
   String s;
   int ch = source.getChar();
@@ -53,8 +53,8 @@ String readLine(DataSource &source)
 //! Determine format of file in \a source.
 TFormat fileFormat(DataSource &source)
 {
-  String s1 = readLine(source);
-  String s2 = readLine(source);
+  String s1 = readALine(source);
+  String s2 = readALine(source);
   if (s1.substr(0, 5) == "<?xml" || s1.substr(0, 4) == "<ipe")
     return EXml;
   if (s1.substr(0, 4) == "%PDF")
