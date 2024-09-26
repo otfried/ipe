@@ -30,6 +30,7 @@
 
 #include "ipeui_qt.h"
 
+#include <iostream>
 #include <QApplication>
 #include <QCheckBox>
 #include <QCloseEvent>
@@ -47,6 +48,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QRegularExpression>
+#include <QSaveFile>
 #include <QShortcut>
 #include <QSyntaxHighlighter>
 #include <QTextEdit>
@@ -810,6 +812,7 @@ static int ipeui_getColor(lua_State *L)
 
 // --------------------------------------------------------------------
 
+#ifndef __EMSCRIPTEN__
 static int ipeui_fileDialog(lua_State *L)
 {
   static const char * const typenames[] = { "open", "save", nullptr };
@@ -873,6 +876,117 @@ static int ipeui_fileDialog(lua_State *L)
   }
   return 0;
 }
+
+static int ipeui_downloadFile(lua_State *L) { return 0; } // no-op
+#else
+static int ipeui_fileDialog(lua_State *L)
+{
+  static const char * const typenames[] = { "open", "save", nullptr };
+
+  QWidget *parent = check_winid(L, 1);
+  int type = luaL_checkoption(L, 2, nullptr, typenames);
+  QString caption = checkqstring(L, 3);
+  if (!lua_istable(L, 4))
+    luaL_argerror(L, 4, "table expected for filters");
+  QString filters = "";
+  QString filtersNames = "";
+  int nFilters = lua_rawlen(L, 4);
+  for (int i = 1; i <= nFilters; i += 1) {
+    lua_rawgeti(L, 4, i);
+    luaL_argcheck(L, lua_isstring(L, -1), 4, "filter entry is not a string");
+    if (i % 2 == 0) { // 1-based indexing, first named entry, second csv extensions
+      if (!filters.isEmpty())
+        filters += ",";
+      filters += checkqstring(L, -1).replace("*", "").replace(";", ",");
+    } else {
+      if (!filtersNames.isEmpty())
+        filtersNames += "\n";
+      filtersNames += checkqstring(L, -1);
+    }
+    lua_pop(L, 1); // element i
+  }
+
+  QString dir;
+  if (!lua_isnoneornil(L, 5))
+    dir = checkqstring(L, 5);
+  QString name;
+  if (!lua_isnoneornil(L, 6))
+    name = checkqstring(L, 6);
+  int selected = 0;
+  if (!lua_isnoneornil(L, 7))
+    selected = luaL_checkinteger(L, 7);
+
+  QString filePath;
+  if (type == 0) { // open
+    std::filesystem::create_directories("/tmp/ipefiles");
+
+    WaitDialog dialog("Waiting for file upload");
+
+    bool success = false;
+    auto fileContentReady = [&filePath, &success, &dialog](const QString &fileName, const QByteArray &fileContent) {
+      if (!fileName.isEmpty()) {
+        filePath = "/tmp/ipefiles/" + fileName;
+        QSaveFile file(filePath);
+        file.open(QIODevice::WriteOnly);
+        file.write(fileContent);
+        success = file.commit();
+      }
+      dialog.completed(); // FIXME never called if upload is cancelled
+    };
+    // unused: parent, caption, selected (filter), dir, name
+    QFileDialog::getOpenFileContent(filters, fileContentReady);
+
+    dialog.startDialog();
+  } else { // save
+    if(name.contains('/')) {
+      name = name.section("/", -1);
+    }
+
+    bool ok;
+    QString text = QInputDialog::getText(
+      parent,
+      caption,
+      "Please enter a file name. Possible extensions:\n"+filtersNames,
+      QLineEdit::Normal,
+      name,
+      &ok);
+
+    if (ok && !text.isEmpty()) {
+      if (dir.isEmpty()) {
+        dir = "/home/web_user";
+      }
+      std::filesystem::create_directories(dir.toStdString());
+      filePath = dir + "/" + text;
+    } else {
+      return 0;
+    }
+  }
+
+  push_string(L, filePath);
+  // QString f = dialog.selectedNameFilter();
+  // int sf = 0;
+  // while (sf < filters.size() && filters[sf] != f)	++sf;
+  // lua_pushinteger(L, (sf < filters.size()) ? sf + 1 : 0);
+  // TODO currently type cannot be changed when saving / error when no extension
+  lua_pushinteger(L, 0); // selected type
+  return 2;
+}
+
+static int ipeui_downloadFile(lua_State *L)
+{
+  QString path = checkqstring(L, 1);
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    std::cerr << "Could not open file at " << path.toStdString() << " for downloading!" << std::endl;
+    return 0;
+  }
+  if (path.contains('/')) {
+    path = path.section("/", -1);
+  }
+  QFileDialog::saveFileContent(file.readAll(), path);
+  return 0;
+}
+#endif
 
 // --------------------------------------------------------------------
 
@@ -983,6 +1097,7 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "messageBox", ipeui_messageBox },
   { "waitDialog", ipeui_wait },
   { "currentDateTime", ipeui_currentDateTime },
+  { "downloadFile", ipeui_downloadFile },
   { nullptr, nullptr }
 };
 
