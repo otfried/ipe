@@ -483,6 +483,7 @@ String Platform::readFile(String fname)
   return s;
 }
 
+#ifndef __EMSCRIPTEN__  // wasm version is elsewhere
 //! Runs latex on file ipetemp.tex in given directory.
 /*! directory of docname is added to TEXINPUTS if its non-empty. */
 int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
@@ -619,6 +620,7 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
   return result;
 #endif
 }
+#endif
 
 #ifdef WIN32
 FILE *Platform::fopen(const char *fname, const char *mode)
