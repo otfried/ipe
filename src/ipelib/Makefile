@@ -59,8 +59,7 @@ sources	= \
 	ipesnap.cpp \
 	ipeutils.cpp \
 	ipelatex.cpp \
-	ipedoc.cpp \
-	ipenodejs.cpp
+	ipedoc.cpp
 
 ifdef WIN32
 sources += ipebitmap_win.cpp

@@ -83,12 +83,7 @@ static void usage()
   exit(1);
 }
 
-#ifdef IPENODEJS
-int main() {
-  auto [ argc, argv ] = ipe::Platform::setupNodeJs();
-#else
 int main(int argc, char *argv[]) {
-#endif
   ipe::Platform::initLib(ipe::IPELIB_VERSION);
 
   // ensure at least two arguments (handles -help as well :-)

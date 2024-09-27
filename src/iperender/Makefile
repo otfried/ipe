@@ -9,8 +9,7 @@ TARGET = $(call exe_target,iperender)
 
 CPPFLAGS += -I../include $(CAIRO_CFLAGS) -I../ipecairo
 ifdef IPENODEJS
-LDFLAGS += -sEXPORTED_RUNTIME_METHODS=stringToNewUTF8
-LDFLAGS += -lnoderawfs.js -lnodefs.js
+LDFLAGS += -lnoderawfs.js -lnodefs.js --pre-js $(NODEJSPRE)
 endif
 LIBS += -L$(buildlib) -lipecairo -lipe $(CAIRO_LIBS)
 
@@ -18,9 +17,9 @@ all: $(TARGET)
 
 sources	= iperender.cpp
 
-$(TARGET): $(objects)
+$(TARGET): $(objects) $(NODEJSPRE)
 	$(MAKE_BINDIR)
-	$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $(objects) $(LIBS)
 
 clean:
 	@-rm -f $(objects) $(TARGET) $(DEPEND)

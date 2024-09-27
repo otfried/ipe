@@ -229,12 +229,13 @@ ifdef IPENODEJS
   # this is a bit weird, as wasm doesn't really have shared libraries
   DLL_LDFLAGS	 += -shared
   dll_target     = $(buildlib)/lib$1.so
+  exe_target	 = $(BUILDDIR)/bin/$1.js
   CXX            = em++
   CC             = emcc
   CXXFLAGS	 += -g -O2
   ZLIB_CFLAGS    =
   ZLIB_LIBS      = -lz
-  PNG_CFLAGS     := -I$(IPEDEPS)/libpng16
+  PNG_CFLAGS     := -I$(IPEDEPS)/include/libpng16
   PNG_LIBS       := -L$(IPEDEPS)/lib -lpng16 -lz
   JPEG_CFLAGS    := --use-port=libjpeg
   JPEG_LIBS      := -ljpeg
@@ -249,6 +250,7 @@ ifdef IPENODEJS
   FREETYPE_LIBS := -L$(IPEDEPS)/lib -lfreetype
   CAIRO_CFLAGS   := -I$(IPEDEPS)/include/cairo
   CAIRO_LIBS     := -L$(IPEDEPS)/lib -lcairo -lpixman-1
+  NODEJSPRE      := ../ipelib/nodejs-pre.js
 else
   # -------------------- Unix --------------------
   CXXFLAGS	 += -g -O2
@@ -259,11 +261,11 @@ else
   dll_symlinks   = ln -sf lib$1.so.$(IPEVERS) $(buildlib)/lib$1.so
   install_symlinks = ln -sf lib$1.so.$(IPEVERS) \
 		$(INSTALL_ROOT)$(IPELIBDIR)/lib$1.so
+  exe_target	 = $(BUILDDIR)/bin/$1
 endif
   buildlib	 = $(BUILDDIR)/lib
   buildbin       = $(BUILDDIR)/bin
   buildipelets   = $(BUILDDIR)/ipelets
-  exe_target	 = $(BUILDDIR)/bin/$1
   ipelet_target  = $(BUILDDIR)/ipelets/$1.so
 endif
 endif

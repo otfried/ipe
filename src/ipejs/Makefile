@@ -1,23 +1,23 @@
 # --------------------------------------------------------------------
-# Makefile for Ipetoipe
+# Makefile for ipejs - Javascript bindings to ipelib etc.
 # --------------------------------------------------------------------
 
-OBJDIR = $(BUILDDIR)/obj/ipetoipe
+ifdef IPENODEJS
+
+OBJDIR = $(BUILDDIR)/obj/ipejs
 include ../common.mak
 
-TARGET = $(call exe_target,ipetoipe)
+TARGET = $(call exe_target,ipejs)
 
 CPPFLAGS += -I../include
-ifdef IPENODEJS
-LDFLAGS += -lnoderawfs.js -lnodefs.js --pre-js $(NODEJSPRE)
-endif
 LIBS += -L$(buildlib) -lipe
+LDFLAGS += -lembind
 
 all: $(TARGET)
 
-sources	= ipetoipe.cpp
+sources	= ipejs.cpp
 
-$(TARGET): $(objects) $(NODEJSPRE)
+$(TARGET): $(objects)
 	$(MAKE_BINDIR)
 	$(CXX) $(LDFLAGS) -o $@ $(objects) $(LIBS)
 
@@ -29,8 +29,6 @@ $(DEPEND): Makefile
 
 -include $(DEPEND)
 
-install: $(TARGET)
-	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEBINDIR)
-	$(INSTALL_PROGRAMS) $(TARGET) $(INSTALL_ROOT)$(IPEBINDIR)
+endif
 
 # --------------------------------------------------------------------
