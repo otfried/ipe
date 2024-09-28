@@ -33,6 +33,7 @@
 #define APPUI_JS_H
 
 #include "appui.h"
+#include "ipecanvas_js.h"
 
 using namespace ipe;
 
@@ -46,7 +47,7 @@ class LayerBox;
 class AppUi : public AppUiBase {
 
 public:
-  AppUi(lua_State *L0, int model);
+  AppUi(lua_State *L0, int model, Canvas *canvas);
   ~AppUi();
 
   virtual void setLayers(const Page *page, int view) override;

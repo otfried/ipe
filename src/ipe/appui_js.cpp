@@ -33,22 +33,26 @@
 
 #include "ipelua.h"
 
-#include "ipethumbs.h"
+// #include "ipethumbs.h"
 
-#include <cstdio>
-#include <cstdlib>
+// #include <cstdio>
+// #include <cstdlib>
 
-#include <sys/types.h>
-#include <sys/stat.h>
+// #include <sys/types.h>
+// #include <sys/stat.h>
+
+#include <emscripten.h>
+#include <emscripten/bind.h>
 
 using namespace ipe;
 using namespace ipelua;
 
 // --------------------------------------------------------------------
 
-AppUi::AppUi(lua_State *L0, int model)
+AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
   : AppUiBase(L0, model)
 {
+  iCanvas = canvas;
 }
 
 AppUi::~AppUi()
@@ -57,6 +61,31 @@ AppUi::~AppUi()
 }
 
 // --------------------------------------------------------------------
+
+void AppUi::addRootMenu(int id, const char *name)
+{
+}
+
+void AppUi::addItem(int id, const char *title, const char *name)
+{
+}
+
+static MENUHANDLE submenu = nullptr;
+
+void AppUi::startSubMenu(int id, const char *name, int tag)
+{
+}
+
+void AppUi::addSubItem(const char *title, const char *name)
+{
+}
+
+MENUHANDLE AppUi::endSubMenu()
+{
+  return submenu;
+}
+
+// ------------------------------------------------------------------------
 
 void AppUi::setRecentFileMenu(const std::vector<String> & names)
 {
@@ -268,9 +297,14 @@ int AppUi::clipboard(lua_State *L)
   return 0;
 }
 
-AppUiBase *createAppUi(lua_State *L0, int model)
+// --------------------------------------------------------------------
+
+int CanvasBase::selectPageOrView(Document *doc, int page, int startIndex,
+				 int pageWidth, int width, int height)
 {
-  return new AppUi(L0, model);
+  // TODO
+  return -1;
 }
 
-// --------------------------------------------------------------------
+// ------------------------------------------------------------------------
+

@@ -80,6 +80,65 @@ static int ipeui_wait(lua_State *L)
 
 // --------------------------------------------------------------------
 
+class PTimer : public Timer {
+public:
+  PTimer(lua_State *L0, int lua_object, const char *method);
+  virtual ~PTimer();
+
+  virtual int setInterval(lua_State *L) override;
+  virtual int active(lua_State *L) override;
+  virtual int start(lua_State *L) override;
+  virtual int stop(lua_State *L) override;
+private:
+  emscripten::val iTimer;
+};
+
+PTimer::PTimer(lua_State *L0, int lua_object, const char *method)
+  : Timer(L0, lua_object, method)
+{
+  /*
+  iTimer = new QTimer();
+  connect(iTimer, &QTimer::timeout, [&]() {
+      if (iSingleShot)
+	iTimer->stop();
+      callLua();
+    });
+  */
+}
+
+PTimer::~PTimer()
+{
+  // delete iTimer;
+}
+
+int PTimer::setInterval(lua_State *L)
+{
+  int t = (int)luaL_checkinteger(L, 2);
+  (void) t;
+  // iTimer->setInterval(t);
+  return 0;
+}
+
+int PTimer::active(lua_State *L)
+{
+  lua_pushboolean(L, false); // iTimer->isActive());
+  return 1;
+}
+
+int PTimer::start(lua_State *L)
+{
+  // iTimer->start();
+  return 0;
+}
+
+int PTimer::stop(lua_State *L)
+{
+  // iTimer->stop();
+  return 0;
+}
+
+// ------------------------------------------------------------------------
+
 static int timer_constructor(lua_State *L)
 {
   luaL_argcheck(L, lua_istable(L, 1), 1, "argument is not a table");
@@ -99,7 +158,7 @@ static int timer_constructor(lua_State *L)
   lua_pushvalue(L, 1);
   lua_rawseti(L, -2, 1);
   int lua_object = luaL_ref(L, LUA_REGISTRYINDEX);
-  // *t = new PTimer(L, lua_object, method);
+  *t = new PTimer(L, lua_object, method);
   (void) method;
   (void) lua_object;
   return 1;

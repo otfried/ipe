@@ -298,6 +298,9 @@ String Platform::ipeDrive()
 #ifdef IPEBUNDLE
 String Platform::ipeDir(const char *suffix, const char *fname)
 {
+#if defined(__EMSCRIPTEN__) && !defined(IPENODEJS)
+  String exe("/opt/ipe/");
+#else  
 #ifdef WIN32
   wchar_t exename[OFS_MAXPATHNAME];
   GetModuleFileNameW(nullptr, exename, OFS_MAXPATHNAME);
@@ -310,9 +313,6 @@ String Platform::ipeDir(const char *suffix, const char *fname)
     exe = String(rpath);
   else
     ipeDebug("ipeDir: buffer too small; need size %u", size);
-#elif defined(IPEWASM)
-  // TODO
-  String exe("/root/ipe.js");
 #endif
   int i = exe.rfind(IPESEP);
   if (i >= 0) {
@@ -329,6 +329,7 @@ String Platform::ipeDir(const char *suffix, const char *fname)
     exe += "/Resources/";
 #else
   exe += IPESEP;
+#endif
 #endif
   exe += suffix;
   if (fname) {
