@@ -16,6 +16,7 @@ LIBS += -L$(buildlib) -lipecanvas -lipecairo -lipelua -lipe -lipeui \
 ifdef IPEWASM
 # create js/wasm files suitable for a browser or an Electron render process
 LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -lembind
+LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS
 endif
 
 ifdef IPEBUNDLE

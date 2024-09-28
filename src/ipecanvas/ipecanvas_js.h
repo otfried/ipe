@@ -44,7 +44,7 @@ namespace ipe {
 
   class Canvas : public CanvasBase {
   public:
-    Canvas(emscripten::val canvas);
+    Canvas(emscripten::val canvas, double dpr);
 
     virtual void setCursor(TCursor cursor, double w = 1.0,
 			   Color *color = nullptr);
@@ -69,6 +69,7 @@ namespace ipe {
     virtual QSize sizeHint() const;
     */
   private:
+    emscripten::val iCanvas;
     emscripten::val iCtx;
   };
 

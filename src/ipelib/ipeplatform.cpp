@@ -154,14 +154,6 @@ static void readIpeConf()
 }
 #endif
 
-#ifdef __EMSCRIPTEN__
-static void debugHandlerImpl(const char *msg)
-{
-  EM_ASM({
-      console.log(UTF8ToString($0));
-    }, msg);
-}
-#else
 static void debugHandlerImpl(const char *msg)
 {
   if (showDebug) {
@@ -172,7 +164,6 @@ static void debugHandlerImpl(const char *msg)
 #endif
   }
 }
-#endif
 
 static void shutdownIpelib()
 {
@@ -203,9 +194,9 @@ void Platform::initLib(int version)
   initialized = true;
   readIpeConf();
   showDebug = getenv("IPEDEBUG") != nullptr;
-  debugHandler = debugHandlerImpl;
   if (showDebug)
-    ipeDebug("Debug messages enabled");
+    fprintf(stderr, "Debug messages enabled\n");
+  debugHandler = debugHandlerImpl;
 #ifdef WIN32
   HMODULE hDll = LoadLibraryA("msvcrt.dll");
   if (hDll) {

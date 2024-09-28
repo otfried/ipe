@@ -43,21 +43,18 @@ using namespace emscripten;
 // --------------------------------------------------------------------
 
 //! Construct a new canvas.
-Canvas::Canvas(val canvas)
+Canvas::Canvas(val canvas, double dpr)
 {
-  iWidth = canvas["width"].as<double>();
-  iHeight = canvas["height"].as<double>();
+  iCanvas = canvas;
+  iWidth = iCanvas["width"].as<double>();
+  iHeight = iCanvas["height"].as<double>();
 
-  // TODO: handle device pixel ratio
-  iBWidth = iWidth;
-  iBHeight = iHeight;
+  iBWidth = iWidth * dpr;
+  iBHeight = iHeight * dpr;
 
-  iCtx = canvas.call<val>("getContext", val("2d"));
+  iCtx = iCanvas.call<val>("getContext", val("2d"));
+  iCtx.call<void>("scale", 1.0/dpr, 1.0/dpr);
   ipeDebug("Canvas has size: %g x %g", iWidth, iHeight);
-
-  // quick test
-  iCtx.set("fillStyle", val("green"));
-  iCtx.call<void>("fillRect", 10, 10, 150, 100);
 }
 
 void Canvas::setCursor(TCursor cursor, double w, Color *color)
@@ -243,6 +240,11 @@ void Canvas::paint()
 				       buffer1["byteLength"]);
   val ImageData = val::global("ImageData");
   val img = ImageData.new_(buffer2, iBWidth, iBHeight);
+  // the following doesn't work, as createImageBitmap returns a promise
+  val createImageBitmap = val::global("createImageBitmap");
+  val img1 = createImageBitmap(img);
+  // putImageData cannot scale
+  // iCtx.call<void>("drawImage", img1, 0, 0, iWidth, iHeight);
   iCtx.call<void>("putImageData", img, 0, 0);
   /*
   if (iFifiVisible)
@@ -270,7 +272,7 @@ namespace {
 
 EMSCRIPTEN_BINDINGS(ipecanvas) {
   emscripten::class_<Canvas>("Canvas")
-    .constructor<val>()
+    .constructor<val, double>()
     .function("update", &updateCanvas, emscripten::allow_raw_pointers())
     .property("width", &Canvas::canvasWidth)
     .property("height", &Canvas::canvasHeight)
