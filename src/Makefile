@@ -7,6 +7,9 @@ GOAL ?= all
 ifdef IPECROSS
 IPEQVORONOI = 1
 endif
+ifdef IPEWASM
+undefine IPEQVORONOI
+endif
 
 subdirs = \
 	ipelib \
@@ -21,8 +24,10 @@ subdirs = \
 	ipelua \
 	ipeui \
 	ipe \
-	ipepresenter \
-	ipecurl
+
+ifndef IPEWASM
+subdirs += ipepresenter ipecurl
+endif
 
 ifdef IPEQVORONOI
 subdirs += ipelets/qvoronoi

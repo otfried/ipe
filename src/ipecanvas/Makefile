@@ -11,8 +11,11 @@ SONAME = $(call soname,ipecanvas)
 INSTALL_SYMLINKS = $(call install_symlinks,ipecanvas)
 
 CPPFLAGS += -I../include -I../ipecairo $(CAIRO_CFLAGS) $(UI_CFLAGS)
-LIBS += -L$(buildlib) -lipecairo -lipe $(CAIRO_LIBS) $(UI_LIBS)
 CXXFLAGS += $(DLL_CFLAGS)
+
+ifndef IPEWASM
+LIBS += -L$(buildlib) -lipecairo -lipe $(CAIRO_LIBS) $(UI_LIBS)
+endif
 
 all: $(TARGET)
 
@@ -22,6 +25,7 @@ win_sources = ipecanvas_win.cpp ipeselector_win.cpp ipepdfview_win.cpp
 gtk_sources = ipecanvas_gtk.cpp ipeselector_gtk.cpp
 qt_sources = ipecanvas_qt.cpp ipeselector_qt.cpp ipepdfview_qt.cpp
 moc_headers = ipecanvas_qt.h ipeselector_qt.h ipepdfview_qt.h
+js_sources = ipecanvas_js.cpp
 
 $(TARGET): $(objects)
 	$(MAKE_LIBDIR)

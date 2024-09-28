@@ -15,7 +15,10 @@ ifdef IPE_SPELLCHECK
 CPPFLAGS += -DIPE_SPELLCHECK
 endif
 CXXFLAGS += $(UI_CFLAGS) $(LUA_CFLAGS) $(DLL_CFLAGS) $(SPELL_CFLAGS)
+
+ifndef IPEWASM
 LIBS += $(UI_LIBS) $(LUA_LIBS) $(SPELL_LIBS)
+endif
 
 all: $(TARGET)
 
@@ -25,6 +28,7 @@ qt_sources = ipeui_qt.cpp
 moc_headers = ipeui_qt.h
 win_sources = ipeui_win.cpp
 gtk_sources = ipeui_gtk.cpp
+js_sources  = ipeui_js.cpp
 
 $(TARGET): $(objects)
 	$(MAKE_LIBDIR)

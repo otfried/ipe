@@ -13,8 +13,10 @@ CPPFLAGS += -I../include -I../ipecanvas -I../ipecairo -I../ipelua \
 LIBS += -L$(buildlib) -lipecanvas -lipecairo -lipelua -lipe -lipeui \
 	$(LUA_LIBS) $(UI_LIBS) $(CAIRO_LIBS) $(ZLIB_LIBS) $(DL_LIBS)
 
-manualdir = ../../build/doc
-doxydir = ../../build/doxygen/ipelib/html
+ifdef IPEWASM
+# create js/wasm files suitable for a browser or an Electron render process
+LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -lembind
+endif
 
 ifdef IPEBUNDLE
 CPPFLAGS += -DIPEBUNDLE
@@ -35,6 +37,7 @@ win_sources = main_win.cpp appui_win.cpp pathview_win.cpp pagesorter_win.cpp
 gtk_sources = main_gtk.cpp appui_gtk.cpp
 cocoa_sources = main_cocoa.cpp appui_cocoa.cpp controls_cocoa.cpp \
 	pagesorter_cocoa.cpp
+js_sources = appui_js.cpp ../ipejs/ipejs.cpp ../ipejs/ipecairojs.cpp
 
 ifdef WIN32
 CXXFLAGS += -mwindows
@@ -61,7 +64,7 @@ else
 nib = 
 endif
 
-$(TARGET): $(objects) $(resource) $(nib)
+$(TARGET): $(objects) $(resource) $(nib) Makefile
 	$(MAKE_BINDIR)
 	$(CXX) $(LDFLAGS) -o $@ $(objects) $(resource) $(LIBS)
 
@@ -80,7 +83,6 @@ app:
 	$(INSTALL_DIR) $(RESOURCEDIR)/lua
 	$(INSTALL_DIR) $(RESOURCEDIR)/styles
 	$(INSTALL_DIR) $(RESOURCEDIR)/icons
-#	$(INSTALL_DIR) $(BUNDLEDIR)/SharedSupport/doc
 	$(INSTALL_SCRIPTS) ../../scripts/* $(RESOURCEDIR)/scripts
 	$(INSTALL_FILES) lua/*.lua $(RESOURCEDIR)/lua
 	$(INSTALL_FILES) ../../styles/basic.isy $(RESOURCEDIR)/styles
@@ -96,8 +98,6 @@ app:
 	$(INSTALL_FILES) Info.plist $(BUNDLEDIR)
 	$(INSTALL_FILES) $(BUILDDIR)/ipe.icns $(RESOURCEDIR)
 	$(INSTALL_FILES) ../../artwork/icons.ipe $(RESOURCEDIR)/icons
-#	$(INSTALL_FILES) $(manualdir)/* $(BUNDLEDIR)/SharedSupport/doc
-#	$(INSTALL_FILES) $(doxydir)/* $(BUNDLEDIR)/SharedSupport/doc
 
 endif
 
@@ -112,9 +112,6 @@ install: $(TARGET)
 	$(INSTALL_PROGRAMS) $(TARGET) $(INSTALL_ROOT)$(IPEBINDIR)
 	$(INSTALL_SCRIPTS) ../../scripts/* $(INSTALL_ROOT)$(IPESCRIPTDIR)
 	$(INSTALL_FILES) ../../man/*.1 $(INSTALL_ROOT)$(IPEMANDIR) 
-#	$(INSTALL_FILES) $(manualdir)/* $(INSTALL_ROOT)$(IPEDOCDIR)
-#	test -d $(doxydir) && \
-#		$(INSTALL_FILES) $(doxydir)/* $(INSTALL_ROOT)$(IPEDOCDIR) || true
 	$(INSTALL_FILES) lua/*.lua $(INSTALL_ROOT)$(IPELUADIR)
 	$(INSTALL_FILES) ../../styles/*.isy $(INSTALL_ROOT)$(IPESTYLEDIR)
 	$(INSTALL_FILES) ../../artwork/icons.ipe $(INSTALL_ROOT)$(IPEICONDIR)

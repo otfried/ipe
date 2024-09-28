@@ -32,11 +32,52 @@
 
 #include <emscripten/bind.h>
 
+using namespace emscripten;
+
+namespace {
+  void initLib() {
+    putenv(strdup("IPEDEBUG=1"));
+    ipe::Platform::initLib(ipe::IPELIB_VERSION);
+  }
+  ipe::Document *loadWithErrorReport(std::string s) {
+    return ipe::Document::loadWithErrorReport(s.c_str());
+  }
+  ipe::Page *getPage(ipe::Document *doc, int pno) {
+    return doc->page(pno);
+  }
+  val getBytes(ipe::Buffer & buffer) {
+    return val(typed_memory_view(buffer.size(), (uint8_t *) buffer.data()));
+  }
+};
+
 EMSCRIPTEN_BINDINGS(ipe) {
-  emscripten::class_<ipe::Document>("Document")
-    .constructor()
-    .class_function("loadWithErrorReport", &ipe::Document::loadWithErrorReport,
-		    emscripten::return_value_policy::take_ownership());
+  class_<ipe::Platform>("Platform")
+    .class_function("initLib", &initLib);
+
+  value_object<ipe::Vector>("Vector")
+    .field("x", &ipe::Vector::x)
+    .field("y", &ipe::Vector::y);
+
+  class_<ipe::Buffer>("Buffer")
+    .property("size", &ipe::Buffer::size)
+    .function("data", &getBytes);
+
+  class_<ipe::Page>("Page")
+    .property("count", &ipe::Page::count)
+    .property("countLayers", &ipe::Page::countLayers)
+    .property("countViews", &ipe::Page::countViews);
+
+  class_<ipe::Cascade>("Cascade")
+    .property("count", &ipe::Cascade::count);
+
+  class_<ipe::Document>("Document")
+    .constructor<>()
+    .property("countPages", &ipe::Document::countPages)
+    .function("page", &getPage, allow_raw_pointers())
+    .function("cascade", select_overload<ipe::Cascade *()>(&ipe::Document::cascade),
+	      allow_raw_pointers());
+  function("loadWithErrorReport", &loadWithErrorReport, return_value_policy::take_ownership());
+
 }
 
 // --------------------------------------------------------------------

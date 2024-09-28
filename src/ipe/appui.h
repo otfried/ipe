@@ -59,6 +59,10 @@ typedef QMenu *MENUHANDLE;
 typedef NSWindow *WINID;
 typedef NSMenu *MENUHANDLE;
 #endif
+#ifdef IPEUI_JS
+typedef void *WINID;
+typedef void *MENUHANDLE;
+#endif
 
 using namespace ipe;
 

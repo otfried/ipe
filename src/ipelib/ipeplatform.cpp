@@ -67,6 +67,10 @@
 #include <cstring>
 #include <cerrno>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 using namespace ipe;
 
 // --------------------------------------------------------------------
@@ -150,6 +154,14 @@ static void readIpeConf()
 }
 #endif
 
+#ifdef __EMSCRIPTEN__
+static void debugHandlerImpl(const char *msg)
+{
+  EM_ASM({
+      console.log(UTF8ToString($0));
+    }, msg);
+}
+#else
 static void debugHandlerImpl(const char *msg)
 {
   if (showDebug) {
@@ -160,6 +172,7 @@ static void debugHandlerImpl(const char *msg)
 #endif
   }
 }
+#endif
 
 static void shutdownIpelib()
 {
@@ -189,12 +202,10 @@ void Platform::initLib(int version)
     return;
   initialized = true;
   readIpeConf();
-  showDebug = false;
-  if (getenv("IPEDEBUG")) {
-    showDebug = true;
-    fprintf(stderr, "Debug messages enabled\n");
-  }
+  showDebug = getenv("IPEDEBUG") != nullptr;
   debugHandler = debugHandlerImpl;
+  if (showDebug)
+    ipeDebug("Debug messages enabled");
 #ifdef WIN32
   HMODULE hDll = LoadLibraryA("msvcrt.dll");
   if (hDll) {
@@ -308,7 +319,8 @@ String Platform::ipeDir(const char *suffix, const char *fname)
     exe = String(rpath);
   else
     ipeDebug("ipeDir: buffer too small; need size %u", size);
-#elif defined(IPENODEJS)
+#elif defined(IPEWASM)
+  // TODO
   String exe("/root/ipe.js");
 #endif
   int i = exe.rfind(IPESEP);
@@ -486,7 +498,7 @@ String Platform::readFile(String fname)
 }
 
 #if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
-// amazingly, this actually works for a CLI in NodeJS in wasm.
+// amazingly, this actually works in NodeJS as is.
 //! Runs latex on file ipetemp.tex in given directory.
 /*! directory of docname is added to TEXINPUTS if its non-empty. */
 int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
@@ -622,6 +634,14 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
     result = WEXITSTATUS(result);
   return result;
 #endif
+}
+#endif
+
+#if defined(IPEWASM) && !defined(IPENODEJS)
+int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
+{
+  // TODO: escape from sandboxed environment
+  return 0;
 }
 #endif
 

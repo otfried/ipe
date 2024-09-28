@@ -13,10 +13,9 @@ else ifdef IPECROSS
   WIN32 = 1
   IPEBUNDLE = 1
   IPEUI = WIN32
-else ifdef IPENODEJS
+else ifdef IPEWASM
   IPEBUNDLE = 1
-  IPEUI = QT
-  CPPFLAGS += -DIPENODEJS
+  IPEUI = JS
 else
   UNAME = $(shell uname)
   ifeq "$(UNAME)" "Darwin"
@@ -39,7 +38,7 @@ IPESRCDIR ?= ..
 # Read configuration options (not used for Win32 and Wasm)
 
 ifndef WIN32
-ifndef IPENODEJS
+ifndef IPEWASM
   include $(IPESRCDIR)/$(IPECONFIGMAK)
   BUILDDIR = $(IPESRCDIR)/../build
 endif
@@ -91,6 +90,14 @@ UI_CFLAGS    = $(GTK_CFLAGS)
 UI_LIBS      = $(GTK_LIBS)
 all_sources  = $(sources) $(gtk_sources)
 BUILDDIR     = $(IPESRCDIR)/../gtkbuild
+objects      = $(addprefix $(OBJDIR)/, $(subst .cpp,.o,$(all_sources)))
+else ifeq ($(IPEUI), JS)
+# user interface using HTML, Javascript, and webassembly
+CPPFLAGS     += -DIPEUI_JS
+IPEUI_JS     := 1
+UI_CFLAGS    =
+UI_LIBS      =
+all_sources  = $(sources) $(js_sources)
 objects      = $(addprefix $(OBJDIR)/, $(subst .cpp,.o,$(all_sources)))
 else
   error("Unknown IPEUI selected")
@@ -222,7 +229,7 @@ ifdef MACOS
   install_symlinks = ln -sf lib$1.$(IPEVERS).dylib \
 		$(INSTALL_ROOT)$(IPELIBDIR)/lib$1.dylib
 else
-ifdef IPENODEJS
+ifdef IPEWASM
   # -------------------- emscripten --------------------
   BUILDDIR       = $(IPESRCDIR)/../emscripten
   IPEDEPS	 ?= /sw/emscripten
@@ -233,6 +240,11 @@ ifdef IPENODEJS
   CXX            = em++
   CC             = emcc
   CXXFLAGS	 += -g -O2
+  CPPFLAGS	 += -DIPEWASM
+ifdef IPENODEJS
+  # compile code that will run under NodeJS, not in a browser
+  CPPFLAGS       += -DIPENODEJS
+endif
   ZLIB_CFLAGS    =
   ZLIB_LIBS      = -lz
   PNG_CFLAGS     := -I$(IPEDEPS)/include/libpng16

@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- 
+ a basic test of the js bindings to ipelib 
+
+ to run it, embed 'tiling1.ipe' using 
+ LDFLAGS += --embed-file tiling1.ipe
+-->
+<html>
+  <script type="module">
+import initIpe from './ipejs.js';
+
+// Get 2d drawing context for canvas
+const ctx = document.getElementById('canvas').getContext('2d');
+ctx.fillStyle = "green";
+ctx.fillRect(10, 10, 150, 100);
+  
+initIpe().then((ipe) => {
+  console.log("Ipe bindings loaded");
+  const doc1 = new ipe.Document();
+  console.log("Document: ", doc1);
+  console.log("has pages: ", doc1.countPages);
+  const doc2 = new ipe.loadWithErrorReport("tiling1.ipe");
+  console.log("Document: ", doc2);
+  console.log("has pages: ", doc2.countPages);
+  const p = doc2.page(0);
+  console.log("The first page: ", p);
+  console.log(" has objects, layers, and views: ", p.count,
+	      p.countLayers, p.countViews);
+  const thumb = new ipe.Thumbnail(doc2, 200);
+  const w = thumb.width;
+  const h = thumb.height;
+  console.log("Thumbnail has size: ", w, h);
+  const b = thumb.render(p, 0);
+  console.log("Rendering first view to buffer of length: ", b.size);
+  const buffer = b.data();
+  console.log("Direct access to the data: ", buffer);
+
+  // use a different view on the same data
+  const data = new Uint8ClampedArray(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+
+  const img = new ImageData(data, thumb.width, thumb.height);
+  ctx.putImageData(img, 0, 0);
+
+  b.delete();
+  thumb.delete();
+  doc1.delete();
+  doc2.delete();
+});
+  </script>
+  <body>
+    <h3>Hello from Ipe!</h3>
+    <div>
+      <canvas id="canvas" width="200px" height="300px">
+	Your browser does not support canvas :-(
+      </canvas>
+    </div>
+  </body>
+</html>

@@ -58,6 +58,9 @@ using WINID = QWidget *;
 #include <Cocoa/Cocoa.h>
 using WINID = NSWindow * __unsafe_unretained;
 #endif
+#ifdef IPEUI_JS
+using WINID = void *;
+#endif
 
 using ushort = unsigned short;
 using uchar = unsigned char;
