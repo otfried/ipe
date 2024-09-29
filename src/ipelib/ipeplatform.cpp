@@ -68,7 +68,7 @@
 #include <cerrno>
 
 #ifdef __EMSCRIPTEN__
-#include <emscripten.h>
+#include <emscripten/bind.h>
 #endif
 
 using namespace ipe;
@@ -110,6 +110,12 @@ static LPStrtodL p_strtod_l = nullptr;
 locale_t ipeLocale;
 #endif
 
+#if defined(IPEWASM) && !defined(IPENODEJS)
+String Platform::dotIpe()
+{
+  return String("/home/ipe/.ipe");
+}
+#else
 #ifndef WIN32
 String Platform::dotIpe()
 {
@@ -121,6 +127,7 @@ String Platform::dotIpe()
     return String();
   return res + "/";
 }
+#endif
 #endif
 
 #ifdef WIN32
@@ -632,7 +639,12 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
 #if defined(IPEWASM) && !defined(IPENODEJS)
 int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
 {
-  // TODO: escape from sandboxed environment
+  std::string latex = (engine == LatexType::Xetex) ?
+    "xelatex" : (engine == LatexType::Luatex) ?
+    "lualatex" : "pdflatex";
+  String ipetemp = readFile(latexDirectory() + "latexrun/ipetemp.tex");
+  emscripten::val window = emscripten::val::global("window");
+  emscripten::val result = window.call<emscripten::val>("runlatex", latex, ipetemp);
   return 0;
 }
 #endif
