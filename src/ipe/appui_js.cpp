@@ -33,14 +33,6 @@
 
 #include "ipelua.h"
 
-// #include "ipethumbs.h"
-
-// #include <cstdio>
-// #include <cstdlib>
-
-// #include <sys/types.h>
-// #include <sys/stat.h>
-
 #include <emscripten.h>
 #include <emscripten/bind.h>
 
@@ -66,29 +58,64 @@ AppUi::~AppUi()
 
 // --------------------------------------------------------------------
 
+static emscripten::val tojs(const char *s) noexcept {
+  if (s == nullptr)
+    return emscripten::val::null();
+  return emscripten::val(std::string(s));
+}
+
+static void requestMenu(const char *what, int id, const char *name,
+			const char * title, int tag, const char * shortcut)
+{
+  emscripten::val window = emscripten::val::global("window");
+  window.call<void>("buildMenu", tojs(what), id, tojs(name),
+		    tojs(title), tag, tojs(shortcut));
+}
+
 void AppUi::addRootMenu(int id, const char *name)
 {
-  ipeDebug("addRootMenu %d %s", id, name);
+  requestMenu("addRootMenu", id, name, nullptr, 0, nullptr);
 }
 
 void AppUi::addItem(int id, const char *title, const char *name)
 {
-  ipeDebug("addItem %d %s", id, name);
+  if (title == nullptr) {
+    requestMenu("addSeparator", id, nullptr, nullptr, 0, nullptr);
+  } else {
+    if (name[0] == '@')
+      name = name + 1;
+    int tag = 0;
+    if (name[0] == '*') {
+      tag = 1;
+      name = name + 1;
+    } else if ((id == EModeMenu) ||
+	       (String(name).find('|') >= 0)) {
+      tag = 2; // radio button
+    }
+    lua_getglobal(L, "shortcuts");
+    lua_getfield(L, -1, name);
+    requestMenu("addItem", id, name, title, tag,
+		lua_isstring(L, -1) ? lua_tostring(L, -1) : nullptr);
+    lua_pop(L, 2);
+  }
 }
 
-static MENUHANDLE submenu = nullptr;
+static MENUHANDLE currentSubmenu = -1;
 
 void AppUi::startSubMenu(int id, const char *name, int tag)
 {
+  currentSubmenu = tag;
+  requestMenu("startSubMenu", id, name, nullptr, tag, nullptr);
 }
 
 void AppUi::addSubItem(const char *title, const char *name)
 {
+  addItem(-1, title, name);
 }
 
 MENUHANDLE AppUi::endSubMenu()
 {
-  return submenu;
+  return currentSubmenu;
 }
 
 // ------------------------------------------------------------------------
@@ -176,65 +203,11 @@ void AppUi::setActionState(const char *name, bool value)
 
 // --------------------------------------------------------------------
 
-static const char * const aboutText =
-  "<qt><h1>Ipe %d.%d.%d</h1>"
-  "<p>Copyright (c) 1993-%d Otfried Cheong</p>"
-  "<p>The extensible drawing editor Ipe creates figures in PDF format, "
-  "using LaTeX to format the text in the figures.</p>"
-  "<p>Ipe is released under the GNU Public License.</p>"
-  "<p>See the <a href=\"http://ipe.otfried.org\">Ipe homepage</a>"
-  " for further information.</p>"
-  "<p>If you are an Ipe fan and want to show others, have a look at the "
-  "<a href=\"https://www.shirtee.com/en/store/ipe\">Ipe T-shirts</a>.</p>"
-  "<h3>Platinum and gold sponsors</h3>"
-  "<ul><li>Hee-Kap Ahn</li>"
-  "<li>Günter Rote</li>"
-  "<li>SCALGO</li>"
-  "<li>Martin Ziegler</li></ul>"
-  "<p>If you enjoy Ipe, feel free to treat the author on a cup of coffee at "
-  "<a href=\"https://ko-fi.com/ipe7author\">Ko-fi</a>.</p>"
-  "<p>You can also become a member of the exclusive community of "
-  "<a href=\"http://patreon.com/otfried\">Ipe patrons</a>. "
-  "For the price of a cup of coffee per month you can make a meaningful contribution "
-  "to the continuing development of Ipe.</p>"
-  "</qt>";
-
-void AppUi::aboutIpe()
-{
-  std::vector<char> buf(strlen(aboutText) + 100);
-  sprintf(buf.data(), aboutText,
-	  IPELIB_VERSION / 10000,
-	  (IPELIB_VERSION / 100) % 100,
-	  IPELIB_VERSION % 100,
-	  COPYRIGHT_YEAR);
-
-  /*
-  QMessageBox msgBox(this);
-  msgBox.setWindowTitle("About Ipe");
-  msgBox.setWindowIcon(prefsIcon("ipe"));
-  msgBox.setInformativeText(buf.data());
-  msgBox.setIconPixmap(prefsPixmap("ipe"));
-  msgBox.setStandardButtons(QMessageBox::Ok);
-  msgBox.exec();
-  */
-}
-
-// --------------------------------------------------------------------
-
 void AppUi::action(String name)
 {
-  /*
-  if (name == "fullscreen") {
-    setWindowState(windowState() ^ Qt::WindowFullScreen);
-  } else 
-  */
-  if (name == "about") {
-    aboutIpe();
-  } else {
-    // if (name.left(5) == "mode_")
-    // iModeIndicator->setPixmap(prefsPixmap(name));
-    luaAction(name);
-  }
+  // if (name.left(5) == "mode_")
+  // iModeIndicator->setPixmap(prefsPixmap(name));
+  luaAction(name);
 }
 
 // --------------------------------------------------------------------

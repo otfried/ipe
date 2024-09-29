@@ -99,10 +99,12 @@ static void setup_globals(lua_State *L, int width, int height, double devicePixe
 
 // store these from the moment startIpe is called until we create the AppUi
 static Canvas *theCanvas = nullptr;
+static AppUi *theAppUi = nullptr;
 
 AppUiBase *createAppUi(lua_State *L0, int model)
 {
-  return new AppUi(L0, model, theCanvas);
+  theAppUi = new AppUi(L0, model, theCanvas);
+  return theAppUi;
 }
 
 int mainloop(lua_State *L)
@@ -111,7 +113,7 @@ int mainloop(lua_State *L)
   return 0;
 }
 
-void startIpe(Canvas *canvas, int width, int height, double dpr)
+AppUi *startIpe(Canvas *canvas, int width, int height, double dpr)
 {
   theCanvas = canvas;
 
@@ -128,11 +130,21 @@ void startIpe(Canvas *canvas, int width, int height, double dpr)
   setup_globals(L, width, height, dpr);
 
   lua_run_ipe(L, mainloop);
+  return theAppUi;
+}
+
+// --------------------------------------------------------------------
+
+void ipeAction(AppUi *ui, std::string name)
+{
+  ui->action(String(name.c_str()));
 }
 
 // --------------------------------------------------------------------
 
 EMSCRIPTEN_BINDINGS(ipeui) {
+  emscripten::class_<AppUi>("AppUi")
+    .function("action", &ipeAction, emscripten::allow_raw_pointers());
   emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());
 }
 

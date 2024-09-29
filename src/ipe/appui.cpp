@@ -255,7 +255,9 @@ void AppUiBase::buildMenus()
   addItem(EModeMenu, "Pan the canvas", "mode_pan");
   addItem(EModeMenu, "Shred objects", "mode_shredder");
   addItem(EModeMenu, "Laser pointer", "mode_laser");
+#ifndef IPEUI_JS  // breaks radio group
   addItem(EModeMenu);
+#endif
   addItem(EModeMenu, "Text labels", "mode_label");
   addItem(EModeMenu, "Mathematical symbols", "mode_math");
   addItem(EModeMenu, "Paragraphs", "mode_paragraph");

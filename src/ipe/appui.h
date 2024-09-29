@@ -61,7 +61,7 @@ typedef NSMenu *MENUHANDLE;
 #endif
 #ifdef IPEUI_JS
 typedef void *WINID;
-typedef void *MENUHANDLE;
+typedef int MENUHANDLE;
 #endif
 
 using namespace ipe;
