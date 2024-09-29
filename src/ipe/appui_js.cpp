@@ -49,10 +49,14 @@ using namespace ipelua;
 
 // --------------------------------------------------------------------
 
+static bool build_menus = true;
+
 AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
   : AppUiBase(L0, model)
 {
   iCanvas = canvas;
+  buildMenus();
+  build_menus = false; // all Windows share the same main menu
 }
 
 AppUi::~AppUi()
@@ -64,10 +68,12 @@ AppUi::~AppUi()
 
 void AppUi::addRootMenu(int id, const char *name)
 {
+  ipeDebug("addRootMenu %d %s", id, name);
 }
 
 void AppUi::addItem(int id, const char *title, const char *name)
 {
+  ipeDebug("addItem %d %s", id, name);
 }
 
 static MENUHANDLE submenu = nullptr;

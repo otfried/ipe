@@ -46,15 +46,15 @@ using namespace emscripten;
 Canvas::Canvas(val canvas, double dpr)
 {
   iCanvas = canvas;
-  iWidth = iCanvas["width"].as<double>();
-  iHeight = iCanvas["height"].as<double>();
+  iBWidth = iCanvas["width"].as<double>();
+  iBHeight = iCanvas["height"].as<double>();
 
-  iBWidth = iWidth * dpr;
-  iBHeight = iHeight * dpr;
+  iWidth = iBWidth / dpr;
+  iHeight = iBHeight / dpr;
 
   iCtx = iCanvas.call<val>("getContext", val("2d"));
-  iCtx.call<void>("scale", 1.0/dpr, 1.0/dpr);
-  ipeDebug("Canvas has size: %g x %g", iWidth, iHeight);
+  ipeDebug("Canvas has size: %g x %g (%g x %g)",
+	   iWidth, iHeight, iBWidth, iBHeight);
 }
 
 void Canvas::setCursor(TCursor cursor, double w, Color *color)
@@ -233,6 +233,7 @@ void Canvas::paint()
 {
   refreshSurface();
 
+  // TODO: maybe call a single JS function to do all of this at once?
   val buffer1 = val(typed_memory_view(iBWidth * iBHeight * 4, cairo_image_surface_get_data(iSurface)));
   val Uint8ClampedArray = val::global("Uint8ClampedArray");
   val buffer2 = Uint8ClampedArray.new_(buffer1["buffer"],
@@ -240,11 +241,6 @@ void Canvas::paint()
 				       buffer1["byteLength"]);
   val ImageData = val::global("ImageData");
   val img = ImageData.new_(buffer2, iBWidth, iBHeight);
-  // the following doesn't work, as createImageBitmap returns a promise
-  val createImageBitmap = val::global("createImageBitmap");
-  val img1 = createImageBitmap(img);
-  // putImageData cannot scale
-  // iCtx.call<void>("drawImage", img1, 0, 0, iWidth, iHeight);
   iCtx.call<void>("putImageData", img, 0, 0);
   /*
   if (iFifiVisible)
