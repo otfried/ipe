@@ -11,9 +11,6 @@ SONAME = $(call soname,ipe)
 INSTALL_SYMLINKS = $(call install_symlinks,ipe)
 
 CPPFLAGS += -I../include
-ifdef IPEBUNDLE
-CPPFLAGS += -DIPEBUNDLE
-endif
 CPPFLAGS += -DIPE_GSL $(GSL_CFLAGS)
 LIBS += $(GSL_LIBS)
 ifdef IPE_NO_IPELIB_VERSION_CHECK

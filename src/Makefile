@@ -7,26 +7,20 @@ GOAL ?= all
 ifdef IPECROSS
 IPEQVORONOI = 1
 endif
+
+subdirs_libraries = ipelib ipecairo ipelua ipecanvas ipeui
+subdirs_cli = ipetoipe iperender ipescript ipe6upgrade ipeextract
+
+subdirs = $(subdirs_libraries) ipelets/lua ipe
+
 ifdef IPEWASM
 undefine IPEQVORONOI
+subdirs += ipejs
+ifdef IPENODEJS
+subdirs += $(subdirs_cli)
 endif
-
-subdirs = \
-	ipelib \
-	ipelets/lua \
-	ipetoipe \
-	ipe6upgrade \
-	ipeextract \
-	ipescript \
-	ipecairo \
-	iperender \
-	ipecanvas \
-	ipelua \
-	ipeui \
-	ipe \
-
-ifndef IPEWASM
-subdirs += ipepresenter ipecurl
+else
+subdirs += $(subdirs_cli) ipepresenter ipecurl
 endif
 
 ifdef IPEQVORONOI
@@ -56,9 +50,10 @@ ipecanvas: ipelib ipecairo
 ipeview: ipecanvas
 ipelua: ipelib
 ipescript: ipelib ipelua
-ipe: ipecanvas ipelua $(IPEICO)
+ipe: ipelib ipecanvas ipelua $(IPEICO)
 ipepresenter: ipecanvas $(IPEICO)
 ipecurl: ipelib
+ipejs: ipelib ipecairo
 
 $(subdirs):
 	$(MAKE) --directory=$@ $(GOAL)

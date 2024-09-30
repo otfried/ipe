@@ -8,10 +8,11 @@ include ../common.mak
 TARGET = $(call exe_target,iperender)
 
 CPPFLAGS += -I../include $(CAIRO_CFLAGS) -I../ipecairo
+LIBS += -L$(buildlib) -lipecairo -lipe $(CAIRO_LIBS)
+
 ifdef IPENODEJS
 LDFLAGS += --pre-js $(NODEJSPRE) -lnoderawfs.js -lnodefs.js
 endif
-LIBS += -L$(buildlib) -lipecairo -lipe $(CAIRO_LIBS)
 
 all: $(TARGET)
 

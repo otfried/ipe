@@ -14,16 +14,12 @@ LIBS += -L$(buildlib) -lipecanvas -lipecairo -lipelua -lipe -lipeui \
 	$(LUA_LIBS) $(UI_LIBS) $(CAIRO_LIBS) $(ZLIB_LIBS) $(DL_LIBS)
 
 ifdef IPEWASM
-# create js/wasm files suitable for a browser or an Electron render process
+# create js/wasm files suitable for a browser
 LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -lembind
 LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS -sALLOW_MEMORY_GROWTH=1
-# ASYNCIFY is very expensive, more than doubling the wasm size
-LDFLAGS += -sASYNCIFY
 endif
 
-ifdef IPEBUNDLE
-CPPFLAGS += -DIPEBUNDLE
-else
+ifndef IPEBUNDLE
 CPPFLAGS += -DIPELETDIR=\"$(IPELETDIR)\"
 CPPFLAGS += -DIPELUADIR=\"$(IPELUADIR)\"
 CPPFLAGS += -DIPEICONDIR=\"$(IPEICONDIR)\"
@@ -40,7 +36,7 @@ win_sources = main_win.cpp appui_win.cpp pathview_win.cpp pagesorter_win.cpp
 gtk_sources = main_gtk.cpp appui_gtk.cpp
 cocoa_sources = main_cocoa.cpp appui_cocoa.cpp controls_cocoa.cpp \
 	pagesorter_cocoa.cpp
-js_sources = main_js.cpp appui_js.cpp ../ipejs/ipejs.cpp ../ipejs/ipecairojs.cpp
+js_sources = main_js.cpp appui_js.cpp
 
 ifdef WIN32
 CXXFLAGS += -mwindows

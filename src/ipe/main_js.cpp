@@ -107,6 +107,8 @@ AppUiBase *createAppUi(lua_State *L0, int model)
   return theAppUi;
 }
 
+// --------------------------------------------------------------------
+
 int mainloop(lua_State *L)
 {
   // this does nothing, the browser already runs an event loop
@@ -133,16 +135,21 @@ AppUi *startIpe(Canvas *canvas, int width, int height, double dpr)
   return theAppUi;
 }
 
-// --------------------------------------------------------------------
+static void initLib() {
+  putenv(strdup("IPEDEBUG=1"));
+  ipe::Platform::initLib(ipe::IPELIB_VERSION);
+}
 
-void ipeAction(AppUi *ui, std::string name)
+static void ipeAction(AppUi *ui, std::string name)
 {
   ui->action(String(name.c_str()));
 }
 
 // --------------------------------------------------------------------
 
-EMSCRIPTEN_BINDINGS(ipeui) {
+EMSCRIPTEN_BINDINGS(ipe) {
+  emscripten::class_<ipe::Platform>("Platform")
+    .class_function("initLib", &initLib);
   emscripten::class_<AppUi>("AppUi")
     .function("action", &ipeAction, emscripten::allow_raw_pointers());
   emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());

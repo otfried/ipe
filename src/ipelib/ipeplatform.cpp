@@ -647,9 +647,8 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
   String ipepdf = dir + "latexrun/ipetemp.pdf";
   String ipelog = dir + "latexrun/ipetemp.log";
   emscripten::val ipc = emscripten::val::global("window")["ipc"];
-  // here is the only place we need ASYNCIFY
-  emscripten::val result = ipc.call<emscripten::val>("runlatex", latex,
-						     std::string(ipetemp.z())).await();
+  emscripten::val result = ipc.call<emscripten::val>("runlatex", latex, std::string(ipetemp.z()));
+  /*
   std::string pdf = result["pdf"].as<std::string>();
   std::string log = result["log"].as<std::string>();
   std::FILE *pdfFile = Platform::fopen(ipepdf.z(), "wb");
@@ -658,6 +657,7 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
   std::FILE *logFile = Platform::fopen(ipelog.z(), "wb");
   std::fwrite(log.data(), 1, log.size(), logFile);
   std::fclose(logFile);
+  */
   return 0;
 }
 #endif

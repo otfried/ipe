@@ -16,7 +16,7 @@ LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -lembind
 # LDFLAGS += --embed-file tiling1.ipe
 
 CPPFLAGS += -I../include -I../ipecairo $(CAIRO_CFLAGS) $(FREETYPE_CFLAGS)
-LIBS += -L$(buildlib) -lipe -lipecairo -lipecanvas $(CAIRO_LIBS) $(FREETYPE_LIBS)
+LIBS += -L$(buildlib) -lipe -lipecairo $(CAIRO_LIBS) $(FREETYPE_LIBS)
 
 all: $(TARGET)
 

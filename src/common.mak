@@ -7,15 +7,12 @@
 # Are we compiling for Windows?  For Mac OS X? For webasm?
 ifdef COMSPEC
   WIN32	=  1
-  IPEBUNDLE = 1
   IPEUI = WIN32
 else ifdef IPECROSS
   WIN32 = 1
-  IPEBUNDLE = 1
   IPEUI = WIN32
 else ifdef IPEWASM
-  IPEBUNDLE = 1
-  IPEUI = JS
+  IPEUI ?= JS
 else
   UNAME = $(shell uname)
   ifeq "$(UNAME)" "Darwin"
@@ -40,7 +37,7 @@ IPESRCDIR ?= ..
 ifndef WIN32
 ifndef IPEWASM
   include $(IPESRCDIR)/$(IPECONFIGMAK)
-  BUILDDIR = $(IPESRCDIR)/../build
+  BUILDDIR ?= $(IPESRCDIR)/../build
 endif
 endif
 
@@ -122,6 +119,7 @@ DEPEND ?= $(OBJDIR)/depend.mak
 # Variables depending on platform
 ifdef WIN32
   # -------------------- WIN32 --------------------
+  IPEBUNDLE      = 1
   # Set just in case user has environment variables set
   IPEDOCDIR	 :=
   IPEICONDIR	 :=
@@ -244,6 +242,8 @@ ifdef IPEWASM
 ifdef IPENODEJS
   # compile code that will run under NodeJS, not in a browser
   CPPFLAGS       += -DIPENODEJS
+else
+  IPEBUNDLE = 1
 endif
   ZLIB_CFLAGS    =
   ZLIB_LIBS      = -lz
@@ -280,6 +280,10 @@ endif
   buildipelets   = $(BUILDDIR)/ipelets
   ipelet_target  = $(BUILDDIR)/ipelets/$1.so
 endif
+endif
+
+ifdef IPEBUNDLE
+CPPFLAGS += -DIPEBUNDLE
 endif
 
 # Macros
