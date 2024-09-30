@@ -465,13 +465,10 @@ void AppUiBase::canvasObserverWheelMoved(double xDegrees, double yDegrees,
 					 int kind)
 {
   if (xDegrees != 0.0 || yDegrees != 0.0) {
-    lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-    lua_getfield(L, -1, "wheel_zoom");
-    lua_insert(L, -2); // model
     lua_pushnumber(L, xDegrees);
     lua_pushnumber(L, yDegrees);
     lua_pushinteger(L, kind);
-    luacall(L, 4, 0);
+    wrapCall("wheel_zoom", 3);
   } else
     // result of a zoom gesture (Windows only, currently)
     setZoom(iCanvas->zoom());
@@ -522,18 +519,17 @@ void AppUiBase::canvasObserverPositionChanged()
 
 void AppUiBase::canvasObserverMouseAction(int button)
 {
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "mouseButtonAction");
-  lua_insert(L, -2); // model
   push_button(L, button);
-  luacall(L, 3, 0);
+  wrapCall("mouseButtonAction", 2);
 }
 
 void AppUiBase::canvasObserverSizeChanged()
 {
+  // we do not wrap this call, as it can happen
+  // while Latex is running or a dialog is showing
   lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
   lua_getfield(L, -1, "sizeChanged");
-  lua_insert(L, -2); // model
+  lua_insert(L, -2); // move before model
   luacall(L, 1, 0);
 }
 
@@ -544,36 +540,22 @@ int AppUiBase::actionInfo(lua_State *L) const
   return 0; // only Windows will override this
 }
 
-static void call_selector(lua_State *L, int model, String name)
-{
-  // calls model selector
-  lua_rawgeti(L, LUA_REGISTRYINDEX, model);
-  lua_getfield(L, -1, "selector");
-  lua_pushvalue(L, -2); // model
-  lua_remove(L, -3);
-  push_string(L, name);
-}
-
 void AppUiBase::luaSelector(String name, String value)
 {
-  call_selector(L, iModel, name);
+  push_string(L, name);
   if (value == "true")
     lua_pushboolean(L, true);
   else if (value == "false")
     lua_pushboolean(L, false);
   else
     push_string(L, value);
-  luacall(L, 3, 0);
+  wrapCall("selector", 2);
 }
 
 void AppUiBase::luaAbsoluteButton(const char *s)
 {
-  // calls model selector
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "absoluteButton");
-  lua_insert(L, -2); // method, model
   lua_pushstring(L, s);
-  luacall(L, 2, 0);
+  wrapCall("absoluteButton", 1);
 }
 
 // --------------------------------------------------------------------
@@ -603,60 +585,62 @@ void AppUiBase::luaAction(String name)
     int i = name.find('|');
     luaSelector(name.left(i), name.substr(i+1));
   } else {
-    // calls model action
-    lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-    lua_getfield(L, -1, "action");
-    lua_insert(L, -2); // before model
-    push_string(L, name);
-    luacall(L, 2, 0);
+    push_string(L, name); 
+    wrapCall(String{"action"}, 1);
   }
+}
+
+void AppUiBase::wrapCall(String method, int nArgs)
+{
+  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
+  lua_getfield(L, -1, "wrapCall");
+  lua_insert(L, -2); // move before model
+  lua_getfield(L, -1, method.z());
+  lua_pushvalue(L, -2); // model again
+  lua_rotate(L, -nArgs - 4, 4);
+  // calling: model.wrapCall model method model <nArgs>
+  luacall(L, nArgs + 3, 0);
 }
 
 void AppUiBase::luaShowPathStylePopup(Vector v)
 {
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "showPathStylePopup");
-  lua_insert(L, -2); // before model
   push_vector(L, v);
-  luacall(L, 2, 0);
+  wrapCall("showPathStylePopup", 1);
 }
 
 void AppUiBase::luaShowLayerBoxPopup(Vector v, String layer)
 {
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "showLayerBoxPopup");
-  lua_insert(L, -2); // before model
   push_vector(L, v);
   push_string(L, layer);
-  luacall(L, 3, 0);
+  wrapCall("showLayerBoxPopup", 2);
 }
 
 void AppUiBase::luaLayerAction(String name, String layer)
 {
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "layerAction");
-  lua_insert(L, -2); // before model
   push_string(L, name);
   push_string(L, layer);
-  luacall(L, 3, 0);
+  wrapCall("layerAction", 2);
 }
 
 void AppUiBase::luaBookmarkSelected(int index)
 {
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "bookmark");
-  lua_insert(L, -2); // method, model
   lua_pushnumber(L, index + 1);
-  luacall(L, 2, 0);
+  wrapCall("bookmark", 1);
 }
 
 void AppUiBase::luaRecentFileSelected(String name)
 {
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "recent_file");
-  lua_insert(L, -2); // method, model
   push_string(L, name);
-  luacall(L, 2, 0);
+  wrapCall("recent_file", 1);
+}
+
+void AppUiBase::resumeLua()
+{
+  // calls model:resumeLua
+  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
+  lua_getfield(L, -1, "resumeLua");
+  lua_insert(L, -2); // before model
+  luacall(L, 1, 0);
 }
 
 // --------------------------------------------------------------------

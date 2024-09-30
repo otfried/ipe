@@ -63,6 +63,10 @@
 #pragma GCC diagnostic pop
 #endif
 
+#ifdef __EMSCRIPTEN__
+extern int ipeui_downloadFileIfIpeWeb(lua_State *L);
+#endif
+
 // --------------------------------------------------------------------
 
 #ifdef IPE_SPELLCHECK
@@ -172,34 +176,78 @@ LatexHighlighter::LatexHighlighter(QTextEdit *textEdit)
 
 // --------------------------------------------------------------------
 
-PDialog::PDialog(lua_State *L0, WINID parent, const char *caption, const char *language)
-  : QDialog(parent), Dialog(L0, parent, caption, language)
+class PDialog;
+
+class IpeUiQDialog : public QDialog {
+public:
+  IpeUiQDialog(WINID parent, PDialog *pDialog);
+
+protected:
+  virtual void keyPressEvent(QKeyEvent *e);
+private:
+  PDialog *pDialog;
+};
+
+// --------------------------------------------------------------------
+
+class PDialog : public Dialog {
+public:
+  PDialog(lua_State *L0, WINID parent, const char *caption, const char * language);
+  ~PDialog();
+  QGridLayout *gridlayout() { return iGrid; }
+  bool ignoresEscapeKey();
+  int takeDown(lua_State *L);
+
+protected:
+  virtual void setMapped(lua_State *L, int idx);
+  virtual Dialog::Result buildAndRun(int w, int h);
+  virtual void retrieveValues();
+  virtual void enableItem(int idx, bool value);
+  virtual void acceptDialog(lua_State *L);
+
+private:
+  IpeUiQDialog * qDialog;
+  std::vector<QWidget *> iWidgets;
+  QGridLayout *iGrid;
+  QHBoxLayout *iButtonArea;
+};
+
+// --------------------------------------------------------------------
+
+IpeUiQDialog::IpeUiQDialog(WINID parent, PDialog *pDialog)
+  : QDialog{parent}, pDialog{pDialog}
 {
-  setWindowTitle(caption);
+  QShortcut *shortcut = new QShortcut(QKeySequence("Ctrl+Return"), this);
+  connect(shortcut, &QShortcut::activated, this, &QDialog::accept);
+}
+
+void IpeUiQDialog::keyPressEvent(QKeyEvent *e)
+{
+  if (e->key() == Qt::Key_Escape && pDialog->ignoresEscapeKey())
+    return;
+  QDialog::keyPressEvent(e);
+}
+
+// --------------------------------------------------------------------
+
+PDialog::PDialog(lua_State *L0, WINID parent, const char *caption, const char *language)
+  : Dialog(L0, parent, caption, language)
+{
+  qDialog = new IpeUiQDialog(parent, this);
+  qDialog->setWindowTitle(caption);
   QVBoxLayout *vlo = new QVBoxLayout;
-  setLayout(vlo);
+  qDialog->setLayout(vlo);
   iGrid = new QGridLayout;
   vlo->addLayout(iGrid);
   iButtonArea = new QHBoxLayout;
   vlo->addLayout(iButtonArea);
   iButtonArea->addStretch(1);
-  QShortcut *shortcut = new QShortcut(QKeySequence("Ctrl+Return"), this);
-  connect(shortcut, &QShortcut::activated, this, &QDialog::accept);
 }
 
 PDialog::~PDialog()
 {
-  //
-}
-
-void PDialog::keyPressEvent(QKeyEvent *e)
-{
-  if (iIgnoreEscapeField >= 0 && e->key() == Qt::Key_Escape) {
-    retrieveValues();
-    if (iElements[iIgnoreEscapeField].text != iIgnoreEscapeText)
-      return;  // text has been modified, do not allow ESC
-  }
-  QDialog::keyPressEvent(e);
+  if (qDialog)
+    qDialog->deleteLater(); // schedule for deletion
 }
 
 static void markupLog(QTextEdit *t, const QString &text)
@@ -280,52 +328,53 @@ void PDialog::setMapped(lua_State *L, int idx)
   }
 }
 
-bool PDialog::buildAndRun(int w, int h)
+Dialog::Result PDialog::buildAndRun(int w, int h)
 {
   for (int i = 0; i < int(iElements.size()); ++i) {
     SElement &m = iElements[i];
     if (m.row < 0) {
-      QPushButton *b = new QPushButton(QString::fromUtf8(m.text.c_str()), this);
+      QPushButton *b = new QPushButton(QString::fromUtf8(m.text.c_str()), qDialog);
       iWidgets.push_back(b);
       if (m.flags & EAccept) {
 	b->setDefault(true);
-	connect(b, &QPushButton::clicked, this, &QDialog::accept);
+	QObject::connect(b, &QPushButton::clicked, qDialog, &QDialog::accept);
       } else if (m.flags & EReject)
-	connect(b, &QPushButton::clicked, this, &QDialog::reject);
+	QObject::connect(b, &QPushButton::clicked, qDialog, &QDialog::reject);
       else if (m.lua_method != LUA_NOREF)
-	connect(b, &QPushButton::clicked, [&,method=m.lua_method](){ callLua(method); });
+	QObject::connect(b, &QPushButton::clicked, [&,method=m.lua_method](){ callLua(method); });
       iButtonArea->addWidget(b);
     } else {
       QWidget *w = nullptr;
       switch (m.type) {
       case ELabel:
-	w = new QLabel(QString::fromUtf8(m.text.c_str()), this);
+	w = new QLabel(QString::fromUtf8(m.text.c_str()), qDialog);
 	w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	break;
       case EButton:
 	{
-	  QPushButton *b = new QPushButton(QString::fromUtf8(m.text.c_str()), this);
+	  QPushButton *b = new QPushButton(QString::fromUtf8(m.text.c_str()), qDialog);
 	  if (m.flags & EAccept)
-	    connect(b, &QPushButton::clicked, this, &QDialog::accept);
+	    QObject::connect(b, &QPushButton::clicked, qDialog, &QDialog::accept);
 	  else if (m.flags & EReject)
-	    connect(b, &QPushButton::clicked, this, &QDialog::reject);
+	    QObject::connect(b, &QPushButton::clicked, qDialog, &QDialog::reject);
 	  else if (m.lua_method != LUA_NOREF)
-	    connect(b, &QPushButton::clicked, [&,method=m.lua_method](){ callLua(method); });
+	    QObject::connect(b, &QPushButton::clicked, [&,method=m.lua_method](){ callLua(method); });
 	  w = b;
 	}
 	break;
       case ECheckBox:
 	{
-	  QCheckBox *ch = new QCheckBox(QString::fromUtf8(m.text.c_str()), this);
+	  QCheckBox *ch = new QCheckBox(QString::fromUtf8(m.text.c_str()), qDialog);
 	  ch->setChecked(m.value);
 	  if (m.lua_method != LUA_NOREF)
-	    connect(ch, &QCheckBox::stateChanged, [&,method=m.lua_method](int){ callLua(method); });
+	    QObject::connect(ch, &QCheckBox::stateChanged,
+			     [&,method=m.lua_method](int){ callLua(method); });
 	  w = ch;
 	}
 	break;
       case EInput:
 	{
-	  QLineEdit *e = new QLineEdit(this);
+	  QLineEdit *e = new QLineEdit(qDialog);
 	  e->setText(QString::fromUtf8(m.text.c_str()));
 	  if (m.flags & ESelectAll)
 	    e->selectAll();
@@ -336,9 +385,9 @@ bool PDialog::buildAndRun(int w, int h)
 	{
 #ifdef IPE_SPELLCHECK
 	  QTextEdit *t = (m.flags & ELogFile) ?
-	    new QTextEdit(this) : new TextEdit(this, this->iLanguage);
+	    new QTextEdit(qDialog) : new TextEdit(qDialog, this->iLanguage);
 #else
-	  QTextEdit *t = new QTextEdit(this);
+	  QTextEdit *t = new QTextEdit(qDialog);
 #endif
 	  t->setAcceptRichText(false);
 	  if (m.flags & EReadOnly)
@@ -359,27 +408,27 @@ bool PDialog::buildAndRun(int w, int h)
 	break;
       case ECombo:
 	{
-	  QComboBox *b = new QComboBox(this);
+	  QComboBox *b = new QComboBox(qDialog);
 	  for (int k = 0; k < int(m.items.size()); ++k)
 	    b->addItem(QString::fromUtf8(m.items[k].c_str()));
 	  b->setCurrentIndex(m.value);
 	  if (m.lua_method != LUA_NOREF) {
-	    connect<void (QComboBox::*)(int)>(b, &QComboBox::activated,
-					      [this,method=m.lua_method](int index){
-						callLua(method);
-					      });
+	    QObject::connect<void (QComboBox::*)(int)>(b, &QComboBox::activated,
+						       [this,method=m.lua_method](int index){
+							 callLua(method);
+						       });
 	  }
 	  w = b;
 	}
 	break;
       case EList:
 	{
-	  QListWidget *l = new QListWidget(this);
+	  QListWidget *l = new QListWidget(qDialog);
 	  for (int k = 0; k < int(m.items.size()); ++k)
 	    l->addItem(QString::fromUtf8(m.items[k].c_str()));
 	  if (m.lua_method != LUA_NOREF) {
-	    connect(l, &QListWidget::itemActivated,
-		    [this,method=m.lua_method](QListWidgetItem *){ callLua(method); });
+	    QObject::connect(l, &QListWidget::itemActivated,
+			     [this,method=m.lua_method](QListWidgetItem *){ callLua(method); });
 	  }
 	  w = l;
 	}
@@ -395,10 +444,26 @@ bool PDialog::buildAndRun(int w, int h)
 	w->setEnabled(false);
     }
   }
-  setMinimumSize(w, h);
-  int result = exec();
+  qDialog->setMinimumSize(w, h);
+  qDialog->setModal(true);
+  qDialog->show();
+  QObject::connect(qDialog, &QDialog::finished, [this]() {
+    int nresults = 0;
+    // resume will then call the public takeDown
+    lua_resume(L, nullptr, 0, &nresults);
+  });
+  return Result::MODAL;
+}
+
+int PDialog::takeDown(lua_State *L)
+{
+  bool accepted = qDialog->result() == QDialog::Accepted;
   retrieveValues(); // for future reference
-  return (result == QDialog::Accepted);
+  release(L); // release references to Lua objects
+  qDialog->deleteLater(); // schedule for deletion
+  qDialog = nullptr; // and forget it
+  lua_pushboolean(L, accepted);
+  return 1;
 }
 
 void PDialog::retrieveValues()
@@ -440,7 +505,17 @@ void PDialog::enableItem(int idx, bool value)
 void PDialog::acceptDialog(lua_State *L)
 {
   int accept = lua_toboolean(L, 2);
-  QDialog::done(accept);
+  qDialog->done(accept);
+}
+
+bool PDialog::ignoresEscapeKey()
+{
+  if (iIgnoreEscapeField >= 0) {
+    retrieveValues();
+    if (iElements[iIgnoreEscapeField].text != iIgnoreEscapeText)
+      return true;  // text has been modified, do not allow ESC
+  }
+  return false;
 }
 
 // --------------------------------------------------------------------
@@ -480,7 +555,6 @@ PMenu::PMenu(WINID parent)
   iMenu = new QMenu();
 }
 
-
 PMenu::~PMenu()
 {
   delete iMenu;
@@ -494,9 +568,8 @@ int PMenu::execute(lua_State *L)
   MenuAction *ma = qobject_cast<MenuAction *>(a);
   if (ma) {
     push_string(L, ma->name());
-    lua_pushnumber(L, ma->number());
     push_string(L, ma->itemName());
-    return 3;
+    return 2;
   }
   return 0;
 }
@@ -592,118 +665,6 @@ static int menu_constructor(lua_State *L)
 
   *m = new PMenu(parent);
   return 1;
-}
-
-// --------------------------------------------------------------------
-
-Waiter::Waiter(lua_State *L, const QString &cmd)
-  : L{L}, iCommand{cmd}
-{
-  // nothing
-}
-
-void Waiter::process()
-{
-  if (iCommand.isEmpty()) {
-    lua_call(L, 0, 0);
-  } else {
-    // give wait dialog a chance to show up before we pass control to the editor
-    // this helps to make sure the editor has keyboard focus when it starts
-    QThread::msleep(100);
-    int result = std::system(iCommand.toUtf8());
-    (void) result;
-  }
-  emit completed();
-}
-
-// --------------------------------------------------------------------
-
-WaitDialog::WaitDialog(QString label, QWidget *parent)
-  : QDialog{parent}, running{true}
-{
-  QGridLayout *lo = new QGridLayout;
-  setLayout(lo);
-  setWindowTitle("Ipe: waiting");
-  QLabel *l = new QLabel(label, this);
-  lo->addWidget(l, 0, 0);
-}
-
-void WaitDialog::keyPressEvent(QKeyEvent *e)
-{
-  // do not let Escape close the dialog
-  if (e->key() != Qt::Key_Escape)
-    QDialog::keyPressEvent(e);
-}
-
-void WaitDialog::closeEvent(QCloseEvent *ev)
-{
-  // do not let user close the dialog
-  ev->ignore();
-}
-
-// start modal dialog if the thread has not yet signaled and keep mutex locked
-void WaitDialog::startDialog()
-{
-  mutex.lock();
-  if (running)
-    this->exec();
-  mutex.unlock();
-};
-
-void WaitDialog::completed()
-{
-  if (mutex.tryLock()) {
-    // the mutex was free, so dialog is not yet showing
-    running = false;
-    mutex.unlock();
-  } else
-    done(0);
-}
-
-// --------------------------------------------------------------------
-
-static int ipeui_wait(lua_State *L)
-{
-  PDialog *parent = nullptr;
-  Dialog **dlg = (Dialog **) luaL_testudata(L, 1, "Ipe.dialog");
-  if (dlg != nullptr)
-    parent = (PDialog *) *dlg;
-  QString cmd;
-  if (!lua_isfunction(L, 2))
-    cmd = checkqstring(L, 2);
-  QString label = "Waiting for external editor";
-  if (lua_isstring(L, 3))
-    label = checkqstring(L, 3);
-
-  QThread *thread = new QThread();
-  Waiter *waiter = new Waiter(L, cmd);
-  waiter->moveToThread(thread);
-  WaitDialog *dialog = new WaitDialog(label);
-
-  // waiter is in a different thread, but connect does this right
-  QObject::connect(thread, &QThread::started, waiter, &Waiter::process);
-  QObject::connect(waiter, &Waiter::completed, thread, &QThread::quit);
-  QObject::connect(waiter, &Waiter::completed, waiter, &QObject::deleteLater);
-  QObject::connect(thread, &QThread::finished, thread, &QObject::deleteLater);
-  QObject::connect(waiter, &Waiter::completed, dialog, &WaitDialog::completed);
-
-  if (cmd.isEmpty()) {
-    // call Lua function
-    lua_pushvalue(L, 2);
-    thread->start();
-    for (int i = 0; i < 3 && dialog->isRunning(); ++i) {
-      QThread::msleep(100);
-      QCoreApplication::processEvents();
-    }
-    dialog->startDialog();
-  } else {
-    thread->start();
-    dialog->startDialog();
-    if (parent)
-      parent->activateWindow();
-  }
-  delete dialog;
-  return 0;
 }
 
 // --------------------------------------------------------------------
@@ -972,10 +933,9 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "getColor", ipeui_getColor },
   { "fileDialog", ipeui_fileDialog },
   { "messageBox", ipeui_messageBox },
-  { "waitDialog", ipeui_wait },
   { "currentDateTime", ipeui_currentDateTime },
-  { "downloadFileIfIpeWeb", ipeui_downloadFileIfIpeWeb },
 #ifdef __EMSCRIPTEN__
+  { "downloadFileIfIpeWeb", ipeui_downloadFileIfIpeWeb },
   { "startBrowser", ipeui_startBrowser }, // open new tab on ipe-web
   // if not defined (on ipe-qt), defaults to shell cmd
 #endif

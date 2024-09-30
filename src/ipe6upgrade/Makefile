@@ -9,7 +9,10 @@ TARGET = $(call exe_target,ipe6upgrade)
 
 CPPFLAGS += -I../include
 LIBS += -L$(buildlib) -lipe
-#LIBS += $(buildlib)/ipe.dll
+
+ifdef IPEWASM
+LDFLAGS += --pre-js $(NODEJSPRE) -lembind -lnoderawfs.js -lnodefs.js
+endif
 
 all: $(TARGET)
 

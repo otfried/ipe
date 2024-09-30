@@ -91,6 +91,7 @@ public:
   void togglePropertiesShown();
   void fillDynamicSubmenu(NSMenuItem *item);
   NSImage *loadIcon(String action, bool touchBar=false, int size=22);
+  bool waitDialog(const char *cmd, const char *label) override;
 
 private:
   void createAction(String name, String tooltip,

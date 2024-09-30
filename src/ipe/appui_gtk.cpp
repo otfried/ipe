@@ -377,6 +377,14 @@ int AppUi::pageSorter(lua_State *L, Document *doc, int pno,
   return 0;
 }
 
+bool AppUi::waitDialog(const char *cmd, const char *label)
+{
+  // TODO
+  return true;
+}
+
+// --------------------------------------------------------------------
+
 AppUiBase *createAppUi(lua_State *L0, int model)
 {
   return new AppUi(L0, model);

@@ -80,6 +80,8 @@ public:
 
   virtual void setRecentFileMenu(const std::vector<String> & names) override;
 
+  virtual bool waitDialog(const char *cmd, const char *label) override;
+
   void toggleFullscreen();
 
 private:

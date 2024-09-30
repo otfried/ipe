@@ -30,22 +30,9 @@
 
 -- main entry point to all actions
 -- (except mouseaction, selector)
-
--- protects call, then distributes to action_xxx method or
--- saction_xxx methods (the latter are only called if a selection exists)
-function MODEL:action(a)
-  local result, err = xpcall(function () self:paction(a) end,
-			     debug.traceback)
-  if not result then
-    messageBox(nil, "critical",
-		     "Lua error\n\n"..
-		       "Data may have been corrupted. \n" ..
-		       "Save your file!",
-		     err)
-  end
-end
-
-function MODEL:paction(a1)
+-- distributes to action_xxx method or saction_xxx methods (the latter
+-- are only called if a selection exists)
+function MODEL:action(a1)
   -- work-around for bug in Qt 5.5, to be replaced with something better:
   local a = a1:gsub("&", "")
   -- print("MODEL:paction(" .. a .. ")")
@@ -137,6 +124,18 @@ function MODEL:selector(prop, value)
       value = self:findOldValue(prop, proptype)
     end
   end
+  if value == "toggle" then
+    value = not self.attributes[prop]
+  elseif value == "next" then
+    value = self.attributes[prop]
+    if value == "stroked" then
+      value = "strokedfilled"
+    elseif value == "strokedfilled" then
+      value = "filled"
+    else
+      value = "stroked"
+    end
+  end
   self.attributes[prop] = value
   self.ui:setAttributes(self.doc:sheets(), self.attributes)
   if self:page():hasSelection() then
@@ -199,8 +198,13 @@ function MODEL:absoluteButton(button)
   -- print("Button:", button)
   if button == "stroke" or button == "fill" then
     local old = self:findOldValue(button, "color")
-    r, g, b = ipeui.getColor(self.ui:win(), "Select " .. button .. " color",
-			     old.r, old.g, old.b)
+    if config.toolkit == "htmljs" then
+      r, g, b = self:getColorJS("Select " .. button .. " color",
+				old.r, old.g, old.b)
+    else
+      r, g, b = ipeui.getColor(self.ui:win(), "Select " .. button .. " color",
+			       old.r, old.g, old.b)
+    end
     if r then
       self:set_absolute(button, { r = r, g = g, b = b });
     elseif config.platform == "apple" then
@@ -244,8 +248,19 @@ function MODEL:absoluteButton(button)
   end
 end
 
+function MODEL:selectPage(pno, vno)
+  if self.ui.selectPageAsync then
+    -- self.ui:selectPageAsync(pno, vno)
+    -- return coroutine.yield()
+    messageBox(self.ui:win(), "warning", "Not yet implemented")
+    return nil
+  else
+    return self.ui:selectPage(pno, vno)
+  end
+end
+
 function MODEL:action_jump_view()
-  local d = self.ui:selectPage(self.doc, self.pno, self.vno)
+  local d = self:selectPage(self.pno, self.vno)
   if d then
     self.vno = d
     self:setPage()
@@ -253,7 +268,7 @@ function MODEL:action_jump_view()
 end
 
 function MODEL:action_jump_page()
-  local d = self.ui:selectPage(self.doc, nil, self.pno)
+  local d = self:selectPage(nil, self.pno)
   if d then
     self.pno = d
     self.vno = 1
@@ -360,7 +375,7 @@ function MODEL:showPathStylePopup(v)
   m:add("fillrule", "Fill rule", { "normal", "evenodd", "wind" },
 	nil, a.fillrule)
 
-  local r, n, value = m:execute(v.x, v.y)
+  local r, value = m:execute(v.x, v.y)
   if r then self:selector(r, value) end
 end
 
@@ -408,7 +423,7 @@ function MODEL:showLayerBoxPopup(v, layer)
 	  function (i, l) if l == "_top_" then return "to top"
 	    else return "after " .. l end end)
   end
-  local r, no, subitem = m:execute(v.x, v.y)
+  local r, subitem = m:execute(v.x, v.y)
   if r then
     self:layerAction(r, layer, subitem)
   end
@@ -828,7 +843,10 @@ function MODEL:export(format)
     self.ui:renderPage(self.doc, self.pno, self.vno,
        		       format, s, self.ui:zoom(),
 		       true, false) -- transparent, nocrop
-    ipeui.downloadFileIfIpeWeb(s)
+    if not self:persistFile(s) then
+      self:warning("Export failed",
+		   "I could not persist the exported file '" .. s .. "'.")
+    end
   end
 end
 
@@ -953,6 +971,7 @@ function action_about_ipelets(win)
   local d = ipeui.Dialog(win, "Ipe: About the ipelets")
   d:add("text", "text", { read_only=true }, 1, 1)
   d:set("text", s)
+  d:setStretch("row", 1, 1)
   d:addButton("ok", "Ok", "accept")
   d:execute(prefs.latexlog_size)
 end
@@ -1633,6 +1652,8 @@ function MODEL:action_edit_view()
   d:add("tfm", "text", {}, -1, 2)
   d:add("effect-label", "label", { label="Effect" }, 0, 1)
   d:add("combo", "combo", list, -1, 2)
+  d:setStretch("row", 4, 1)
+  d:setStretch("row", 5, 1)  
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:set("name", name0)
@@ -1749,7 +1770,7 @@ function MODEL:action_new_page()
 end
 
 function MODEL:action_paste_page()
-  local data = self.ui:clipboard()
+  local data = self:clipboard(false)
   if data:sub(1,9) ~= "<ipepage>" then
     self:warning("No Ipe page to paste")
     return
@@ -1945,8 +1966,18 @@ function mark_pages(doc, marks)
   return originalMarks
 end
 
+function MODEL:pageSorter(pno)
+  if self.ui.pageSorterAsync then
+    -- self.ui:pageSorterAsync(self.doc, pno)
+    -- return coroutine.yield()
+    messageBox(self.ui:win(), "warning", "Not yet implemented")
+  else
+    return 
+  end
+end
+
 function MODEL:action_page_sorter()
-  local arr, marks = self.ui:pageSorter(self.doc)
+  local arr, marks = self:pageSorter()
   if not arr then return end -- canceled
   if #arr == 0 then
     self:warning("You cannot delete all pages of the document")
@@ -2018,7 +2049,7 @@ function arrange_views(p, arr, marks)
 end
 
 function MODEL:action_view_sorter()
-  local arr, marks = self.ui:pageSorter(self.doc, self.pno)
+  local arr, marks = self:pageSorter(self.pno)
   if not arr then return end -- canceled
   if #arr == 0 then
     self:warning("You cannot delete all views of the page")
@@ -2099,7 +2130,7 @@ function MODEL:saction_edit_as_xml()
   local xml = self:page()[prim]:xml()
   local d = ipeui.Dialog(self.ui:win(), "Edit as XML")
   d:add("xml", "text", { syntax="xml", focus=true }, 1, 1)
-  addEditorField(d, "xml")
+  self:addEditorField(d, "xml")
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("row", 1, 1);
@@ -2418,7 +2449,7 @@ function MODEL:action_cut()
 end
 
 function MODEL:action_paste()
-  local data = self.ui:clipboard(true)  -- allow a bitmap
+  local data = self:clipboard(true)  -- allow a bitmap
   if not data then
     self:warning("Nothing to paste")
     return
@@ -2461,7 +2492,7 @@ function MODEL:action_paste()
 end
 
 function MODEL:action_paste_with_layer()
-  local data = self.ui:clipboard(false)
+  local data = self:clipboard(false)
   if not data then
     self:warning("Nothing to paste")
     return
@@ -2622,7 +2653,8 @@ local function sheets_edit(d, dd)
   f:close()
   local sheet, msg
   while not sheet do
-    ipeui.waitDialog(d, string.format(prefs.external_editor, fname))
+    dd.model:waitDialog(string.format(prefs.external_editor, fname),
+			"Waiting for external editor")
     sheet, msg = ipe.Sheet(fname)
     if not sheet then
       local r = messageBox(dd.model.ui:win(), "question",
@@ -2645,8 +2677,10 @@ local function sheets_del(d, dd)
   local i = d:get("list")
   if not i then return end
   if dd.list[i]:isStandard() then
-    dd.model:warning("Cannot delete stylesheet",
-		     "The standard stylesheet cannot be removed")
+    if config.toolkit ~= "htmljs" then
+      dd.model:warning("Cannot delete stylesheet",
+		       "The standard stylesheet cannot be removed")
+    end
     return
   end
   table.remove(dd.list, i)
@@ -2693,7 +2727,9 @@ local function sheets_save(d, dd)
     f:write('<!DOCTYPE ipestyle SYSTEM "ipe.dtd">\n')
     f:write(data)
     f:close()
-    ipeui.downloadFileIfIpeWeb(s)
+    if not dd.model:persistFile(s) then
+      dd.model:warning("Cannot persist stylesheet")
+    end
     dd.model.ui:explain("Stylesheet saved to " .. s)
   end
 end
@@ -2710,18 +2746,20 @@ function MODEL:action_style_sheets()
   local d = ipeui.Dialog(self.ui:win(), "Ipe style sheets")
   d:add("label1", "label", { label="Style sheets"}, 1, 1, 1, 4)
   d:add("list", "list", sheets_namelist(dd.list), 2, 1, 7, 3)
-  d:add("add", "button",
-	{ label="&Add", action=function (d) sheets_add(d, dd) end }, 2, 4)
   d:add("del", "button",
 	{ label="Del", action=function (d) sheets_del(d, dd) end }, 3, 4)
-  d:add("edit", "button",
-	{ label="Edit", action=function (d) sheets_edit(d, dd) end }, 4, 4)
   d:add("up", "button",
 	{ label="&Up", action=function (d) sheets_up(d, dd) end }, 5, 4)
   d:add("down", "button",
 	{ label="&Down", action=function (d) sheets_down(d, dd) end }, 6, 4)
+  if config.toolkit ~= "htmljs" then
+  d:add("add", "button",
+	{ label="&Add", action=function (d) sheets_add(d, dd) end }, 2, 4)
+  d:add("edit", "button",
+	{ label="Edit", action=function (d) sheets_edit(d, dd) end }, 4, 4)
   d:add("save", "button",
 	{ label="&Save", action=function (d) sheets_save(d, dd) end }, 7, 4)
+  end
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("column", 2, 1)
@@ -2777,7 +2815,7 @@ function MODEL:action_document_properties()
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("column", 5, 1)
   d:setStretch("row", 8, 1)
-  addEditorField(d, "preamble")
+  self:addEditorField(d, "preamble")
   for n in pairs(p) do d:set(n, p[n]) end
   if not d:execute() then return end
 

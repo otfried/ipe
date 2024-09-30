@@ -29,7 +29,7 @@
 */
 
 #include "ipeui_qt.h"
-#include <emscripten/bind.h>
+#include <emscripten/val.h>
 
 #include <QApplication>
 #include <QFileDialog>
@@ -42,22 +42,6 @@
 #include <QSaveFile>
 
 #include <utility>
-
-class CancellableWaitDialog : public WaitDialog {
-        Q_OBJECT
-
-    public:
-        CancellableWaitDialog(QString label, QWidget *parent = nullptr) : WaitDialog(std::move(label), parent) {
-        }
-
-    protected:
-        void keyPressEvent(QKeyEvent *e) override {
-            QDialog::keyPressEvent(e);
-        }
-        void closeEvent(QCloseEvent *ev) override {
-            QDialog::closeEvent(ev);
-        }
-};
 
 #define UPLOAD_DIR "/home/web_user"
 

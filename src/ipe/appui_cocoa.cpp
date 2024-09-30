@@ -1441,12 +1441,13 @@ BOOL AppUi::closeRequested()
 {
   // calls model
   lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "closeEvent");
-  lua_pushvalue(L, -2); // model
-  lua_remove(L, -3);
-  lua_call(L, 1, 1);
-  bool result = lua_toboolean(L, -1);
-  return result;
+  lua_getfield(L, -1, "okay_close");
+  if (lua_toboolean(L, -1)) {
+    return true;
+  } else {
+    wrapCall("closeEvent", 0);
+    return false;
+  }
 }
 
 BOOL AppUi::isModified()
@@ -1463,7 +1464,9 @@ BOOL AppUi::isModified()
 
 void AppUi::closeWindow()
 {
-  [iWindow performClose:iDelegate];
+  dispatch_async(dispatch_get_main_queue(), ^{
+      [iWindow performClose:iDelegate];
+    });
 }
 
 // --------------------------------------------------------------------
@@ -1551,6 +1554,69 @@ int AppUi::setClipboard(lua_State *L)
   [pasteBoard clearContents];
   [pasteBoard writeObjects:@[ C2N(s) ]];
   return 0;
+}
+
+// --------------------------------------------------------------------
+
+@interface IpePanelDelegate : NSObject <NSWindowDelegate>
+@property void (^threadFunction)();
+@property BOOL threadStarted;
+@end
+
+@implementation IpePanelDelegate
+- (instancetype) init
+{
+  self = [super init];
+  if (self) {
+    _threadStarted = false;
+  }
+  return self;
+}
+
+- (void) windowDidBecomeKey:(NSNotification *) notification
+{
+  if (!self.threadStarted && self.threadFunction) {
+    [NSThread detachNewThreadSelector:@selector(startThread:)
+			     toTarget:self
+			   withObject:nil];
+    self.threadStarted = true;
+  }
+}
+
+- (void) startThread:(id) arg
+{
+  self.threadFunction();
+}
+@end
+
+// --------------------------------------------------------------------
+
+bool AppUi::waitDialog(const char *cmd, const char *label)
+{
+  NSPanel *panel = [[NSPanel alloc]
+		     initWithContentRect:NSMakeRect(400.,800., 200, 100)
+			       styleMask:NSTitledWindowMask
+				 backing:NSBackingStoreBuffered
+				   defer:YES];
+  panel.title = @"Ipe: waiting";
+  NSTextField *l = [[NSTextField alloc]
+		     initWithFrame:NSMakeRect(0., 0., 200., 100.)];
+  l.stringValue = C2N(label);
+  l.editable = NO;
+  l.bordered = NO;
+  l.drawsBackground = NO;
+
+  addToLayout(panel.contentView, l);
+  layout(panel.contentView, l, "x=x");
+  layout(panel.contentView, l, "y=y");
+
+  auto delegate = [[IpePanelDelegate alloc] init];
+  panel.delegate = delegate;
+
+  delegate.threadFunction = ^() { (void) std::system(cmd); [NSApp abortModal]; };
+  [NSApp runModalForWindow:panel];
+  [panel close];
+  return true;
 }
 
 // --------------------------------------------------------------------

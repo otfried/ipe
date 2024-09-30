@@ -921,12 +921,9 @@ void AppUi::handleDpiChange(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	       SWP_NOZORDER | SWP_NOACTIVATE);
 
   // finally, notify Lua code
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "dpiChange");
-  lua_insert(L, -2); // before model
   lua_pushinteger(L, oldDpi);
   lua_pushinteger(L, iDpi);
-  luacall(L, 3, 0);
+  wrapCall("dpiChange", 2);
 }
 
 // --------------------------------------------------------------------
@@ -1134,20 +1131,18 @@ void AppUi::setNotes(String notes)
 
 void AppUi::closeRequested()
 {
-  // calls model
   lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "closeEvent");
-  lua_pushvalue(L, -2); // model
-  lua_remove(L, -3);
-  luacall(L, 1, 1);
-  bool result = lua_toboolean(L, -1);
-  if (result)
+  lua_getfield(L, -1, "okay_close");
+  if (lua_toboolean(L, -1))
     DestroyWindow(hwnd);
+  else
+    // give Lua code a chance to consider the case and close again
+    wrapCall("closeEvent", 0);
 }
 
 void AppUi::closeWindow()
 {
-  SendMessage(hwnd, WM_CLOSE, 0, 0);
+  PostMessage(hwnd, WM_CLOSE, 0, 0);
 }
 
 // Determine if an action is checked.
@@ -1858,6 +1853,111 @@ void AppUi::init(HINSTANCE hInstance, int nCmdShow)
 AppUiBase *createAppUi(lua_State *L0, int model)
 {
   return new AppUi(L0, model);
+}
+
+// --------------------------------------------------------------------
+
+struct SDialogHandle {
+  HWND hwnd;
+  HANDLE thread;
+};
+
+BOOL CALLBACK waitDialogProc(HWND hwnd, UINT message,
+			     WPARAM wParam, LPARAM lParam)
+{
+  switch (message) {
+  case WM_INITDIALOG: {
+    SDialogHandle *d = (SDialogHandle *) lParam;
+    d->hwnd = hwnd;
+    if (d->thread) {
+      ResumeThread(d->thread);
+      // delay showing the dialog by 300ms
+      // if Latex is fast, the dialog never gets shown
+      Sleep(300);
+    }
+    return TRUE; }
+  default:
+    return FALSE;
+  }
+}
+
+VOID CALLBACK waitCallback(PVOID lpParameter, BOOLEAN timerOrWaitFired)
+{
+  SDialogHandle *d = (SDialogHandle *) lpParameter;
+  EndDialog(d->hwnd, 1);
+}
+
+DWORD CALLBACK waitLuaThreadProc(LPVOID lpParameter)
+{
+  lua_State *L = (lua_State *) lpParameter;
+  lua_callk(L, 0, 0, 0, nullptr);
+  return 0;
+}
+
+bool AppUi::waitDialog(const char *cmd, const char *label)
+{
+  std::vector<short> t;
+
+  // Dialog flags
+  buildFlags(t, WS_POPUP | WS_BORDER | DS_SHELLFONT |
+	     WS_SYSMENU | DS_MODALFRAME | WS_CAPTION);
+  t.push_back(1);
+  t.push_back(0); // offset of popup-window from parent window
+  t.push_back(0);
+  t.push_back(240);
+  t.push_back(60);
+  // menu
+  t.push_back(0);
+  // class
+  t.push_back(0);
+  // title
+  buildString(t, "Ipe: waiting");
+  // for DS_SHELLFONT
+  t.push_back(10);
+  buildString(t,"MS Shell Dlg");
+  if (t.size() % 2 != 0)
+    t.push_back(0);
+  buildFlags(t, WS_CHILD|WS_VISIBLE|SS_LEFT);
+  t.push_back(40);
+  t.push_back(20);
+  t.push_back(120);
+  t.push_back(20);
+  t.push_back(IDBASE);
+  buildControl(t, 0x0082, label);
+
+  SDialogHandle dialogHandle = { nullptr, nullptr };
+
+  HANDLE waitHandle;
+
+  // call external process
+
+  // Declare and initialize process blocks
+  PROCESS_INFORMATION processInformation;
+  STARTUPINFOW startupInfo;
+  memset(&processInformation, 0, sizeof(processInformation));
+  memset(&startupInfo, 0, sizeof(startupInfo));
+  startupInfo.cb = sizeof(startupInfo);
+  
+  WString wcmd(cmd);
+  
+  int result = CreateProcessW(nullptr, wcmd.data(), nullptr, nullptr, FALSE,
+			      NORMAL_PRIORITY_CLASS|CREATE_NO_WINDOW,
+			      nullptr, nullptr, &startupInfo, &processInformation);
+  if (result == 0)
+    return true;
+  
+  RegisterWaitForSingleObject(&waitHandle, processInformation.hProcess, waitCallback, &dialogHandle,
+			      INFINITE, WT_EXECUTEINWAITTHREAD|WT_EXECUTEONLYONCE);
+  
+  DialogBoxIndirectParamW((HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			  (LPCDLGTEMPLATE) t.data(),
+			  hwnd, (DLGPROC) waitDialogProc,
+			  (LPARAM) &dialogHandle);
+  
+  UnregisterWait(waitHandle);
+  CloseHandle(processInformation.hProcess);
+  CloseHandle(processInformation.hThread);
+  return true;
 }
 
 // --------------------------------------------------------------------

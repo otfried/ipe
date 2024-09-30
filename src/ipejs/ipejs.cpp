@@ -32,50 +32,61 @@
 
 #include <emscripten/bind.h>
 
+using namespace ipe;
 using namespace emscripten;
 
 namespace {
-  void initLib() {
-    putenv(strdup("IPEDEBUG=1"));
-    ipe::Platform::initLib(ipe::IPELIB_VERSION);
+  Latex *converter = nullptr;
+
+  Document *loadWithErrorReport(std::string s) {
+    return Document::loadWithErrorReport(s.c_str());
   }
-  ipe::Document *loadWithErrorReport(std::string s) {
-    return ipe::Document::loadWithErrorReport(s.c_str());
+
+  int prepareLatexRun(Document *doc) {
+    converter = nullptr;
+    return doc->prepareLatexRun(&converter);
   }
-  ipe::Page *getPage(ipe::Document *doc, int pno) {
+
+  int completeLatexRun(Document *doc) {
+    String log;
+    return doc->completeLatexRun(log, converter);
+  }
+
+  Page *getPage(Document *doc, int pno) {
     return doc->page(pno);
   }
-  val getBytes(ipe::Buffer & buffer) {
+
+  val getBytes(Buffer & buffer) {
     return val(typed_memory_view(buffer.size(), (uint8_t *) buffer.data()));
   }
 };
 
-EMSCRIPTEN_BINDINGS(ipe) {
-  class_<ipe::Platform>("Platform")
-    .class_function("initLib", &initLib);
+EMSCRIPTEN_BINDINGS(ipelib) {
+  value_object<Vector>("Vector")
+    .field("x", &Vector::x)
+    .field("y", &Vector::y);
 
-  value_object<ipe::Vector>("Vector")
-    .field("x", &ipe::Vector::x)
-    .field("y", &ipe::Vector::y);
-
-  class_<ipe::Buffer>("Buffer")
-    .property("size", &ipe::Buffer::size)
+  class_<Buffer>("Buffer")
+    .property("size", &Buffer::size)
     .function("data", &getBytes);
 
-  class_<ipe::Page>("Page")
-    .property("count", &ipe::Page::count)
-    .property("countLayers", &ipe::Page::countLayers)
-    .property("countViews", &ipe::Page::countViews);
+  class_<Page>("Page")
+    .property("count", &Page::count)
+    .property("countLayers", &Page::countLayers)
+    .property("countViews", &Page::countViews);
 
-  class_<ipe::Cascade>("Cascade")
-    .property("count", &ipe::Cascade::count);
+  class_<Cascade>("Cascade")
+    .property("count", &Cascade::count);
 
-  class_<ipe::Document>("Document")
+  class_<Document>("Document")
     .constructor<>()
-    .property("countPages", &ipe::Document::countPages)
+    .property("countPages", &Document::countPages)
+    .function("prepareLatexRun", &prepareLatexRun, allow_raw_pointers())
+    .function("completeLatexRun", &completeLatexRun, allow_raw_pointers())
     .function("page", &getPage, allow_raw_pointers())
-    .function("cascade", select_overload<ipe::Cascade *()>(&ipe::Document::cascade),
-	      allow_raw_pointers());
+    .function("cascade", select_overload<Cascade *()>(&Document::cascade),
+	      allow_raw_pointers())
+    ;
   function("loadWithErrorReport", &loadWithErrorReport, return_value_policy::take_ownership());
 
 }

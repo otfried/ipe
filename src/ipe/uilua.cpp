@@ -39,6 +39,11 @@
 #include <cstdio>
 #include <cstdlib>
 
+#ifdef IPEUI_JS
+extern int appui_preloadFile(lua_State *L);
+extern int appui_persistFile(lua_State *L);
+#endif
+
 using namespace ipe;
 using namespace ipelua;
 
@@ -416,10 +421,11 @@ static int pastetool_setmatrix(lua_State *L)
 
 static int appui_shapetool(lua_State *L)
 {
-  CanvasBase *canvas = check_canvas(L, 1);
+  AppUiBase **ui = (AppUiBase **) luaL_checkudata(L, 1, "Ipe.appui");
+  CanvasBase *canvas = (*ui)->canvas();
   lua_pushvalue(L, 2);
   int luatool = luaL_ref(L, LUA_REGISTRYINDEX);
-  ShapeTool *tool = new ShapeTool(canvas, L, luatool);
+  ShapeTool *tool = new ShapeTool(canvas, L, luatool, (*ui)->model());
   // add methods to Lua tool
   lua_rawgeti(L, LUA_REGISTRYINDEX, luatool);
   lua_pushlightuserdata(L, tool);
@@ -440,11 +446,13 @@ static int appui_shapetool(lua_State *L)
 
 static int appui_pastetool(lua_State *L)
 {
-  CanvasBase *canvas = check_canvas(L, 1);
+  AppUiBase **ui = (AppUiBase **) luaL_checkudata(L, 1, "Ipe.appui");
+  CanvasBase *canvas = (*ui)->canvas();
   Object *obj = check_object(L, 2)->obj;
   lua_pushvalue(L, 3);
   int luatool = luaL_ref(L, LUA_REGISTRYINDEX);
-  PasteTool *tool = new PasteTool(canvas, L, luatool, obj->clone());
+  PasteTool *tool = new PasteTool(canvas, L, luatool,
+				  (*ui)->model(), obj->clone());
   // add methods to Lua tool
   lua_rawgeti(L, LUA_REGISTRYINDEX, luatool);
   lua_pushlightuserdata(L, tool);
@@ -731,6 +739,17 @@ static int appui_renderPage(lua_State *L)
 
 // --------------------------------------------------------------------
 
+static int appui_waitDialog(lua_State *L)
+{
+  AppUiBase **ui = check_appui(L, 1);
+  const char *cmd = luaL_checklstring(L, 2, nullptr);
+  const char *label = luaL_checklstring(L, 3, nullptr);
+  lua_pushboolean(L, (*ui)->waitDialog(cmd, label));
+  return 1;
+}
+
+// --------------------------------------------------------------------
+
 static const struct luaL_Reg appui_methods[] = {
   { "__tostring", appui_tostring },
   { "__gc", appui_destructor },
@@ -767,9 +786,9 @@ static const struct luaL_Reg appui_methods[] = {
   { "pasteTool", appui_pastetool },
   // --------------------------------------------------------------------
   { "win", appui_win},
+  { "waitDialog", appui_waitDialog },
   { "close", appui_close},
   { "setClipboard", appui_setClipboard },
-  { "clipboard", appui_clipboard },
   { "setActionState", appui_setActionState },
   { "actionState", appui_actionState },
   { "actionInfo", appui_actionInfo },
@@ -784,9 +803,18 @@ static const struct luaL_Reg appui_methods[] = {
   { "setNotes", appui_setNotes },
   { "setRecentFiles", appui_setRecentFiles },
   { "showTool", appui_showTool },
+  { "renderPage", appui_renderPage },
+#ifdef IPEUI_JS
+  { "preloadFile", appui_preloadFile },
+  { "persistFile", appui_persistFile },
+  { "getClipboardAsync", appui_clipboard },
+  { "selectPageAsync", appui_selectPage },
+  { "pageSorterAsync", appui_pageSorter },
+#else
   { "selectPage", appui_selectPage },
   { "pageSorter", appui_pageSorter },
-  { "renderPage", appui_renderPage },
+  { "getClipboard", appui_clipboard },
+#endif
   { nullptr, nullptr }
 };
 

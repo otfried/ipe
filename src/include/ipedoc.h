@@ -155,8 +155,9 @@ namespace ipe {
 	   ErrRunLatex, ErrLatex, ErrLatexOutput };
     int runLatex(String docname, String &logFile);
     int runLatex(String docname);
-    int runLatexAsync(String docname, String &texLog, Latex **pConverter);
-    int completeLatexRun(Latex *converter);
+    int prepareLatexRun(Latex **pConverter);
+    void runLatexAsync(String docname);
+    int completeLatexRun(String &texLog, Latex *converter);
 
   private:
     std::vector<Page *> iPages;

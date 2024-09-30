@@ -179,7 +179,7 @@ public:
   NSString *row(int idx, int row);
 
   virtual void setMapped(lua_State *L, int idx);
-  virtual bool buildAndRun(int w, int h);
+  virtual Result buildAndRun(int w, int h);
   virtual void retrieveValues();
   virtual void enableItem(int idx, bool value);
   virtual void acceptDialog(lua_State *L);
@@ -493,7 +493,7 @@ void PDialog::layoutControls()
 
 // --------------------------------------------------------------------
 
-bool PDialog::buildAndRun(int w, int h)
+Dialog::Result PDialog::buildAndRun(int w, int h)
 {
   NSUInteger style = NSTitledWindowMask|NSResizableWindowMask;
   if (iIgnoreEscapeField >= 0)
@@ -656,7 +656,7 @@ bool PDialog::buildAndRun(int w, int h)
   undoItem.action = @selector(ipeMenuAction:);
   redoItem.action = @selector(ipeMenuAction:);
   iPanel = nil;
-  return result;
+  return result ? Result::ACCEPTED : Result::CLOSED;
 }
 
 // --------------------------------------------------------------------
@@ -675,81 +675,6 @@ static int dialog_constructor(lua_State *L)
   lua_setmetatable(L, -2);
   *dlg = new PDialog(L, parent, s, language);
   return 1;
-}
-
-// --------------------------------------------------------------------
-
-@interface IpePanelDelegate : NSObject <NSWindowDelegate>
-@property void (^threadFunction)();
-@property BOOL threadStarted;
-@end
-
-@implementation IpePanelDelegate
-- (instancetype) init
-{
-  self = [super init];
-  if (self) {
-    _threadStarted = false;
-  }
-  return self;
-}
-
-- (void) windowDidBecomeKey:(NSNotification *) notification
-{
-  if (!self.threadStarted && self.threadFunction) {
-    [NSThread detachNewThreadSelector:@selector(startThread:)
-			     toTarget:self
-			   withObject:nil];
-    self.threadStarted = true;
-  }
-}
-
-- (void) startThread:(id) arg
-{
-  self.threadFunction();
-}
-@end
-
-static int ipeui_wait(lua_State *L)
-{
-  const char *cmd = nullptr;
-  if (!lua_isfunction(L, 2)) {
-    cmd = luaL_checkstring(L, 2);
-  }
-  const char *text = "Waiting for external editor";
-  if (lua_isstring(L, 3))
-    text = lua_tolstring(L, 3, nullptr);
-
-  NSPanel *panel = [[NSPanel alloc]
-		     initWithContentRect:NSMakeRect(400.,800., 200, 100)
-			       styleMask:NSTitledWindowMask
-				 backing:NSBackingStoreBuffered
-				   defer:YES];
-  panel.title = @"Ipe: waiting";
-  NSTextField *l = [[NSTextField alloc]
-		     initWithFrame:NSMakeRect(0., 0., 200., 100.)];
-  l.stringValue = C2N(text);
-  l.editable = NO;
-  l.bordered = NO;
-  l.drawsBackground = NO;
-
-  addToLayout(panel.contentView, l);
-  layout(panel.contentView, l, "x=x");
-  layout(panel.contentView, l, "y=y");
-
-  auto delegate = [[IpePanelDelegate alloc] init];
-  panel.delegate = delegate;
-
-  if (cmd) {
-    delegate.threadFunction = ^() { (void) std::system(cmd); [NSApp abortModal]; };
-  } else {
-    lua_pushvalue(L, 2);
-    delegate.threadFunction = ^() { lua_call(L, 0, 0); [NSApp abortModal];};
-  }
-
-  [NSApp runModalForWindow:panel];
-  [panel close];
-  return 0;
 }
 
 // --------------------------------------------------------------------
@@ -811,12 +736,11 @@ int PMenu::execute(lua_State *L)
 					 inView:nil];
   if (result && iSelected) {
     lua_pushstring(L, N2C(iSelected.ipeName));
-    lua_pushinteger(L, iSelected.ipeSubmenuIndex);
     if (iSelected.ipeSubmenuName)
       lua_pushstring(L, N2C(iSelected.ipeSubmenuName));
     else
       lua_pushliteral(L, "");
-    return 3;
+    return 2;
   } else
     return 0;
 }
@@ -1326,7 +1250,6 @@ static int ipeui_startBrowser(lua_State *L)
 // --------------------------------------------------------------------
 
 static const struct luaL_Reg ipeui_functions[] = {
-  { "waitDialog", ipeui_wait },
   { "Dialog", dialog_constructor },
   { "Timer", timer_constructor },
   { "Menu", menu_constructor },
@@ -1335,7 +1258,6 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "messageBox", ipeui_messageBox },
   { "currentDateTime", ipeui_currentDateTime },
   { "startBrowser", ipeui_startBrowser },
-  { "downloadFileIfIpeWeb", ipeui_downloadFileIfIpeWeb },
   { nullptr, nullptr }
 };
 

@@ -1,16 +1,16 @@
 <!doctype html>
 <!-- 
- test ipecanvas_js in a webbrowser
-
- to run it, embed 'test.ipe' using
- LDFLAGS += --embed-file test.ipe
+ test latex output in a webbrowser
+ to run it, embed 'test.ipe' and 'ipetemp.pdf' using
+ LDFLAGS += --embed-file test.ipe ipetemp.pdf
 -->
 <html>
   <script type="module">
-import initIpe from './ipejs.js';
+import initIpe from './ipe.js';
 
-initIpe().then((ipe) => {
+initIpe().then(async (ipe) => {
   console.log("Ipe bindings loaded");
+  ipe.FS.mkdir("/tmp/latexrun");
   ipe.Platform.initLib(["HOME=/home/ipe", "IPEJSLATEX=1", "IPEDEBUG=1"]);
   const doc = new ipe.loadWithErrorReport("test.ipe");
   console.log(`Doc has ${doc.countPages} pages`);
@@ -24,11 +24,20 @@ initIpe().then((ipe) => {
   canvas.updateSize();
   console.log("Got my canvas: ", canvas, canvas.width, canvas.height);
 
+  const prep = doc.prepareLatexRun();
+  console.log("prepareLatexRun: ", prep);
+  const texfile = ipe.FS.readFile("/tmp/latexrun/ipetemp.tex", {encoding: "utf8"});
+  // console.log("Latex source: ", texfile);
+  // faking running Latex
+  ipe.FS.rename("ipetemp.pdf", "/tmp/latexrun/ipetemp.pdf");
+  const log = `entering extended mode: using latexonline at https://localhost\n`;
+  ipe.FS.writeFile("/tmp/latexrun/ipetemp.log", log);
+  const post = doc.completeLatexRun();
+  console.log("completeLatexRun: ", post);
+  canvas.setResources(doc);
+
   canvas.setPage(p, 0, 0, cascade);
-  canvas.update();
-  console.log("Pan, zoom: ", canvas.pan, canvas.zoom);
   canvas.pan = {x:150, y:100};
-  console.log("Pan, zoom: ", canvas.pan, canvas.zoom);
   canvas.update();
 
   let dragging = false;

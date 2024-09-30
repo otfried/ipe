@@ -1,5 +1,6 @@
+// -*- C++ -*-
 // --------------------------------------------------------------------
-// Helper class for Win32 Unicode interface
+// Special widgets for JS
 // --------------------------------------------------------------------
 /*
 
@@ -28,27 +29,28 @@
 
 */
 
-#ifndef IPEUI_WSTRING_H
-#define IPEUI_WSTRING_H
+#ifndef CONTROLS_JS_H
+#define CONTROLS_JS_H
 
-class WString : public std::wstring {
- public:
-#ifdef IPEBASE_H
-  WString(const ipe::String &s) : std::wstring( std::move(s.w()) ) { /* nothing */ }
-#endif
-  WString(const std::string &s)  { init(s.data(), s.size()); }
-  WString(const char *s) { init(s, -1); }
- private:
-  void init(const char *s, int len);
+#include "ipelib.h"
+
+#include <emscripten/val.h>
+
+using namespace ipe;
+
+// --------------------------------------------------------------------
+
+class PathView {
+public:
+  PathView();
+  void setColor(const Color & color);
+  void set(const AllAttributes &all, Cascade *sheet);
+  void paint(emscripten::val canvas);
+private:
+  Cascade *iCascade;
+  AllAttributes iAll;
+  Color iColor;
 };
-
-extern void buildFlags(std::vector<short> &t, DWORD flags);
-extern void buildString(std::vector<short> &t, const char *s);
-extern void buildControl(std::vector<short> &t, short what, const char *s = nullptr);
-extern BOOL setWindowText(HWND h, const char *s);
-extern void sendMessage(HWND h, UINT code, const char *t, WPARAM wParam = 0);
-
 
 // --------------------------------------------------------------------
 #endif
-

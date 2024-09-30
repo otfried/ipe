@@ -36,6 +36,7 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
+#include <string>
 
 // --------------------------------------------------------------------
 
@@ -85,6 +86,7 @@ namespace ipe {
     String(const char *str, int len) noexcept;
     String(const String &rhs) noexcept;
     String(const String &rhs, int index, int len) noexcept;
+    String(const std::string &rhs) noexcept;
     String &operator=(const String &rhs) noexcept;
 #ifdef WIN32
     String(const wchar_t *data);
@@ -136,6 +138,9 @@ namespace ipe {
     int unicode(int &index) const noexcept;
     String getLine(int &index) const noexcept;
     const char *z() const noexcept;
+    std::string s() const noexcept {
+      return std::string(z());
+    }
   private:
     void detach(int n) noexcept;
   private:
@@ -240,8 +245,6 @@ namespace ipe {
   private:
     std::shared_ptr<std::vector<char>> iData;
   };
-
-  extern void ipeDebugBuffer(Buffer data, int maxsize);
 
   // --------------------------------------------------------------------
 
@@ -352,6 +355,8 @@ namespace ipe {
 #ifdef WIN32
     static FILE *fopen(const char *fname, const char *mode);
     static int mkdir(const char *dname);
+#elif defined(IPEWASM)
+    static FILE *fopen(const char *fname, const char *mode);
 #else
     inline static FILE *fopen(const char *fname, const char *mode) {
       return ::fopen(fname, mode);
@@ -368,7 +373,9 @@ namespace ipe {
     static bool listDirectory(String path, std::vector<String> &files);
     static String realPath(String fname);
     static String readFile(String fname);
-    static int runLatex(String dir, LatexType engine, String docname) noexcept;
+    static String howToRunLatex(String dir, LatexType engine, String docname) noexcept;
+    static int system(String cmd);
+    static String createTarball(String tex);
     static double toDouble(String s);
     static int toNumber(String s, int &iValue, double &dValue);
     static String spiroVersion();
@@ -407,6 +414,8 @@ namespace ipe {
   }
 
 } // namespace
+
+extern void ipeDebugBuffer(ipe::Buffer data, int maxsize);
 
 // --------------------------------------------------------------------
 #endif

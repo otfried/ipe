@@ -13,10 +13,22 @@ CPPFLAGS += -I../include -I../ipecanvas -I../ipecairo -I../ipelua \
 LIBS += -L$(buildlib) -lipecanvas -lipecairo -lipelua -lipe -lipeui \
 	$(LUA_LIBS) $(UI_LIBS) $(CAIRO_LIBS) $(ZLIB_LIBS) $(DL_LIBS)
 
+MAKE_ASSETS =
+WASM_LIBS =
+
 ifdef IPEWASM
+ifdef IPEWASMTARGET
+TARGET = $(IPEWASMTARGET)/ipe.js
+endif
 # create js/wasm files suitable for a browser
-LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -lembind
-LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS -sALLOW_MEMORY_GROWTH=1
+LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -sALLOW_MEMORY_GROWTH=1
+LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS,IDBFS,stringToNewUTF8,Emval
+LDFLAGS += -lembind -lidbfs.js --embed-file opt
+MAKE_ASSETS = bash mkipewebassets.sh
+WASM_LIBS = $(BUILDDIR)/lib/libipeui.so $(BUILDDIR)/lib/libipecanvas.so \
+	$(BUILDDIR)/lib/libipelua.so $(BUILDDIR)/lib/libipe.so \
+	$(BUILDDIR)/lib/libipecairo.so \
+	lua/model.lua lua/actions.lua lua/main.lua
 endif
 
 ifndef IPEBUNDLE
@@ -31,12 +43,12 @@ all: $(TARGET)
 
 sources	= tools.cpp appui.cpp uilua.cpp 
 qt_sources = main_qt.cpp appui_qt.cpp controls_qt.cpp 
-moc_headers = appui_qt.h controls_qt.h
+moc_headers = appui_qt.h controls_qt.h waitdlg_qt.h
 win_sources = main_win.cpp appui_win.cpp pathview_win.cpp pagesorter_win.cpp
 gtk_sources = main_gtk.cpp appui_gtk.cpp
 cocoa_sources = main_cocoa.cpp appui_cocoa.cpp controls_cocoa.cpp \
 	pagesorter_cocoa.cpp
-js_sources = main_js.cpp appui_js.cpp
+js_sources = main_js.cpp appui_js.cpp controls_js.cpp
 
 ifdef WIN32
 CXXFLAGS += -mwindows
@@ -63,8 +75,9 @@ else
 nib = 
 endif
 
-$(TARGET): $(objects) $(resource) $(nib) Makefile
+$(TARGET): $(objects) $(resource) $(nib) Makefile $(WASM_LIBS)
 	$(MAKE_BINDIR)
+	$(MAKE_ASSETS)
 	$(CXX) $(LDFLAGS) -o $@ $(objects) $(resource) $(LIBS)
 
 clean:
