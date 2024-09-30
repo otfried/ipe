@@ -828,6 +828,7 @@ function MODEL:export(format)
     self.ui:renderPage(self.doc, self.pno, self.vno,
        		       format, s, self.ui:zoom(),
 		       true, false) -- transparent, nocrop
+    ipeui.downloadFileIfIpeWeb(s)
   end
 end
 
@@ -2692,6 +2693,7 @@ local function sheets_save(d, dd)
     f:write('<!DOCTYPE ipestyle SYSTEM "ipe.dtd">\n')
     f:write(data)
     f:close()
+    ipeui.downloadFileIfIpeWeb(s)
     dd.model.ui:explain("Stylesheet saved to " .. s)
   end
 end

@@ -45,6 +45,23 @@ class QTextEdit;
 
 // --------------------------------------------------------------------
 
+inline void push_string(lua_State *L, const QString &str)
+{
+  lua_pushstring(L, str.toUtf8());
+}
+
+inline QString toqstring(lua_State *L, int i)
+{
+  return QString::fromUtf8(lua_tostring(L, i));
+}
+
+inline QString checkqstring(lua_State *L, int i)
+{
+  return QString::fromUtf8(luaL_checkstring(L, i));
+}
+
+// --------------------------------------------------------------------
+
 class MenuAction : public QAction {
   Q_OBJECT
 public:

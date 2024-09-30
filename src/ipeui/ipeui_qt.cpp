@@ -30,6 +30,7 @@
 
 #include "ipeui_qt.h"
 
+#include <iostream>
 #include <QApplication>
 #include <QCheckBox>
 #include <QCloseEvent>
@@ -47,6 +48,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QRegularExpression>
+#include <QSaveFile>
 #include <QShortcut>
 #include <QSyntaxHighlighter>
 #include <QTextEdit>
@@ -60,23 +62,6 @@
 #include <QtSpell.hpp>
 #pragma GCC diagnostic pop
 #endif
-
-// --------------------------------------------------------------------
-
-inline void push_string(lua_State *L, const QString &str)
-{
-  lua_pushstring(L, str.toUtf8());
-}
-
-inline QString toqstring(lua_State *L, int i)
-{
-  return QString::fromUtf8(lua_tostring(L, i));
-}
-
-inline QString checkqstring(lua_State *L, int i)
-{
-  return QString::fromUtf8(luaL_checkstring(L, i));
-}
 
 // --------------------------------------------------------------------
 
@@ -810,6 +795,7 @@ static int ipeui_getColor(lua_State *L)
 
 // --------------------------------------------------------------------
 
+#ifndef __EMSCRIPTEN__
 static int ipeui_fileDialog(lua_State *L)
 {
   static const char * const typenames[] = { "open", "save", nullptr };
@@ -873,6 +859,11 @@ static int ipeui_fileDialog(lua_State *L)
   }
   return 0;
 }
+#else
+// ipe-web defines these in another file
+int ipeui_fileDialog(lua_State *L);
+int ipeui_startBrowser(lua_State *L);
+#endif
 
 // --------------------------------------------------------------------
 
@@ -983,6 +974,11 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "messageBox", ipeui_messageBox },
   { "waitDialog", ipeui_wait },
   { "currentDateTime", ipeui_currentDateTime },
+  { "downloadFileIfIpeWeb", ipeui_downloadFileIfIpeWeb },
+#ifdef __EMSCRIPTEN__
+  { "startBrowser", ipeui_startBrowser }, // open new tab on ipe-web
+  // if not defined (on ipe-qt), defaults to shell cmd
+#endif
   { nullptr, nullptr }
 };
 

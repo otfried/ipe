@@ -748,3 +748,7 @@ int luaopen_ipeui_common(lua_State *L)
 }
 
 // --------------------------------------------------------------------
+
+#ifndef __EMSCRIPTEN__
+int ipeui_downloadFileIfIpeWeb(lua_State *L) { return 0; } // no-op
+#endif

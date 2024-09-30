@@ -919,6 +919,7 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "messageBox", ipeui_messageBox },
   { "waitDialog", ipeui_wait },
   { "currentDateTime", ipeui_currentDateTime },
+  { "downloadFileIfIpeWeb", ipeui_downloadFileIfIpeWeb },
   { nullptr, nullptr },
 };
 
