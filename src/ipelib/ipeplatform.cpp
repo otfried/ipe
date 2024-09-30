@@ -639,12 +639,25 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
 #if defined(IPEWASM) && !defined(IPENODEJS)
 int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
 {
+  ipeDebug("Platform::runLatex %s", dir.z());
   std::string latex = (engine == LatexType::Xetex) ?
     "xelatex" : (engine == LatexType::Luatex) ?
     "lualatex" : "pdflatex";
-  String ipetemp = readFile(latexDirectory() + "latexrun/ipetemp.tex");
-  emscripten::val window = emscripten::val::global("window");
-  emscripten::val result = window.call<emscripten::val>("runlatex", latex, ipetemp);
+  String ipetemp = readFile(dir + "latexrun/ipetemp.tex");
+  String ipepdf = dir + "latexrun/ipetemp.pdf";
+  String ipelog = dir + "latexrun/ipetemp.log";
+  emscripten::val ipc = emscripten::val::global("window")["ipc"];
+  // here is the only place we need ASYNCIFY
+  emscripten::val result = ipc.call<emscripten::val>("runlatex", latex,
+						     std::string(ipetemp.z())).await();
+  std::string pdf = result["pdf"].as<std::string>();
+  std::string log = result["log"].as<std::string>();
+  std::FILE *pdfFile = Platform::fopen(ipepdf.z(), "wb");
+  std::fwrite(pdf.data(), 1, pdf.size(), pdfFile);
+  std::fclose(pdfFile);
+  std::FILE *logFile = Platform::fopen(ipelog.z(), "wb");
+  std::fwrite(log.data(), 1, log.size(), logFile);
+  std::fclose(logFile);
   return 0;
 }
 #endif

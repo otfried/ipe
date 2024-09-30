@@ -239,7 +239,7 @@ ifdef IPEWASM
   exe_target	 = $(BUILDDIR)/bin/$1.js
   CXX            = em++
   CC             = emcc
-  CXXFLAGS	 += -g -O2
+  CXXFLAGS	 += -O3
   CPPFLAGS	 += -DIPEWASM
 ifdef IPENODEJS
   # compile code that will run under NodeJS, not in a browser

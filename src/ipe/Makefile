@@ -17,6 +17,8 @@ ifdef IPEWASM
 # create js/wasm files suitable for a browser or an Electron render process
 LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -lembind
 LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS -sALLOW_MEMORY_GROWTH=1
+# ASYNCIFY is very expensive, more than doubling the wasm size
+LDFLAGS += -sASYNCIFY
 endif
 
 ifdef IPEBUNDLE
