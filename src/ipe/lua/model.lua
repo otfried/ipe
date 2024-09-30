@@ -639,7 +639,7 @@ function MODEL:saveDocument(fname)
     self:warning("File not saved!", "Error saving the document")
     return
   end
-  ipeui.downloadFile(fname)
+  ipeui.downloadFileIfIpeWeb(fname)
 
   if fm == "xml" and #prefs.auto_export > 0 then
     self:auto_export(fname)

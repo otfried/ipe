@@ -1336,6 +1336,7 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "waitDialog", ipeui_wait },
   { "currentDateTime", ipeui_currentDateTime },
   { "startBrowser", ipeui_startBrowser },
+  { "downloadFileIfIpeWeb", ipeui_downloadFileIfIpeWeb },
   { nullptr, nullptr }
 };
 

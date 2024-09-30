@@ -221,5 +221,7 @@ inline Timer **check_timer(lua_State *L, int i)
 
 extern int luaopen_ipeui_common(lua_State *L);
 
+int ipeui_downloadFileIfIpeWeb(lua_State *L);
+
 // --------------------------------------------------------------------
 #endif
