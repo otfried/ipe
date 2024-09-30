@@ -29,7 +29,7 @@
 */
 
 #include "ipeui_qt.h"
-#include <emscripten.h>
+#include <emscripten/bind.h>
 
 #include <QApplication>
 #include <QFileDialog>
@@ -94,9 +94,12 @@ int ipeui_fileDialog(lua_State *L) {
     QString name;
     if (!lua_isnoneornil(L, 6))
         name = checkqstring(L, 6);
+    /*
+    // not implemented
     int selected = 0;
     if (!lua_isnoneornil(L, 7))
         selected = luaL_checkinteger(L, 7);
+    */
 
     QString filePath;
     if (type == 0) { // open
@@ -175,7 +178,9 @@ int ipeui_downloadFileIfIpeWeb(lua_State *L) {
 
 int ipeui_startBrowser(lua_State *L) {
     const std::string url = luaL_checklstring(L, 1, nullptr);
-    emscripten_run_script("window.open('" + url + "', '_blank').focus();");
+    emscripten::val window = emscripten::val::global("window");
+    window.call<emscripten::val>("open", url, std::string("_blank"))
+      .call<void>("focus");
     lua_pushboolean(L, true);
     return 1;
 }
