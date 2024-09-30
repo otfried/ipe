@@ -604,10 +604,10 @@ Page *Document::remove(int no)
 // --------------------------------------------------------------------
 
 //! Run PdfLatex or Xelatex
-int Document::runLatexAsync(String docname, String &texLog, Latex **pConverter)
+///! This function starts the Latex run asynchronously.
+int Document::runLatexAsync(String docname, Latex **pConverter)
 {
   *pConverter = nullptr;
-  texLog = "";
   std::unique_ptr<Latex> converter(new Latex(cascade(),
 					     iProperties.iTexEngine,
 					     iProperties.iSequentialText));
@@ -655,11 +655,18 @@ int Document::runLatexAsync(String docname, String &texLog, Latex **pConverter)
   if (err < 0)
     return ErrWritingSource;
 
-  int result = Platform::runLatex(latexDir, iProperties.iTexEngine, docname);
+  Platform::runLatex(latexDir, iProperties.iTexEngine, docname);
+  *pConverter = converter.release();
+  return ErrNone;
+}
 
-  if (result != 0 && result != 1)
-    return ErrRunLatex;
-
+int Document::completeLatexRun(String &texLog, Latex *converter)
+{
+  texLog = "";
+  String latexDir = Platform::latexDirectory();
+  String pdfFile = latexDir + "ipetemp.pdf";
+  String logFile = latexDir + "ipetemp.log";
+  
   // Check log file for Pdflatex version and errors
   texLog = Platform::readFile(logFile);
   if (!texLog.hasPrefix("This is ") && !texLog.hasPrefix("entering extended mode"))
@@ -679,16 +686,10 @@ int Document::runLatexAsync(String docname, String &texLog, Latex **pConverter)
   FileSource source(pdfF);
   bool okay = converter->readPdf(source);
   std::fclose(pdfF);
-  if (okay) {
-    *pConverter = converter.release();
-    return ErrNone;
-  } else
+  if (!okay)
     return ErrLatexOutput;
-}
 
-int Document::completeLatexRun(Latex *converter)
-{
-  bool okay = converter->updateTextObjects();
+  okay = converter->updateTextObjects();
   if (okay) {
     setResources(converter->takeResources());
     // resources()->show();
@@ -699,11 +700,11 @@ int Document::completeLatexRun(Latex *converter)
 
 int Document::runLatex(String docname, String &texLog)
 {
-  Latex *converter;
-  int err = runLatexAsync(docname, texLog, &converter);
+  Latex *converter = nullptr;
+  int err = runLatexAsync(docname, &converter);
   if (err)
     return err;
-  return completeLatexRun(converter);
+  return completeLatexRun(texLog, converter);
 }
 
 //! Run Pdflatex (suitable for console applications)

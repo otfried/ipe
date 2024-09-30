@@ -75,6 +75,8 @@ public:
   virtual void setRecentFileMenu(const std::vector<String> & names) override;
   virtual void action(String name) override;
 
+  void resumeLua();
+
 private:
   virtual void addRootMenu(int id, const char *name) override;
   virtual void addItem(int id, const char *title, const char *name) override;

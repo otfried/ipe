@@ -146,7 +146,7 @@ prefs.win_toolbar_order = { "snap", "grid", "angle", "edit", "mode" }
 prefs.win_mini_edit = false
 
 -- Should LaTeX be run automatically every time text has changed?
-prefs.auto_run_latex = true
+prefs.auto_run_latex = false
 
 -- Allow Ipe to freeze while LaTeX is running
 -- Useful when your Latex is fast and you want to keep typing while Latex is running

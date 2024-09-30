@@ -68,6 +68,7 @@ function MODEL:init(fname)
   self.ui = AppUi(self)
   self.pristine = false
   self.first_show = true
+  self.current_action = nil
 
   self.type3_font = false
 
@@ -115,6 +116,12 @@ function MODEL:init(fname)
   end
   if err then
     self:warning("Document '" .. fname .. "' could not be opened", err)
+  end
+end
+
+function MODEL:resumeLua()
+  if self.current_action then
+    coroutine.resume(self.current_action)
   end
 end
 
@@ -471,12 +478,10 @@ function MODEL:runLatex()
   if prefs.freeze_in_latex then
     success, errmsg, result, log = self.doc:runLatex(self.file_name) -- sync
   else
-    ipeui.waitDialog(self.ui:win(),
-		     function ()
-		       success, errmsg, result, log = self.doc:runLatex(self.file_name, true) -- async
-		     end, "Compiling Latex")
-    if success and success ~= true then
-      self.doc:completeLatexRun(success) -- on ui thread
+    success, converter = self.doc:runLatexAsync(self.file_name, true) -- starts async run, then returns
+    if success then
+      coroutine.yield() -- wait for latex to complete running
+      success, errmsg, result, log = self.doc:completeLatexRun(converter)
     end
   end
   if success then

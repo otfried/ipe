@@ -276,6 +276,16 @@ int AppUi::clipboard(lua_State *L)
   return 0;
 }
 
+// ------------------------------------------------------------------------
+
+void AppUi::resumeLua() {
+  // calls model:resumeLua
+  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
+  lua_getfield(L, -1, "resumeLua");
+  lua_insert(L, -2); // before model
+  luacall(L, 1, 0);
+}
+
 // --------------------------------------------------------------------
 
 int CanvasBase::selectPageOrView(Document *doc, int page, int startIndex,
@@ -286,4 +296,3 @@ int CanvasBase::selectPageOrView(Document *doc, int page, int startIndex,
 }
 
 // ------------------------------------------------------------------------
-

@@ -113,7 +113,7 @@ locale_t ipeLocale;
 #if defined(IPEWASM) && !defined(IPENODEJS)
 String Platform::dotIpe()
 {
-  return String("/home/ipe/.ipe");
+  return String("/home/ipe/.ipe/");
 }
 #else
 #ifndef WIN32
@@ -498,6 +498,7 @@ String Platform::readFile(String fname)
 
 #if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
 // amazingly, this actually works in NodeJS as is.
+// to make this async, need to run it on a different thread
 //! Runs latex on file ipetemp.tex in given directory.
 /*! directory of docname is added to TEXINPUTS if its non-empty. */
 int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
@@ -637,27 +638,13 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
 #endif
 
 #if defined(IPEWASM) && !defined(IPENODEJS)
+// this is fully async: starts latex on a different process and returns
 int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
 {
-  ipeDebug("Platform::runLatex %s", dir.z());
   std::string latex = (engine == LatexType::Xetex) ?
     "xelatex" : (engine == LatexType::Luatex) ?
     "lualatex" : "pdflatex";
-  String ipetemp = readFile(dir + "latexrun/ipetemp.tex");
-  String ipepdf = dir + "latexrun/ipetemp.pdf";
-  String ipelog = dir + "latexrun/ipetemp.log";
-  emscripten::val ipc = emscripten::val::global("window")["ipc"];
-  emscripten::val result = ipc.call<emscripten::val>("runlatex", latex, std::string(ipetemp.z()));
-  /*
-  std::string pdf = result["pdf"].as<std::string>();
-  std::string log = result["log"].as<std::string>();
-  std::FILE *pdfFile = Platform::fopen(ipepdf.z(), "wb");
-  std::fwrite(pdf.data(), 1, pdf.size(), pdfFile);
-  std::fclose(pdfFile);
-  std::FILE *logFile = Platform::fopen(ipelog.z(), "wb");
-  std::fwrite(log.data(), 1, log.size(), logFile);
-  std::fclose(logFile);
-  */
+  emscripten::val::global("window").call<emscripten::val>("runlatex", latex);
   return 0;
 }
 #endif

@@ -34,7 +34,7 @@
 -- protects call, then distributes to action_xxx method or
 -- saction_xxx methods (the latter are only called if a selection exists)
 function MODEL:action(a)
-  local result, err = xpcall(function () self:paction(a) end,
+  local result, err = xpcall(function () self:caction(a) end,
 			     debug.traceback)
   if not result then
     messageBox(nil, "critical",
@@ -43,6 +43,15 @@ function MODEL:action(a)
 		       "Save your file!",
 		     err)
   end
+end
+
+function MODEL:caction(a1)
+  if self.current_action and coroutine.status(self.current_action) ~= "dead" then
+    print("WARNING: actions are not reentrant!")
+    return
+  end
+  self.current_action = coroutine.create(self.paction)
+  coroutine.resume(self.current_action, self, a1)
 end
 
 function MODEL:paction(a1)

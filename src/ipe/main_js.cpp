@@ -151,7 +151,8 @@ EMSCRIPTEN_BINDINGS(ipe) {
   emscripten::class_<ipe::Platform>("Platform")
     .class_function("initLib", &initLib);
   emscripten::class_<AppUi>("AppUi")
-    .function("action", &ipeAction, emscripten::allow_raw_pointers());
+    .function("action", &ipeAction, emscripten::allow_raw_pointers())
+    .function("resume", &AppUi::resumeLua);
   emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());
 }
 
