@@ -659,6 +659,15 @@ void AppUiBase::luaRecentFileSelected(String name)
   luacall(L, 2, 0);
 }
 
+void AppUiBase::resumeLua()
+{
+  // calls model:resumeLua
+  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
+  lua_getfield(L, -1, "resumeLua");
+  lua_insert(L, -2); // before model
+  luacall(L, 1, 0);
+}
+
 // --------------------------------------------------------------------
 
 static String stripMark(Attribute mark)

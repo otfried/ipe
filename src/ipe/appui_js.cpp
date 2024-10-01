@@ -276,14 +276,12 @@ int AppUi::clipboard(lua_State *L)
   return 0;
 }
 
-// ------------------------------------------------------------------------
-
-void AppUi::resumeLua() {
-  // calls model:resumeLua
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "resumeLua");
-  lua_insert(L, -2); // before model
-  luacall(L, 1, 0);
+bool AppUi::waitDialog(const char *cmd, const char *label)
+{
+  // this is fully async: starts latex on a different process and returns
+  // here, cmd is the name of the tex engine
+  emscripten::val::global("window").call<emscripten::val>("runlatex", std::string(cmd));
+  return false;
 }
 
 // --------------------------------------------------------------------

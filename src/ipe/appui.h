@@ -110,6 +110,7 @@ public:
   void luaShowPathStylePopup(Vector v);
   void luaBookmarkSelected(int index);
   void luaRecentFileSelected(String name);
+  void resumeLua();
   inline void setInkMode(bool ink) { isInkMode = ink; }
   static int readImage(lua_State *L, String fn);
 
@@ -141,6 +142,8 @@ public:  // What platforms must implement:
   virtual int actionInfo(lua_State *L) const;
 
   virtual void setRecentFileMenu(const std::vector<String> & names) = 0;
+
+  virtual bool waitDialog(const char *cmd, const char *label) = 0; 
 
 protected:   // What platforms must implement:
   virtual void addRootMenu(int id, const char *name) = 0;

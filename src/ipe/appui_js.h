@@ -75,7 +75,7 @@ public:
   virtual void setRecentFileMenu(const std::vector<String> & names) override;
   virtual void action(String name) override;
 
-  void resumeLua();
+  virtual bool waitDialog(const char *cmd, const char *label) override;
 
 private:
   virtual void addRootMenu(int id, const char *name) override;

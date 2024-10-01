@@ -145,6 +145,10 @@ static void ipeAction(AppUi *ui, std::string name)
   ui->action(String(name.c_str()));
 }
 
+static void resumeLua(AppUi *ui) {
+  ui->resumeLua();
+}
+
 // --------------------------------------------------------------------
 
 EMSCRIPTEN_BINDINGS(ipe) {
@@ -152,7 +156,7 @@ EMSCRIPTEN_BINDINGS(ipe) {
     .class_function("initLib", &initLib);
   emscripten::class_<AppUi>("AppUi")
     .function("action", &ipeAction, emscripten::allow_raw_pointers())
-    .function("resume", &AppUi::resumeLua);
+    .function("resume", &resumeLua, emscripten::allow_raw_pointers());
   emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());
 }
 

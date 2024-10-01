@@ -31,7 +31,7 @@ all: $(TARGET)
 
 sources	= tools.cpp appui.cpp uilua.cpp 
 qt_sources = main_qt.cpp appui_qt.cpp controls_qt.cpp 
-moc_headers = appui_qt.h controls_qt.h
+moc_headers = appui_qt.h controls_qt.h waitdlg_qt.h
 win_sources = main_win.cpp appui_win.cpp pathview_win.cpp pagesorter_win.cpp
 gtk_sources = main_gtk.cpp appui_gtk.cpp
 cocoa_sources = main_cocoa.cpp appui_cocoa.cpp controls_cocoa.cpp \
