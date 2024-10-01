@@ -887,14 +887,6 @@ static int timer_constructor(lua_State *L)
 
 // --------------------------------------------------------------------
 
-static int ipeui_wait(lua_State *L)
-{
-  luaL_error(L, "'waitDialog' is not yet implemented.");
-  return 0;
-}
-
-// --------------------------------------------------------------------
-
 static int ipeui_currentDateTime(lua_State *L)
 {
   time_t t = time(NULL);
@@ -917,7 +909,6 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "getColor", ipeui_getColor },
   { "fileDialog", ipeui_fileDialog },
   { "messageBox", ipeui_messageBox },
-  { "waitDialog", ipeui_wait },
   { "currentDateTime", ipeui_currentDateTime },
   { "downloadFileIfIpeWeb", ipeui_downloadFileIfIpeWeb },
   { nullptr, nullptr },
