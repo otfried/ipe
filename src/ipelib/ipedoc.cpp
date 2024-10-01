@@ -603,9 +603,7 @@ Page *Document::remove(int no)
 
 // --------------------------------------------------------------------
 
-//! Run PdfLatex or Xelatex
-///! This function starts the Latex run asynchronously.
-int Document::runLatexAsync(String docname, Latex **pConverter)
+int Document::prepareLatexRun(Latex **pConverter)
 {
   *pConverter = nullptr;
   std::unique_ptr<Latex> converter(new Latex(cascade(),
@@ -655,7 +653,6 @@ int Document::runLatexAsync(String docname, Latex **pConverter)
   if (err < 0)
     return ErrWritingSource;
 
-  Platform::runLatex(latexDir, iProperties.iTexEngine, docname);
   *pConverter = converter.release();
   return ErrNone;
 }
@@ -698,12 +695,16 @@ int Document::completeLatexRun(String &texLog, Latex *converter)
   return okay ? ErrNone : ErrLatexOutput;
 }
 
+#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
 int Document::runLatex(String docname, String &texLog)
 {
   Latex *converter = nullptr;
-  int err = runLatexAsync(docname, &converter);
-  if (err)
-    return err;
+  int err = prepareLatexRun(&converter);
+  if (err) return err;
+  String cmd = 
+    Platform::howToRunLatex(Platform::latexDirectory(), iProperties.iTexEngine, docname);
+  if (cmd.empty() || Platform::system(cmd))
+    return ErrRunLatex;
   return completeLatexRun(texLog, converter);
 }
 
@@ -738,5 +739,6 @@ int Document::runLatex(String docname)
     return 0;
   }
 }
+#endif
 
 // --------------------------------------------------------------------

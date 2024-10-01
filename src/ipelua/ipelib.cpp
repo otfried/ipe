@@ -292,6 +292,7 @@ static int document_replaceSheets(lua_State *L)
   return 1;
 }
 
+#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
 static int document_runLatex(lua_State *L)
 {
   Document **d = check_document(L, 1);
@@ -336,15 +337,13 @@ static int document_runLatex(lua_State *L)
   push_string(L, log);
   return 4;
 }
+#endif
 
-static int document_runLatexAsync(lua_State *L)
+static int document_prepareLatexRun(lua_State *L)
 {
   Document **d = check_document(L, 1);
-  String docname;
-  if (!lua_isnoneornil(L, 2))
-    docname = luaL_checklstring(L, 2, nullptr);
   Latex *converter = nullptr;
-  int result = (*d)->runLatexAsync(docname, &converter);
+  int result = (*d)->prepareLatexRun(&converter);
   // TODO: return precise error
   if (result == 0) {
     lua_pushboolean(L, true);
@@ -354,6 +353,21 @@ static int document_runLatexAsync(lua_State *L)
     lua_pushnil(L);
   }
   return 2;
+}
+
+static int document_howToRunLatex(lua_State *L)
+{
+  Document **d = check_document(L, 1);
+  String docname;
+  if (!lua_isnoneornil(L, 2))
+    docname = luaL_checklstring(L, 2, nullptr);
+  String cmd = 
+    Platform::howToRunLatex(Platform::latexDirectory(), (*d)->properties().iTexEngine, docname);
+  if (cmd.empty())
+    lua_pushnil(L);
+  else
+    push_string(L, cmd);
+  return 1;
 }
 
 static int document_completeLatexRun(lua_State *L)
@@ -549,8 +563,11 @@ static const struct luaL_Reg document_methods[] = {
   { "countTotalViews", document_countTotalViews },
   { "sheets", document_sheets },
   { "replaceSheets", document_replaceSheets },
+#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
   { "runLatex", document_runLatex },
-  { "runLatexAsync", document_runLatexAsync },
+#endif
+  { "prepareLatexRun", document_prepareLatexRun },
+  { "howToRunLatex", document_howToRunLatex },
   { "completeLatexRun", document_completeLatexRun },
   { "checkStyle", document_checkStyle },
   { "properties", document_properties },

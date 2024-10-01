@@ -499,9 +499,9 @@ String Platform::readFile(String fname)
 #if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
 // amazingly, this actually works in NodeJS as is.
 // to make this async, need to run it on a different thread
-//! Runs latex on file ipetemp.tex in given directory.
+//! Returns command to run latex on file ipetemp.tex in given directory.
 /*! directory of docname is added to TEXINPUTS if its non-empty. */
-int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
+String Platform::howToRunLatex(String dir, LatexType engine, String docname) noexcept
 {
   const char *latex = (engine == LatexType::Xetex) ?
     "xelatex" : (engine == LatexType::Luatex) ?
@@ -563,40 +563,11 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
   String s = dir + "runlatex.bat";
   std::FILE *f = Platform::fopen(s.z(), "wb");
   if (!f)
-    return -1;
+    return String();
   std::fwrite(bat.data(), 1, bat.size(), f);
   std::fclose(f);
-
-  // Declare and initialize process blocks
-  PROCESS_INFORMATION processInformation;
-  STARTUPINFOW startupInfo;
-
-  memset(&processInformation, 0, sizeof(processInformation));
-  memset(&startupInfo, 0, sizeof(startupInfo));
-  startupInfo.cb = sizeof(startupInfo);
-
-  // Call the executable program
-  String cmd = String("cmd /c call \"") + dir + String("runlatex.bat\"");
-  std::wstring wcmd = cmd.w();
-
-  int result = CreateProcessW(nullptr, wcmd.data(), nullptr, nullptr, FALSE,
-			      NORMAL_PRIORITY_CLASS|CREATE_NO_WINDOW,
-			      nullptr, nullptr, &startupInfo, &processInformation);
-  if (result == 0)
-    return -1;  // failure to create process
-
-  // Wait until child process exits.
-  WaitForSingleObject(processInformation.hProcess, INFINITE);
-
-  // Close process and thread handles.
-  CloseHandle(processInformation.hProcess);
-  CloseHandle(processInformation.hThread);
-
-  // Apparently WaitForSingleObject doesn't work in Wine
-  const char *wine = getenv("IPEWINE");
-  if (wine)
-    Sleep(Lex(wine).getInt());
-  return 0;
+  
+  return String("cmd /c call \"") + dir + String("runlatex.bat\"");
 #else
   if (!online && getenv("IPETEXFORMAT")) {
     latex = (engine == LatexType::Xetex) ?
@@ -629,23 +600,61 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
     s += " ipetemp.tex";
   }
   s += " > /dev/null";
-  int result = std::system(s.z());
+  return s;
+#endif
+}
+
+#ifdef WIN32
+int Platform::system(String cmd)
+{
+  // Declare and initialize process blocks
+  PROCESS_INFORMATION processInformation;
+  STARTUPINFOW startupInfo;
+
+  memset(&processInformation, 0, sizeof(processInformation));
+  memset(&startupInfo, 0, sizeof(startupInfo));
+  startupInfo.cb = sizeof(startupInfo);
+
+  // Call the executable program
+  std::wstring wcmd = cmd.w();
+
+  int result = CreateProcessW(nullptr, wcmd.data(), nullptr, nullptr, FALSE,
+			      NORMAL_PRIORITY_CLASS|CREATE_NO_WINDOW,
+			      nullptr, nullptr, &startupInfo, &processInformation);
+  if (result == 0)
+    return -1;  // failure to create process
+
+  // Wait until child process exits.
+  WaitForSingleObject(processInformation.hProcess, INFINITE);
+
+  // Close process and thread handles.
+  CloseHandle(processInformation.hProcess);
+  CloseHandle(processInformation.hThread);
+
+  // Apparently WaitForSingleObject doesn't work in Wine
+  const char *wine = getenv("IPEWINE");
+  if (wine)
+    Sleep(Lex(wine).getInt());
+  return 0;
+}
+#else
+int Platform::system(String cmd)
+{
+  int result = std::system(cmd.z());
   if (result != -1)
     result = WEXITSTATUS(result);
   return result;
-#endif
 }
 #endif
+#endif
 
-#if defined(IPEWASM) && !defined(IPENODEJS)
-// this is fully async: starts latex on a different process and returns
-int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
+#if defined(__EMSCRIPTEN__) && !defined(IPENODEJS)
+String Platform::howToRunLatex(String dir, LatexType engine, String docname) noexcept
 {
-  std::string latex = (engine == LatexType::Xetex) ?
+  const char *latex = (engine == LatexType::Xetex) ?
     "xelatex" : (engine == LatexType::Luatex) ?
     "lualatex" : "pdflatex";
-  emscripten::val::global("window").call<emscripten::val>("runlatex", latex);
-  return 0;
+  return String(latex);
 }
 #endif
 

@@ -367,7 +367,10 @@ namespace ipe {
     static bool listDirectory(String path, std::vector<String> &files);
     static String realPath(String fname);
     static String readFile(String fname);
-    static int runLatex(String dir, LatexType engine, String docname) noexcept;
+    static String howToRunLatex(String dir, LatexType engine, String docname) noexcept;
+#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
+    static int system(String cmd);
+#endif
     static double toDouble(String s);
     static int toNumber(String s, int &iValue, double &dValue);
     static String spiroVersion();
