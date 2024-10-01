@@ -82,10 +82,18 @@ Dialog::Dialog(lua_State *L0, WINID parent, const char *caption, const char *lan
 // the Lua method for an action, as this would stop it from being garbage collected.
 Dialog::~Dialog()
 {
+  fprintf(stderr, "~Dialog (%s)\n", iCaption.c_str());
   // dereference lua methods
-  for (int i = 0; i < int(iElements.size()); ++i)
+  /*
+  // TODO: danger: L represents the Lua thread that created the dialog/methods
+  // but this thread may already have been garbage collected.
+  for (int i = 0; i < int(iElements.size()); ++i) {
+    fprintf(stderr, "Deref %d\n", iElements[i].lua_method);
     luaL_unref(L, LUA_REGISTRYINDEX, iElements[i].lua_method);
+  }
   luaL_unref(L, LUA_REGISTRYINDEX, iLuaDialog);
+  */
+  fprintf(stderr, "~/Dialog (%s)\n", iCaption.c_str());
 }
 
 void Dialog::callLua(int luaMethod)

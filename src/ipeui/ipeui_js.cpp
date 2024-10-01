@@ -68,18 +68,6 @@ static int menu_constructor(lua_State *L)
 
 // --------------------------------------------------------------------
 
-static int ipeui_wait(lua_State *L)
-{
-  // PDialog *parent = nullptr;
-  Dialog **dlg = (Dialog **) luaL_testudata(L, 1, "Ipe.dialog");
-  // if (dlg != nullptr)
-  // parent = (PDialog *) *dlg;
-  (void) dlg;
-  return 0;
-}
-
-// --------------------------------------------------------------------
-
 class PTimer : public Timer {
 public:
   PTimer(lua_State *L0, int lua_object, const char *method);
@@ -231,7 +219,6 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "getColor", ipeui_getColor },
   { "fileDialog", ipeui_fileDialog },
   { "messageBox", ipeui_messageBox },
-  { "waitDialog", ipeui_wait },
   { "currentDateTime", ipeui_currentDateTime },
   { nullptr, nullptr }
 };
