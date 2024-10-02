@@ -123,7 +123,7 @@ public:
 
 protected:
   virtual void setMapped(lua_State *L, int idx);
-  virtual bool buildAndRun(int w, int h);
+  virtual Result buildAndRun(int w, int h);
   void buildElements(std::vector<short> &t);
   virtual void retrieveValues();
   virtual void enableItem(int idx, bool value);
@@ -503,7 +503,7 @@ void PDialog::buildElements(std::vector<short> &t)
   }
 }
 
-bool PDialog::buildAndRun(int w, int h)
+Dialog::Result PDialog::buildAndRun(int w, int h)
 {
   // converts dimensions to dialog units and possibly changes them
   computeDimensions(w, h);
@@ -540,7 +540,7 @@ bool PDialog::buildAndRun(int w, int h)
 			    iParent, (DLGPROC) dialogProc, (LPARAM) this);
   // retrieveValues() has been called before EndDialog!
   hDialog = nullptr; // already destroyed by Windows
-  return (res > 0);
+  return (res > 0) ? Result::ACCEPTED : Result::CLOSED;
 }
 
 // converts (w, h) from pixels to dialog units and possibly increases them to fit dialog

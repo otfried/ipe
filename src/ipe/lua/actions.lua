@@ -46,12 +46,18 @@ function MODEL:action(a)
 end
 
 function MODEL:caction(a1)
-  if self.current_action and coroutine.status(self.current_action) ~= "dead" then
+  if self.current_action then
+    -- TODO: perhaps just cancel the suspended thread?
     print("WARNING: actions are not reentrant!")
     return
   end
   self.current_action = coroutine.create(self.paction)
   coroutine.resume(self.current_action, self, a1)
+  if coroutine.status(self.current_action) == "dead" then self.current_action = nil end
+end
+
+function MODEL:resumeLua()
+  if self.current_action then coroutine.resume(self.current_action) end
 end
 
 function MODEL:paction(a1)
@@ -2631,7 +2637,8 @@ local function sheets_edit(d, dd)
   f:close()
   local sheet, msg
   while not sheet do
-    ipeui.waitDialog(d, string.format(prefs.external_editor, fname))
+    dd.model:waitDialog(string.format(prefs.external_editor, fname),
+			"Waiting for external editor")
     sheet, msg = ipe.Sheet(fname)
     if not sheet then
       local r = messageBox(dd.model.ui:win(), "question",

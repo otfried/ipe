@@ -28,7 +28,7 @@
 
 --]]
 
-function externalEditor(d, field)
+function MODEL:externalEditor(d, field)
   local text = d:get(field)
   local fname = os.tmpname()
   if prefs.editable_textfile then
@@ -37,7 +37,8 @@ function externalEditor(d, field)
   local f = io.open(fname, "w")
   f:write(text)
   f:close()
-  ipeui.waitDialog(d, string.format(prefs.external_editor, fname))
+  self.ui:waitDialog(string.format(prefs.external_editor, fname),
+		     "Waiting for external editor")
   f = io.open(fname, "r")
   text = f:read("*all")
   f:close()
@@ -48,9 +49,9 @@ function externalEditor(d, field)
   end
 end
 
-function addEditorField(d, field)
+function MODEL:addEditorField(d, field)
   if prefs.external_editor then
-    d:addButton("editor", "&Editor", function (d) externalEditor(d, field) end)
+    d:addButton("editor", "&Editor", function (d) self:externalEditor(d, field) end)
   end
 end
 
@@ -928,7 +929,7 @@ function MODEL:createText(mode, pos, width, pinned)
   d:add("size", "combo", sizes, -1, 4)
   d:add("text", "text", { syntax="latex", focus=true,
 			  spell_check=prefs.spell_check }, 0, 1, 1, 4)
-  addEditorField(d, "text")
+  self:addEditorField(d, "text")
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("row", 2, 1)
@@ -1412,7 +1413,7 @@ function MODEL:action_edit_text(prim, obj)
 			  spell_check=prefs.spell_check}, 0, 1, 1, 4)
   d:addButton("apply", "&Apply",
 	      function (d) apply_text_edit(d, data, true) end)
-  addEditorField(d, "text")
+  self:addEditorField(d, "text")
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("row", 2, 1)
@@ -1437,6 +1438,7 @@ function MODEL:action_edit_text(prim, obj)
     if string.match(d:get("text"), "^%s*$") then return end
     apply_text_edit(d, data, self.auto_latex)
   end
+  -- TODO: release dialog in case it was not executed
 end
 
 function MODEL:accept_group_text_edit(prim, group, t, tobj)
@@ -1482,7 +1484,7 @@ function MODEL:action_edit_group_text(prim, obj)
   d:add("label", "label", { label="Edit latex source" }, 1, 1, 1, 2)
   d:add("text", "text", { syntax="latex", focus=true,
 			  spell_check=prefs.spell_check}, 0, 1, 1, 4)
-  addEditorField(d, "text")
+  self:addEditorField(d, "text")
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("row", 2, 1)

@@ -866,7 +866,7 @@ filling the button row using 'addButton'.  The 'action' for
 'addButton' can be one of the strings "accept" or "reject", or a Lua
 method.
 \verbatim
-d = ipeui.Dialog(parent, window_title)
+d = ipeui.Dialog(parent, window_title, language)
 
 -- row == -1 means last row, row == 0 means start new row
 d:add(name, what, options, row, column, row_span, column_span)
@@ -884,31 +884,13 @@ d:setEnabled(name, true_or_false)
 -- set whether escape should be ignored (true/false)
 d:set("ignore-escape", flag)
 
--- show dialog
-done, accepted = d:execute()
-done, accepted = d:execute(size)   -- where size == { width, height }
+-- show dialog modally
+accepted = d:execute()
+accepted = d:execute(size)   -- where size == { width, height }
 \endverbatim
 
-If \e done is true, then the dialog has already finished and accepted
-is true or false.  If \e done is false, then the dialog is currently
-showing as a modal dialog. The calling Lua code must then yield.  When
-the user closes the dialog, Lua will resume, and the result will be
-returned be the 'yield'.  So the code should look like this:
-\verbatim
-d = ipeui.Dialog(parent, "A dialog", handler)
--- build dialog elements
-done, accepted = d:execute()
-if not done then
-  accepted = coroutine.yield()
-end
-if accepted then
- -- handle dialog action
-end
-\endverbatim
-In Ipe or ipelets, simply write (\e dexecute is defined in \f main.lua):
-\verbatim
-accepted = dexecute(d)
-\endverbatim
+Note that on some platforms (Qt and JS), `d:execute` may yield.
+Closing the dialog causes the Lua thread to be resumed.
 
 \e name can be an arbitrary string. \e what must be one of 
 \verbatim

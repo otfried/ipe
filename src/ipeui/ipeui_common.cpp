@@ -510,7 +510,7 @@ static int dialog_destructor(lua_State *L)
   return 0;
 }
 
-static int dialog_execute(lua_State *L)
+static int dialog_executeAsync(lua_State *L)
 {
   Dialog **dlg = check_dialog(L, 1);
   int w = 0;
@@ -530,7 +530,6 @@ static int dialog_execute(lua_State *L)
     lua_pushboolean(L, false);
     lua_pushboolean(L, false);
   } else {
-    (*dlg)->retrieveValues();
     (*dlg)->release();
     lua_pushboolean(L, true);
     lua_pushboolean(L, result == Dialog::Result::ACCEPTED);
@@ -586,7 +585,7 @@ static int dialog_accept(lua_State *L)
 static const struct luaL_Reg dialog_methods[] = {
   { "__tostring", dialog_tostring },
   { "__gc", dialog_destructor },
-  { "execute", dialog_execute },
+  { "executeAsync", dialog_executeAsync }, // internal use
   { "setStretch", dialog_setStretch },
   { "add", dialog_add },
   { "addButton", dialog_addButton },
@@ -766,6 +765,16 @@ static void make_metatable(lua_State *L, const char *name,
   lua_pushvalue(L, -2);  /* pushes the metatable */
   lua_settable(L, -3);   /* metatable.__index = metatable */
   luaL_setfuncs(L, methods, 0);
+  if (!strcmp(name, "Ipe.dialog")) {
+    int ok = luaL_loadstring(L, "return function (d, s, l)"
+			     "done, accepted = d:executeAsync(s, l)"
+			     "if not done then accepted = coroutine.yield() end "
+			     "return accepted end");
+    if (ok != LUA_OK)
+      luaL_error(L, "cannot prepare d:execute function");
+    lua_call(L, 0, 1);
+    lua_setfield(L, -2, "execute");
+  }
   lua_pop(L, 1);
 }
 

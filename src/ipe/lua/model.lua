@@ -119,12 +119,6 @@ function MODEL:init(fname)
   end
 end
 
-function MODEL:resumeLua()
-  if self.current_action then
-    coroutine.resume(self.current_action)
-  end
-end
-
 function MODEL:sizeChanged()
   if self.first_show then
     self:action_fit_top()
@@ -188,6 +182,11 @@ function MODEL:getDouble(caption, label, value, minv, maxv)
       return n
     end
   end
+end
+
+function MODEL:waitDialog(cmd, text)
+  local done = self.ui:waitDialog(cmd, text)
+  if not done then coroutine.yield() end
 end
 
 ----------------------------------------------------------------------
@@ -450,9 +449,10 @@ end
 
 ----------------------------------------------------------------------
 
-local function showSource(d)
+function MODEL:showSource()
   local fname = config.latexdir .. "ipetemp.tex"
-  ipeui.waitDialog(d, string.format(prefs.external_editor, fname))
+  self:waitDialog(string.format(prefs.external_editor, fname),
+		  "Waiting for external editor")
 end
 
 function MODEL:latexErrorBox(log)
@@ -463,7 +463,7 @@ function MODEL:latexErrorBox(log)
 	1, 1)
   d:add("text", "text", { read_only=true, syntax="logfile", focus=true }, 2, 1)
   if prefs.external_editor then
-    d:addButton("editor", "&Source", function (d) showSource(d) end)
+    d:addButton("editor", "&Source", function () self.showSource() end)
   end
   d:addButton("ok", "Ok", "accept")
   d:set("text", log)
@@ -476,11 +476,11 @@ function MODEL:runLatex()
   self.type3_font = false
   local success, errmsg, result, log
   if prefs.freeze_in_latex then
-    success, errmsg, result, log = self.doc:runLatex(self.file_name) -- sync
+    success, errmsg, result, log = self.doc:runLatex(self.file_name)
   else
-    success, converter = self.doc:runLatexAsync(self.file_name, true) -- starts async run, then returns
+    success, converter = self.doc:prepareLatexRun()
     if success then
-      coroutine.yield() -- wait for latex to complete running
+      self:waitDialog(self.doc:howToRunLatex(self.file_name), "Compiling Latex")
       success, errmsg, result, log = self.doc:completeLatexRun(converter)
     end
   end

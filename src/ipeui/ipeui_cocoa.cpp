@@ -179,7 +179,7 @@ public:
   NSString *row(int idx, int row);
 
   virtual void setMapped(lua_State *L, int idx);
-  virtual bool buildAndRun(int w, int h);
+  virtual Result buildAndRun(int w, int h);
   virtual void retrieveValues();
   virtual void enableItem(int idx, bool value);
   virtual void acceptDialog(lua_State *L);
@@ -493,7 +493,7 @@ void PDialog::layoutControls()
 
 // --------------------------------------------------------------------
 
-bool PDialog::buildAndRun(int w, int h)
+Dialog::Result PDialog::buildAndRun(int w, int h)
 {
   NSUInteger style = NSTitledWindowMask|NSResizableWindowMask;
   if (iIgnoreEscapeField >= 0)
@@ -656,7 +656,7 @@ bool PDialog::buildAndRun(int w, int h)
   undoItem.action = @selector(ipeMenuAction:);
   redoItem.action = @selector(ipeMenuAction:);
   iPanel = nil;
-  return result;
+  return result ? Result::ACCEPTED : Result::CLOSED;
 }
 
 // --------------------------------------------------------------------
