@@ -196,10 +196,13 @@ public:
 
 protected:
   virtual void setMapped(lua_State *L, int idx);
-  virtual bool buildAndRun(int w, int h);
+  virtual Dialog::Result buildAndRun(int w, int h);
   virtual void retrieveValues();
   virtual void enableItem(int idx, bool value);
   virtual void acceptDialog(lua_State *L);
+
+private:
+  void takeDown();
 
 private:
   IpeUiQDialog * qDialog;
@@ -329,7 +332,7 @@ void PDialog::setMapped(lua_State *L, int idx)
   }
 }
 
-bool PDialog::buildAndRun(int w, int h)
+Dialog::Result PDialog::buildAndRun(int w, int h)
 {
   for (int i = 0; i < int(iElements.size()); ++i) {
     SElement &m = iElements[i];
@@ -446,11 +449,22 @@ bool PDialog::buildAndRun(int w, int h)
     }
   }
   qDialog->setMinimumSize(w, h);
-  int result = qDialog->exec();
+  qDialog->setModal(true);
+  qDialog->show();
+  QObject::connect(qDialog, &QDialog::finished, [this]() { this->takeDown(); });
+  return Result::MODAL;
+}
+
+void PDialog::takeDown()
+{
+  bool accepted = qDialog->result() == QDialog::Accepted;
   retrieveValues(); // for future reference
+  release(); // release references to Lua objects
   qDialog->deleteLater(); // schedule for deletion
   qDialog = nullptr; // and forget it
-  return (result == QDialog::Accepted);
+  int nresults = 0;
+  lua_pushboolean(L, accepted);
+  lua_resume(L, nullptr, 1, &nresults);
 }
 
 void PDialog::retrieveValues()

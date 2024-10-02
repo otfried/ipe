@@ -83,17 +83,15 @@ Dialog::Dialog(lua_State *L0, WINID parent, const char *caption, const char *lan
 Dialog::~Dialog()
 {
   fprintf(stderr, "~Dialog (%s)\n", iCaption.c_str());
-  // dereference lua methods
-  /*
-  // TODO: danger: L represents the Lua thread that created the dialog/methods
-  // but this thread may already have been garbage collected.
+  // complain if any Lua objects have not been released earlier
   for (int i = 0; i < int(iElements.size()); ++i) {
-    fprintf(stderr, "Deref %d\n", iElements[i].lua_method);
-    luaL_unref(L, LUA_REGISTRYINDEX, iElements[i].lua_method);
+    if (iElements[i].lua_method != LUA_NOREF)
+      fprintf(stderr, "WARNING: Lua object %d not released\n", 
+	      iElements[i].lua_method);
   }
-  luaL_unref(L, LUA_REGISTRYINDEX, iLuaDialog);
-  */
-  fprintf(stderr, "~/Dialog (%s)\n", iCaption.c_str());
+  if (iLuaDialog != LUA_NOREF)
+    fprintf(stderr, "WARNING: Lua dialog object %d not released\n",
+	    iLuaDialog);
 }
 
 void Dialog::callLua(int luaMethod)
@@ -436,17 +434,24 @@ int Dialog::get(lua_State *L)
   }
 }
 
-bool Dialog::execute(lua_State *L, int w, int h)
+Dialog::Result Dialog::execute(lua_State *L, int w, int h)
 {
   // remember Lua object for dialog for callbacks
   lua_pushvalue(L, 1);
   iLuaDialog = luaL_ref(L, LUA_REGISTRYINDEX);
-  bool result = buildAndRun(w, h); // execute dialog
-  // discard reference to dialog object
+  return buildAndRun(w, h); // execute dialog
+}
+
+void Dialog::release()
+{
+  // discard references to dialog object and Lua methods
   // (otherwise the circular reference will stop Lua gc)
+  for (int i = 0; i < int(iElements.size()); ++i) {
+    luaL_unref(L, LUA_REGISTRYINDEX, iElements[i].lua_method);
+    iElements[i].lua_method = LUA_NOREF;
+  }
   luaL_unref(L, LUA_REGISTRYINDEX, iLuaDialog);
   iLuaDialog = LUA_NOREF;
-  return result;
 }
 
 int Dialog::setEnabled(lua_State *L)
@@ -498,9 +503,8 @@ static int dialog_tostring(lua_State *L)
 
 static int dialog_destructor(lua_State *L)
 {
-  //fprintf(stderr, "Dialog::~Dialog()\n");
+  fprintf(stderr, "Dialog::~Dialog()\n");
   Dialog **dlg = check_dialog(L, 1);
-  // on Qt, hope we destruct before the parent window does
   delete (*dlg);
   *dlg = nullptr;
   return 0;
@@ -521,8 +525,17 @@ static int dialog_execute(lua_State *L)
     h = lua_tointegerx(L, -1, nullptr);
     lua_pop(L, 2); // w & h
   }
-  lua_pushboolean(L, (*dlg)->execute(L, w, h));
-  return 1;
+  Dialog::Result result = (*dlg)->execute(L, w, h);
+  if (result == Dialog::Result::MODAL) {
+    lua_pushboolean(L, false);
+    lua_pushboolean(L, false);
+  } else {
+    (*dlg)->retrieveValues();
+    (*dlg)->release();
+    lua_pushboolean(L, true);
+    lua_pushboolean(L, result == Dialog::Result::ACCEPTED);
+  }
+  return 2;
 }
 
 static int dialog_setStretch(lua_State *L)
@@ -637,6 +650,10 @@ Timer::Timer(lua_State *L0, int lua_object, const char *method)
   : iMethod(method)
 {
   L = L0;
+  lua_rawgeti(L, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+  if (lua_tothread(L, -1) != L)
+    luaL_error(L, "timer can only be created from main thread");
+  lua_pop(L, 1);
   iLuaObject = lua_object;
   iSingleShot = false;
 }
@@ -735,6 +752,12 @@ static const struct luaL_Reg timer_methods[] = {
 
 // --------------------------------------------------------------------
 
+#ifndef __EMSCRIPTEN__
+int ipeui_downloadFileIfIpeWeb(lua_State *L) { return 0; } // no-op
+#endif
+
+// --------------------------------------------------------------------
+
 static void make_metatable(lua_State *L, const char *name,
 			   const struct luaL_Reg *methods)
 {
@@ -756,7 +779,3 @@ int luaopen_ipeui_common(lua_State *L)
 }
 
 // --------------------------------------------------------------------
-
-#ifndef __EMSCRIPTEN__
-int ipeui_downloadFileIfIpeWeb(lua_State *L) { return 0; } // no-op
-#endif
