@@ -177,7 +177,6 @@ class PDialog;
 class IpeUiQDialog : public QDialog {
 public:
   IpeUiQDialog(WINID parent, PDialog *pDialog);
-  ~IpeUiQDialog();
 
 protected:
   virtual void keyPressEvent(QKeyEvent *e);
@@ -220,11 +219,6 @@ IpeUiQDialog::IpeUiQDialog(WINID parent, PDialog *pDialog)
   connect(shortcut, &QShortcut::activated, this, &QDialog::accept);
 }
 
-IpeUiQDialog::~IpeUiQDialog()
-{
-  // 
-}
-
 void IpeUiQDialog::keyPressEvent(QKeyEvent *e)
 {
   if (e->key() == Qt::Key_Escape && pDialog->ignoresEscapeKey())
@@ -250,7 +244,8 @@ PDialog::PDialog(lua_State *L0, WINID parent, const char *caption, const char *l
 
 PDialog::~PDialog()
 {
-  delete qDialog;
+  if (qDialog)
+    qDialog->deleteLater(); // schedule for deletion
 }
 
 static void markupLog(QTextEdit *t, const QString &text)
@@ -458,7 +453,7 @@ void PDialog::takeDown()
 {
   bool accepted = qDialog->result() == QDialog::Accepted;
   retrieveValues(); // for future reference
-  release(); // release references to Lua objects
+  release(L); // release references to Lua objects
   qDialog->deleteLater(); // schedule for deletion
   qDialog = nullptr; // and forget it
   int nresults = 0;

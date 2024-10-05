@@ -63,6 +63,8 @@ static const struct luaL_Reg winid_methods[] = {
 
 // --------------------------------------------------------------------
 
+// Make sure not to create a cyclic reference to the dialog by capturing it inside
+// the Lua method for an action, as this would stop it from being garbage collected.
 Dialog::Dialog(lua_State *L0, WINID parent, const char *caption, const char *language)
   : iCaption(caption), iLanguage(language)
 {
@@ -75,22 +77,9 @@ Dialog::Dialog(lua_State *L0, WINID parent, const char *caption, const char *lan
   iNoCols = 1;
 }
 
-// Careful: On Qt, the dialog is owned by the parent window.
-// It's important that Lua deletes the dialog before Qt tries to, otherwise
-// we have a double deletion.
-// Make sure not to create a cyclic reference to the dialog by capturing it inside
-// the Lua method for an action, as this would stop it from being garbage collected.
 Dialog::~Dialog()
 {
-  // complain if any Lua objects have not been released earlier
-  for (int i = 0; i < int(iElements.size()); ++i) {
-    if (iElements[i].lua_method != LUA_NOREF)
-      fprintf(stderr, "WARNING: Lua object %d not released\n", 
-	      iElements[i].lua_method);
-  }
-  if (iLuaDialog != LUA_NOREF)
-    fprintf(stderr, "WARNING: Lua dialog object %d not released\n",
-	    iLuaDialog);
+  //
 }
 
 void Dialog::callLua(int luaMethod)
@@ -441,15 +430,16 @@ Dialog::Result Dialog::execute(lua_State *L, int w, int h)
   return buildAndRun(w, h); // execute dialog
 }
 
-void Dialog::release()
+// garbage collection will call this on the main thread,
+// and our own "L" might already have been collected
+void Dialog::release(lua_State *LL)
 {
   // discard references to dialog object and Lua methods
-  // (otherwise the circular reference will stop Lua gc)
   for (int i = 0; i < int(iElements.size()); ++i) {
-    luaL_unref(L, LUA_REGISTRYINDEX, iElements[i].lua_method);
+    luaL_unref(LL, LUA_REGISTRYINDEX, iElements[i].lua_method);
     iElements[i].lua_method = LUA_NOREF;
   }
-  luaL_unref(L, LUA_REGISTRYINDEX, iLuaDialog);
+  luaL_unref(LL, LUA_REGISTRYINDEX, iLuaDialog);
   iLuaDialog = LUA_NOREF;
 }
 
@@ -503,6 +493,7 @@ static int dialog_tostring(lua_State *L)
 static int dialog_destructor(lua_State *L)
 {
   Dialog **dlg = check_dialog(L, 1);
+  (*dlg)->release(L);
   delete (*dlg);
   *dlg = nullptr;
   return 0;
@@ -528,7 +519,7 @@ static int dialog_executeAsync(lua_State *L)
     lua_pushboolean(L, false);
     lua_pushboolean(L, false);
   } else {
-    (*dlg)->release();
+    (*dlg)->release(L);
     lua_pushboolean(L, true);
     lua_pushboolean(L, result == Dialog::Result::ACCEPTED);
   }

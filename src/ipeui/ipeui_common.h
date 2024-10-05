@@ -107,7 +107,7 @@ public:
 
   Result execute(lua_State *L, int w, int h);
   virtual void retrieveValues() = 0;
-  void release();
+  void release(lua_State *LM);
 
   virtual void acceptDialog(lua_State *L) = 0;
 
