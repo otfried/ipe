@@ -107,6 +107,7 @@ public:
   void setGridAngleSize(Attribute abs_grid, Attribute abs_angle);
   void setAttributes(const AllAttributes &all, Cascade *sheet);
 
+  void wrapCall(String method, int nArgs);
   void luaShowPathStylePopup(Vector v);
   void luaBookmarkSelected(int index);
   void luaRecentFileSelected(String name);

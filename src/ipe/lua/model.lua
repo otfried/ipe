@@ -69,6 +69,7 @@ function MODEL:init(fname)
   self.pristine = false
   self.first_show = true
   self.current_action = nil
+  self.okay_close = false
 
   self.type3_font = false
 
@@ -133,6 +134,47 @@ function MODEL:dpiChange(oldDpi, newDpi)
   if nzoom < prefs.min_zoom then nzoom = prefs.min_zoom end
   self.ui:setZoom(nzoom)
   self.ui:update()
+end
+
+----------------------------------------------------------------------
+
+-- every call from the UI into Lua code must be wrapped:
+-- 1. inside a thread, so actions can yield and wait for UI or
+--    background activity
+-- 2. if an error happens in Lua code, there will be a message and
+--    Ipe continues to run, instead of crashing.
+
+function MODEL:wrapCall(f, ...)
+  local wrapper = function(f, ...)
+    local result, err = xpcall(f, debug.traceback, ...)
+    if not result then
+      messageBox(nil, "critical",
+		 "Lua error\n\n"..
+		   "Data may have been corrupted. \n" ..
+		   "Save your file!",
+		 err)
+    end
+  end
+  if self.current_action then
+    local status = coroutine.status(self.current_action)
+    if status == "suspended" then
+      messageBox(nil, "warning",
+		 "An operation is still waiting for a dialog, Latex, "
+		   .. "or an external editor, yet a new action happens.")
+      coroutine.close(self.current_action)
+    elseif status == "normal" then
+      print("DANGER! THIS SHOULD NOT HAPPEN!")
+      print("Calling into Lua while an operation is ongoing.  What's going on?")
+    end
+  end
+  self.current_action = coroutine.create(wrapper)
+  coroutine.resume(self.current_action, f, ...)
+end
+
+-- called by the UI when a waitDialog terminates, that is, when a Latex
+-- run terminates or when an external editor closes
+function MODEL:resumeLua()
+  if self.current_action then coroutine.resume(self.current_action) end
 end
 
 ----------------------------------------------------------------------
@@ -751,13 +793,13 @@ function MODEL:closeEvent()
 			 "The document has been modified",
 			 "Do you wish to save the document?",
 			 "savediscardcancel")
-    if r == 1 then
-      return self:action_save()
-    else
-      return r == 0
+    if r == 0 or (r == 1 and self:action_save()) then
+      self.okay_close = true
+      self.ui:close()
     end
   else
-    return true
+    self.okay_close = true
+    self.ui:close()
   end
 end
 

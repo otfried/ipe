@@ -55,6 +55,7 @@
 #include <QWindow>
 #include <QScreen>
 #include <QThread>
+#include <QTimer>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -853,17 +854,15 @@ void AppUi::setActionsEnabled(bool mode)
 //! Window has been closed
 void AppUi::closeEvent(QCloseEvent* ce)
 {
-  // calls model
   lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "closeEvent");
-  lua_pushvalue(L, -2); // model
-  lua_remove(L, -3);
-  lua_call(L, 1, 1);
-  bool result = lua_toboolean(L, -1);
-  if (result)
+  lua_getfield(L, -1, "okay_close");
+  if (lua_toboolean(L, -1)) {
     ce->accept();
-  else
+  } else {
     ce->ignore();
+    // give Lua code a chance to consider the case and close again
+    wrapCall("closeEvent", 0);
+  }
 }
 
 // --------------------------------------------------------------------
@@ -1038,7 +1037,9 @@ WINID AppUi::windowId()
 
 void AppUi::closeWindow()
 {
-  close();
+  // call it from the event loop so closeEvent calls into Lua outside
+  // of the current Lua action
+  QTimer::singleShot(0, this, &AppUi::close);
 }
 
 void AppUi::setWindowCaption(bool mod, const char *s)

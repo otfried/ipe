@@ -222,7 +222,7 @@ IpeUiQDialog::IpeUiQDialog(WINID parent, PDialog *pDialog)
 
 IpeUiQDialog::~IpeUiQDialog()
 {
-  fprintf(stderr, "~IpeUiQDialog\n");
+  // 
 }
 
 void IpeUiQDialog::keyPressEvent(QKeyEvent *e)
@@ -250,7 +250,6 @@ PDialog::PDialog(lua_State *L0, WINID parent, const char *caption, const char *l
 
 PDialog::~PDialog()
 {
-  fprintf(stderr, "~PDialog (%s)\n", iCaption.c_str());
   delete qDialog;
 }
 

@@ -30,37 +30,9 @@
 
 -- main entry point to all actions
 -- (except mouseaction, selector)
-
--- protects call, then distributes to action_xxx method or
--- saction_xxx methods (the latter are only called if a selection exists)
-function MODEL:action(a)
-  local result, err = xpcall(function () self:caction(a) end,
-			     debug.traceback)
-  if not result then
-    messageBox(nil, "critical",
-		     "Lua error\n\n"..
-		       "Data may have been corrupted. \n" ..
-		       "Save your file!",
-		     err)
-  end
-end
-
-function MODEL:caction(a1)
-  if self.current_action then
-    -- TODO: perhaps just cancel the suspended thread?
-    print("WARNING: actions are not reentrant!")
-    return
-  end
-  self.current_action = coroutine.create(self.paction)
-  coroutine.resume(self.current_action, self, a1)
-  if coroutine.status(self.current_action) == "dead" then self.current_action = nil end
-end
-
-function MODEL:resumeLua()
-  if self.current_action then coroutine.resume(self.current_action) end
-end
-
-function MODEL:paction(a1)
+-- distributes to action_xxx method or saction_xxx methods (the latter
+-- are only called if a selection exists)
+function MODEL:action(a1)
   -- work-around for bug in Qt 5.5, to be replaced with something better:
   local a = a1:gsub("&", "")
   -- print("MODEL:paction(" .. a .. ")")

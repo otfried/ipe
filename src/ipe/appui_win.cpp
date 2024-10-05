@@ -921,12 +921,9 @@ void AppUi::handleDpiChange(HWND hwnd, WPARAM wParam, LPARAM lParam)
 	       SWP_NOZORDER | SWP_NOACTIVATE);
 
   // finally, notify Lua code
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "dpiChange");
-  lua_insert(L, -2); // before model
   lua_pushinteger(L, oldDpi);
   lua_pushinteger(L, iDpi);
-  luacall(L, 3, 0);
+  wrapCall("dpiChange", 2);
 }
 
 // --------------------------------------------------------------------
@@ -1134,20 +1131,18 @@ void AppUi::setNotes(String notes)
 
 void AppUi::closeRequested()
 {
-  // calls model
   lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "closeEvent");
-  lua_pushvalue(L, -2); // model
-  lua_remove(L, -3);
-  luacall(L, 1, 1);
-  bool result = lua_toboolean(L, -1);
-  if (result)
+  lua_getfield(L, -1, "okay_close");
+  if (lua_toboolean(L, -1))
     DestroyWindow(hwnd);
+  else
+    // give Lua code a chance to consider the case and close again
+    wrapCall("closeEvent", 0);
 }
 
 void AppUi::closeWindow()
 {
-  SendMessage(hwnd, WM_CLOSE, 0, 0);
+  PostMessage(hwnd, WM_CLOSE, 0, 0);
 }
 
 // Determine if an action is checked.

@@ -82,7 +82,6 @@ Dialog::Dialog(lua_State *L0, WINID parent, const char *caption, const char *lan
 // the Lua method for an action, as this would stop it from being garbage collected.
 Dialog::~Dialog()
 {
-  fprintf(stderr, "~Dialog (%s)\n", iCaption.c_str());
   // complain if any Lua objects have not been released earlier
   for (int i = 0; i < int(iElements.size()); ++i) {
     if (iElements[i].lua_method != LUA_NOREF)
@@ -503,7 +502,6 @@ static int dialog_tostring(lua_State *L)
 
 static int dialog_destructor(lua_State *L)
 {
-  fprintf(stderr, "Dialog::~Dialog()\n");
   Dialog **dlg = check_dialog(L, 1);
   delete (*dlg);
   *dlg = nullptr;
@@ -614,7 +612,6 @@ static int menu_tostring(lua_State *L)
 
 static int menu_destructor(lua_State *L)
 {
-  //fprintf(stderr, "Menu::~Menu()\n");
   Menu **m = check_menu(L, 1);
   delete *m;
   *m = nullptr;
@@ -698,7 +695,6 @@ static int timer_tostring(lua_State *L)
 static int timer_destructor(lua_State *L)
 {
   Timer **t = check_timer(L, 1);
-  //fprintf(stderr, "Timer::~Timer()\n");
   delete *t;
   *t = nullptr;
   return 0;
