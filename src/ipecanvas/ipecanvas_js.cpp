@@ -42,6 +42,86 @@ using namespace emscripten;
 
 // --------------------------------------------------------------------
 
+class JsPainter : public Painter {
+public:
+  JsPainter(const Cascade *sheet, emscripten::val context);
+  virtual ~JsPainter();
+
+protected:
+  virtual void doNewPath();
+  virtual void doMoveTo(const Vector &v);
+  virtual void doLineTo(const Vector &v);
+  virtual void doCurveTo(const Vector &v1, const Vector &v2,
+			 const Vector &v3);
+  virtual void doClosePath();
+
+  virtual void doDrawPath(TPathMode mode);
+
+private:
+  emscripten::val iCtx;
+};
+
+JsPainter::JsPainter(const Cascade *sheet, emscripten::val context)
+  : Painter(sheet), iCtx{context}
+{
+  // nothing
+}
+
+JsPainter::~JsPainter()
+{
+  // nothing
+}
+
+void JsPainter::doNewPath()
+{
+  iCtx.call<void>("beginPath");
+}
+
+void JsPainter::doMoveTo(const Vector &v)
+{
+  iCtx.call<void>("moveTo", v.x, v.y);
+}
+
+void JsPainter::doLineTo(const Vector &v)
+{
+  iCtx.call<void>("lineTo", v.x, v.y);
+}
+
+void JsPainter::doCurveTo(const Vector &v1, const Vector &v2, const Vector &v3)
+{
+  iCtx.call<void>("bezierCurveTo", v1.x, v1.y, v2.x, v2.y, v3.x, v3.y);
+}
+
+void JsPainter::doClosePath()
+{
+  iCtx.call<void>("closePath");
+}
+
+void JsPainter::doDrawPath(TPathMode mode)
+{
+  auto colorString = [](Color color) {
+    String result;
+    StringStream ss{result};
+    ss << "#";
+    ss.putHexByte(int(color.iRed.internal() * 255 / 1000));
+    ss.putHexByte(int(color.iGreen.internal() * 255 / 1000));
+    ss.putHexByte(int(color.iBlue.internal() * 255 / 1000));
+    return result;
+  };
+  if (mode >= EStrokedAndFilled) {
+    String fill1 = colorString(fill());
+    iCtx.set("fillStyle", std::string(fill1.z()));
+    iCtx.call<void>("fill");
+  }
+  if (mode <= EStrokedAndFilled) {
+    String stroke1 = colorString(stroke());
+    iCtx.set("strokeStyle", std::string(stroke1.z()));
+    iCtx.call<void>("stroke");
+  }
+}
+
+// --------------------------------------------------------------------
+
 //! Construct a new canvas.
 Canvas::Canvas(val canvas, double dpr)
 {
@@ -76,21 +156,56 @@ void Canvas::invalidate(int x, int y, int w, int h)
 
 // --------------------------------------------------------------------
 
-/*
-static int convertModifiers(int qmod)
+static int convertModifiers(emscripten::val ev)
 {
   int mod = 0;
-  if (qmod & Qt::ShiftModifier)
+  if (ev["shiftKey"].as<bool>())
     mod |= CanvasBase::EShift;
-  if (qmod & Qt::ControlModifier)
+  if (ev["ctrlKey"].as<bool>())
     mod |= CanvasBase::EControl;
-  if (qmod & Qt::AltModifier)
+  if (ev["altKey"].as<bool>())
     mod |= CanvasBase::EAlt;
-  if (qmod & Qt::MetaModifier)
+  if (ev["metaKey"].as<bool>())
     mod |= CanvasBase::EMeta;
   return mod;
 }
-*/
+
+void Canvas::mouseButtonEvent(emscripten::val ev, int button, bool press)
+{
+  iGlobalPos = Vector(ev["screenX"].as<double>(), ev["screenY"].as<double>());
+  computeFifi(ev["offsetX"].as<double>(), ev["offsetY"].as<double>());
+  int mod = convertModifiers(ev) | iAdditionalModifiers;
+  // ipeDebug("mouseButton %g, %g %d %d %d", iUnsnappedMousePos.x, iUnsnappedMousePos.y, press, button, mod);
+  if (iTool)
+    iTool->mouseButton(button | mod, press);
+  else if (press && iObserver)
+    iObserver->canvasObserverMouseAction(button | mod);
+}
+
+void Canvas::mouseMoveEvent(emscripten::val ev)
+{
+  computeFifi(ev["offsetX"].as<double>(), ev["offsetY"].as<double>());
+  // ipeDebug("mouseMove %g, %g", iUnsnappedMousePos.x, iUnsnappedMousePos.y);
+  if (iTool)
+    iTool->mouseMove();
+  if (iObserver)
+    iObserver->canvasObserverPositionChanged();
+}
+
+void Canvas::wheelEvent(emscripten::val ev)
+{
+  Vector p{ev["deltaX"].as<double>(), ev["deltaY"].as<double>()};
+  int mod = convertModifiers(ev);
+  // ipeDebug("wheel %g, %g %d", p.x, p.y, mod);
+  int kind = (mod & CanvasBase::EControl) ? 2 : 0;
+  if (iObserver) {
+    if (mod & CanvasBase::EShift)
+      // switch x and y
+      iObserver->canvasObserverWheelMoved(p.y / 8.0, p.x / 8.0, kind);
+    else
+      iObserver->canvasObserverWheelMoved(p.x / 8.0, p.y / 8.0, kind);
+  }
+}
 
 #if 0
 void Canvas::keyPressEvent(QKeyEvent *ev)
@@ -101,50 +216,6 @@ void Canvas::keyPressEvent(QKeyEvent *ev)
     ev->accept();
   else
     ev->ignore();
-}
-
-void Canvas::mouseButton(QMouseEvent *ev, int button, bool press)
-{
-  iGlobalPos = Vector(ev->globalPosition().x(), ev->globalPosition().y());
-  computeFifi(ev->position().x(), ev->position().y());
-  int mod = convertModifiers(ev->modifiers()) | iAdditionalModifiers;
-  if (iTool)
-    iTool->mouseButton(button | mod, press);
-  else if (press && iObserver)
-    iObserver->canvasObserverMouseAction(button | mod);
-}
-
-void Canvas::mousePressEvent(QMouseEvent *ev)
-{
-  mouseButton(ev, ev->button(), true);
-}
-
-void Canvas::mouseReleaseEvent(QMouseEvent *ev)
-{
-  mouseButton(ev, ev->button(), false);
-}
-
-void Canvas::mouseMoveEvent(QMouseEvent *ev)
-{
-  computeFifi(ev->position().x(), ev->position().y());
-  if (iTool)
-    iTool->mouseMove();
-  if (iObserver)
-    iObserver->canvasObserverPositionChanged();
-}
-
-void Canvas::wheelEvent(QWheelEvent *ev)
-{
-  QPoint p = ev->angleDelta();
-  int kind = (ev->modifiers() & Qt::ControlModifier) ? 2 : 0;
-  if (iObserver) {
-    if (ev->modifiers() & Qt::ShiftModifier)
-      // switch x and y
-      iObserver->canvasObserverWheelMoved(p.y() / 8.0, p.x() / 8.0, kind);
-    else
-      iObserver->canvasObserverWheelMoved(p.x() / 8.0, p.y() / 8.0, kind);
-  }
-  ev->accept();
 }
 
 static void draw_plus(const Vector &p, QPainter &q)
@@ -229,6 +300,10 @@ void Canvas::drawFifi(QPainter &q)
 }
 #endif
 
+// TODO: make two separate canvasses that are overlaid,
+// use the bottom one for the cairo surface and the top one for the tool,
+// saving a lot of redrawing
+
 void Canvas::paint()
 {
   refreshSurface();
@@ -242,17 +317,16 @@ void Canvas::paint()
   val ImageData = val::global("ImageData");
   val img = ImageData.new_(buffer2, iBWidth, iBHeight);
   iCtx.call<void>("putImageData", img, 0, 0);
-  /*
-  if (iFifiVisible)
-    drawFifi(qPainter);
+  // if (iFifiVisible)
+  // drawFifi(qPainter);
   if (iPage) {
-    IpeQtPainter qp(iCascade, &qPainter);
+    JsPainter qp(iCascade, iCtx);
+    qp.transform(Linear(2, 0, 0, 2));
     qp.transform(canvasTfm());
     qp.pushMatrix();
     drawTool(qp);
     qp.popMatrix();
   }
-  */
 }
 
 namespace {
@@ -274,7 +348,10 @@ EMSCRIPTEN_BINDINGS(ipecanvas) {
     .property("height", &Canvas::canvasHeight)
     .function("setPage", &setPage, emscripten::allow_raw_pointers())
     .property("pan", &Canvas::pan, &Canvas::setPan)
-    .property("zoom", &Canvas::zoom, &Canvas::setZoom);
+    .property("zoom", &Canvas::zoom, &Canvas::setZoom)
+    .function("mouseButtonEvent", &Canvas::mouseButtonEvent)
+    .function("mouseMoveEvent", &Canvas::mouseMoveEvent)
+    .function("wheelEvent", &Canvas::wheelEvent);
 }
 
 // --------------------------------------------------------------------

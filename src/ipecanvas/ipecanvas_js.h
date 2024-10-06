@@ -49,6 +49,10 @@ namespace ipe {
     virtual void setCursor(TCursor cursor, double w = 1.0,
 			   Color *color = nullptr);
 
+    void mouseButtonEvent(emscripten::val event, int button, bool press);
+    void mouseMoveEvent(emscripten::val ev);
+    void wheelEvent(emscripten::val ev);
+
   protected:
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);

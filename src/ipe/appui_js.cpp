@@ -47,13 +47,14 @@ AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
   : AppUiBase(L0, model)
 {
   iCanvas = canvas;
-  buildMenus();
+  if (build_menus)
+    buildMenus();
   build_menus = false; // all Windows share the same main menu
 }
 
 AppUi::~AppUi()
 {
-  ipeDebug("AppUi C++ destructor");
+  ipeDebug("AppUi destructor");
 }
 
 // --------------------------------------------------------------------
@@ -178,6 +179,9 @@ void AppUi::setToolVisible(int m, bool vis)
 
 void AppUi::setZoom(double zoom)
 {
+  // QString s = QString("(%1ppi)").arg(int(72.0 * zoom));
+  // iResolution->setText(s);
+  iCanvas->setZoom(zoom);
 }
 
 // --------------------------------------------------------------------
