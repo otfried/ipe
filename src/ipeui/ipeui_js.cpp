@@ -31,6 +31,7 @@
 #include "ipeui_common.h"
 
 #include <emscripten/bind.h>
+#include <emscripten/val.h>
 
 // --------------------------------------------------------------------
 
@@ -178,21 +179,29 @@ static int ipeui_messageBox(lua_State *L)
     "ok", "okcancel", "yesnocancel", "discardcancel",
     "savediscardcancel", nullptr };
 
-  // QWidget *parent = check_winid(L, 1);
-  // int type = luaL_checkoption(L, 2, "none", options);
-  // QString text = checkqstring(L, 3);
-  // QString details;
-  // if (!lua_isnoneornil(L, 4))
-  // details = checkqstring(L, 4);
+  void * parent = check_winid(L, 1);
+  int type = luaL_checkoption(L, 2, "none", options);
+  std::string text = checkstring(L, 3);
+  std::string details;
+  if (!lua_isnoneornil(L, 4))
+    details = checkstring(L, 4);
   int buttons = 0;
   if (lua_isnumber(L, 5))
     buttons = luaL_checkinteger(L, 5);
   else if (!lua_isnoneornil(L, 5))
     buttons = luaL_checkoption(L, 5, nullptr, buttontype);
 
+  emscripten::val arg = emscripten::val::object();
+  // TODO: send parent id somehow
+  // arg.set("parent", (int) parent);
+  (void) parent;
+  arg.set("type", type);
+  arg.set("text", text);
+  arg.set("details", details);
+  arg.set("buttons", buttons);
+  emscripten::val::global("window")["ipeui"]
+    .call<void>("messageBox", arg);
   lua_pushnumber(L, -1);
-  (void) options;
-  (void) buttons;
   return 1;
 }
 
@@ -200,14 +209,17 @@ static int ipeui_messageBox(lua_State *L)
 
 static int ipeui_currentDateTime(lua_State *L)
 {
-  /*
-  QDateTime dt = QDateTime::currentDateTime();
-  QString mod = QString::asprintf("%04d%02d%02d%02d%02d%02d",
-				  dt.date().year(), dt.date().month(), dt.date().day(),
-				  dt.time().hour(), dt.time().minute(), dt.time().second());
-  */
-  // push_string(L, mod);
-  return 0;
+  emscripten::val dt = emscripten::val::global("Date").new_();
+  char buf[15];
+  sprintf(buf, "%04d%02d%02d%02d%02d%02d",
+	  dt.call<int>("getFullYear"),
+	  dt.call<int>("getMonth") + 1,
+	  dt.call<int>("getDate"),
+	  dt.call<int>("getHours"),
+	  dt.call<int>("getMinutes"),
+	  dt.call<int>("getSeconds"));
+  lua_pushstring(L, buf);
+  return 1;
 }
 
 // --------------------------------------------------------------------
