@@ -1438,7 +1438,6 @@ function MODEL:action_edit_text(prim, obj)
     if string.match(d:get("text"), "^%s*$") then return end
     apply_text_edit(d, data, self.auto_latex)
   end
-  -- TODO: release dialog in case it was not executed
 end
 
 function MODEL:accept_group_text_edit(prim, group, t, tobj)
