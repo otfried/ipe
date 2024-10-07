@@ -42,6 +42,8 @@ namespace ipe {
 
   // --------------------------------------------------------------------
 
+  class JsPainter;
+
   class Canvas : public CanvasBase {
   public:
     Canvas(emscripten::val canvas, double dpr);
@@ -52,12 +54,12 @@ namespace ipe {
     void mouseButtonEvent(emscripten::val event, int button, bool press);
     void mouseMoveEvent(emscripten::val ev);
     void wheelEvent(emscripten::val ev);
+    void paint();
 
   protected:
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);
-    void drawFifi();
-    void paint();
+    void drawFifi(JsPainter & qp);
 
   protected:
     /*
@@ -75,6 +77,7 @@ namespace ipe {
   private:
     emscripten::val iCanvas;
     emscripten::val iCtx;
+    bool iNeedPaint;
   };
 
 } // namespace

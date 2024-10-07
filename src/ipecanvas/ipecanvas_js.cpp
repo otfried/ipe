@@ -42,10 +42,18 @@ using namespace emscripten;
 
 // --------------------------------------------------------------------
 
+namespace ipe {
+  
 class JsPainter : public Painter {
 public:
-  JsPainter(const Cascade *sheet, emscripten::val context);
+  JsPainter(const Cascade *sheet, emscripten::val context, double dpr);
   virtual ~JsPainter();
+
+  void setPen(int r, int g, int b);
+  String colorString(int r, int g, int b);
+
+  void drawLine(const Vector & p1, const Vector & p2);
+  void drawPath(const Vector & v1, const Vector & v2, const Vector & v3, const Vector & v4);
 
 protected:
   virtual void doNewPath();
@@ -59,17 +67,58 @@ protected:
 
 private:
   emscripten::val iCtx;
+  double iDpr;
 };
 
-JsPainter::JsPainter(const Cascade *sheet, emscripten::val context)
-  : Painter(sheet), iCtx{context}
+} // namespace ipe
+
+JsPainter::JsPainter(const Cascade *sheet, emscripten::val context, double dpr)
+  : Painter(sheet), iCtx{context}, iDpr{dpr}
 {
-  // nothing
+  // adjust for display's pixel ratio
+  transform(Linear(iDpr, 0, 0, iDpr));
 }
 
 JsPainter::~JsPainter()
 {
   // nothing
+}
+
+String JsPainter::colorString(int r, int g, int b)
+{
+  String result;
+  StringStream ss{result};
+  ss << "#";
+  ss.putHexByte(r);
+  ss.putHexByte(g);
+  ss.putHexByte(b);
+  return result;
+}
+
+void JsPainter::setPen(int r, int g, int b)
+{
+  String rgb = colorString(r, g, b);
+  iCtx.set("strokeStyle", std::string(rgb.z()));
+  iCtx.set("lineWidth", iDpr);
+}
+
+void JsPainter::drawLine(const Vector & v1, const Vector & v2)
+{
+  iCtx.call<void>("beginPath");
+  iCtx.call<void>("moveTo", v1.x, v1.y);
+  iCtx.call<void>("lineTo", v2.x, v2.y);
+  iCtx.call<void>("stroke");
+}
+
+void JsPainter::drawPath(const Vector & v1, const Vector & v2, const Vector & v3, const Vector & v4)
+{
+  iCtx.call<void>("beginPath");
+  iCtx.call<void>("moveTo", v1.x, v1.y);
+  iCtx.call<void>("lineTo", v2.x, v2.y);
+  iCtx.call<void>("lineTo", v3.x, v3.y);
+  iCtx.call<void>("lineTo", v4.x, v4.y);
+  iCtx.call<void>("closePath");
+  iCtx.call<void>("stroke");
 }
 
 void JsPainter::doNewPath()
@@ -99,23 +148,20 @@ void JsPainter::doClosePath()
 
 void JsPainter::doDrawPath(TPathMode mode)
 {
-  auto colorString = [](Color color) {
-    String result;
-    StringStream ss{result};
-    ss << "#";
-    ss.putHexByte(int(color.iRed.internal() * 255 / 1000));
-    ss.putHexByte(int(color.iGreen.internal() * 255 / 1000));
-    ss.putHexByte(int(color.iBlue.internal() * 255 / 1000));
-    return result;
+  auto colorString1 = [this](Color color) {
+    return colorString(int(color.iRed.internal() * 255 / 1000),
+		       int(color.iGreen.internal() * 255 / 1000),
+		       int(color.iBlue.internal() * 255 / 1000));
   };
   if (mode >= EStrokedAndFilled) {
-    String fill1 = colorString(fill());
+    String fill1 = colorString1(fill());
     iCtx.set("fillStyle", std::string(fill1.z()));
     iCtx.call<void>("fill");
   }
   if (mode <= EStrokedAndFilled) {
-    String stroke1 = colorString(stroke());
+    String stroke1 = colorString1(stroke());
     iCtx.set("strokeStyle", std::string(stroke1.z()));
+    iCtx.set("lineWidth", iDpr * pen().toDouble());
     iCtx.call<void>("stroke");
   }
 }
@@ -132,6 +178,8 @@ Canvas::Canvas(val canvas, double dpr)
   iWidth = iBWidth / dpr;
   iHeight = iBHeight / dpr;
 
+  iNeedPaint = false;
+
   iCtx = iCanvas.call<val>("getContext", val("2d"));
   ipeDebug("Canvas has size: %g x %g (%g x %g)",
 	   iWidth, iHeight, iBWidth, iBHeight);
@@ -146,17 +194,18 @@ void Canvas::setCursor(TCursor cursor, double w, Color *color)
 
 void Canvas::invalidate()
 {
-  paint();
+  iNeedPaint = true;
+  EM_ASM({ window.schedulePaint(); });
 }
 
 void Canvas::invalidate(int x, int y, int w, int h)
 {
-  paint();
+  invalidate();
 }
 
 // --------------------------------------------------------------------
 
-static int convertModifiers(emscripten::val ev)
+static int convertModifiers(val ev)
 {
   int mod = 0;
   if (ev["shiftKey"].as<bool>())
@@ -217,51 +266,46 @@ void Canvas::keyPressEvent(QKeyEvent *ev)
   else
     ev->ignore();
 }
+#endif
 
-static void draw_plus(const Vector &p, QPainter &q)
+static void draw_plus(const Vector &p, JsPainter &q)
 {
-  q.drawLine(QPt(p - Vector(8, 0)), QPt(p + Vector(8, 0)));
-  q.drawLine(QPt(p - Vector(0, 8)), QPt(p + Vector(0, 8)));
+  q.drawLine(p - Vector(8, 0), p + Vector(8, 0));
+  q.drawLine(p - Vector(0, 8), p + Vector(0, 8));
 }
 
-static void draw_rhombus(const Vector &p, QPainter &q)
+static void draw_rhombus(const Vector &p, JsPainter &q)
 {
- QPainterPath path;
- path.moveTo(QPt(p - Vector(8, 0)));
- path.lineTo(QPt(p + Vector(0, 8)));
- path.lineTo(QPt(p + Vector(8, 0)));
- path.lineTo(QPt(p + Vector(0, -8)));
- path.closeSubpath();
- q.drawPath(path);
+  q.drawPath(p - Vector(8, 0),
+	     p + Vector(0, 8),
+	     p + Vector(8, 0),
+	     p + Vector(0, -8));
 }
 
-static void draw_square(const Vector &p, QPainter &q)
+static void draw_square(const Vector &p, JsPainter &q)
 {
- QPainterPath path;
- path.moveTo(QPt(p + Vector(-7, -7)));
- path.lineTo(QPt(p + Vector(7, -7)));
- path.lineTo(QPt(p + Vector(7, 7)));
- path.lineTo(QPt(p + Vector(-7, 7)));
- path.closeSubpath();
- q.drawPath(path);
+  q.drawPath(p + Vector(-7, -7),
+	     p + Vector(7, -7),
+	     p + Vector(7, 7),
+	     p + Vector(-7, 7));
 }
 
-static void draw_x(const Vector &p, QPainter &q)
+static void draw_x(const Vector &p, JsPainter &q)
 {
-  q.drawLine(QPt(p - Vector(5.6, 5.6)),
-	     QPt(p + Vector(5.6, 5.6)));
-  q.drawLine(QPt(p - Vector(5.6, -5.6)),
-	     QPt(p + Vector(5.6, -5.6)));
+  q.drawLine(p - Vector(5.6, 5.6),
+	     p + Vector(5.6, 5.6));
+  q.drawLine(p - Vector(5.6, -5.6),
+	     p + Vector(5.6, -5.6));
 }
 
-static void draw_star(const Vector &p, QPainter &q)
+static void draw_star(const Vector &p, JsPainter &q)
 {
-  q.drawLine(QPt(p - Vector(8, 0)), QPt(p + Vector(8, 0)));
-  q.drawLine(QPt(p + Vector(-4, 7)), QPt(p + Vector(4, -7)));
-  q.drawLine(QPt(p + Vector(-4, -7)), QPt(p + Vector(4, 7)));
+  q.drawLine(p - Vector(8, 0), p + Vector(8, 0));
+  q.drawLine(p + Vector(-4, 7), p + Vector(4, -7));
+  q.drawLine(p + Vector(-4, -7), p + Vector(4, 7));
 }
 
-void Canvas::drawFifi(QPainter &q)
+void Canvas::drawFifi(JsPainter &q)
 {
   Vector p = userToDev(iMousePos);
   switch (iFifiMode) {
@@ -269,36 +313,35 @@ void Canvas::drawFifi(QPainter &q)
     // don't draw at all
     break;
   case Snap::ESnapVtx:
-    q.setPen(QColor(255, 0, 0, 255));
+    q.setPen(255, 0, 0);
     draw_rhombus(p, q);
     break;
   case Snap::ESnapCtl:
-    q.setPen(QColor(255, 0, 0, 255));
+    q.setPen(255, 0, 0);
     draw_square(p, q);
     break;
     break;
   case Snap::ESnapBd:
-    q.setPen(QColor(255, 0, 0, 255));
+    q.setPen(255, 0, 0);
     draw_plus(p, q);
     break;
   case Snap::ESnapInt:
-    q.setPen(QColor(255, 0, 0, 255));
+    q.setPen(255, 0, 0);
     draw_x(p, q);
     break;
   case Snap::ESnapGrid:
-    q.setPen(QColor(0, 128, 0, 255));
+    q.setPen(0, 128, 0);
     draw_plus(p, q);
     break;
   case Snap::ESnapAngle:
   case Snap::ESnapAuto:
   default:
-    q.setPen(QColor(255, 0, 0, 255));
+    q.setPen(255, 0, 0);
     draw_star(p, q);
     break;
   }
   iOldFifi = p;
 }
-#endif
 
 // TODO: make two separate canvasses that are overlaid,
 // use the bottom one for the cairo surface and the top one for the tool,
@@ -306,6 +349,7 @@ void Canvas::drawFifi(QPainter &q)
 
 void Canvas::paint()
 {
+  iNeedPaint = false;
   refreshSurface();
 
   // TODO: maybe call a single JS function to do all of this at once?
@@ -317,11 +361,11 @@ void Canvas::paint()
   val ImageData = val::global("ImageData");
   val img = ImageData.new_(buffer2, iBWidth, iBHeight);
   iCtx.call<void>("putImageData", img, 0, 0);
-  // if (iFifiVisible)
-  // drawFifi(qPainter);
+
+  JsPainter qp(iCascade, iCtx, iBWidth / iWidth);
+  if (iFifiVisible)
+    drawFifi(qp);
   if (iPage) {
-    JsPainter qp(iCascade, iCtx);
-    qp.transform(Linear(2, 0, 0, 2));
     qp.transform(canvasTfm());
     qp.pushMatrix();
     drawTool(qp);
@@ -333,9 +377,6 @@ namespace {
   void setPage(Canvas * canvas, Page *page, int pno, int view, Cascade *sheet) {
     return canvas->setPage(page, pno, view, sheet);
   }
-  void updateCanvas(Canvas * canvas) {
-    return canvas->update();
-  }
 }
 
 // --------------------------------------------------------------------
@@ -343,7 +384,8 @@ namespace {
 EMSCRIPTEN_BINDINGS(ipecanvas) {
   emscripten::class_<Canvas>("Canvas")
     .constructor<val, double>()
-    .function("update", &updateCanvas, emscripten::allow_raw_pointers())
+    .function("update", &CanvasBase::update)
+    .function("paint", &Canvas::paint)
     .property("width", &Canvas::canvasWidth)
     .property("height", &Canvas::canvasHeight)
     .function("setPage", &setPage, emscripten::allow_raw_pointers())
