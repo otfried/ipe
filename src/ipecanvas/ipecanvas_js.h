@@ -46,7 +46,7 @@ namespace ipe {
 
   class Canvas : public CanvasBase {
   public:
-    Canvas(emscripten::val canvas, double dpr);
+    Canvas(emscripten::val bottomCanvas, emscripten::val topCanvas, double dpr);
 
     virtual void setCursor(TCursor cursor, double w = 1.0,
 			   Color *color = nullptr);
@@ -61,22 +61,11 @@ namespace ipe {
     virtual void invalidate(int x, int y, int w, int h);
     void drawFifi(JsPainter & qp);
 
-  protected:
-    /*
-    virtual void paintEvent(QPaintEvent *ev);
-    void mouseButton(QMouseEvent *ev, int button, bool press);
-    virtual void mouseDoubleClickEvent(QMouseEvent *ev);
-    virtual void mousePressEvent(QMouseEvent *ev) ;
-    virtual void mouseReleaseEvent(QMouseEvent *ev);
-    virtual void mouseMoveEvent(QMouseEvent *ev);
-    virtual void tabletEvent(QTabletEvent *ev);
-    virtual void wheelEvent(QWheelEvent *ev);
-    virtual void keyPressEvent(QKeyEvent *ev);
-    virtual QSize sizeHint() const;
-    */
   private:
-    emscripten::val iCanvas;
-    emscripten::val iCtx;
+    emscripten::val iBottomCanvas;
+    emscripten::val iTopCanvas;
+    emscripten::val iBottomCtx;
+    emscripten::val iTopCtx;
     bool iNeedPaint;
   };
 

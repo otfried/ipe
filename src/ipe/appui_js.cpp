@@ -282,9 +282,10 @@ int AppUi::clipboard(lua_State *L)
 
 bool AppUi::waitDialog(const char *cmd, const char *label)
 {
-  // this is fully async: starts latex on a different process and returns
-  // here, cmd is the name of the tex engine
-  emscripten::val::global("window").call<emscripten::val>("runlatex", std::string(cmd));
+  // this is fully async: the cmd is started and the function returns
+  // cmd is either: "runlatex:<tex engine>" or "editor:"
+  emscripten::val::global("window").call<emscripten::val>("waitDialog", std::string(cmd),
+							  std::string(label));
   return false;
 }
 

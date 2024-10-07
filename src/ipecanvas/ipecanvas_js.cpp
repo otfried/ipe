@@ -169,18 +169,23 @@ void JsPainter::doDrawPath(TPathMode mode)
 // --------------------------------------------------------------------
 
 //! Construct a new canvas.
-Canvas::Canvas(val canvas, double dpr)
+Canvas::Canvas(val bottomCanvas, val topCanvas, double dpr)
 {
-  iCanvas = canvas;
-  iBWidth = iCanvas["width"].as<double>();
-  iBHeight = iCanvas["height"].as<double>();
+  iBottomCanvas = bottomCanvas;
+  iTopCanvas = topCanvas;
+
+  iBWidth = iBottomCanvas["width"].as<double>();
+  iBHeight = iBottomCanvas["height"].as<double>();
 
   iWidth = iBWidth / dpr;
   iHeight = iBHeight / dpr;
 
   iNeedPaint = false;
 
-  iCtx = iCanvas.call<val>("getContext", val("2d"));
+  val options = val::object();
+  options.set("alpha", false);
+  iBottomCtx = iBottomCanvas.call<val>("getContext", val("2d"), options);
+  iTopCtx = iTopCanvas.call<val>("getContext", val("2d"));
   ipeDebug("Canvas has size: %g x %g (%g x %g)",
 	   iWidth, iHeight, iBWidth, iBHeight);
 }
@@ -195,7 +200,8 @@ void Canvas::setCursor(TCursor cursor, double w, Color *color)
 void Canvas::invalidate()
 {
   iNeedPaint = true;
-  EM_ASM({ window.schedulePaint(); });
+  val window = val::global("window");
+  window.call<void>("schedulePaint");
 }
 
 void Canvas::invalidate(int x, int y, int w, int h)
@@ -343,26 +349,25 @@ void Canvas::drawFifi(JsPainter &q)
   iOldFifi = p;
 }
 
-// TODO: make two separate canvasses that are overlaid,
-// use the bottom one for the cairo surface and the top one for the tool,
-// saving a lot of redrawing
-
 void Canvas::paint()
 {
   iNeedPaint = false;
-  refreshSurface();
 
-  // TODO: maybe call a single JS function to do all of this at once?
-  val buffer1 = val(typed_memory_view(iBWidth * iBHeight * 4, cairo_image_surface_get_data(iSurface)));
-  val Uint8ClampedArray = val::global("Uint8ClampedArray");
-  val buffer2 = Uint8ClampedArray.new_(buffer1["buffer"],
-				       buffer1["byteOffset"],
-				       buffer1["byteLength"]);
-  val ImageData = val::global("ImageData");
-  val img = ImageData.new_(buffer2, iBWidth, iBHeight);
-  iCtx.call<void>("putImageData", img, 0, 0);
+  if (refreshSurface()) {
+    // TODO: call a single JS function to do all of this at once?
+    val buffer1 = val(typed_memory_view(iBWidth * iBHeight * 4, cairo_image_surface_get_data(iSurface)));
+    val Uint8ClampedArray = val::global("Uint8ClampedArray");
+    val buffer2 = Uint8ClampedArray.new_(buffer1["buffer"],
+					 buffer1["byteOffset"],
+					 buffer1["byteLength"]);
+    val ImageData = val::global("ImageData");
+    val img = ImageData.new_(buffer2, iBWidth, iBHeight);
+    iBottomCtx.call<void>("putImageData", img, 0, 0);
+  }
 
-  JsPainter qp(iCascade, iCtx, iBWidth / iWidth);
+  iTopCtx.call<void>("clearRect", 0, 0, iBWidth, iBHeight);
+
+  JsPainter qp(iCascade, iTopCtx, iBWidth / iWidth);
   if (iFifiVisible)
     drawFifi(qp);
   if (iPage) {
@@ -383,7 +388,7 @@ namespace {
 
 EMSCRIPTEN_BINDINGS(ipecanvas) {
   emscripten::class_<Canvas>("Canvas")
-    .constructor<val, double>()
+    .constructor<val, val, double>()
     .function("update", &CanvasBase::update)
     .function("paint", &Canvas::paint)
     .property("width", &Canvas::canvasWidth)

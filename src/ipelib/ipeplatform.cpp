@@ -651,10 +651,11 @@ int Platform::system(String cmd)
 #if defined(__EMSCRIPTEN__) && !defined(IPENODEJS)
 String Platform::howToRunLatex(String dir, LatexType engine, String docname) noexcept
 {
-  const char *latex = (engine == LatexType::Xetex) ?
+  String how("runlatex:");
+  how += (engine == LatexType::Xetex) ?
     "xelatex" : (engine == LatexType::Luatex) ?
     "lualatex" : "pdflatex";
-  return String(latex);
+  return how;
 }
 #endif
 
