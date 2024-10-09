@@ -164,8 +164,42 @@ static int ipeui_getColor(lua_State *L)
 
 static int ipeui_fileDialog(lua_State *L)
 {
-  // static const char * const typenames[] = { "open", "save", nullptr };
+  static const char * const typenames[] = { "open", "save", nullptr };
 
+  void * parent = check_winid(L, 1);
+  (void) parent;
+
+  int type = luaL_checkoption(L, 2, nullptr, typenames);
+  std::string caption = checkstring(L, 3);
+  if (!lua_istable(L, 4))
+    luaL_argerror(L, 4, "table expected for filters");
+  std::vector<std::string> filters;
+  int nFilters = lua_rawlen(L, 4);
+  for (int i = 1; i <= nFilters; i += 2) { // skip Windows versions
+    lua_rawgeti(L, 4, i);
+    luaL_argcheck(L, lua_isstring(L, -1), 4, "filter entry is not a string");
+    filters.push_back(checkstring(L, -1));
+    lua_pop(L, 1); // element i
+  }
+
+  std::string dir;
+  if (!lua_isnoneornil(L, 5))
+    dir = checkstring(L, 5);
+  std::string path;
+  if (!lua_isnoneornil(L, 6))
+    path = checkstring(L, 6);
+  int selected = 0;
+  if (!lua_isnoneornil(L, 7))
+    selected = luaL_checkinteger(L, 7);
+
+  emscripten::val arg = emscripten::val::object();
+  arg.set("type", typenames[type]);
+  arg.set("caption", caption);
+  arg.set("filters", filters);
+  arg.set("dir", dir);
+  arg.set("path", path);
+  arg.set("selected", selected);
+  emscripten::val::global("window")["ipeui"].call<void>("fileDialog", arg);
   return 0;
 }
 
@@ -180,6 +214,7 @@ static int ipeui_messageBox(lua_State *L)
     "savediscardcancel", nullptr };
 
   void * parent = check_winid(L, 1);
+  (void) parent;
   int type = luaL_checkoption(L, 2, "none", options);
   std::string text = checkstring(L, 3);
   std::string details;
@@ -192,17 +227,12 @@ static int ipeui_messageBox(lua_State *L)
     buttons = luaL_checkoption(L, 5, nullptr, buttontype);
 
   emscripten::val arg = emscripten::val::object();
-  // TODO: send parent id somehow
-  // arg.set("parent", (int) parent);
-  (void) parent;
   arg.set("type", type);
   arg.set("text", text);
   arg.set("details", details);
   arg.set("buttons", buttons);
-  emscripten::val::global("window")["ipeui"]
-    .call<void>("messageBox", arg);
-  lua_pushnumber(L, -1);
-  return 1;
+  emscripten::val::global("window")["ipeui"].call<void>("messageBox", arg);
+  return 0;
 }
 
 // --------------------------------------------------------------------
@@ -229,17 +259,32 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "Menu", menu_constructor },
   { "Timer", timer_constructor },
   { "getColor", ipeui_getColor },
-  { "fileDialog", ipeui_fileDialog },
-  { "messageBox", ipeui_messageBox },
+  { "fileDialogAsync", ipeui_fileDialog },
+  { "messageBoxAsync", ipeui_messageBox },
   { "currentDateTime", ipeui_currentDateTime },
   { nullptr, nullptr }
 };
 
 // --------------------------------------------------------------------
 
+void addMethod(lua_State *L, const char * name, const char * luacode)
+{
+  int ok = luaL_loadstring(L, luacode);
+  if (ok != LUA_OK)
+    luaL_error(L, "cannot prepare function");
+  lua_call(L, 0, 1);
+  lua_setfield(L, -2, name);
+}
+
 int luaopen_ipeui(lua_State *L)
 {
   luaL_newlib(L, ipeui_functions);
+  addMethod(L, "messageBox",
+	    "return function (...) ipeui.messageBoxAsync(...)"
+	    "return coroutine.yield() end");
+  addMethod(L, "fileDialog",
+	    "return function (...) ipeui.fileDialogAsync(...)"
+	    "return coroutine.yield() end");
   lua_setglobal(L, "ipeui");
   luaopen_ipeui_common(L);
   return 0;
