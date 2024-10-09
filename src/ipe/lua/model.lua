@@ -177,6 +177,10 @@ function MODEL:resumeLua()
   if self.current_action then coroutine.resume(self.current_action) end
 end
 
+function MODEL:resumeDialog(arg)
+  if self.current_action then coroutine.resume(self.current_action, arg) end
+end
+
 ----------------------------------------------------------------------
 
 function MODEL:resetGridSize()

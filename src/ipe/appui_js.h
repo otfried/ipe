@@ -76,6 +76,7 @@ public:
   virtual void action(String name) override;
 
   virtual bool waitDialog(const char *cmd, const char *label) override;
+  void resumeDialog(emscripten::val result);
 
 private:
   virtual void addRootMenu(int id, const char *name) override;

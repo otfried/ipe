@@ -37,6 +37,8 @@
 #include "appui_js.h"
 #include "ipecanvas_js.h"
 
+extern void ipeui_resumeDialog(emscripten::val results);
+
 using namespace ipe;
 using namespace ipelua;
 
@@ -62,7 +64,7 @@ static void setup_globals(lua_State *L, int width, int height, double devicePixe
   lua_setfield(L, -2, "path");
 
   lua_newtable(L);  // config table
-  lua_pushliteral(L, "web");
+  lua_pushliteral(L, "electron");
   lua_setfield(L, -2, "platform");
   lua_pushliteral(L, "html");
   lua_setfield(L, -2, "toolkit");
@@ -150,6 +152,10 @@ static void resumeLua(AppUi *ui) {
   ui->resumeLua();
 }
 
+static void resumeDialog(AppUi *ui, emscripten::val arg) {
+  ui->resumeDialog(arg);
+}
+
 // --------------------------------------------------------------------
 
 EMSCRIPTEN_BINDINGS(ipe) {
@@ -157,7 +163,8 @@ EMSCRIPTEN_BINDINGS(ipe) {
     .class_function("initLib", &initLib);
   emscripten::class_<AppUi>("AppUi")
     .function("action", &ipeAction, emscripten::allow_raw_pointers())
-    .function("resume", &resumeLua, emscripten::allow_raw_pointers());
+    .function("resume", &resumeLua, emscripten::allow_raw_pointers())
+    .function("resumeDialog", &resumeDialog, emscripten::allow_raw_pointers());
   emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());
 }
 

@@ -289,6 +289,16 @@ bool AppUi::waitDialog(const char *cmd, const char *label)
   return false;
 }
 
+void AppUi::resumeDialog(emscripten::val result)
+{
+  // calls model:resumeDialog
+  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
+  lua_getfield(L, -1, "resumeDialog");
+  lua_insert(L, -2); // before model
+  lua_pushlightuserdata(L, &result);
+  luacall(L, 2, 0);
+}
+
 // --------------------------------------------------------------------
 
 int CanvasBase::selectPageOrView(Document *doc, int page, int startIndex,
