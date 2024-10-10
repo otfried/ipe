@@ -157,6 +157,7 @@ static int timer_constructor(lua_State *L)
 
 static int ipeui_getColor(lua_State *L)
 {
+  luaL_error(L, "Color dialog is not yet implemented");
   return 0;
 }
 
@@ -166,37 +167,34 @@ static int ipeui_fileDialog(lua_State *L)
 {
   static const char * const typenames[] = { "open", "save", nullptr };
 
-  void * parent = check_winid(L, 1);
-  (void) parent;
-
+  // void * parent = check_winid(L, 1);
   int type = luaL_checkoption(L, 2, nullptr, typenames);
   std::string caption = checkstring(L, 3);
   if (!lua_istable(L, 4))
     luaL_argerror(L, 4, "table expected for filters");
-  std::vector<std::string> filters;
   int nFilters = lua_rawlen(L, 4);
+  emscripten::val filters = emscripten::val::array();
   for (int i = 1; i <= nFilters; i += 2) { // skip Windows versions
     lua_rawgeti(L, 4, i);
     luaL_argcheck(L, lua_isstring(L, -1), 4, "filter entry is not a string");
-    filters.push_back(checkstring(L, -1));
+    filters.call<void>("push", emscripten::val(checkstring(L, -1)));
     lua_pop(L, 1); // element i
   }
 
-  std::string dir;
+  emscripten::val dir = emscripten::val::null();
   if (!lua_isnoneornil(L, 5))
-    dir = checkstring(L, 5);
-  std::string path;
+    dir = emscripten::val(checkstring(L, 5));
+  emscripten::val path = emscripten::val::null();
   if (!lua_isnoneornil(L, 6))
-    path = checkstring(L, 6);
+    path = emscripten::val(checkstring(L, 6));
   int selected = 0;
   if (!lua_isnoneornil(L, 7))
     selected = luaL_checkinteger(L, 7);
 
   emscripten::val arg = emscripten::val::object();
-  (void) type;
   arg.set("type", std::string(typenames[type]));
   arg.set("caption", caption);
-  // arg.set("filters", filters);
+  arg.set("filters", filters);
   arg.set("dir", dir);
   arg.set("path", path);
   arg.set("selected", selected);
@@ -214,8 +212,7 @@ static int ipeui_messageBox(lua_State *L)
     "ok", "okcancel", "yesnocancel", "discardcancel",
     "savediscardcancel", nullptr };
 
-  void * parent = check_winid(L, 1);
-  (void) parent;
+  // void * parent = check_winid(L, 1);
   int type = luaL_checkoption(L, 2, "none", options);
   std::string text = checkstring(L, 3);
   std::string details;
@@ -228,7 +225,7 @@ static int ipeui_messageBox(lua_State *L)
     buttons = luaL_checkoption(L, 5, nullptr, buttontype);
 
   emscripten::val arg = emscripten::val::object();
-  arg.set("type", type);
+  arg.set("type", std::string(options[type]));
   arg.set("text", text);
   arg.set("details", details);
   arg.set("buttons", buttons);
@@ -258,7 +255,8 @@ static int ipeui_currentDateTime(lua_State *L)
 static int ipeui_val(lua_State *L)
 {
   emscripten::val * arg = (emscripten::val *) lua_touserdata(L, 1);
-  luaL_argcheck(L, arg != nullptr, 1, "argument is not a Javascript value");
+  luaL_argcheck(L, arg != nullptr && !arg->isNull(), 1,
+		"argument is not a Javascript object");
   const char *tag = luaL_checkstring(L, 2);
   emscripten::val v = (*arg)[tag];
   if (v.isNumber())
@@ -309,7 +307,8 @@ int luaopen_ipeui(lua_State *L)
 	    "return ipeui.val(coroutine.yield(), 'result') end");
   addMethod(L, "fileDialog",
 	    "return function (...) ipeui.fileDialogAsync(...)"
-	    "return coroutine.yield() end");
+	    "local r = coroutine.yield()"
+	    "if r then return ipeui.val(r, 'path'), ipeui.val(r, 'selected') end end");
   lua_setglobal(L, "ipeui");
   luaopen_ipeui_common(L);
   return 0;

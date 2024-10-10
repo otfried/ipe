@@ -295,7 +295,10 @@ void AppUi::resumeDialog(emscripten::val result)
   lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
   lua_getfield(L, -1, "resumeDialog");
   lua_insert(L, -2); // before model
-  lua_pushlightuserdata(L, &result);
+  if (result.isNull())
+    lua_pushnil(L);
+  else
+    lua_pushlightuserdata(L, &result);
   luacall(L, 2, 0);
 }
 
