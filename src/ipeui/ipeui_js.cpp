@@ -36,10 +36,127 @@
 
 // --------------------------------------------------------------------
 
+class PDialog : public Dialog {
+public:
+  PDialog(lua_State *L0, WINID parent, const char *caption, const char * language);
+  // TODO bool ignoresEscapeKey();
+
+protected:
+  virtual void setMapped(lua_State *L, int idx);
+  virtual void enableItem(int idx, bool value);
+  virtual void acceptDialog(lua_State *L);
+
+  virtual Dialog::Result buildAndRun(int w, int h);
+  virtual void retrieveValues();
+
+private:
+  // void takeDown();
+
+private:
+};
+
+// --------------------------------------------------------------------
+
+PDialog::PDialog(lua_State *L0, WINID parent, const char *caption, const char *language)
+  : Dialog(L0, parent, caption, language)
+{
+}
+
+void PDialog::setMapped(lua_State *L, int idx)
+{
+  luaL_error(L, "Dialog:setMapped is not implemented for JS dialogs");
+}
+
+void PDialog::enableItem(int idx, bool value)
+{
+  luaL_error(L, "Dialog:enableItem is not implemented for JS dialogs");
+}
+
+void PDialog::acceptDialog(lua_State *L)
+{
+  luaL_error(L, "Dialog:acceptDialog is not implemented for JS dialogs");
+}
+
+void PDialog::retrieveValues()
+{
+  // TODO
+}
+
+Dialog::Result PDialog::buildAndRun(int w, int h)
+{
+  emscripten::val buttons = emscripten::val::array();
+  emscripten::val elements = emscripten::val::array();  
+  for (int i = 0; i < int(iElements.size()); ++i) {
+    SElement &m = iElements[i];
+    if (m.row < 0) {
+      // a button in the button bar
+      emscripten::val b = emscripten::val::object();  
+      b.set("name", m.text);
+      b.set("flags", m.flags);
+      buttons.call<void>("push", b);
+    } else {
+      emscripten::val w = emscripten::val::object();  
+      switch (m.type) {
+      case ELabel:
+	w.set("type", std::string("label"));
+	w.set("text", m.text);
+	break;
+      case EButton:
+	w.set("type", std::string("button"));
+	w.set("text", m.text);
+	w.set("flags", m.flags);
+	break;
+      case ECheckBox:
+	w.set("type", std::string("checkbox"));
+	w.set("text", m.text);
+	w.set("value", m.value);
+	break;
+      case EInput:
+	w.set("type", std::string("input"));
+	w.set("text", m.text);
+	w.set("flags", m.flags);
+	break;
+      case ETextEdit:
+	w.set("type", std::string("textedit"));
+	w.set("text", m.text);
+	w.set("flags", m.flags);
+	break;
+      case ECombo:
+      case EList:
+	w.set("type", m.type == ECombo ? std::string("combo") : std::string("list"));
+	w.set("value", m.value);
+	{
+	  emscripten::val items = emscripten::val::array();
+	  for (int k = 0; k < int(m.items.size()); ++k)
+	    items.call<void>("push", m.items[k]);
+	  w.set("items", items);
+	}
+	break;
+      default:
+	break;
+      }
+      w.set("row", m.row);
+      w.set("col", m.col);
+      w.set("rowspan", m.rowspan);
+      w.set("colspan", m.colspan);
+      elements.call<void>("push", w);
+    }
+  }
+  emscripten::val arg = emscripten::val::object();
+  arg.set("type", std::string("dialog"));
+  arg.set("caption", iCaption);
+  arg.set("buttons", buttons);
+  arg.set("elements", elements);
+  emscripten::val::global("window")["ipeui"].call<void>("dialog", arg);
+  return Result::MODAL;
+}
+
+// --------------------------------------------------------------------
+
 static int dialog_constructor(lua_State *L)
 {
-  // QWidget *parent = check_winid(L, 1);
-  const char *s = luaL_checkstring(L, 2);
+  void * parent = check_winid(L, 1);
+  const char *caption = luaL_checkstring(L, 2);
   const char *language = "";
   if (lua_isstring(L, 3))
     language = luaL_checkstring(L, 3);
@@ -48,9 +165,7 @@ static int dialog_constructor(lua_State *L)
   *dlg = nullptr;
   luaL_getmetatable(L, "Ipe.dialog");
   lua_setmetatable(L, -2);
-  // *dlg = new PDialog(L, parent, s, language);
-  (void) s;
-  (void) language;
+  *dlg = new PDialog(L, parent, caption, language);
   return 1;
 }
 
