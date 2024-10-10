@@ -68,6 +68,8 @@ function MODEL:init(fname)
   self.ui = AppUi(self)
   self.pristine = false
   self.first_show = true
+  self.current_action = nil
+  self.okay_close = false
 
   self.type3_font = false
 
@@ -136,6 +138,51 @@ end
 
 ----------------------------------------------------------------------
 
+-- every call from the UI into Lua code must be wrapped:
+-- 1. inside a thread, so actions can yield and wait for UI or
+--    background activity
+-- 2. if an error happens in Lua code, there will be a message and
+--    Ipe continues to run, instead of crashing.
+
+function MODEL:wrapCall(f, ...)
+  local wrapper = function(f, ...)
+    local result, err = xpcall(f, debug.traceback, ...)
+    if not result then
+      messageBox(nil, "critical",
+		 "Lua error\n\n"..
+		   "Data may have been corrupted. \n" ..
+		   "Save your file!",
+		 err)
+    end
+  end
+  if self.current_action then
+    local status = coroutine.status(self.current_action)
+    if status == "suspended" then
+      messageBox(nil, "warning",
+		 "An operation is still waiting for a dialog, Latex, "
+		   .. "or an external editor, yet a new action happens.")
+      coroutine.close(self.current_action)
+    elseif status == "normal" then
+      print("DANGER! THIS SHOULD NOT HAPPEN!")
+      print("Calling into Lua while an operation is ongoing.  What's going on?")
+    end
+  end
+  self.current_action = coroutine.create(wrapper)
+  coroutine.resume(self.current_action, f, ...)
+end
+
+-- called by the UI when a waitDialog terminates, that is, when a Latex
+-- run terminates or when an external editor closes
+function MODEL:resumeLua()
+  if self.current_action then coroutine.resume(self.current_action) end
+end
+
+function MODEL:resumeDialog(arg)
+  if self.current_action then coroutine.resume(self.current_action, arg) end
+end
+
+----------------------------------------------------------------------
+
 function MODEL:resetGridSize()
   self.snap.gridsize = prefs.initial.grid_size
   self.snap.anglesize = prefs.initial.angle_size
@@ -181,6 +228,11 @@ function MODEL:getDouble(caption, label, value, minv, maxv)
       return n
     end
   end
+end
+
+function MODEL:waitDialog(cmd, text)
+  local done = self.ui:waitDialog(cmd, text)
+  if not done then coroutine.yield() end
 end
 
 ----------------------------------------------------------------------
@@ -443,9 +495,10 @@ end
 
 ----------------------------------------------------------------------
 
-local function showSource(d)
+function MODEL:showSource()
   local fname = config.latexdir .. "ipetemp.tex"
-  ipeui.waitDialog(d, string.format(prefs.external_editor, fname))
+  self:waitDialog(string.format(prefs.external_editor, fname),
+		  "Waiting for external editor")
 end
 
 function MODEL:latexErrorBox(log)
@@ -456,7 +509,7 @@ function MODEL:latexErrorBox(log)
 	1, 1)
   d:add("text", "text", { read_only=true, syntax="logfile", focus=true }, 2, 1)
   if prefs.external_editor then
-    d:addButton("editor", "&Source", function (d) showSource(d) end)
+    d:addButton("editor", "&Source", function () self.showSource() end)
   end
   d:addButton("ok", "Ok", "accept")
   d:set("text", log)
@@ -469,14 +522,12 @@ function MODEL:runLatex()
   self.type3_font = false
   local success, errmsg, result, log
   if prefs.freeze_in_latex then
-    success, errmsg, result, log = self.doc:runLatex(self.file_name) -- sync
+    success, errmsg, result, log = self.doc:runLatex(self.file_name)
   else
-    ipeui.waitDialog(self.ui:win(),
-		     function ()
-		       success, errmsg, result, log = self.doc:runLatex(self.file_name, true) -- async
-		     end, "Compiling Latex")
-    if success and success ~= true then
-      self.doc:completeLatexRun(success) -- on ui thread
+    success, converter = self.doc:prepareLatexRun()
+    if success then
+      self:waitDialog(self.doc:howToRunLatex(self.file_name), "Compiling Latex")
+      success, errmsg, result, log = self.doc:completeLatexRun(converter)
     end
   end
   if success then
@@ -746,13 +797,13 @@ function MODEL:closeEvent()
 			 "The document has been modified",
 			 "Do you wish to save the document?",
 			 "savediscardcancel")
-    if r == 1 then
-      return self:action_save()
-    else
-      return r == 0
+    if r == 0 or (r == 1 and self:action_save()) then
+      self.okay_close = true
+      self.ui:close()
     end
   else
-    return true
+    self.okay_close = true
+    self.ui:close()
   end
 end
 

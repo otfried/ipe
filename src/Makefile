@@ -50,7 +50,7 @@ ipecanvas: ipelib ipecairo
 ipeview: ipecanvas
 ipelua: ipelib
 ipescript: ipelib ipelua
-ipe: ipelib ipecanvas ipelua $(IPEICO)
+ipe: ipelib ipecanvas ipelua ipeui $(IPEICO)
 ipepresenter: ipecanvas $(IPEICO)
 ipecurl: ipelib
 ipejs: ipelib ipecairo

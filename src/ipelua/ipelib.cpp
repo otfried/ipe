@@ -292,23 +292,17 @@ static int document_replaceSheets(lua_State *L)
   return 1;
 }
 
+#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
 static int document_runLatex(lua_State *L)
 {
   Document **d = check_document(L, 1);
   String docname;
   if (!lua_isnoneornil(L, 2))
     docname = luaL_checklstring(L, 2, nullptr);
-  bool async = lua_toboolean(L, 3);
   String log;
-  ipe::Latex *converter;
-  int result = async ? (*d)->runLatexAsync(docname, log, &converter)
-    : (*d)->runLatex(docname, log);
-
+  int result = (*d)->runLatex(docname, log);
   if (result == Document::ErrNone) {
-    if (async)
-      lua_pushlightuserdata(L, converter);
-    else
-      lua_pushboolean(L, true);
+    lua_pushboolean(L, true);
     lua_pushnil(L);
     lua_pushnil(L);
   } else if (result == Document::ErrNoText) {
@@ -343,6 +337,38 @@ static int document_runLatex(lua_State *L)
   push_string(L, log);
   return 4;
 }
+#endif
+
+static int document_prepareLatexRun(lua_State *L)
+{
+  Document **d = check_document(L, 1);
+  Latex *converter = nullptr;
+  int result = (*d)->prepareLatexRun(&converter);
+  // TODO: return precise error
+  if (result == 0) {
+    lua_pushboolean(L, true);
+    lua_pushlightuserdata(L, converter);
+  } else {
+    lua_pushboolean(L, false);
+    lua_pushnil(L);
+  }
+  return 2;
+}
+
+static int document_howToRunLatex(lua_State *L)
+{
+  Document **d = check_document(L, 1);
+  String docname;
+  if (!lua_isnoneornil(L, 2))
+    docname = luaL_checklstring(L, 2, nullptr);
+  String cmd = 
+    Platform::howToRunLatex(Platform::latexDirectory(), (*d)->properties().iTexEngine, docname);
+  if (cmd.empty())
+    lua_pushnil(L);
+  else
+    push_string(L, cmd);
+  return 1;
+}
 
 static int document_completeLatexRun(lua_State *L)
 {
@@ -350,8 +376,43 @@ static int document_completeLatexRun(lua_State *L)
   ipe::Latex *converter = (ipe::Latex *) lua_touserdata(L, 2);
   if (converter == nullptr)
     luaL_error(L, "no Latex converter given");
-  lua_pushboolean(L, (*d)->completeLatexRun(converter));
-  return 1;
+  String log;
+  int result = (*d)->completeLatexRun(log, converter);
+  if (result == Document::ErrNone) {
+    lua_pushboolean(L, true);
+    lua_pushnil(L);
+    lua_pushnil(L);
+  } else if (result == Document::ErrNoText) {
+    lua_pushboolean(L, true);
+    lua_pushnil(L);
+    lua_pushliteral(L, "notext");
+  } else {
+    lua_pushboolean(L, false);
+    switch (result) {
+    case Document::ErrNoDir:
+      lua_pushliteral(L, "Directory does not exist and cannot be created");
+      lua_pushliteral(L, "nodir");
+      break;
+    case Document::ErrWritingSource:
+      lua_pushliteral(L, "Error writing Latex source");
+      lua_pushliteral(L, "writingsource");
+      break;
+    case Document::ErrRunLatex:
+      lua_pushliteral(L, "There was an error trying to run Pdflatex");
+      lua_pushliteral(L, "runlatex");
+      break;
+    case Document::ErrLatex:
+      lua_pushliteral(L, "There were Latex errors");
+      lua_pushliteral(L, "latex");
+      break;
+    case Document::ErrLatexOutput:
+      lua_pushliteral(L, "There was an error reading the Pdflatex output");
+      lua_pushliteral(L, "latexoutput");
+      break;
+    }
+  }
+  push_string(L, log);
+  return 4;
 }
 
 static int document_checkStyle(lua_State *L)
@@ -502,7 +563,11 @@ static const struct luaL_Reg document_methods[] = {
   { "countTotalViews", document_countTotalViews },
   { "sheets", document_sheets },
   { "replaceSheets", document_replaceSheets },
+#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
   { "runLatex", document_runLatex },
+#endif
+  { "prepareLatexRun", document_prepareLatexRun },
+  { "howToRunLatex", document_howToRunLatex },
   { "completeLatexRun", document_completeLatexRun },
   { "checkStyle", document_checkStyle },
   { "properties", document_properties },

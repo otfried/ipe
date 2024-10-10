@@ -153,10 +153,13 @@ namespace ipe {
     //! Error codes returned by RunLatex.
     enum { ErrNone, ErrNoText, ErrNoDir, ErrWritingSource,
 	   ErrRunLatex, ErrLatex, ErrLatexOutput };
+#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
     int runLatex(String docname, String &logFile);
     int runLatex(String docname);
-    int runLatexAsync(String docname, String &texLog, Latex **pConverter);
-    int completeLatexRun(Latex *converter);
+#endif
+    int prepareLatexRun(Latex **pConverter);
+    void runLatexAsync(String docname);
+    int completeLatexRun(String &texLog, Latex *converter);
 
   private:
     std::vector<Page *> iPages;

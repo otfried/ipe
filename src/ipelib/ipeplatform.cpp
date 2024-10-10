@@ -113,7 +113,7 @@ locale_t ipeLocale;
 #if defined(IPEWASM) && !defined(IPENODEJS)
 String Platform::dotIpe()
 {
-  return String("/home/ipe/.ipe");
+  return String("/home/ipe/.ipe/");
 }
 #else
 #ifndef WIN32
@@ -498,9 +498,10 @@ String Platform::readFile(String fname)
 
 #if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
 // amazingly, this actually works in NodeJS as is.
-//! Runs latex on file ipetemp.tex in given directory.
+// to make this async, need to run it on a different thread
+//! Returns command to run latex on file ipetemp.tex in given directory.
 /*! directory of docname is added to TEXINPUTS if its non-empty. */
-int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
+String Platform::howToRunLatex(String dir, LatexType engine, String docname) noexcept
 {
   const char *latex = (engine == LatexType::Xetex) ?
     "xelatex" : (engine == LatexType::Luatex) ?
@@ -562,40 +563,11 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
   String s = dir + "runlatex.bat";
   std::FILE *f = Platform::fopen(s.z(), "wb");
   if (!f)
-    return -1;
+    return String();
   std::fwrite(bat.data(), 1, bat.size(), f);
   std::fclose(f);
-
-  // Declare and initialize process blocks
-  PROCESS_INFORMATION processInformation;
-  STARTUPINFOW startupInfo;
-
-  memset(&processInformation, 0, sizeof(processInformation));
-  memset(&startupInfo, 0, sizeof(startupInfo));
-  startupInfo.cb = sizeof(startupInfo);
-
-  // Call the executable program
-  String cmd = String("cmd /c call \"") + dir + String("runlatex.bat\"");
-  std::wstring wcmd = cmd.w();
-
-  int result = CreateProcessW(nullptr, wcmd.data(), nullptr, nullptr, FALSE,
-			      NORMAL_PRIORITY_CLASS|CREATE_NO_WINDOW,
-			      nullptr, nullptr, &startupInfo, &processInformation);
-  if (result == 0)
-    return -1;  // failure to create process
-
-  // Wait until child process exits.
-  WaitForSingleObject(processInformation.hProcess, INFINITE);
-
-  // Close process and thread handles.
-  CloseHandle(processInformation.hProcess);
-  CloseHandle(processInformation.hThread);
-
-  // Apparently WaitForSingleObject doesn't work in Wine
-  const char *wine = getenv("IPEWINE");
-  if (wine)
-    Sleep(Lex(wine).getInt());
-  return 0;
+  
+  return String("cmd /c call \"") + dir + String("runlatex.bat\"");
 #else
   if (!online && getenv("IPETEXFORMAT")) {
     latex = (engine == LatexType::Xetex) ?
@@ -628,37 +600,62 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
     s += " ipetemp.tex";
   }
   s += " > /dev/null";
-  int result = std::system(s.z());
+  return s;
+#endif
+}
+
+#ifdef WIN32
+int Platform::system(String cmd)
+{
+  // Declare and initialize process blocks
+  PROCESS_INFORMATION processInformation;
+  STARTUPINFOW startupInfo;
+
+  memset(&processInformation, 0, sizeof(processInformation));
+  memset(&startupInfo, 0, sizeof(startupInfo));
+  startupInfo.cb = sizeof(startupInfo);
+
+  // Call the executable program
+  std::wstring wcmd = cmd.w();
+
+  int result = CreateProcessW(nullptr, wcmd.data(), nullptr, nullptr, FALSE,
+			      NORMAL_PRIORITY_CLASS|CREATE_NO_WINDOW,
+			      nullptr, nullptr, &startupInfo, &processInformation);
+  if (result == 0)
+    return -1;  // failure to create process
+
+  // Wait until child process exits.
+  WaitForSingleObject(processInformation.hProcess, INFINITE);
+
+  // Close process and thread handles.
+  CloseHandle(processInformation.hProcess);
+  CloseHandle(processInformation.hThread);
+
+  // Apparently WaitForSingleObject doesn't work in Wine
+  const char *wine = getenv("IPEWINE");
+  if (wine)
+    Sleep(Lex(wine).getInt());
+  return 0;
+}
+#else
+int Platform::system(String cmd)
+{
+  int result = std::system(cmd.z());
   if (result != -1)
     result = WEXITSTATUS(result);
   return result;
-#endif
 }
 #endif
+#endif
 
-#if defined(IPEWASM) && !defined(IPENODEJS)
-int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
+#if defined(__EMSCRIPTEN__) && !defined(IPENODEJS)
+String Platform::howToRunLatex(String dir, LatexType engine, String docname) noexcept
 {
-  ipeDebug("Platform::runLatex %s", dir.z());
-  std::string latex = (engine == LatexType::Xetex) ?
+  String how("runlatex:");
+  how += (engine == LatexType::Xetex) ?
     "xelatex" : (engine == LatexType::Luatex) ?
     "lualatex" : "pdflatex";
-  String ipetemp = readFile(dir + "latexrun/ipetemp.tex");
-  String ipepdf = dir + "latexrun/ipetemp.pdf";
-  String ipelog = dir + "latexrun/ipetemp.log";
-  emscripten::val ipc = emscripten::val::global("window")["ipc"];
-  emscripten::val result = ipc.call<emscripten::val>("runlatex", latex, std::string(ipetemp.z()));
-  /*
-  std::string pdf = result["pdf"].as<std::string>();
-  std::string log = result["log"].as<std::string>();
-  std::FILE *pdfFile = Platform::fopen(ipepdf.z(), "wb");
-  std::fwrite(pdf.data(), 1, pdf.size(), pdfFile);
-  std::fclose(pdfFile);
-  std::FILE *logFile = Platform::fopen(ipelog.z(), "wb");
-  std::fwrite(log.data(), 1, log.size(), logFile);
-  std::fclose(logFile);
-  */
-  return 0;
+  return how;
 }
 #endif
 

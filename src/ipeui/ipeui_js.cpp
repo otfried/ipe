@@ -31,6 +31,8 @@
 #include "ipeui_common.h"
 
 #include <emscripten/bind.h>
+#include <emscripten/val.h>
+#include <emscripten.h>
 
 // --------------------------------------------------------------------
 
@@ -68,22 +70,11 @@ static int menu_constructor(lua_State *L)
 
 // --------------------------------------------------------------------
 
-static int ipeui_wait(lua_State *L)
-{
-  // PDialog *parent = nullptr;
-  Dialog **dlg = (Dialog **) luaL_testudata(L, 1, "Ipe.dialog");
-  // if (dlg != nullptr)
-  // parent = (PDialog *) *dlg;
-  (void) dlg;
-  return 0;
-}
-
-// --------------------------------------------------------------------
-
 class PTimer : public Timer {
 public:
   PTimer(lua_State *L0, int lua_object, const char *method);
-  virtual ~PTimer();
+
+  void trigger();
 
   virtual int setInterval(lua_State *L) override;
   virtual int active(lua_State *L) override;
@@ -96,47 +87,41 @@ private:
 PTimer::PTimer(lua_State *L0, int lua_object, const char *method)
   : Timer(L0, lua_object, method)
 {
-  /*
-  iTimer = new QTimer();
-  connect(iTimer, &QTimer::timeout, [&]() {
-      if (iSingleShot)
-	iTimer->stop();
-      callLua();
-    });
-  */
-}
-
-PTimer::~PTimer()
-{
-  // delete iTimer;
+  iTimer = emscripten::val::module_property("createIpeTimer")();
+  iTimer.set("callback", this);
 }
 
 int PTimer::setInterval(lua_State *L)
 {
-  int t = (int)luaL_checkinteger(L, 2);
-  (void) t;
-  // iTimer->setInterval(t);
+  int t = luaL_checkinteger(L, 2);
+  iTimer.set("interval", t);
   return 0;
 }
 
 int PTimer::active(lua_State *L)
 {
-  lua_pushboolean(L, false); // iTimer->isActive());
+  lua_pushboolean(L, iTimer["active"].as<bool>());
   return 1;
 }
 
 int PTimer::start(lua_State *L)
 {
-  // iTimer->start();
+  iTimer.set("singleShot", iSingleShot);
+  iTimer.call<void>("start");
   return 0;
 }
 
 int PTimer::stop(lua_State *L)
 {
-  // iTimer->stop();
+  iTimer.set("stopped", true);
   return 0;
 }
 
+void PTimer::trigger()
+{
+  callLua();
+}
+   
 // ------------------------------------------------------------------------
 
 static int timer_constructor(lua_State *L)
@@ -159,8 +144,6 @@ static int timer_constructor(lua_State *L)
   lua_rawseti(L, -2, 1);
   int lua_object = luaL_ref(L, LUA_REGISTRYINDEX);
   *t = new PTimer(L, lua_object, method);
-  (void) method;
-  (void) lua_object;
   return 1;
 }
 
@@ -168,6 +151,7 @@ static int timer_constructor(lua_State *L)
 
 static int ipeui_getColor(lua_State *L)
 {
+  luaL_error(L, "Color dialog is not yet implemented");
   return 0;
 }
 
@@ -175,8 +159,40 @@ static int ipeui_getColor(lua_State *L)
 
 static int ipeui_fileDialog(lua_State *L)
 {
-  // static const char * const typenames[] = { "open", "save", nullptr };
+  static const char * const typenames[] = { "open", "save", nullptr };
 
+  // void * parent = check_winid(L, 1);
+  int type = luaL_checkoption(L, 2, nullptr, typenames);
+  std::string caption = checkstring(L, 3);
+  if (!lua_istable(L, 4))
+    luaL_argerror(L, 4, "table expected for filters");
+  int nFilters = lua_rawlen(L, 4);
+  emscripten::val filters = emscripten::val::array();
+  for (int i = 1; i <= nFilters; i += 2) { // skip Windows versions
+    lua_rawgeti(L, 4, i);
+    luaL_argcheck(L, lua_isstring(L, -1), 4, "filter entry is not a string");
+    filters.call<void>("push", emscripten::val(checkstring(L, -1)));
+    lua_pop(L, 1); // element i
+  }
+
+  emscripten::val dir = emscripten::val::null();
+  if (!lua_isnoneornil(L, 5))
+    dir = emscripten::val(checkstring(L, 5));
+  emscripten::val path = emscripten::val::null();
+  if (!lua_isnoneornil(L, 6))
+    path = emscripten::val(checkstring(L, 6));
+  int selected = 0;
+  if (!lua_isnoneornil(L, 7))
+    selected = luaL_checkinteger(L, 7);
+
+  emscripten::val arg = emscripten::val::object();
+  arg.set("type", std::string(typenames[type]));
+  arg.set("caption", caption);
+  arg.set("filters", filters);
+  arg.set("dir", dir);
+  arg.set("path", path);
+  arg.set("selected", selected);
+  emscripten::val::global("window")["ipeui"].call<void>("fileDialog", arg);
   return 0;
 }
 
@@ -190,60 +206,140 @@ static int ipeui_messageBox(lua_State *L)
     "ok", "okcancel", "yesnocancel", "discardcancel",
     "savediscardcancel", nullptr };
 
-  // QWidget *parent = check_winid(L, 1);
-  // int type = luaL_checkoption(L, 2, "none", options);
-  // QString text = checkqstring(L, 3);
-  // QString details;
-  // if (!lua_isnoneornil(L, 4))
-  // details = checkqstring(L, 4);
+  // void * parent = check_winid(L, 1);
+  int type = luaL_checkoption(L, 2, "none", options);
+  std::string text = checkstring(L, 3);
+  std::string details;
+  if (!lua_isnoneornil(L, 4))
+    details = checkstring(L, 4);
   int buttons = 0;
   if (lua_isnumber(L, 5))
     buttons = luaL_checkinteger(L, 5);
   else if (!lua_isnoneornil(L, 5))
     buttons = luaL_checkoption(L, 5, nullptr, buttontype);
 
-  lua_pushnumber(L, -1);
-  (void) options;
-  (void) buttons;
-  return 1;
+  emscripten::val arg = emscripten::val::object();
+  arg.set("type", std::string(options[type]));
+  arg.set("text", text);
+  arg.set("details", details);
+  arg.set("buttons", buttons);
+  emscripten::val::global("window")["ipeui"].call<void>("messageBox", arg);
+  return 0;
 }
 
 // --------------------------------------------------------------------
 
 static int ipeui_currentDateTime(lua_State *L)
 {
-  /*
-  QDateTime dt = QDateTime::currentDateTime();
-  QString mod = QString::asprintf("%04d%02d%02d%02d%02d%02d",
-				  dt.date().year(), dt.date().month(), dt.date().day(),
-				  dt.time().hour(), dt.time().minute(), dt.time().second());
-  */
-  // push_string(L, mod);
-  return 0;
+  emscripten::val dt = emscripten::val::global("Date").new_();
+  char buf[15];
+  sprintf(buf, "%04d%02d%02d%02d%02d%02d",
+	  dt.call<int>("getFullYear"),
+	  dt.call<int>("getMonth") + 1,
+	  dt.call<int>("getDate"),
+	  dt.call<int>("getHours"),
+	  dt.call<int>("getMinutes"),
+	  dt.call<int>("getSeconds"));
+  lua_pushstring(L, buf);
+  return 1;
 }
 
 // --------------------------------------------------------------------
 
+static int ipeui_val(lua_State *L)
+{
+  emscripten::val * arg = (emscripten::val *) lua_touserdata(L, 1);
+  luaL_argcheck(L, arg != nullptr && !arg->isNull(), 1,
+		"argument is not a Javascript object");
+  const char *tag = luaL_checkstring(L, 2);
+  emscripten::val v = (*arg)[tag];
+  if (v.isNumber())
+    lua_pushnumber(L, v.as<double>());
+  else if (v.isString())
+    lua_pushstring(L, v.as<std::string>().c_str());
+  else if (v.isNull())
+    lua_pushnil(L);
+  else if (v.isTrue())
+    lua_pushboolean(L, true);
+  else if (v.isFalse())
+    lua_pushboolean(L, false);
+  else
+    luaL_error(L, "unsupported Javascript type");
+  return 1;
+}
+
+// --------------------------------------------------------------------
+  
 static const struct luaL_Reg ipeui_functions[] = {
   { "Dialog", dialog_constructor },
   { "Menu", menu_constructor },
   { "Timer", timer_constructor },
   { "getColor", ipeui_getColor },
-  { "fileDialog", ipeui_fileDialog },
-  { "messageBox", ipeui_messageBox },
-  { "waitDialog", ipeui_wait },
+  { "fileDialogAsync", ipeui_fileDialog },
+  { "messageBoxAsync", ipeui_messageBox },
   { "currentDateTime", ipeui_currentDateTime },
+  { "val", ipeui_val },
   { nullptr, nullptr }
 };
 
 // --------------------------------------------------------------------
 
+EM_JS(void, addJSClasses, (), {
+class IpeTimer {
+  constructor () {
+    this.active = false;
+    this.singleShot = false;
+  }
+
+  start() {
+    this.active = true;
+    this.stopped = false;
+    const trigger = () => {
+      if (!this.stopped) {
+        this.callback.trigger();
+        if (!this.singleShot)
+          setTimeout(trigger, this.interval);
+      }
+    };
+    setTimeout(trigger, this.interval);
+  }
+}
+
+Module['createIpeTimer'] = () => new IpeTimer();
+  });
+
+// --------------------------------------------------------------------
+
+void addMethod(lua_State *L, const char * name, const char * luacode)
+{
+  int ok = luaL_loadstring(L, luacode);
+  if (ok != LUA_OK)
+    luaL_error(L, "cannot prepare function");
+  lua_call(L, 0, 1);
+  lua_setfield(L, -2, name);
+}
+
 int luaopen_ipeui(lua_State *L)
 {
   luaL_newlib(L, ipeui_functions);
+  addMethod(L, "messageBox",
+	    "return function (...) ipeui.messageBoxAsync(...)"
+	    "return ipeui.val(coroutine.yield(), 'result') end");
+  addMethod(L, "fileDialog",
+	    "return function (...) ipeui.fileDialogAsync(...)"
+	    "local r = coroutine.yield()"
+	    "if r then return ipeui.val(r, 'path'), ipeui.val(r, 'selected') end end");
   lua_setglobal(L, "ipeui");
   luaopen_ipeui_common(L);
+  addJSClasses();
   return 0;
+}
+
+// --------------------------------------------------------------------
+
+EMSCRIPTEN_BINDINGS(ipeui) {
+  emscripten::class_<PTimer>("Timer")
+    .function("trigger", &PTimer::trigger);
 }
 
 // --------------------------------------------------------------------

@@ -30,22 +30,9 @@
 
 -- main entry point to all actions
 -- (except mouseaction, selector)
-
--- protects call, then distributes to action_xxx method or
--- saction_xxx methods (the latter are only called if a selection exists)
-function MODEL:action(a)
-  local result, err = xpcall(function () self:paction(a) end,
-			     debug.traceback)
-  if not result then
-    messageBox(nil, "critical",
-		     "Lua error\n\n"..
-		       "Data may have been corrupted. \n" ..
-		       "Save your file!",
-		     err)
-  end
-end
-
-function MODEL:paction(a1)
+-- distributes to action_xxx method or saction_xxx methods (the latter
+-- are only called if a selection exists)
+function MODEL:action(a1)
   -- work-around for bug in Qt 5.5, to be replaced with something better:
   local a = a1:gsub("&", "")
   -- print("MODEL:paction(" .. a .. ")")
@@ -2622,7 +2609,8 @@ local function sheets_edit(d, dd)
   f:close()
   local sheet, msg
   while not sheet do
-    ipeui.waitDialog(d, string.format(prefs.external_editor, fname))
+    dd.model:waitDialog(string.format(prefs.external_editor, fname),
+			"Waiting for external editor")
     sheet, msg = ipe.Sheet(fname)
     if not sheet then
       local r = messageBox(dd.model.ui:win(), "question",

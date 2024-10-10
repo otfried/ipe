@@ -39,7 +39,7 @@ public:
   virtual ~PDialog();
 
   virtual void setMapped(lua_State *L, int idx);
-  virtual bool buildAndRun(int w, int h);
+  virtual Result buildAndRun(int w, int h);
   virtual void retrieveValues();
   virtual void enableItem(int idx, bool value);
   virtual void acceptDialog(lua_State *L);
@@ -229,7 +229,7 @@ static void escapeResponse(GtkWidget *, GtkDialog *dlg)
   // catching escape, doing nothing
 }
 
-bool PDialog::buildAndRun(int w, int h)
+Dialog::Result PDialog::buildAndRun(int w, int h)
 {
   hDialog = gtk_dialog_new();
   gtk_window_set_title(GTK_WINDOW(hDialog), iCaption.c_str());
@@ -368,7 +368,7 @@ bool PDialog::buildAndRun(int w, int h)
   retrieveValues(); // for future reference
   gtk_widget_destroy(hDialog);
   hDialog = NULL;
-  return (result == GTK_RESPONSE_ACCEPT);
+  return (result == GTK_RESPONSE_ACCEPT) ? Result::ACCEPTED : Result::CLOSED;
 }
 
 // --------------------------------------------------------------------
@@ -887,14 +887,6 @@ static int timer_constructor(lua_State *L)
 
 // --------------------------------------------------------------------
 
-static int ipeui_wait(lua_State *L)
-{
-  luaL_error(L, "'waitDialog' is not yet implemented.");
-  return 0;
-}
-
-// --------------------------------------------------------------------
-
 static int ipeui_currentDateTime(lua_State *L)
 {
   time_t t = time(NULL);
@@ -917,7 +909,6 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "getColor", ipeui_getColor },
   { "fileDialog", ipeui_fileDialog },
   { "messageBox", ipeui_messageBox },
-  { "waitDialog", ipeui_wait },
   { "currentDateTime", ipeui_currentDateTime },
   { "downloadFileIfIpeWeb", ipeui_downloadFileIfIpeWeb },
   { nullptr, nullptr },

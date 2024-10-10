@@ -47,13 +47,14 @@ AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
   : AppUiBase(L0, model)
 {
   iCanvas = canvas;
-  buildMenus();
+  if (build_menus)
+    buildMenus();
   build_menus = false; // all Windows share the same main menu
 }
 
 AppUi::~AppUi()
 {
-  ipeDebug("AppUi C++ destructor");
+  ipeDebug("AppUi destructor");
 }
 
 // --------------------------------------------------------------------
@@ -178,6 +179,9 @@ void AppUi::setToolVisible(int m, bool vis)
 
 void AppUi::setZoom(double zoom)
 {
+  // QString s = QString("(%1ppi)").arg(int(72.0 * zoom));
+  // iResolution->setText(s);
+  iCanvas->setZoom(zoom);
 }
 
 // --------------------------------------------------------------------
@@ -276,6 +280,28 @@ int AppUi::clipboard(lua_State *L)
   return 0;
 }
 
+bool AppUi::waitDialog(const char *cmd, const char *label)
+{
+  // this is fully async: the cmd is started and the function returns
+  // cmd is either: "runlatex:<tex engine>" or "editor:"
+  emscripten::val::global("window").call<emscripten::val>("waitDialog", std::string(cmd),
+							  std::string(label));
+  return false;
+}
+
+void AppUi::resumeDialog(emscripten::val result)
+{
+  // calls model:resumeDialog
+  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
+  lua_getfield(L, -1, "resumeDialog");
+  lua_insert(L, -2); // before model
+  if (result.isNull())
+    lua_pushnil(L);
+  else
+    lua_pushlightuserdata(L, &result);
+  luacall(L, 2, 0);
+}
+
 // --------------------------------------------------------------------
 
 int CanvasBase::selectPageOrView(Document *doc, int page, int startIndex,
@@ -286,4 +312,3 @@ int CanvasBase::selectPageOrView(Document *doc, int page, int startIndex,
 }
 
 // ------------------------------------------------------------------------
-
