@@ -32,6 +32,7 @@
 
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <emscripten.h>
 
 // --------------------------------------------------------------------
 
@@ -72,7 +73,8 @@ static int menu_constructor(lua_State *L)
 class PTimer : public Timer {
 public:
   PTimer(lua_State *L0, int lua_object, const char *method);
-  virtual ~PTimer();
+
+  void trigger();
 
   virtual int setInterval(lua_State *L) override;
   virtual int active(lua_State *L) override;
@@ -85,47 +87,41 @@ private:
 PTimer::PTimer(lua_State *L0, int lua_object, const char *method)
   : Timer(L0, lua_object, method)
 {
-  /*
-  iTimer = new QTimer();
-  connect(iTimer, &QTimer::timeout, [&]() {
-      if (iSingleShot)
-	iTimer->stop();
-      callLua();
-    });
-  */
-}
-
-PTimer::~PTimer()
-{
-  // delete iTimer;
+  iTimer = emscripten::val::module_property("createIpeTimer")();
+  iTimer.set("callback", this);
 }
 
 int PTimer::setInterval(lua_State *L)
 {
-  int t = (int)luaL_checkinteger(L, 2);
-  (void) t;
-  // iTimer->setInterval(t);
+  int t = luaL_checkinteger(L, 2);
+  iTimer.set("interval", t);
   return 0;
 }
 
 int PTimer::active(lua_State *L)
 {
-  lua_pushboolean(L, false); // iTimer->isActive());
+  lua_pushboolean(L, iTimer["active"].as<bool>());
   return 1;
 }
 
 int PTimer::start(lua_State *L)
 {
-  // iTimer->start();
+  iTimer.set("singleShot", iSingleShot);
+  iTimer.call<void>("start");
   return 0;
 }
 
 int PTimer::stop(lua_State *L)
 {
-  // iTimer->stop();
+  iTimer.set("stopped", true);
   return 0;
 }
 
+void PTimer::trigger()
+{
+  callLua();
+}
+   
 // ------------------------------------------------------------------------
 
 static int timer_constructor(lua_State *L)
@@ -148,8 +144,6 @@ static int timer_constructor(lua_State *L)
   lua_rawseti(L, -2, 1);
   int lua_object = luaL_ref(L, LUA_REGISTRYINDEX);
   *t = new PTimer(L, lua_object, method);
-  (void) method;
-  (void) lua_object;
   return 1;
 }
 
@@ -290,6 +284,32 @@ static const struct luaL_Reg ipeui_functions[] = {
 
 // --------------------------------------------------------------------
 
+EM_JS(void, addJSClasses, (), {
+class IpeTimer {
+  constructor () {
+    this.active = false;
+    this.singleShot = false;
+  }
+
+  start() {
+    this.active = true;
+    this.stopped = false;
+    const trigger = () => {
+      if (!this.stopped) {
+        this.callback.trigger();
+        if (!this.singleShot)
+          setTimeout(trigger, this.interval);
+      }
+    };
+    setTimeout(trigger, this.interval);
+  }
+}
+
+Module['createIpeTimer'] = () => new IpeTimer();
+  });
+
+// --------------------------------------------------------------------
+
 void addMethod(lua_State *L, const char * name, const char * luacode)
 {
   int ok = luaL_loadstring(L, luacode);
@@ -311,7 +331,15 @@ int luaopen_ipeui(lua_State *L)
 	    "if r then return ipeui.val(r, 'path'), ipeui.val(r, 'selected') end end");
   lua_setglobal(L, "ipeui");
   luaopen_ipeui_common(L);
+  addJSClasses();
   return 0;
+}
+
+// --------------------------------------------------------------------
+
+EMSCRIPTEN_BINDINGS(ipeui) {
+  emscripten::class_<PTimer>("Timer")
+    .function("trigger", &PTimer::trigger);
 }
 
 // --------------------------------------------------------------------
