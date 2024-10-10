@@ -168,9 +168,27 @@ void JsPainter::doDrawPath(TPathMode mode)
 
 // --------------------------------------------------------------------
 
+EM_JS(void, addIpeCanvasJS, (), {
+class IpeRepainter {
+  paint() {
+    setTimeout(() => this.canvas.paint(), 0);
+  }
+}
+
+function ipeBlitSurface(ctx, buffer1, w, h) {
+  const buffer2 = new Uint8ClampedArray(buffer1.buffer, buffer1.byteOffset, buffer1.byteLength);
+  const img = new ImageData(buffer2, w, h);
+  ctx.putImageData(img, 0, 0);
+}
+
+Module['createIpeRepainter'] = () => new IpeRepainter();
+Module['ipeBlitSurface'] = ipeBlitSurface;
+  });
+
 //! Construct a new canvas.
 Canvas::Canvas(val bottomCanvas, val topCanvas, double dpr)
 {
+  addIpeCanvasJS();
   iBottomCanvas = bottomCanvas;
   iTopCanvas = topCanvas;
 
@@ -188,6 +206,9 @@ Canvas::Canvas(val bottomCanvas, val topCanvas, double dpr)
   iTopCtx = iTopCanvas.call<val>("getContext", val("2d"));
   ipeDebug("Canvas has size: %g x %g (%g x %g)",
 	   iWidth, iHeight, iBWidth, iBHeight);
+
+  iPaintScheduler = emscripten::val::module_property("createIpeRepainter")();
+  iPaintScheduler.set("canvas", this);
 }
 
 void Canvas::setCursor(TCursor cursor, double w, Color *color)
@@ -200,8 +221,7 @@ void Canvas::setCursor(TCursor cursor, double w, Color *color)
 void Canvas::invalidate()
 {
   iNeedPaint = true;
-  val window = val::global("window");
-  window.call<void>("schedulePaint");
+  iPaintScheduler.call<void>("paint");
 }
 
 void Canvas::invalidate(int x, int y, int w, int h)
@@ -354,15 +374,8 @@ void Canvas::paint()
   iNeedPaint = false;
 
   if (refreshSurface()) {
-    // TODO: call a single JS function to do all of this at once?
     val buffer1 = val(typed_memory_view(iBWidth * iBHeight * 4, cairo_image_surface_get_data(iSurface)));
-    val Uint8ClampedArray = val::global("Uint8ClampedArray");
-    val buffer2 = Uint8ClampedArray.new_(buffer1["buffer"],
-					 buffer1["byteOffset"],
-					 buffer1["byteLength"]);
-    val ImageData = val::global("ImageData");
-    val img = ImageData.new_(buffer2, iBWidth, iBHeight);
-    iBottomCtx.call<void>("putImageData", img, 0, 0);
+    val::module_property("ipeBlitSurface")(iBottomCtx, buffer1, iBWidth, iBHeight);
   }
 
   iTopCtx.call<void>("clearRect", 0, 0, iBWidth, iBHeight);

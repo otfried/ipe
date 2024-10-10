@@ -62,6 +62,7 @@ namespace ipe {
     void drawFifi(JsPainter & qp);
 
   private:
+    emscripten::val iPaintScheduler;
     emscripten::val iBottomCanvas;
     emscripten::val iTopCanvas;
     emscripten::val iBottomCtx;
