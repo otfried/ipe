@@ -82,6 +82,10 @@ void PDialog::retrieveValues()
   // TODO
 }
 
+static const char *typenames[] = {
+  "button", "textedit", "list", "label", "combo", "checkbox", "input",
+};
+
 Dialog::Result PDialog::buildAndRun(int w, int h)
 {
   emscripten::val buttons = emscripten::val::array();
@@ -95,45 +99,17 @@ Dialog::Result PDialog::buildAndRun(int w, int h)
       b.set("flags", m.flags);
       buttons.call<void>("push", b);
     } else {
-      emscripten::val w = emscripten::val::object();  
-      switch (m.type) {
-      case ELabel:
-	w.set("type", std::string("label"));
-	w.set("text", m.text);
-	break;
-      case EButton:
-	w.set("type", std::string("button"));
-	w.set("text", m.text);
-	w.set("flags", m.flags);
-	break;
-      case ECheckBox:
-	w.set("type", std::string("checkbox"));
-	w.set("text", m.text);
-	w.set("value", m.value);
-	break;
-      case EInput:
-	w.set("type", std::string("input"));
-	w.set("text", m.text);
-	w.set("flags", m.flags);
-	break;
-      case ETextEdit:
-	w.set("type", std::string("textedit"));
-	w.set("text", m.text);
-	w.set("flags", m.flags);
-	break;
-      case ECombo:
-      case EList:
-	w.set("type", m.type == ECombo ? std::string("combo") : std::string("list"));
-	w.set("value", m.value);
-	{
-	  emscripten::val items = emscripten::val::array();
-	  for (int k = 0; k < int(m.items.size()); ++k)
-	    items.call<void>("push", m.items[k]);
-	  w.set("items", items);
-	}
-	break;
-      default:
-	break;
+      emscripten::val w = emscripten::val::object();
+      w.set("name", m.name);
+      w.set("type", std::string(typenames[m.type]));
+      w.set("text", m.text);
+      w.set("flags", m.flags);
+      w.set("value", m.value);
+      if (!m.items.empty()) {
+	emscripten::val items = emscripten::val::array();
+	for (int k = 0; k < int(m.items.size()); ++k)
+	  items.call<void>("push", m.items[k]);
+	w.set("items", items);
       }
       w.set("row", m.row);
       w.set("col", m.col);
