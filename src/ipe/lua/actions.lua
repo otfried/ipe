@@ -2086,7 +2086,7 @@ function MODEL:saction_edit_as_xml()
   local xml = self:page()[prim]:xml()
   local d = ipeui.Dialog(self.ui:win(), "Edit as XML")
   d:add("xml", "text", { syntax="xml", focus=true }, 1, 1)
-  addEditorField(d, "xml")
+  self:addEditorField(d, "xml")
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("row", 1, 1);
@@ -2765,7 +2765,7 @@ function MODEL:action_document_properties()
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("column", 5, 1)
   d:setStretch("row", 8, 1)
-  addEditorField(d, "preamble")
+  self:addEditorField(d, "preamble")
   for n in pairs(p) do d:set(n, p[n]) end
   if not d:execute() then return end
 

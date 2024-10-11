@@ -142,11 +142,23 @@ Dialog::Result PDialog::buildAndRun(int w, int h)
       elements.call<void>("push", w);
     }
   }
+  while (int(iColStretch.size()) < iNoCols)
+    iColStretch.push_back(0);
+  while (int(iRowStretch.size()) < iNoRows)
+    iRowStretch.push_back(0);
+  emscripten::val rowstretch = emscripten::val::array();
+  for (int s : iRowStretch)
+    rowstretch.call<void>("push", s);
+  emscripten::val colstretch = emscripten::val::array();
+  for (int s : iColStretch)
+    colstretch.call<void>("push", s);
   emscripten::val arg = emscripten::val::object();
   arg.set("type", std::string("dialog"));
   arg.set("caption", iCaption);
   arg.set("buttons", buttons);
   arg.set("elements", elements);
+  arg.set("rowstretch", rowstretch);
+  arg.set("colstretch", colstretch);
   emscripten::val::global("window")["ipeui"].call<void>("dialog", arg);
   return Result::MODAL;
 }
