@@ -192,6 +192,7 @@ public:
   ~PDialog();
   QGridLayout *gridlayout() { return iGrid; }
   bool ignoresEscapeKey();
+  int takeDown(lua_State *L);
 
 protected:
   virtual void setMapped(lua_State *L, int idx);
@@ -449,6 +450,7 @@ Dialog::Result PDialog::buildAndRun(int w, int h)
   return Result::MODAL;
 }
 
+// this is called by dialog callback
 void PDialog::takeDown()
 {
   bool accepted = qDialog->result() == QDialog::Accepted;
@@ -458,7 +460,13 @@ void PDialog::takeDown()
   qDialog = nullptr; // and forget it
   int nresults = 0;
   lua_pushboolean(L, accepted);
+  // resume will then call the public takeDown
   lua_resume(L, nullptr, 1, &nresults);
+}
+
+int PDialog::takeDown(lua_State *L)
+{
+  return 1; // simply pass on accepted
 }
 
 void PDialog::retrieveValues()

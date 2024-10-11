@@ -481,6 +481,12 @@ int Dialog::setStretch(lua_State *L)
   return 0;
 }
 
+int Dialog::takeDown(lua_State *L)
+{
+  luaL_error(L, "Dialog::takeDown not implemented for this toolkit");
+  return 0; 
+}
+
 // --------------------------------------------------------------------
 
 static int dialog_tostring(lua_State *L)
@@ -569,6 +575,12 @@ static int dialog_accept(lua_State *L)
   return 0;
 }
 
+static int dialog_takeDown(lua_State *L)
+{
+  Dialog **dlg = check_dialog(L, 1);
+  return (*dlg)->takeDown(L);
+}
+
 // --------------------------------------------------------------------
 
 static const struct luaL_Reg dialog_methods[] = {
@@ -582,6 +594,7 @@ static const struct luaL_Reg dialog_methods[] = {
   { "get", dialog_get },
   { "setEnabled", dialog_setEnabled },
   { "accept", dialog_accept },
+  { "takeDown", dialog_takeDown },
   { nullptr, nullptr }
 };
 
@@ -753,18 +766,10 @@ static void make_metatable(lua_State *L, const char *name,
   lua_settable(L, -3);   /* metatable.__index = metatable */
   luaL_setfuncs(L, methods, 0);
   if (!strcmp(name, "Ipe.dialog")) {
-#ifdef IPEUI_JS
-    int ok = luaL_loadstring(L, "return function (d, s, l)"
-			     "d:executeAsync(s, l)"
-			     "local r = coroutine.yield()"
-			     "print(r, ipeui.val(r, 'result'))"
-			     "return nil end");
-#else
     int ok = luaL_loadstring(L, "return function (d, s, l)"
 			     "done, accepted = d:executeAsync(s, l)"
-			     "if not done then accepted = coroutine.yield() end "
+			     "if not done then accepted = d:takeDown(coroutine.yield()) end "
 			     "return accepted end");
-#endif
     if (ok != LUA_OK)
       luaL_error(L, "cannot prepare d:execute function");
     lua_call(L, 0, 1);

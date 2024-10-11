@@ -108,7 +108,7 @@ public:
   Result execute(lua_State *L, int w, int h);
   virtual void retrieveValues() = 0;
   void release(lua_State *LM);
-
+  virtual int takeDown(lua_State *L);
   virtual void acceptDialog(lua_State *L) = 0;
 
   WINID winId() const { return hDialog; }

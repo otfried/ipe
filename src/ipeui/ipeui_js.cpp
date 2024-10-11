@@ -40,6 +40,7 @@ class PDialog : public Dialog {
 public:
   PDialog(lua_State *L0, WINID parent, const char *caption, const char * language);
   // TODO bool ignoresEscapeKey();
+  virtual int takeDown(lua_State *L);
 
 protected:
   virtual void setMapped(lua_State *L, int idx);
@@ -48,11 +49,6 @@ protected:
 
   virtual Dialog::Result buildAndRun(int w, int h);
   virtual void retrieveValues();
-
-private:
-  // void takeDown();
-
-private:
 };
 
 // --------------------------------------------------------------------
@@ -79,7 +75,7 @@ void PDialog::acceptDialog(lua_State *L)
 
 void PDialog::retrieveValues()
 {
-  // TODO
+  luaL_error(L, "Dialog:retrieveValues is not implemented for JS dialogs");
 }
 
 static const char *typenames[] = {
@@ -137,6 +133,33 @@ Dialog::Result PDialog::buildAndRun(int w, int h)
   arg.set("colstretch", colstretch);
   emscripten::val::global("window")["ipeui"].call<void>("dialog", arg);
   return Result::MODAL;
+}
+
+int PDialog::takeDown(lua_State *L)
+{
+  emscripten::val * results = (emscripten::val *) lua_touserdata(L, 2);
+  luaL_argcheck(L, results != nullptr && !results->isNull(), 2,
+		"argument is not a Javascript object");
+  release(L); // release references to Lua objects
+  bool accepted = (*results)["result"].as<bool>();
+  if (accepted) {
+    emscripten::val values = (*results)["values"];
+    for (int i = 0; i < int(iElements.size()); ++i) {
+      SElement &m = iElements[i];
+      if (m.row < 0)  continue;
+      emscripten::val value = values[m.name];
+      if (!value.isUndefined()) {
+	if (m.type == ETextEdit || m.type == EInput)
+	  m.text = value.as<std::string>();
+	else if (m.type == ECheckBox)
+	  m.value = value.as<bool>() ? 1 : 0;
+	else if (m.type == EList || m.type == ECombo)
+	  m.value = value.as<int>();
+      }
+    }
+  }
+  lua_pushboolean(L, accepted);
+  return 1;
 }
 
 // --------------------------------------------------------------------
