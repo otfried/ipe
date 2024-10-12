@@ -374,7 +374,22 @@ void Canvas::paint()
   iNeedPaint = false;
 
   if (refreshSurface()) {
-    val buffer1 = val(typed_memory_view(iBWidth * iBHeight * 4, cairo_image_surface_get_data(iSurface)));
+    // adjust from ARGB to RGBA
+    uint8_t * p = cairo_image_surface_get_data(iSurface);
+    const uint32_t * source = (uint32_t *) p;
+    int nPixels = cairo_image_surface_get_width(iSurface) * cairo_image_surface_get_height(iSurface);
+    const uint32_t * fin = source + nPixels;
+    while (source != fin) {
+      uint32_t bits = *source++;
+      p[0] = (bits & 0x00ff0000) >> 16;
+      p[1] = (bits & 0x0000ff00) >> 8;
+      p[2] = (bits & 0x000000ff);
+      p[3] = 0xff;
+      p += 4;
+    }
+    // not sure if this is needed, we will repaint completely anyway
+    cairo_surface_mark_dirty(iSurface);
+    val buffer1 = val(typed_memory_view(nPixels * 4, cairo_image_surface_get_data(iSurface)));
     val::module_property("ipeBlitSurface")(iBottomCtx, buffer1, iBWidth, iBHeight);
   }
 
