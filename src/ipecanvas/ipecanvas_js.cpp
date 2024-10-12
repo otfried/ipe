@@ -105,18 +105,18 @@ void JsPainter::setPen(int r, int g, int b)
 void JsPainter::drawLine(const Vector & v1, const Vector & v2)
 {
   iCtx.call<void>("beginPath");
-  iCtx.call<void>("moveTo", v1.x, v1.y);
-  iCtx.call<void>("lineTo", v2.x, v2.y);
+  iCtx.call<void>("moveTo", v1.x * iDpr, v1.y * iDpr);
+  iCtx.call<void>("lineTo", v2.x * iDpr, v2.y * iDpr);
   iCtx.call<void>("stroke");
 }
 
 void JsPainter::drawPath(const Vector & v1, const Vector & v2, const Vector & v3, const Vector & v4)
 {
   iCtx.call<void>("beginPath");
-  iCtx.call<void>("moveTo", v1.x, v1.y);
-  iCtx.call<void>("lineTo", v2.x, v2.y);
-  iCtx.call<void>("lineTo", v3.x, v3.y);
-  iCtx.call<void>("lineTo", v4.x, v4.y);
+  iCtx.call<void>("moveTo", v1.x * iDpr, v1.y * iDpr);
+  iCtx.call<void>("lineTo", v2.x * iDpr, v2.y * iDpr);
+  iCtx.call<void>("lineTo", v3.x * iDpr, v3.y * iDpr);
+  iCtx.call<void>("lineTo", v4.x * iDpr, v4.y * iDpr);
   iCtx.call<void>("closePath");
   iCtx.call<void>("stroke");
 }
@@ -186,18 +186,13 @@ Module['ipeBlitSurface'] = ipeBlitSurface;
   });
 
 //! Construct a new canvas.
-Canvas::Canvas(val bottomCanvas, val topCanvas, double dpr)
+Canvas::Canvas(val bottomCanvas, val topCanvas)
 {
   addIpeCanvasJS();
   iBottomCanvas = bottomCanvas;
   iTopCanvas = topCanvas;
 
-  iBWidth = iBottomCanvas["width"].as<double>();
-  iBHeight = iBottomCanvas["height"].as<double>();
-
-  iWidth = iBWidth / dpr;
-  iHeight = iBHeight / dpr;
-
+  updateSize();
   iNeedPaint = false;
 
   val options = val::object();
@@ -209,6 +204,15 @@ Canvas::Canvas(val bottomCanvas, val topCanvas, double dpr)
 
   iPaintScheduler = emscripten::val::module_property("createIpeRepainter")();
   iPaintScheduler.set("canvas", this);
+}
+
+void Canvas::updateSize()
+{
+  iDpr = val::global("window")["devicePixelRatio"].as<double>();
+  iBWidth = iBottomCanvas["width"].as<double>();
+  iBHeight = iBottomCanvas["height"].as<double>();
+  iWidth = iBWidth / iDpr;
+  iHeight = iBHeight / iDpr;
 }
 
 void Canvas::setCursor(TCursor cursor, double w, Color *color)
@@ -395,7 +399,7 @@ void Canvas::paint()
 
   iTopCtx.call<void>("clearRect", 0, 0, iBWidth, iBHeight);
 
-  JsPainter qp(iCascade, iTopCtx, iBWidth / iWidth);
+  JsPainter qp(iCascade, iTopCtx, iDpr);
   if (iFifiVisible)
     drawFifi(qp);
   if (iPage) {
@@ -410,14 +414,18 @@ namespace {
   void setPage(Canvas * canvas, Page *page, int pno, int view, Cascade *sheet) {
     return canvas->setPage(page, pno, view, sheet);
   }
+  void update(Canvas * canvas) {
+    canvas->update();
+  }
 }
 
 // --------------------------------------------------------------------
 
 EMSCRIPTEN_BINDINGS(ipecanvas) {
   emscripten::class_<Canvas>("Canvas")
-    .constructor<val, val, double>()
-    .function("update", &CanvasBase::update)
+    .constructor<val, val>()
+    .function("update", &update, emscripten::allow_raw_pointers())
+    .function("updateSize", &Canvas::updateSize)
     .function("paint", &Canvas::paint)
     .property("width", &Canvas::canvasWidth)
     .property("height", &Canvas::canvasHeight)

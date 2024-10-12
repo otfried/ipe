@@ -134,6 +134,7 @@ AppUi *startIpe(Canvas *canvas, int width, int height, double dpr)
   setup_globals(L, width, height, dpr);
 
   lua_run_ipe(L, mainloop);
+
   theCanvas->setObserver(theAppUi);
   return theAppUi;
 }

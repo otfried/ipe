@@ -46,7 +46,7 @@ namespace ipe {
 
   class Canvas : public CanvasBase {
   public:
-    Canvas(emscripten::val bottomCanvas, emscripten::val topCanvas, double dpr);
+    Canvas(emscripten::val bottomCanvas, emscripten::val topCanvas);
 
     virtual void setCursor(TCursor cursor, double w = 1.0,
 			   Color *color = nullptr);
@@ -55,6 +55,7 @@ namespace ipe {
     void mouseMoveEvent(emscripten::val ev);
     void wheelEvent(emscripten::val ev);
     void paint();
+    void updateSize();
 
   protected:
     virtual void invalidate();
@@ -68,6 +69,7 @@ namespace ipe {
     emscripten::val iBottomCtx;
     emscripten::val iTopCtx;
     bool iNeedPaint;
+    double iDpr;
   };
 
 } // namespace
