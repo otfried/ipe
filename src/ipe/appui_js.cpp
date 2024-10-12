@@ -196,7 +196,6 @@ void AppUi::setActionsEnabled(bool mode)
 // Used for snapXXX, grid_visible, viewmarked, and pagemarked
 bool AppUi::actionState(const char *name)
 {
-  ipeDebug("actionstate %s", name);
   emscripten::val as = emscripten::val::global("window")["actionState"];
   return as[name].as<bool>();
 }
@@ -205,7 +204,6 @@ bool AppUi::actionState(const char *name)
 // Used for snapXXX, grid_visible, to initialize mode_select
 void AppUi::setActionState(const char *name, bool value)
 {
-  ipeDebug("setactionstate %s %d", name, value);
   emscripten::val as = emscripten::val::global("window")["actionState"];
   as.set(name, value);
   // TODO: set it also in menu and in the toolbar

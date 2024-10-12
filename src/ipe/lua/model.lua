@@ -648,7 +648,8 @@ function MODEL:tryLoadDocument(fname)
 
     self:updateRecentFiles(fname)
 
-    if self.auto_latex then
+    if self.auto_latex and (config.platform ~= "electron" or
+			    not self.first_show) then
       self:runLatex()
     end
 
