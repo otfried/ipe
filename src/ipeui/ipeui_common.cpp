@@ -639,7 +639,11 @@ static int menu_add(lua_State *L)
 static const struct luaL_Reg menu_methods[] = {
   { "__tostring", menu_tostring },
   { "__gc", menu_destructor },
+#ifdef IPEUI_JS
+  { "executeAsync", menu_execute },
+#else
   { "execute", menu_execute },
+#endif
   { "add", menu_add },
   { nullptr, nullptr }
 };
@@ -775,6 +779,19 @@ static void make_metatable(lua_State *L, const char *name,
     lua_call(L, 0, 1);
     lua_setfield(L, -2, "execute");
   }
+#ifdef IPEUI_JS
+  if (!strcmp(name, "Ipe.menu")) {
+    int ok = luaL_loadstring(L, "return function (m, x, y)"
+			     "m:executeAsync(x, y)"
+			     "local r = coroutine.yield()"
+			     "if r then return ipeui.val(r, 'action'),"
+			     "ipeui.val(r, 'subitem'),ipeui.val(r, 'current') end end");
+    if (ok != LUA_OK)
+      luaL_error(L, "cannot prepare m:execute function");
+    lua_call(L, 0, 1);
+    lua_setfield(L, -2, "execute");
+  }
+#endif
   lua_pop(L, 1);
 }
 

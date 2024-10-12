@@ -182,15 +182,105 @@ static int dialog_constructor(lua_State *L)
 
 // --------------------------------------------------------------------
 
+class PMenu : public Menu {
+public:
+  PMenu();
+  virtual int add(lua_State *L);
+  virtual int execute(lua_State *L);
+private:
+  emscripten::val iItems;
+};
+
+PMenu::PMenu()
+{
+  iItems = emscripten::val::array();
+}
+
+int PMenu::execute(lua_State *L)
+{
+  emscripten::val menu = emscripten::val::object();
+  menu.set("x", (int) luaL_checknumber(L, 2));
+  menu.set("y", (int) luaL_checknumber(L, 3));
+  menu.set("items", iItems);
+  emscripten::val::global("window")["ipeui"].call<void>("menu", menu);
+  return 0;
+}
+
+int PMenu::add(lua_State *L)
+{
+  emscripten::val item = emscripten::val::object();
+  item.set("name", checkstring(L, 2));
+  item.set("title", checkstring(L, 3));
+  if (lua_gettop(L) > 3) {
+    luaL_argcheck(L, lua_istable(L, 4), 4, "argument is not a table");
+    bool hasmap = !lua_isnoneornil(L, 5) && lua_isfunction(L, 5);
+    bool hastable = !hasmap && !lua_isnoneornil(L, 5);
+    bool hascolor = !lua_isnoneornil(L, 6) && lua_isfunction(L, 6);
+    bool hascheck = !hascolor && !lua_isnoneornil(L, 6);
+    if (hastable)
+      luaL_argcheck(L, lua_istable(L, 5), 5,
+		    "argument is not a function or table");
+    if (hascheck) {
+      luaL_argcheck(L, lua_isstring(L, 6), 6,
+		    "argument is not a function or string");
+      item.set("current", checkstring(L, 6));
+    }
+    int no = lua_rawlen(L, 4);
+    emscripten::val submenu = emscripten::val::array();
+    for (int i = 1; i <= no; ++i) {
+      emscripten::val subitem = emscripten::val::object();
+      lua_rawgeti(L, 4, i);
+      luaL_argcheck(L, lua_isstring(L, -1), 4, "items must be strings");
+      std::string item = tostring(L, -1);
+      subitem.set("item", item);
+      std::string text = item;
+      if (hastable) {
+	lua_rawgeti(L, 5, i);
+	luaL_argcheck(L, lua_isstring(L, -1), 5, "labels must be strings");
+	text = tostring(L, -1);
+	lua_pop(L, 1);
+      }
+      if (hasmap) {
+	lua_pushvalue(L, 5);   // function
+	lua_pushnumber(L, i);  // index
+	lua_pushvalue(L, -3);  // name
+	lua_call(L, 2, 1);     // function returns label
+	luaL_argcheck(L, lua_isstring(L, -1), 5,
+		      "function does not return string");
+	text = tostring(L, -1);
+	lua_pop(L, 1);         // pop result
+      }
+      subitem.set("text", text);
+      if (hascolor) {
+	emscripten::val color = emscripten::val::object();
+	lua_pushvalue(L, 6);   // function
+	lua_pushnumber(L, i);  // index
+	lua_pushvalue(L, -3);  // name
+	lua_call(L, 2, 3);     // function returns red, green, blue
+	color.set("red", luaL_checknumber(L, -3));
+	color.set("green", luaL_checknumber(L, -2));
+	color.set("blue", luaL_checknumber(L, -1));
+	lua_pop(L, 3);         // pop result
+	subitem.set("color", color);
+      }
+      subitem.set("checkable", hascheck);
+      lua_pop(L, 1); // item
+      submenu.call<void>("push", subitem);
+    }
+    item.set("submenu", submenu);
+  }
+  iItems.call<void>("push", item);
+  return 0;
+}
+
 static int menu_constructor(lua_State *L)
 {
-  // QWidget *parent = check_winid(L, 1);
+  // void *parent = check_winid(L, 1);
   Menu **m = (Menu **) lua_newuserdata(L, sizeof(Menu *));
   *m = nullptr;
   luaL_getmetatable(L, "Ipe.menu");
   lua_setmetatable(L, -2);
-
-  // *m = new PMenu(parent);
+  *m = new PMenu();
   return 1;
 }
 
