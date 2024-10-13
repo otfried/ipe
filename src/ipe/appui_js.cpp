@@ -33,6 +33,8 @@
 
 #include "ipelua.h"
 
+#include "ipethumbs.h"
+
 #include <emscripten.h>
 #include <emscripten/bind.h>
 
@@ -43,6 +45,17 @@ using namespace ipelua;
 
 static bool build_menus = true;
 
+static const char *iconActions[] = {
+  "snapvtx",
+  "snapctl",
+  "snapbd",
+  "snapint",
+  "snapgrid",
+  "snapangle",
+  "snapcustom",
+  "snapauto",
+};
+
 AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
   : AppUiBase(L0, model)
 {
@@ -50,11 +63,28 @@ AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
   if (build_menus)
     buildMenus();
   build_menus = false; // all Windows share the same main menu
+
+  for (const char * a : iconActions)
+    createIcon(String(a));
 }
 
 AppUi::~AppUi()
 {
   ipeDebug("AppUi destructor");
+}
+
+void AppUi::createIcon(String name)
+{
+  String svgdir = Platform::latexDirectory() + "/icons/";
+  String svgname = svgdir + name + ".svg";
+  int pno = ipeIcon(name);
+  if (pno >= 0) {
+    bool dark = false;
+    Document *doc = dark ? ipeIconsDark.get() : ipeIcons.get();
+    Thumbnail thumbs(doc, 22);
+    thumbs.setNoCrop(true);
+    thumbs.saveRender(Thumbnail::ESVG, svgname.z(), doc->page(pno), 0, 1.0);
+  }
 }
 
 // --------------------------------------------------------------------

@@ -95,7 +95,7 @@ private:
   virtual void setButtonColor(int sel, Color color) override;
 
 private:
-  void aboutIpe();
+  void createIcon(String name);
 };
 
 // --------------------------------------------------------------------
