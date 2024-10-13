@@ -39,6 +39,11 @@
 #include <cstdio>
 #include <cstdlib>
 
+#ifdef IPEUI_JS
+extern int appui_preloadFile(lua_State *L);
+extern int appui_persistFile(lua_State *L);
+#endif
+
 using namespace ipe;
 using namespace ipelua;
 
@@ -799,6 +804,10 @@ static const struct luaL_Reg appui_methods[] = {
   { "selectPage", appui_selectPage },
   { "pageSorter", appui_pageSorter },
   { "renderPage", appui_renderPage },
+#ifdef IPEUI_JS
+  { "preloadFile", appui_preloadFile },
+  { "persistFile", appui_persistFile },
+#endif
   { nullptr, nullptr }
 };
 

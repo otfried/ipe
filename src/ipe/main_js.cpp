@@ -126,9 +126,7 @@ AppUi *startIpe(Canvas *canvas, int width, int height, double dpr)
 
   // TODO: Should we support command line options?
   
-  lua_createtable(L, 0, 1);
-  lua_pushstring(L, "tiling.ipe");
-  lua_rawseti(L, -2, 1);
+  lua_createtable(L, 0, 0);
   lua_setglobal(L, "argv");
 
   setup_globals(L, width, height, dpr);

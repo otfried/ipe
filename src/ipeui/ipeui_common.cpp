@@ -755,12 +755,6 @@ static const struct luaL_Reg timer_methods[] = {
 
 // --------------------------------------------------------------------
 
-#ifndef __EMSCRIPTEN__
-int ipeui_downloadFileIfIpeWeb(lua_State *L) { return 0; } // no-op
-#endif
-
-// --------------------------------------------------------------------
-
 static void make_metatable(lua_State *L, const char *name,
 			   const struct luaL_Reg *methods)
 {

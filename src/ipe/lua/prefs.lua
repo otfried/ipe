@@ -248,6 +248,7 @@ prefs.snap = { vertex = false,
 prefs.initial = {
   grid_size = 16,     -- points
   angle_size = 45,    -- degrees
+  pretty_display = false,
   grid_visible = true,
 }
 

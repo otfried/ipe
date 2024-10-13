@@ -260,18 +260,12 @@ void AppUi::explain(const char *s, int t)
 
 void AppUi::showWindow(int width, int height, int x, int y, const Color & pathViewColor)
 {
-  /*
-  iPathView->setColor(pathViewColor);
-  if (width > 0 && height > 0)
-    resize(width, height);
-  if (x >= 0 && y >= 0)
-    move(x, y);
-  show();
-  */
+  // TODO: implement pathViewColor?
 }
 
 void AppUi::setFullScreen(int mode)
 {
+  // handled by JS
 }
 
 int AppUi::setClipboard(lua_State *L)
@@ -304,6 +298,23 @@ void AppUi::resumeDialog(emscripten::val result)
   else
     lua_pushlightuserdata(L, &result);
   luacall(L, 2, 0);
+}
+
+// --------------------------------------------------------------------
+
+int appui_preloadFile(lua_State *L)
+{
+  std::string fname{luaL_checklstring(L, 1, nullptr)};
+  std::string tmpname{luaL_checklstring(L, 2, nullptr)};
+  emscripten::val::global("window").call<void>("preloadFile", fname, tmpname);
+  return 0;
+}
+
+int appui_persistFile(lua_State *L)
+{
+  std::string fname{luaL_checklstring(L, 1, nullptr)};
+  emscripten::val::global("window").call<void>("persistFile", fname);
+  return 0;
 }
 
 // --------------------------------------------------------------------

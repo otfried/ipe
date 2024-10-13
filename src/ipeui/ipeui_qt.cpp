@@ -63,6 +63,10 @@
 #pragma GCC diagnostic pop
 #endif
 
+#ifdef __EMSCRIPTEN__
+extern int ipeui_downloadFileIfIpeWeb(lua_State *L);
+#endif
+
 // --------------------------------------------------------------------
 
 #ifdef IPE_SPELLCHECK
@@ -938,8 +942,8 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "fileDialog", ipeui_fileDialog },
   { "messageBox", ipeui_messageBox },
   { "currentDateTime", ipeui_currentDateTime },
-  { "downloadFileIfIpeWeb", ipeui_downloadFileIfIpeWeb },
 #ifdef __EMSCRIPTEN__
+  { "downloadFileIfIpeWeb", ipeui_downloadFileIfIpeWeb },
   { "startBrowser", ipeui_startBrowser }, // open new tab on ipe-web
   // if not defined (on ipe-qt), defaults to shell cmd
 #endif

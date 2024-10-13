@@ -69,6 +69,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/bind.h>
+#include <emscripten/val.h>
 #endif
 
 using namespace ipe;
@@ -694,6 +695,29 @@ String::String(const wchar_t *wbuf)
     iImp->iData = new char[iImp->iCapacity];
     WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, iImp->iData, rm, nullptr, nullptr);
   }
+}
+#endif
+
+#if defined(IPEWASM) && !defined(IPENODEJS)
+FILE *Platform::fopen(const char *fname, const char *mode)
+{
+  ipeDebug("fopen(%s)", fname);
+  if (!strncmp(fname, "/home/ipe/.ipe/latexrun/", 24))
+    return ::fopen(fname, mode);
+  emscripten::val preloadCache = emscripten::val::global("window")["preloadCache"];
+  emscripten::val s = preloadCache[fname];
+  if (!s.isUndefined()) {
+    std::string t = s.as<std::string>();
+    return ::fopen(t.c_str(), mode);
+  } else if (mode[0] == 'w') {
+    char tmpname[] = "/tmp/ipeXXXXXX";
+    int fd = ::mkstemp(tmpname);
+    if (fd < 0)
+      return nullptr;
+    preloadCache.set(fname, tmpname);
+    return ::fdopen(fd, mode);
+  } else
+    return nullptr;
 }
 #endif
 

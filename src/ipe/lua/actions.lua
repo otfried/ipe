@@ -815,7 +815,10 @@ function MODEL:export(format)
     self.ui:renderPage(self.doc, self.pno, self.vno,
        		       format, s, self.ui:zoom(),
 		       true, false) -- transparent, nocrop
-    ipeui.downloadFileIfIpeWeb(s)
+    if not self:persistFile(s) then
+      self:warning("Export failed",
+		   "I could not persist the exported file '" .. s .. "'.")
+    end
   end
 end
 
@@ -2681,7 +2684,9 @@ local function sheets_save(d, dd)
     f:write('<!DOCTYPE ipestyle SYSTEM "ipe.dtd">\n')
     f:write(data)
     f:close()
-    ipeui.downloadFileIfIpeWeb(s)
+    if not dd.model:persistFile(s) then
+      dd.model:warning("Cannot persist stylesheet")
+    end
     dd.model.ui:explain("Stylesheet saved to " .. s)
   end
 end

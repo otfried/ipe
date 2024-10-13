@@ -55,7 +55,7 @@ function MODEL:init(fname)
     snapcustom = prefs.snap.custom,
     snapauto = prefs.snap.autoangle,
     grid_visible = prefs.initial.grid_visible,
-    pretty_display = false,
+    pretty_display = prefs.initial.pretty_display,
     gridsize = prefs.initial.grid_size,
     anglesize = prefs.initial.angle_size,
     snap_distance = prefs.snap_distance,
@@ -179,6 +179,25 @@ end
 
 function MODEL:resumeDialog(arg)
   if self.current_action then coroutine.resume(self.current_action, arg) end
+end
+
+function MODEL:preloadFile(fname)
+  if config.platform == "electron" then
+    self.ui.preloadFile(fname, os.tmpname())
+    coroutine.yield()
+  end
+end
+
+function MODEL:persistFile(fname)
+  if config.platform == "electron" then
+    self.ui.persistFile(fname)
+    return coroutine.yield()
+  elseif config.platform == "web" then
+    ipeui.downloadFileIfIpeWeb(fname)
+    return true
+  else
+    return true
+  end
 end
 
 ----------------------------------------------------------------------
@@ -614,6 +633,7 @@ function MODEL:newDocument()
 end
 
 function MODEL:loadDocument(fname)
+  self:preloadFile(fname)
   local err = self:tryLoadDocument(fname)
   if err then
     self:warning("Document '" .. fname .. "' could not be opened", err)
@@ -687,11 +707,10 @@ function MODEL:saveDocument(fname)
   props.creator = config.version
   self.doc:setProperties(props)
 
-  if not self.doc:save(fname, fm) then
+  if not self.doc:save(fname, fm) or not self:persistFile(fname) then
     self:warning("File not saved!", "Error saving the document")
     return
   end
-  ipeui.downloadFileIfIpeWeb(fname)
 
   if fm == "xml" and #prefs.auto_export > 0 then
     self:auto_export(fname)
@@ -720,6 +739,10 @@ function MODEL:auto_export(fname)
 	self.ui:renderPage(self.doc, 1, 1,
 			   format, ename, prefs.auto_export_resolution / 72.0,
 			   true, false) -- transparent, nocrop
+      end
+      if not self:persistFile(ename) then
+	self:warning("Auto-exporting failed",
+		     "I could not persist the exported file '" .. ename .. "'.")
       end
     end
   end
