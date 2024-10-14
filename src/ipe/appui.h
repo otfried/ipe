@@ -103,7 +103,7 @@ public:
 
   CanvasBase *canvas() { return iCanvas; }
 
-  void setupSymbolicNames(const Cascade *sheet);
+  virtual void setupSymbolicNames(const Cascade *sheet);
   void setGridAngleSize(Attribute abs_grid, Attribute abs_angle);
   void setAttributes(const AllAttributes &all, Cascade *sheet);
 
@@ -113,6 +113,7 @@ public:
   void luaRecentFileSelected(String name);
   void resumeLua();
   void luaAbsoluteButton(const char *s);
+  void luaSelector(String name, String value);
 
   inline void setInkMode(bool ink) { isInkMode = ink; }
   static int readImage(lua_State *L, String fn);
@@ -175,7 +176,6 @@ protected:
   AppUiBase(lua_State *L0, int model);
   static const char * const selectorNames[];
 
-  void luaSelector(String name, String value);
   void luaAction(String name);
   void luaShowLayerBoxPopup(Vector v, String layer);
   void luaLayerAction(String name, String layer);

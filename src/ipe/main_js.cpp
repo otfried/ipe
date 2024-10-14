@@ -152,8 +152,13 @@ static void resumeLua(AppUi *ui, emscripten::val arg) {
   ui->resumeLua(arg);
 }
 
-static void absoluteButton(AppUi *ui, emscripten::val arg) {
-  ui->luaAbsoluteButton(arg.as<std::string>().c_str());
+static void absoluteButton(AppUi *ui, emscripten::val sel) {
+  ui->luaAbsoluteButton(sel.as<std::string>().c_str());
+}
+
+static void selector(AppUi *ui, emscripten::val sel, emscripten::val value) {
+  ui->luaSelector(sel.as<std::string>().c_str(),
+		  value.as<std::string>().c_str());
 }
 
 // --------------------------------------------------------------------
@@ -164,7 +169,8 @@ EMSCRIPTEN_BINDINGS(ipe) {
   emscripten::class_<AppUi>("AppUi")
     .function("action", &ipeAction, emscripten::allow_raw_pointers())
     .function("resume", &resumeLua, emscripten::allow_raw_pointers())
-    .function("absoluteButton", &absoluteButton, emscripten::allow_raw_pointers());
+    .function("absoluteButton", &absoluteButton, emscripten::allow_raw_pointers())
+    .function("selector", &selector, emscripten::allow_raw_pointers());
   emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());
 }
 

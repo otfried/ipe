@@ -77,6 +77,7 @@ public:
 
   virtual bool waitDialog(const char *cmd, const char *label) override;
   void resumeLua(emscripten::val result);
+  virtual void setupSymbolicNames(const Cascade *sheet) override;
 
 private:
   virtual void addRootMenu(int id, const char *name) override;

@@ -43,40 +43,6 @@ using namespace ipelua;
 
 // --------------------------------------------------------------------
 
-static bool build_menus = true;
-
-AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
-  : AppUiBase(L0, model)
-{
-  iCanvas = canvas;
-  if (build_menus)
-    buildMenus();
-  build_menus = false; // all Windows share the same main menu
-  createIcon(String("pen"));
-  createIcon(String("stop"));  
-}
-
-AppUi::~AppUi()
-{
-  ipeDebug("AppUi destructor");
-}
-
-void AppUi::createIcon(String name)
-{
-  String svgdir = Platform::latexDirectory() + "/icons/";
-  String svgname = svgdir + name + ".svg";
-  int pno = ipeIcon(name);
-  if (pno >= 0) {
-    bool dark = false;
-    Document *doc = dark ? ipeIconsDark.get() : ipeIcons.get();
-    Thumbnail thumbs(doc, 22);
-    thumbs.setNoCrop(true);
-    thumbs.saveRender(Thumbnail::ESVG, svgname.z(), doc->page(pno), 0, 1.0);
-  }
-}
-
-// --------------------------------------------------------------------
-
 static emscripten::val tojs(const char *s) noexcept
 {
   if (s == nullptr)
@@ -103,6 +69,43 @@ static void setInnerText(const char *element, const char *s)
 static emscripten::val jsUi() {
   return emscripten::val::global("window")["ipeui"];
 }
+
+static bool build_menus = true;
+
+// --------------------------------------------------------------------
+
+AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
+  : AppUiBase(L0, model)
+{
+  iCanvas = canvas;
+  if (build_menus)
+    buildMenus();
+  build_menus = false; // all Windows share the same main menu
+  createIcon(String("pen"));
+  createIcon(String("stop"));
+  jsUi().call<void>("setupMenu");
+}
+
+AppUi::~AppUi()
+{
+  ipeDebug("AppUi destructor");
+}
+
+void AppUi::createIcon(String name)
+{
+  String svgdir = Platform::latexDirectory() + "/icons/";
+  String svgname = svgdir + name + ".svg";
+  int pno = ipeIcon(name);
+  if (pno >= 0) {
+    bool dark = false;
+    Document *doc = dark ? ipeIconsDark.get() : ipeIcons.get();
+    Thumbnail thumbs(doc, 22);
+    thumbs.setNoCrop(true);
+    thumbs.saveRender(Thumbnail::ESVG, svgname.z(), doc->page(pno), 0, 1.0);
+  }
+}
+
+// --------------------------------------------------------------------
 
 static void requestMenu(const char *what, int id, const char *name,
 			const char * title, int tag, const char * shortcut)
@@ -173,12 +176,17 @@ void AppUi::resetCombos()
 
 void AppUi::addComboColors(AttributeSeq &sym, AttributeSeq &abs)
 {
+  iComboContents[EUiStroke].push_back(IPEABSOLUTE);
+  iComboContents[EUiFill].push_back(IPEABSOLUTE);
   emscripten::val colors = emscripten::val::array();
   for (size_t i = 0; i < sym.size(); ++i) {
     emscripten::val color = emscripten::val::object();
-    color.set("name", sym[i].string().s());
+    String s = sym[i].string();
+    color.set("name", s.s());
     color.set("rgb", tojs(abs[i].color()));
     colors.call<void>("push", color);
+    iComboContents[EUiStroke].push_back(s);
+    iComboContents[EUiFill].push_back(s);
   }
   jsUi().call<void>("addComboColors", colors);
 }
@@ -237,6 +245,31 @@ void AppUi::setZoom(double zoom)
   sprintf(s, "(%dppi)", int(72.0 * zoom));
   setInnerText("resolution", s);
   iCanvas->setZoom(zoom);
+}
+
+void AppUi::setupSymbolicNames(const Cascade *sheet)
+{
+  AppUiBase::setupSymbolicNames(sheet);
+  emscripten::val submenu1 = emscripten::val::array();
+  for (String s : iComboContents[EUiGridSize] )
+    submenu1.call<void>("push", s.s());
+  jsUi().call<void>("setSubmenu", int(ESubmenuGridSize), submenu1);
+  emscripten::val submenu2 = emscripten::val::array();
+  for (String s : iComboContents[EUiAngleSize] )
+    submenu2.call<void>("push", s.s());
+  jsUi().call<void>("setSubmenu", int(ESubmenuAngleSize), submenu2);
+  AttributeSeq seq;
+  sheet->allNames(ETextStyle, seq);
+  emscripten::val submenu3 = emscripten::val::array();
+  for (auto &attr : seq)
+    submenu3.call<void>("push", attr.string().s());
+  jsUi().call<void>("setSubmenu", int(ESubmenuTextStyle), submenu3);
+  seq.clear();
+  sheet->allNames(ELabelStyle, seq);
+  emscripten::val submenu4 = emscripten::val::array();
+  for (auto &attr : seq)
+    submenu4.call<void>("push", attr.string().s());
+  jsUi().call<void>("setSubmenu", int(ESubmenuLabelStyle), submenu4);
 }
 
 // --------------------------------------------------------------------
