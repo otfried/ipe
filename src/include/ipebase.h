@@ -136,6 +136,9 @@ namespace ipe {
     int unicode(int &index) const noexcept;
     String getLine(int &index) const noexcept;
     const char *z() const noexcept;
+    std::string s() const noexcept {
+      return std::string(z());
+    }
   private:
     void detach(int n) noexcept;
   private:

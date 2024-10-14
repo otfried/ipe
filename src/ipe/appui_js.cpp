@@ -52,6 +52,7 @@ AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
   if (build_menus)
     buildMenus();
   build_menus = false; // all Windows share the same main menu
+  createIcon(String("pen"));
 }
 
 AppUi::~AppUi()
@@ -75,23 +76,37 @@ void AppUi::createIcon(String name)
 
 // --------------------------------------------------------------------
 
-static emscripten::val tojs(const char *s) noexcept {
+static emscripten::val tojs(const char *s) noexcept
+{
   if (s == nullptr)
     return emscripten::val::null();
   return emscripten::val(std::string(s));
 }
 
-static void setInnerText(const char *element, const char *s) {
+static emscripten::val tojs(Color c) noexcept
+{
+  emscripten::val v = emscripten::val::object();
+  v.set("red", c.iRed.toDouble());
+  v.set("green", c.iGreen.toDouble());
+  v.set("blue", c.iBlue.toDouble());
+  return v;
+}
+
+static void setInnerText(const char *element, const char *s)
+{
   emscripten::val el = emscripten::val::global("document")
     .call<emscripten::val>("getElementById", std::string(element));
   el.set("innerText", std::string(s));
 }
 
+static emscripten::val jsUi() {
+  return emscripten::val::global("window")["ipeui"];
+}
+
 static void requestMenu(const char *what, int id, const char *name,
 			const char * title, int tag, const char * shortcut)
 {
-  emscripten::val window = emscripten::val::global("window");
-  window.call<void>("buildMenu", tojs(what), id, tojs(name),
+  jsUi().call<void>("buildMenu", tojs(what), id, tojs(name),
 		    tojs(title), tag, tojs(shortcut));
 }
 
@@ -152,24 +167,34 @@ void AppUi::setRecentFileMenu(const std::vector<String> & names)
 
 void AppUi::resetCombos()
 {
-  // for (int i = 0; i < EUiView; ++i)
-  // iSelector[i]->clear();
+  jsUi().call<void>("resetCombos");
 }
 
 void AppUi::addComboColors(AttributeSeq &sym, AttributeSeq &abs)
 {
+  emscripten::val colors = emscripten::val::array();
+  for (size_t i = 0; i < sym.size(); ++i) {
+    emscripten::val color = emscripten::val::object();
+    color.set("name", sym[i].string().s());
+    color.set("rgb", tojs(abs[i].color()));
+    colors.call<void>("push", color);
+  }
+  jsUi().call<void>("addComboColors", colors);
 }
 
 void AppUi::addCombo(int sel, String s)
 {
+  jsUi().call<void>("addCombo", sel, std::string(s.z()));
 }
 
 void AppUi::setComboCurrent(int sel, int idx)
 {
+  jsUi().call<void>("setComboCurrent", sel, idx);
 }
 
 void AppUi::setButtonColor(int sel, Color color)
 {
+  jsUi().call<void>("setButtonColor", sel, tojs(color));
 }
 
 void AppUi::setPathView(const AllAttributes &all, Cascade *sheet)
@@ -182,10 +207,14 @@ void AppUi::setCheckMark(String name, Attribute a)
 
 void AppUi::setNumbers(String vno, bool vm, String pno, bool pm)
 {
+  jsUi().call<void>("setNumbers", vno.s(), vm, pno.s(), pm);
 }
 
 void AppUi::setNotes(String notes)
 {
+  emscripten::val el = emscripten::val::global("document")
+    .call<emscripten::val>("getElementById", std::string("notes"));
+  el.set("value", notes.z());
 }
 
 void AppUi::setLayers(const Page *page, int view)
@@ -196,8 +225,9 @@ void AppUi::setBookmarks(int no, const String *s)
 {
 }
 
-void AppUi::setToolVisible(int m, bool vis)
+void AppUi::setToolVisible(int tool, bool vis)
 {
+  jsUi().call<void>("setToolVisible", tool, vis);
 }
 
 void AppUi::setZoom(double zoom)
@@ -220,7 +250,7 @@ void AppUi::setActionsEnabled(bool mode)
 // Used for snapXXX, grid_visible, viewmarked, and pagemarked
 bool AppUi::actionState(const char *name)
 {
-  emscripten::val as = emscripten::val::global("window")["actionState"];
+  emscripten::val as = jsUi()["actionState"];
   return as[name].as<bool>();
 }
 
@@ -228,17 +258,13 @@ bool AppUi::actionState(const char *name)
 // Used for snapXXX, grid_visible, to initialize mode_select
 void AppUi::setActionState(const char *name, bool value)
 {
-  emscripten::val as = emscripten::val::global("window")["actionState"];
-  as.set(name, value);
-  // TODO: set it also in menu and in the toolbar
+  jsUi().call<void>("setActionState", tojs(name), value);
 }
 
 // --------------------------------------------------------------------
 
 void AppUi::action(String name)
 {
-  // if (name.left(5) == "mode_")
-  // iModeIndicator->setPixmap(prefsPixmap(name));
   luaAction(name);
 }
 
@@ -299,7 +325,7 @@ void AppUi::setFullScreen(int mode)
 int AppUi::setClipboard(lua_State *L)
 {
   std::string data = std::string(luaL_checklstring(L, 2, nullptr));
-  emscripten::val::global("window").call<void>("setClipboard", data);
+  jsUi().call<void>("setClipboard", data);
   return 0;
 }
 
@@ -307,7 +333,7 @@ int AppUi::clipboard(lua_State *L)
 {
   bool allowBitmap = lua_toboolean(L, 2);
   emscripten::val result =
-    emscripten::val::global("window").call<emscripten::val>("getClipboard", allowBitmap);
+    jsUi().call<emscripten::val>("getClipboard", allowBitmap);
   // this operation is async, it will later resume Lua with the result
   return 0;
 }
@@ -315,8 +341,7 @@ int AppUi::clipboard(lua_State *L)
 bool AppUi::waitDialog(const char *cmd, const char *label)
 {
   // cmd is either: "runlatex:<tex engine>" or "editor:"
-  emscripten::val::global("window")
-    .call<void>("waitDialog", std::string(cmd), std::string(label));
+  jsUi().call<void>("waitDialog", std::string(cmd), std::string(label));
   // this operation is async, it will later resume Lua with the result
   return false;
 }
@@ -344,14 +369,14 @@ int appui_preloadFile(lua_State *L)
 {
   std::string fname{luaL_checklstring(L, 1, nullptr)};
   std::string tmpname{luaL_checklstring(L, 2, nullptr)};
-  emscripten::val::global("window").call<void>("preloadFile", fname, tmpname);
+  jsUi().call<void>("preloadFile", fname, tmpname);
   return 0;
 }
 
 int appui_persistFile(lua_State *L)
 {
   std::string fname{luaL_checklstring(L, 1, nullptr)};
-  emscripten::val::global("window").call<void>("persistFile", fname);
+  jsUi().call<void>("persistFile", fname);
   return 0;
 }
 

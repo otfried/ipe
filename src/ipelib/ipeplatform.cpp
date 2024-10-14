@@ -703,7 +703,7 @@ FILE *Platform::fopen(const char *fname, const char *mode)
 {
   if (!strncmp(fname, "/home/ipe/.ipe/latexrun/", 24) || !strncmp(fname, "/opt/ipe", 8))
     return ::fopen(fname, mode);
-  emscripten::val preloadCache = emscripten::val::global("window")["preloadCache"];
+  emscripten::val preloadCache = emscripten::val::global("window")["ipeui"]["preloadCache"];
   emscripten::val s = preloadCache[fname];
   if (!s.isUndefined()) {
     std::string t = s.as<std::string>();
