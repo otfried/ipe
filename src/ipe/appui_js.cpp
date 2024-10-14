@@ -259,12 +259,15 @@ WINID AppUi::windowId()
 
 void AppUi::closeWindow()
 {
+  // handled by JS
 }
 
 void AppUi::setWindowCaption(bool mod, const char *s)
 {
-  // setWindowModified(mod);
-  // setWindowTitle(QString::fromUtf8(s));
+  // TODO: macOS can use the actual filename and whether the file has been modified
+  // (documentEdited and representedFilename on BrowserWindow)
+  emscripten::val htmlDocument = emscripten::val::global("document");
+  htmlDocument.set("title", s);
 }
 
 void AppUi::setMouseIndicator(const char *s)
@@ -295,31 +298,41 @@ void AppUi::setFullScreen(int mode)
 
 int AppUi::setClipboard(lua_State *L)
 {
+  std::string data = std::string(luaL_checklstring(L, 2, nullptr));
+  emscripten::val::global("window").call<void>("setClipboard", data);
   return 0;
 }
 
 int AppUi::clipboard(lua_State *L)
 {
+  bool allowBitmap = lua_toboolean(L, 2);
+  emscripten::val result =
+    emscripten::val::global("window").call<emscripten::val>("getClipboard", allowBitmap);
+  // this operation is async, it will later resume Lua with the result
   return 0;
 }
 
 bool AppUi::waitDialog(const char *cmd, const char *label)
 {
-  // this is fully async: the cmd is started and the function returns
   // cmd is either: "runlatex:<tex engine>" or "editor:"
   emscripten::val::global("window")
     .call<void>("waitDialog", std::string(cmd), std::string(label));
+  // this operation is async, it will later resume Lua with the result
   return false;
 }
 
-void AppUi::resumeDialog(emscripten::val result)
+void AppUi::resumeLua(emscripten::val result)
 {
-  // calls model:resumeDialog
+  // calls model:resumeLua with an argument
   lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "resumeDialog");
+  lua_getfield(L, -1, "resumeLua");
   lua_insert(L, -2); // before model
   if (result.isNull())
     lua_pushnil(L);
+  else if (result.isString())
+    lua_pushstring(L, result.as<std::string>().c_str());
+  else if (result.isNumber())
+    lua_pushnumber(L, result.as<double>());
   else
     lua_pushlightuserdata(L, &result);
   luacall(L, 2, 0);

@@ -786,7 +786,6 @@ static const struct luaL_Reg appui_methods[] = {
   { "waitDialog", appui_waitDialog },
   { "close", appui_close},
   { "setClipboard", appui_setClipboard },
-  { "clipboard", appui_clipboard },
   { "setActionState", appui_setActionState },
   { "actionState", appui_actionState },
   { "actionInfo", appui_actionInfo },
@@ -807,6 +806,9 @@ static const struct luaL_Reg appui_methods[] = {
 #ifdef IPEUI_JS
   { "preloadFile", appui_preloadFile },
   { "persistFile", appui_persistFile },
+  { "getClipboardAsync", appui_clipboard },
+#else
+  { "getClipboard", appui_clipboard },
 #endif
   { nullptr, nullptr }
 };

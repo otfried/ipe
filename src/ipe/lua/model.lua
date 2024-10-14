@@ -171,13 +171,8 @@ function MODEL:wrapCall(f, ...)
   coroutine.resume(self.current_action, f, ...)
 end
 
--- called by the UI when a waitDialog terminates, that is, when a Latex
--- run terminates or when an external editor closes
-function MODEL:resumeLua()
-  if self.current_action then coroutine.resume(self.current_action) end
-end
-
-function MODEL:resumeDialog(arg)
+-- called by the UI to resume when Lua has yielded in an async operation
+function MODEL:resumeLua(arg)
   if self.current_action then coroutine.resume(self.current_action, arg) end
 end
 
@@ -197,6 +192,15 @@ function MODEL:persistFile(fname)
     return true
   else
     return true
+  end
+end
+
+function MODEL:clipboard(allowBitmap)
+  if config.platform == "electron" then
+    self.ui:getClipboardAsync(allowBitmap)
+    return coroutine.yield()
+  else
+    return self.ui:getClipboard(allowBitmap)
   end
 end
 

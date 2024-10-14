@@ -701,7 +701,6 @@ String::String(const wchar_t *wbuf)
 #if defined(IPEWASM) && !defined(IPENODEJS)
 FILE *Platform::fopen(const char *fname, const char *mode)
 {
-  ipeDebug("fopen(%s)", fname);
   if (!strncmp(fname, "/home/ipe/.ipe/latexrun/", 24) || !strncmp(fname, "/opt/ipe", 8))
     return ::fopen(fname, mode);
   emscripten::val preloadCache = emscripten::val::global("window")["preloadCache"];

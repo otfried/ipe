@@ -37,8 +37,6 @@
 #include "appui_js.h"
 #include "ipecanvas_js.h"
 
-extern void ipeui_resumeDialog(emscripten::val results);
-
 using namespace ipe;
 using namespace ipelua;
 
@@ -147,12 +145,8 @@ static void ipeAction(AppUi *ui, std::string name)
   ui->action(String(name.c_str()));
 }
 
-static void resumeLua(AppUi *ui) {
-  ui->resumeLua();
-}
-
-static void resumeDialog(AppUi *ui, emscripten::val arg) {
-  ui->resumeDialog(arg);
+static void resumeLua(AppUi *ui, emscripten::val arg) {
+  ui->resumeLua(arg);
 }
 
 // --------------------------------------------------------------------
@@ -162,8 +156,7 @@ EMSCRIPTEN_BINDINGS(ipe) {
     .class_function("initLib", &initLib);
   emscripten::class_<AppUi>("AppUi")
     .function("action", &ipeAction, emscripten::allow_raw_pointers())
-    .function("resume", &resumeLua, emscripten::allow_raw_pointers())
-    .function("resumeDialog", &resumeDialog, emscripten::allow_raw_pointers());
+    .function("resume", &resumeLua, emscripten::allow_raw_pointers());
   emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());
 }
 

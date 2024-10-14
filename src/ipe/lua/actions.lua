@@ -1739,7 +1739,7 @@ function MODEL:action_new_page()
 end
 
 function MODEL:action_paste_page()
-  local data = self.ui:clipboard()
+  local data = self:clipboard(false)
   if data:sub(1,9) ~= "<ipepage>" then
     self:warning("No Ipe page to paste")
     return
@@ -2408,7 +2408,7 @@ function MODEL:action_cut()
 end
 
 function MODEL:action_paste()
-  local data = self.ui:clipboard(true)  -- allow a bitmap
+  local data = self:clipboard(true)  -- allow a bitmap
   if not data then
     self:warning("Nothing to paste")
     return
@@ -2451,7 +2451,7 @@ function MODEL:action_paste()
 end
 
 function MODEL:action_paste_with_layer()
-  local data = self.ui:clipboard(false)
+  local data = self:clipboard(false)
   if not data then
     self:warning("Nothing to paste")
     return

@@ -1721,7 +1721,7 @@ function PASTETOOL:key(text, modifiers)
 end
 
 function MODEL:action_paste_at_cursor()
-  local data = self.ui:clipboard(true) -- allow bitmap
+  local data = self:clipboard(true) -- allow bitmap
   if not data then
     self:warning("Nothing to paste")
     return
