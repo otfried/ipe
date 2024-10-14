@@ -243,6 +243,25 @@ function MODEL:getString(msg, caption, start)
   end
 end
 
+function MODEL:getColorJS(msg, r, g, b, caption)
+  if caption == nil then caption = "Ipe" end
+  local d = ipeui.Dialog(self.ui:win(), caption)
+  d:add("label", "label", {label=msg}, 1, 1)
+  d:add("color", "input", {color_picker=true}, 2, 1)
+  d:addButton("ok", "Ok", "accept")
+  d:addButton("cancel", "Cancel", "reject")
+  d:set("color", string.format("#%02x%02x%02x", r * 255, g * 255, b * 255))
+  if d:execute() then
+    local s = d:get("color")
+    if #s == 7 and s:sub(1,1) == "#" then
+      r = tonumber2(s:sub(2,3), 16) / 255.0
+      g = tonumber2(s:sub(4,5), 16) / 255.0
+      b = tonumber2(s:sub(6,7), 16) / 255.0
+      return r, g, b
+    end
+  end
+end
+
 function MODEL:getDouble(caption, label, value, minv, maxv)
   local s = self:getString(label, caption, tostring(value))
   if s then

@@ -53,6 +53,7 @@ AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
     buildMenus();
   build_menus = false; // all Windows share the same main menu
   createIcon(String("pen"));
+  createIcon(String("stop"));  
 }
 
 AppUi::~AppUi()

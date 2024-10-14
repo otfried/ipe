@@ -112,6 +112,8 @@ public:
   void luaBookmarkSelected(int index);
   void luaRecentFileSelected(String name);
   void resumeLua();
+  void luaAbsoluteButton(const char *s);
+
   inline void setInkMode(bool ink) { isInkMode = ink; }
   static int readImage(lua_State *L, String fn);
 
@@ -177,7 +179,6 @@ protected:
   void luaAction(String name);
   void luaShowLayerBoxPopup(Vector v, String layer);
   void luaLayerAction(String name, String layer);
-  void luaAbsoluteButton(const char *s);
 
   void buildMenus();
   void showInCombo(const Cascade *sheet, Kind kind,

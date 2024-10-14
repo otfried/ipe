@@ -118,7 +118,7 @@ protected:
 		EAccept = 0x004, EReject = 0x008,
 		EReadOnly = 0x010, EDisabled = 0x020,
 		ESelectAll = 0x080, EFocused = 0x100,
-		ESpellCheck = 0x200,
+		ESpellCheck = 0x200, EColorPicker = 0x400,
   };
   enum TType { EButton = 0, ETextEdit, EList, ELabel, ECombo,
 	       ECheckBox, EInput };

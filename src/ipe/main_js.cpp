@@ -91,6 +91,9 @@ static void setup_globals(lua_State *L, int width, int height, double devicePixe
 
   lua_setglobal(L, "config");
 
+  lua_getglobal(L, "tonumber");
+  lua_setglobal(L, "tonumber2");
+
   lua_pushcfunction(L, ipe_tonumber);
   lua_setglobal(L, "tonumber");
 }
@@ -149,6 +152,10 @@ static void resumeLua(AppUi *ui, emscripten::val arg) {
   ui->resumeLua(arg);
 }
 
+static void absoluteButton(AppUi *ui, emscripten::val arg) {
+  ui->luaAbsoluteButton(arg.as<std::string>().c_str());
+}
+
 // --------------------------------------------------------------------
 
 EMSCRIPTEN_BINDINGS(ipe) {
@@ -156,7 +163,8 @@ EMSCRIPTEN_BINDINGS(ipe) {
     .class_function("initLib", &initLib);
   emscripten::class_<AppUi>("AppUi")
     .function("action", &ipeAction, emscripten::allow_raw_pointers())
-    .function("resume", &resumeLua, emscripten::allow_raw_pointers());
+    .function("resume", &resumeLua, emscripten::allow_raw_pointers())
+    .function("absoluteButton", &absoluteButton, emscripten::allow_raw_pointers());
   emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());
 }
 

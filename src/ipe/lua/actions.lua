@@ -186,8 +186,13 @@ function MODEL:absoluteButton(button)
   -- print("Button:", button)
   if button == "stroke" or button == "fill" then
     local old = self:findOldValue(button, "color")
-    r, g, b = ipeui.getColor(self.ui:win(), "Select " .. button .. " color",
-			     old.r, old.g, old.b)
+    if config.platform == "electron" then
+      r, g, b = self:getColorJS("Select " .. button .. " color",
+				old.r, old.g, old.b)
+    else
+      r, g, b = ipeui.getColor(self.ui:win(), "Select " .. button .. " color",
+			       old.r, old.g, old.b)
+    end
     if r then
       self:set_absolute(button, { r = r, g = g, b = b });
     elseif config.platform == "apple" then

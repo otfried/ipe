@@ -365,14 +365,6 @@ static int timer_constructor(lua_State *L)
 
 // --------------------------------------------------------------------
 
-static int ipeui_getColor(lua_State *L)
-{
-  luaL_error(L, "Color dialog is not yet implemented");
-  return 0;
-}
-
-// --------------------------------------------------------------------
-
 static int ipeui_fileDialog(lua_State *L)
 {
   static const char * const typenames[] = { "open", "save", nullptr };
@@ -490,7 +482,6 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "Dialog", dialog_constructor },
   { "Menu", menu_constructor },
   { "Timer", timer_constructor },
-  { "getColor", ipeui_getColor },
   { "fileDialogAsync", ipeui_fileDialog },
   { "messageBoxAsync", ipeui_messageBox },
   { "currentDateTime", ipeui_currentDateTime },

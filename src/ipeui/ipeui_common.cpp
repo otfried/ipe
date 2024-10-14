@@ -259,7 +259,10 @@ void Dialog::addInput(lua_State *L, SElement &m)
   lua_getfield(L, 4, "focus");
   if (lua_toboolean(L, -1))
     m.flags |= EFocused;
-  lua_pop(L, 2);
+  lua_getfield(L, 4, "color_picker");
+  if (lua_toboolean(L, -1))
+    m.flags |= EColorPicker;
+  lua_pop(L, 3);
 }
 
 void Dialog::addTextEdit(lua_State *L, SElement &m)
