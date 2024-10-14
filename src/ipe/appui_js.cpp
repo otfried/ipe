@@ -45,17 +45,6 @@ using namespace ipelua;
 
 static bool build_menus = true;
 
-static const char *iconActions[] = {
-  "snapvtx",
-  "snapctl",
-  "snapbd",
-  "snapint",
-  "snapgrid",
-  "snapangle",
-  "snapcustom",
-  "snapauto",
-};
-
 AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
   : AppUiBase(L0, model)
 {
@@ -63,9 +52,6 @@ AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
   if (build_menus)
     buildMenus();
   build_menus = false; // all Windows share the same main menu
-
-  for (const char * a : iconActions)
-    createIcon(String(a));
 }
 
 AppUi::~AppUi()
@@ -125,6 +111,7 @@ void AppUi::addItem(int id, const char *title, const char *name)
     }
     lua_getglobal(L, "shortcuts");
     lua_getfield(L, -1, name);
+    createIcon(String(name));
     requestMenu("addItem", id, name, title, tag,
 		lua_isstring(L, -1) ? lua_tostring(L, -1) : nullptr);
     lua_pop(L, 2);
