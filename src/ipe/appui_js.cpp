@@ -81,6 +81,12 @@ static emscripten::val tojs(const char *s) noexcept {
   return emscripten::val(std::string(s));
 }
 
+static void setInnerText(const char *element, const char *s) {
+  emscripten::val el = emscripten::val::global("document")
+    .call<emscripten::val>("getElementById", std::string(element));
+  el.set("innerText", std::string(s));
+}
+
 static void requestMenu(const char *what, int id, const char *name,
 			const char * title, int tag, const char * shortcut)
 {
@@ -196,8 +202,9 @@ void AppUi::setToolVisible(int m, bool vis)
 
 void AppUi::setZoom(double zoom)
 {
-  // QString s = QString("(%1ppi)").arg(int(72.0 * zoom));
-  // iResolution->setText(s);
+  char s[16];
+  sprintf(s, "(%dppi)", int(72.0 * zoom));
+  setInnerText("resolution", s);
   iCanvas->setZoom(zoom);
 }
 
@@ -262,17 +269,18 @@ void AppUi::setWindowCaption(bool mod, const char *s)
 
 void AppUi::setMouseIndicator(const char *s)
 {
-  // iMouse->setText(s);
+  setInnerText("mouse", s);
 }
 
 void AppUi::setSnapIndicator(const char *s)
 {
-  // iSnapIndicator->setText(s);
+  setInnerText("snapIndicator", s);
 }
 
 void AppUi::explain(const char *s, int t)
 {
-  // statusBar()->showMessage(QString::fromUtf8(s), t);
+  // TODO: handle timeout t
+  setInnerText("status", s);
 }
 
 void AppUi::showWindow(int width, int height, int x, int y, const Color & pathViewColor)
@@ -299,8 +307,8 @@ bool AppUi::waitDialog(const char *cmd, const char *label)
 {
   // this is fully async: the cmd is started and the function returns
   // cmd is either: "runlatex:<tex engine>" or "editor:"
-  emscripten::val::global("window").call<emscripten::val>("waitDialog", std::string(cmd),
-							  std::string(label));
+  emscripten::val::global("window")
+    .call<void>("waitDialog", std::string(cmd), std::string(label));
   return false;
 }
 
