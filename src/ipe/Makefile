@@ -14,9 +14,13 @@ LIBS += -L$(buildlib) -lipecanvas -lipecairo -lipelua -lipe -lipeui \
 	$(LUA_LIBS) $(UI_LIBS) $(CAIRO_LIBS) $(ZLIB_LIBS) $(DL_LIBS)
 
 ifdef IPEWASM
+ifdef IPEWASMTARGET
+TARGET = $(IPEWASMTARGET)/ipe.js
+endif
 # create js/wasm files suitable for a browser
 LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -lembind
 LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS -sALLOW_MEMORY_GROWTH=1
+LDFLAGS += --embed-file opt
 endif
 
 ifndef IPEBUNDLE
