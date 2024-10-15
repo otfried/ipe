@@ -85,6 +85,7 @@ namespace ipe {
     String(const char *str, int len) noexcept;
     String(const String &rhs) noexcept;
     String(const String &rhs, int index, int len) noexcept;
+    String(const std::string &rhs) noexcept;
     String &operator=(const String &rhs) noexcept;
 #ifdef WIN32
     String(const wchar_t *data);

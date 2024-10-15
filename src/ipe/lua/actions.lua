@@ -124,6 +124,18 @@ function MODEL:selector(prop, value)
       value = self:findOldValue(prop, proptype)
     end
   end
+  if value == "toggle" then
+    value = not self.attributes[prop]
+  elseif value == "next" then
+    value = self.attributes[prop]
+    if value == "stroked" then
+      value = "strokedfilled"
+    elseif value == "strokedfilled" then
+      value = "filled"
+    else
+      value = "stroked"
+    end
+  end
   self.attributes[prop] = value
   self.ui:setAttributes(self.doc:sheets(), self.attributes)
   if self:page():hasSelection() then

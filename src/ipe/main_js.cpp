@@ -45,6 +45,9 @@ using namespace ipelua;
 
 #include <emscripten/bind.h>
 
+using namespace emscripten;
+using std::string;
+
 // --------------------------------------------------------------------
 
 static void setup_globals(lua_State *L, int width, int height, double devicePixelRatio)
@@ -149,21 +152,37 @@ static void ipeAction(AppUi *ui, std::string name)
   ui->action(String(name.c_str()));
 }
 
-static void resumeLua(AppUi *ui, emscripten::val arg) {
+static void resumeLua(AppUi *ui, val arg) {
   ui->resumeLua(arg);
 }
 
-static void absoluteButton(AppUi *ui, emscripten::val sel) {
+static void absoluteButton(AppUi *ui, val sel) {
   ui->luaAbsoluteButton(sel.as<std::string>().c_str());
 }
 
-static void selector(AppUi *ui, emscripten::val sel, emscripten::val value) {
+static void selector(AppUi *ui, val sel, val value) {
   ui->luaSelector(sel.as<std::string>().c_str(),
 		  value.as<std::string>().c_str());
 }
 
-static void paintPathView(AppUi *ui, emscripten::val canvas) {
+static void paintPathView(AppUi *ui, val canvas) {
   ui->iPathView->paint(canvas);
+}
+
+static void layerAction(AppUi *ui, string name, string layer) {
+  ui->luaLayerAction(String(name), String(layer));
+}
+
+static void showLayerBoxPopup(AppUi *ui, string layer) {
+  ui->luaShowLayerBoxPopup(Vector(0,0), String(layer));
+}
+
+static void showPathStylePopup(AppUi *ui) {
+  ui->luaShowPathStylePopup(Vector(0,0));
+}
+
+static void bookmarkSelected(AppUi *ui, int row) {
+  ui->luaBookmarkSelected(row);
 }
 
 // --------------------------------------------------------------------
@@ -171,12 +190,18 @@ static void paintPathView(AppUi *ui, emscripten::val canvas) {
 EMSCRIPTEN_BINDINGS(ipe) {
   emscripten::class_<ipe::Platform>("Platform")
     .class_function("initLib", &initLib);
+
   emscripten::class_<AppUi>("AppUi")
     .function("action", &ipeAction, emscripten::allow_raw_pointers())
     .function("resume", &resumeLua, emscripten::allow_raw_pointers())
     .function("absoluteButton", &absoluteButton, emscripten::allow_raw_pointers())
     .function("selector", &selector, emscripten::allow_raw_pointers())
-    .function("paintPathView", &paintPathView, emscripten::allow_raw_pointers());
+    .function("paintPathView", &paintPathView, emscripten::allow_raw_pointers())
+    .function("layerAction", &layerAction, emscripten::allow_raw_pointers())
+    .function("showLayerBoxPopup", &showLayerBoxPopup, emscripten::allow_raw_pointers())
+    .function("showPathStylePopup", &showPathStylePopup, emscripten::allow_raw_pointers())
+    .function("bookmarkSelected", &bookmarkSelected, emscripten::allow_raw_pointers());
+    
   emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());
 }
 

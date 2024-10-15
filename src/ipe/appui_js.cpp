@@ -39,21 +39,25 @@
 #include <emscripten.h>
 #include <emscripten/bind.h>
 
+#include <format>
+
 using namespace ipe;
 using namespace ipelua;
+using namespace emscripten;
+using std::string;
 
 // --------------------------------------------------------------------
 
-static emscripten::val tojs(const char *s) noexcept
+static val tojs(const char *s) noexcept
 {
   if (s == nullptr)
-    return emscripten::val::null();
-  return emscripten::val(std::string(s));
+    return val::null();
+  return val(string(s));
 }
 
-static emscripten::val tojs(Color c) noexcept
+static val tojs(Color c) noexcept
 {
-  emscripten::val v = emscripten::val::object();
+  val v = val::object();
   v.set("red", c.iRed.toDouble());
   v.set("green", c.iGreen.toDouble());
   v.set("blue", c.iBlue.toDouble());
@@ -62,13 +66,13 @@ static emscripten::val tojs(Color c) noexcept
 
 static void setInnerText(const char *element, const char *s)
 {
-  emscripten::val el = emscripten::val::global("document")
-    .call<emscripten::val>("getElementById", std::string(element));
-  el.set("innerText", std::string(s));
+  val el = val::global("document")
+    .call<val>("getElementById", string(element));
+  el.set("innerText", string(s));
 }
 
-static emscripten::val jsUi() {
-  return emscripten::val::global("window")["ipeui"];
+static val jsUi() {
+  return val::global("window")["ipeui"];
 }
 
 static bool build_menus = true;
@@ -181,9 +185,9 @@ void AppUi::addComboColors(AttributeSeq &sym, AttributeSeq &abs)
 {
   iComboContents[EUiStroke].push_back(IPEABSOLUTE);
   iComboContents[EUiFill].push_back(IPEABSOLUTE);
-  emscripten::val colors = emscripten::val::array();
+  val colors = val::array();
   for (size_t i = 0; i < sym.size(); ++i) {
-    emscripten::val color = emscripten::val::object();
+    val color = val::object();
     String s = sym[i].string();
     color.set("name", s.s());
     color.set("rgb", tojs(abs[i].color()));
@@ -196,7 +200,7 @@ void AppUi::addComboColors(AttributeSeq &sym, AttributeSeq &abs)
 
 void AppUi::addCombo(int sel, String s)
 {
-  jsUi().call<void>("addCombo", sel, std::string(s.z()));
+  jsUi().call<void>("addCombo", sel, string(s.z()));
 }
 
 void AppUi::setComboCurrent(int sel, int idx)
@@ -212,6 +216,7 @@ void AppUi::setButtonColor(int sel, Color color)
 void AppUi::setPathView(const AllAttributes &all, Cascade *sheet)
 {
   iPathView->set(all, sheet);
+  jsUi().call<void>("paintPathView");
 }
 
 void AppUi::setCheckMark(String name, Attribute a)
@@ -225,17 +230,45 @@ void AppUi::setNumbers(String vno, bool vm, String pno, bool pm)
 
 void AppUi::setNotes(String notes)
 {
-  emscripten::val el = emscripten::val::global("document")
-    .call<emscripten::val>("getElementById", std::string("notes"));
+  val el = val::global("document")
+    .call<val>("getElementById", string("notes"));
   el.set("value", notes.z());
 }
 
 void AppUi::setLayers(const Page *page, int view)
 {
+  std::vector<int> objCounts;
+  page->objectsPerLayer(objCounts);
+  val layers = val::array();
+  for (int i = 0; i < page->countLayers(); ++i) {
+    val item = val::object();
+    item.set("name", page->layer(i).s());
+    item.set("text", std::format("{} ({})", page->layer(i).z(), objCounts[i]));
+    item.set("checked", page->visible(view, i));
+    item.set("active", page->layer(i) == page->active(view));
+    item.set("locked", page->isLocked(i));
+    switch (page->snapping(i)) {
+    case Page::SnapMode::Never:
+      item.set("snap", "never");
+      break;
+    case Page::SnapMode::Always:
+      item.set("snap", "always");
+      break;
+    default:
+      item.set("snap", "normal");
+      break;
+    }
+    layers.call<void>("push", item);
+  }
+  jsUi().call<void>("setLayers", layers);
 }
 
 void AppUi::setBookmarks(int no, const String *s)
 {
+  val bookmarks = val::array();
+  for (int i = 0; i < no; ++i) 
+    bookmarks.call<void>("push", s[i].s());
+  jsUi().call<void>("setBookmarks", bookmarks);
 }
 
 void AppUi::setToolVisible(int tool, bool vis)
@@ -254,23 +287,23 @@ void AppUi::setZoom(double zoom)
 void AppUi::setupSymbolicNames(const Cascade *sheet)
 {
   AppUiBase::setupSymbolicNames(sheet);
-  emscripten::val submenu1 = emscripten::val::array();
+  val submenu1 = val::array();
   for (String s : iComboContents[EUiGridSize] )
     submenu1.call<void>("push", s.s());
   jsUi().call<void>("setSubmenu", int(ESubmenuGridSize), submenu1);
-  emscripten::val submenu2 = emscripten::val::array();
+  val submenu2 = val::array();
   for (String s : iComboContents[EUiAngleSize] )
     submenu2.call<void>("push", s.s());
   jsUi().call<void>("setSubmenu", int(ESubmenuAngleSize), submenu2);
   AttributeSeq seq;
   sheet->allNames(ETextStyle, seq);
-  emscripten::val submenu3 = emscripten::val::array();
+  val submenu3 = val::array();
   for (auto &attr : seq)
     submenu3.call<void>("push", attr.string().s());
   jsUi().call<void>("setSubmenu", int(ESubmenuTextStyle), submenu3);
   seq.clear();
   sheet->allNames(ELabelStyle, seq);
-  emscripten::val submenu4 = emscripten::val::array();
+  val submenu4 = val::array();
   for (auto &attr : seq)
     submenu4.call<void>("push", attr.string().s());
   jsUi().call<void>("setSubmenu", int(ESubmenuLabelStyle), submenu4);
@@ -288,7 +321,7 @@ void AppUi::setActionsEnabled(bool mode)
 // Used for snapXXX, grid_visible, viewmarked, and pagemarked
 bool AppUi::actionState(const char *name)
 {
-  emscripten::val as = jsUi()["actionState"];
+  val as = jsUi()["actionState"];
   return as[name].as<bool>();
 }
 
@@ -330,7 +363,7 @@ void AppUi::setWindowCaption(bool mod, const char *s)
 {
   // TODO: macOS can use the actual filename and whether the file has been modified
   // (documentEdited and representedFilename on BrowserWindow)
-  emscripten::val htmlDocument = emscripten::val::global("document");
+  val htmlDocument = val::global("document");
   htmlDocument.set("title", s);
 }
 
@@ -362,7 +395,7 @@ void AppUi::setFullScreen(int mode)
 
 int AppUi::setClipboard(lua_State *L)
 {
-  std::string data = std::string(luaL_checklstring(L, 2, nullptr));
+  string data = string(luaL_checklstring(L, 2, nullptr));
   jsUi().call<void>("setClipboard", data);
   return 0;
 }
@@ -370,8 +403,8 @@ int AppUi::setClipboard(lua_State *L)
 int AppUi::clipboard(lua_State *L)
 {
   bool allowBitmap = lua_toboolean(L, 2);
-  emscripten::val result =
-    jsUi().call<emscripten::val>("getClipboard", allowBitmap);
+  val result =
+    jsUi().call<val>("getClipboard", allowBitmap);
   // this operation is async, it will later resume Lua with the result
   return 0;
 }
@@ -379,12 +412,12 @@ int AppUi::clipboard(lua_State *L)
 bool AppUi::waitDialog(const char *cmd, const char *label)
 {
   // cmd is either: "runlatex:<tex engine>" or "editor:"
-  jsUi().call<void>("waitDialog", std::string(cmd), std::string(label));
+  jsUi().call<void>("waitDialog", string(cmd), string(label));
   // this operation is async, it will later resume Lua with the result
   return false;
 }
 
-void AppUi::resumeLua(emscripten::val result)
+void AppUi::resumeLua(val result)
 {
   // calls model:resumeLua with an argument
   lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
@@ -393,7 +426,7 @@ void AppUi::resumeLua(emscripten::val result)
   if (result.isNull())
     lua_pushnil(L);
   else if (result.isString())
-    lua_pushstring(L, result.as<std::string>().c_str());
+    lua_pushstring(L, result.as<string>().c_str());
   else if (result.isNumber())
     lua_pushnumber(L, result.as<double>());
   else
@@ -405,15 +438,15 @@ void AppUi::resumeLua(emscripten::val result)
 
 int appui_preloadFile(lua_State *L)
 {
-  std::string fname{luaL_checklstring(L, 1, nullptr)};
-  std::string tmpname{luaL_checklstring(L, 2, nullptr)};
+  string fname{luaL_checklstring(L, 1, nullptr)};
+  string tmpname{luaL_checklstring(L, 2, nullptr)};
   jsUi().call<void>("preloadFile", fname, tmpname);
   return 0;
 }
 
 int appui_persistFile(lua_State *L)
 {
-  std::string fname{luaL_checklstring(L, 1, nullptr)};
+  string fname{luaL_checklstring(L, 1, nullptr)};
   jsUi().call<void>("persistFile", fname);
   return 0;
 }
