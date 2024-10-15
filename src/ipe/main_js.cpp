@@ -35,6 +35,7 @@
 #include <cstdlib>
 
 #include "appui_js.h"
+#include "controls_js.h"
 #include "ipecanvas_js.h"
 
 using namespace ipe;
@@ -161,6 +162,10 @@ static void selector(AppUi *ui, emscripten::val sel, emscripten::val value) {
 		  value.as<std::string>().c_str());
 }
 
+static void paintPathView(AppUi *ui, emscripten::val canvas) {
+  ui->iPathView->paint(canvas);
+}
+
 // --------------------------------------------------------------------
 
 EMSCRIPTEN_BINDINGS(ipe) {
@@ -170,7 +175,8 @@ EMSCRIPTEN_BINDINGS(ipe) {
     .function("action", &ipeAction, emscripten::allow_raw_pointers())
     .function("resume", &resumeLua, emscripten::allow_raw_pointers())
     .function("absoluteButton", &absoluteButton, emscripten::allow_raw_pointers())
-    .function("selector", &selector, emscripten::allow_raw_pointers());
+    .function("selector", &selector, emscripten::allow_raw_pointers())
+    .function("paintPathView", &paintPathView, emscripten::allow_raw_pointers());
   emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());
 }
 

@@ -97,6 +97,9 @@ private:
 
 private:
   void createIcon(String name);
+
+public:
+  PathView *iPathView;
 };
 
 // --------------------------------------------------------------------

@@ -29,6 +29,7 @@
 */
 
 #include "appui_js.h"
+#include "controls_js.h"
 #include "ipecanvas_js.h"
 
 #include "ipelua.h"
@@ -77,6 +78,7 @@ static bool build_menus = true;
 AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
   : AppUiBase(L0, model)
 {
+  iPathView = new PathView();
   iCanvas = canvas;
   if (build_menus)
     buildMenus();
@@ -89,6 +91,7 @@ AppUi::AppUi(lua_State *L0, int model, Canvas *canvas)
 AppUi::~AppUi()
 {
   ipeDebug("AppUi destructor");
+  delete iPathView;
 }
 
 void AppUi::createIcon(String name)
@@ -208,6 +211,7 @@ void AppUi::setButtonColor(int sel, Color color)
 
 void AppUi::setPathView(const AllAttributes &all, Cascade *sheet)
 {
+  iPathView->set(all, sheet);
 }
 
 void AppUi::setCheckMark(String name, Attribute a)
@@ -348,7 +352,7 @@ void AppUi::explain(const char *s, int t)
 
 void AppUi::showWindow(int width, int height, int x, int y, const Color & pathViewColor)
 {
-  // TODO: implement pathViewColor?
+  iPathView->setColor(pathViewColor);
 }
 
 void AppUi::setFullScreen(int mode)

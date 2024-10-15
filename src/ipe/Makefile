@@ -36,7 +36,7 @@ win_sources = main_win.cpp appui_win.cpp pathview_win.cpp pagesorter_win.cpp
 gtk_sources = main_gtk.cpp appui_gtk.cpp
 cocoa_sources = main_cocoa.cpp appui_cocoa.cpp controls_cocoa.cpp \
 	pagesorter_cocoa.cpp
-js_sources = main_js.cpp appui_js.cpp
+js_sources = main_js.cpp appui_js.cpp controls_js.cpp
 
 ifdef WIN32
 CXXFLAGS += -mwindows
