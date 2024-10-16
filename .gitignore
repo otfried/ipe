@@ -4,3 +4,4 @@ mingw64/
 mingw32/
 emscripten/
 venv/
+/src/ipe/opt/
