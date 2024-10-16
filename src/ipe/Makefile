@@ -20,7 +20,7 @@ endif
 # create js/wasm files suitable for a browser
 LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -lembind
 LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS -sALLOW_MEMORY_GROWTH=1
-LDFLAGS += --embed-file opt
+LDFLAGS += --embed-file opt -lidbfs.js
 endif
 
 ifndef IPEBUNDLE
