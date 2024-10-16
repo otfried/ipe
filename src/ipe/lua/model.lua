@@ -187,7 +187,7 @@ function MODEL:persistFile(fname)
   if config.platform == "electron" then
     self.ui.persistFile(fname)
     return coroutine.yield()
-  elseif config.platform == "web" then
+  elseif config.platform == "web" and config.toolkit == "qt" then
     ipeui.downloadFileIfIpeWeb(fname)
     return true
   else
@@ -196,7 +196,7 @@ function MODEL:persistFile(fname)
 end
 
 function MODEL:clipboard(allowBitmap)
-  if config.platform == "electron" then
+  if config.toolkit == "htmljs" then
     self.ui:getClipboardAsync(allowBitmap)
     return coroutine.yield()
   else
@@ -691,7 +691,7 @@ function MODEL:tryLoadDocument(fname)
 
     self:updateRecentFiles(fname)
 
-    if self.auto_latex and (config.platform ~= "electron" or
+    if self.auto_latex and (config.toolkit ~= "htmljs" or
 			    not self.first_show) then
       self:runLatex()
     end
@@ -797,7 +797,6 @@ end
 
 -- on OSX called without a MODEL
 function action_recent_file(fname)
-  print("action recent file", fname)
   MODEL.new(nil, fname)
 end
 

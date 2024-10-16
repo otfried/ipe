@@ -198,7 +198,7 @@ function MODEL:absoluteButton(button)
   -- print("Button:", button)
   if button == "stroke" or button == "fill" then
     local old = self:findOldValue(button, "color")
-    if config.platform == "electron" then
+    if config.toolkit == "htmljs" then
       r, g, b = self:getColorJS("Select " .. button .. " color",
 				old.r, old.g, old.b)
     else

@@ -111,12 +111,10 @@ static LPStrtodL p_strtod_l = nullptr;
 locale_t ipeLocale;
 #endif
 
-#if defined(IPEWASM) && !defined(IPENODEJS)
-String Platform::dotIpe()
-{
-  return String("/home/ipe/.ipe/");
-}
-#else
+#ifdef IPEWEB
+static bool usePreloader = false;
+#endif
+
 #ifndef WIN32
 String Platform::dotIpe()
 {
@@ -128,7 +126,6 @@ String Platform::dotIpe()
     return String();
   return res + "/";
 }
-#endif
 #endif
 
 #ifdef WIN32
@@ -149,6 +146,7 @@ static void readIpeConf()
 #else
 static void readIpeConf()
 {
+#ifndef IPEWEB
   String fname = Platform::dotIpe() + "ipe.conf";
   String conf = Platform::readFile(fname);
   if (conf.empty())
@@ -159,6 +157,7 @@ static void readIpeConf()
     String line = conf.getLine(i);
     putenv(strdup(line.z()));  // a leak, but necessary
   }
+#endif
 }
 #endif
 
@@ -205,6 +204,9 @@ void Platform::initLib(int version)
   if (showDebug)
     fprintf(stderr, "Debug messages enabled\n");
   debugHandler = debugHandlerImpl;
+#ifdef IPEWEB
+  usePreloader = getenv("IPEPRELOADER") != nullptr;
+#endif
 #ifdef WIN32
   HMODULE hDll = LoadLibraryA("msvcrt.dll");
   if (hDll) {
@@ -306,7 +308,7 @@ String Platform::ipeDrive()
 #ifdef IPEBUNDLE
 String Platform::ipeDir(const char *suffix, const char *fname)
 {
-#if defined(__EMSCRIPTEN__) && !defined(IPENODEJS)
+#ifdef IPEWEB
   String exe("/opt/ipe/");
 #else  
 #ifdef WIN32
@@ -402,6 +404,8 @@ String Platform::latexDirectory()
   }
   latexDir += "\\";
   return latexDir;
+#elif defined(IPEWEB)
+  return String("/tmp/latexrun/");
 #else
   const char *p = getenv("IPELATEXDIR");
   String latexDir;
@@ -698,10 +702,10 @@ String::String(const wchar_t *wbuf)
 }
 #endif
 
-#if defined(IPEWASM) && !defined(IPENODEJS)
+#ifdef IPEWEB
 FILE *Platform::fopen(const char *fname, const char *mode)
 {
-  if (!strncmp(fname, "/home/ipe/.ipe/latexrun/", 24) || !strncmp(fname, "/opt/ipe", 8))
+  if (!usePreloader || !strncmp(fname, "/tmp/latexrun/", 14) || !strncmp(fname, "/opt/ipe", 8))
     return ::fopen(fname, mode);
   emscripten::val preloadCache = emscripten::val::global("window")["ipeui"]["preloadCache"];
   emscripten::val s = preloadCache[fname];

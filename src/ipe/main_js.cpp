@@ -45,12 +45,15 @@ using namespace ipelua;
 
 #include <emscripten/bind.h>
 
+#include <format>
+
 using namespace emscripten;
 using std::string;
 
 // --------------------------------------------------------------------
 
-static void setup_globals(lua_State *L, int width, int height, double devicePixelRatio)
+static void setup_globals(lua_State *L, int width, int height,
+			  double devicePixelRatio, std::string platform)
 {
   lua_getglobal(L, "package");
   const char *luapath = getenv("IPELUAPATH");
@@ -66,9 +69,9 @@ static void setup_globals(lua_State *L, int width, int height, double devicePixe
   lua_setfield(L, -2, "path");
 
   lua_newtable(L);  // config table
-  lua_pushliteral(L, "electron");
+  lua_pushstring(L, platform.c_str());
   lua_setfield(L, -2, "platform");
-  lua_pushliteral(L, "html");
+  lua_pushliteral(L, "htmljs");
   lua_setfield(L, -2, "toolkit");
 
 #ifdef IPEBUNDLE
@@ -122,7 +125,8 @@ int mainloop(lua_State *L)
   return 0;
 }
 
-AppUi *startIpe(Canvas *canvas, int width, int height, double dpr)
+AppUi *startIpe(Canvas *canvas, int width, int height, double dpr,
+		std::string platform)
 {
   theCanvas = canvas;
 
@@ -134,7 +138,7 @@ AppUi *startIpe(Canvas *canvas, int width, int height, double dpr)
   lua_createtable(L, 0, 0);
   lua_setglobal(L, "argv");
 
-  setup_globals(L, width, height, dpr);
+  setup_globals(L, width, height, dpr, platform);
 
   lua_run_ipe(L, mainloop);
 
@@ -142,8 +146,12 @@ AppUi *startIpe(Canvas *canvas, int width, int height, double dpr)
   return theAppUi;
 }
 
-static void initLib() {
+// TODO: simply pass a list of VAR=VALUE settings instead
+static void initLib(std::string home, bool usePreloader) {
+  if (usePreloader)
+    putenv(strdup("IPEPRELOADER=1"));
   putenv(strdup("IPEDEBUG=1"));
+  putenv(strdup(std::format("HOME={}", home).c_str()));
   ipe::Platform::initLib(ipe::IPELIB_VERSION);
 }
 

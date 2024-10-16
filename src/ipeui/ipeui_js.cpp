@@ -535,7 +535,8 @@ int luaopen_ipeui(lua_State *L)
   addMethod(L, "fileDialog",
 	    "return function (...) ipeui.fileDialogAsync(...)"
 	    "local r = coroutine.yield()"
-	    "if r then return ipeui.val(r, 'path'), ipeui.val(r, 'selected') end end");
+	    "if ipeui.val(r, 'result') == 1 then "
+	    "return ipeui.val(r, 'path'), ipeui.val(r, 'selected') end end");
   lua_setglobal(L, "ipeui");
   luaopen_ipeui_common(L);
   addJSClasses();

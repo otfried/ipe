@@ -355,7 +355,7 @@ namespace ipe {
 #ifdef WIN32
     static FILE *fopen(const char *fname, const char *mode);
     static int mkdir(const char *dname);
-#elif defined(IPEWASM) && !defined(IPENODEJS)
+#elif defined(IPEWEB)
     static FILE *fopen(const char *fname, const char *mode);
 #else
     inline static FILE *fopen(const char *fname, const char *mode) {

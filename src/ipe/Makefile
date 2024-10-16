@@ -18,9 +18,9 @@ ifdef IPEWASMTARGET
 TARGET = $(IPEWASMTARGET)/ipe.js
 endif
 # create js/wasm files suitable for a browser
-LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -lembind
-LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS -sALLOW_MEMORY_GROWTH=1
-LDFLAGS += --embed-file opt -lidbfs.js
+LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -sALLOW_MEMORY_GROWTH=1
+LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS,IDBFS
+LDFLAGS += -lembind -lidbfs.js --embed-file opt
 endif
 
 ifndef IPEBUNDLE
