@@ -43,22 +43,6 @@
 
 #include <utility>
 
-class CancellableWaitDialog : public WaitDialog {
-        Q_OBJECT
-
-    public:
-        CancellableWaitDialog(QString label, QWidget *parent = nullptr) : WaitDialog(std::move(label), parent) {
-        }
-
-    protected:
-        void keyPressEvent(QKeyEvent *e) override {
-            QDialog::keyPressEvent(e);
-        }
-        void closeEvent(QCloseEvent *ev) override {
-            QDialog::closeEvent(ev);
-        }
-};
-
 #define UPLOAD_DIR "/home/web_user"
 
 int ipeui_fileDialog(lua_State *L) {

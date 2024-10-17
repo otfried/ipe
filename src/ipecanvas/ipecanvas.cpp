@@ -686,7 +686,7 @@ void CanvasBase::computeFifi(double x, double y)
 
 // --------------------------------------------------------------------
 
-void CanvasBase::refreshSurface()
+bool CanvasBase::refreshSurface()
 {
   if (!iSurface
       || iBWidth != cairo_image_surface_get_width(iSurface)
@@ -729,7 +729,9 @@ void CanvasBase::refreshSurface()
     }
     cairo_surface_flush(iSurface);
     cairo_destroy(cc);
-  }
+    return true;
+  } else
+    return false;
 }
 
 // --------------------------------------------------------------------

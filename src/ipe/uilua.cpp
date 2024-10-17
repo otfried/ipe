@@ -39,6 +39,11 @@
 #include <cstdio>
 #include <cstdlib>
 
+#ifdef IPEUI_JS
+extern int appui_preloadFile(lua_State *L);
+extern int appui_persistFile(lua_State *L);
+#endif
+
 using namespace ipe;
 using namespace ipelua;
 
@@ -731,6 +736,17 @@ static int appui_renderPage(lua_State *L)
 
 // --------------------------------------------------------------------
 
+static int appui_waitDialog(lua_State *L)
+{
+  AppUiBase **ui = check_appui(L, 1);
+  const char *cmd = luaL_checklstring(L, 2, nullptr);
+  const char *label = luaL_checklstring(L, 3, nullptr);
+  lua_pushboolean(L, (*ui)->waitDialog(cmd, label));
+  return 1;
+}
+
+// --------------------------------------------------------------------
+
 static const struct luaL_Reg appui_methods[] = {
   { "__tostring", appui_tostring },
   { "__gc", appui_destructor },
@@ -767,9 +783,9 @@ static const struct luaL_Reg appui_methods[] = {
   { "pasteTool", appui_pastetool },
   // --------------------------------------------------------------------
   { "win", appui_win},
+  { "waitDialog", appui_waitDialog },
   { "close", appui_close},
   { "setClipboard", appui_setClipboard },
-  { "clipboard", appui_clipboard },
   { "setActionState", appui_setActionState },
   { "actionState", appui_actionState },
   { "actionInfo", appui_actionInfo },
@@ -787,6 +803,13 @@ static const struct luaL_Reg appui_methods[] = {
   { "selectPage", appui_selectPage },
   { "pageSorter", appui_pageSorter },
   { "renderPage", appui_renderPage },
+#ifdef IPEUI_JS
+  { "preloadFile", appui_preloadFile },
+  { "persistFile", appui_persistFile },
+  { "getClipboardAsync", appui_clipboard },
+#else
+  { "getClipboard", appui_clipboard },
+#endif
   { nullptr, nullptr }
 };
 

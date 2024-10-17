@@ -244,6 +244,7 @@ ifdef IPENODEJS
   CPPFLAGS       += -DIPENODEJS
 else
   IPEBUNDLE = 1
+  CPPFLAGS       += -DIPEWEB
 endif
   ZLIB_CFLAGS    =
   ZLIB_LIBS      = -lz

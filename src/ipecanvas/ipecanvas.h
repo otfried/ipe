@@ -178,7 +178,7 @@ namespace ipe {
     void drawObjects(cairo_t *cc);
     void drawTool(Painter &painter);
     void snapToPaperAndFrame();
-    void refreshSurface();
+    bool refreshSurface();
     void computeFifi(double x, double y);
     void drawFifi(cairo_t *cr);
 

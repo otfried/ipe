@@ -139,6 +139,20 @@ String::String(const char *str, int len) noexcept
   }
 }
 
+String::String(const std::string &rhs) noexcept
+{
+  if (rhs.empty()) {
+    iImp = emptyString();
+  } else {
+    iImp = new Imp;
+    iImp->iRefCount = 1;
+    iImp->iSize = rhs.length();
+    iImp->iCapacity = (rhs.length() + 32) & ~15;
+    iImp->iData = new char[iImp->iCapacity];
+    memcpy(iImp->iData, rhs.c_str(), iImp->iSize);
+  }
+}
+
 //! Copy constructor.
 //! This only copies the reference and takes constant time.
 String::String(const String &rhs) noexcept

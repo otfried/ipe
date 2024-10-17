@@ -38,7 +38,6 @@
 #include <QGridLayout>
 #include <QAction>
 #include <QMenu>
-#include <QMutex>
 
 class QTimer;
 class QTextEdit;
@@ -102,69 +101,6 @@ public:
   virtual int stop(lua_State *L);
 private:
   QTimer *iTimer;
-};
-
-// --------------------------------------------------------------------
-
-class PDialog : public QDialog, public Dialog {
-  Q_OBJECT
-
-public:
-  PDialog(lua_State *L0, WINID parent, const char *caption, const char * language);
-  ~PDialog();
-
-  QGridLayout *gridlayout() { return iGrid; }
-
-protected:
-  virtual void setMapped(lua_State *L, int idx);
-  virtual bool buildAndRun(int w, int h);
-  virtual void retrieveValues();
-  virtual void enableItem(int idx, bool value);
-  virtual void acceptDialog(lua_State *L);
-
-protected:
-  virtual void keyPressEvent(QKeyEvent *e);
-
-private:
-  std::vector<QWidget *> iWidgets;
-  QGridLayout *iGrid;
-  QHBoxLayout *iButtonArea;
-};
-
-// --------------------------------------------------------------------
-
-class Waiter : public QObject
-{
-  Q_OBJECT
-
-public:
-  Waiter(lua_State *L, const QString &cmd);
-
-signals:
-  void completed();
-public slots:
-  void process();
-private:
-  lua_State *L;
-  QString iCommand;
-};
-
-class WaitDialog : public QDialog
-{
-  Q_OBJECT
-
-public:
-  WaitDialog(QString label, QWidget *parent = nullptr);
-  void startDialog();
-  bool isRunning() const noexcept { return running; }
-public slots:
-  void completed();
-protected:
-  void keyPressEvent(QKeyEvent *e);
-  void closeEvent(QCloseEvent *ev);
-private:
-  bool running; // the waiter has not yet signaled completed
-  QMutex mutex; // locked when dialog is waiting modally
 };
 
 // --------------------------------------------------------------------

@@ -1,6 +1,6 @@
 // -*- C++ -*-
 // --------------------------------------------------------------------
-// ipe::Canvas for HTML, Javascript, and webassembly
+// Special widgets for JS
 // --------------------------------------------------------------------
 /*
 
@@ -29,50 +29,28 @@
 
 */
 
-#ifndef IPECANVAS_JS_H
-#define IPECANVAS_JS_H
+#ifndef CONTROLS_JS_H
+#define CONTROLS_JS_H
 
-#include "ipecanvas.h"
+#include "ipelib.h"
 
 #include <emscripten/bind.h>
 
+using namespace ipe;
+
 // --------------------------------------------------------------------
 
-namespace ipe {
-
-  // --------------------------------------------------------------------
-
-  class JsPainter;
-
-  class Canvas : public CanvasBase {
-  public:
-    Canvas(emscripten::val bottomCanvas, emscripten::val topCanvas);
-
-    virtual void setCursor(TCursor cursor, double w = 1.0,
-			   Color *color = nullptr);
-
-    void mouseButtonEvent(emscripten::val event, int button, bool press);
-    void mouseMoveEvent(emscripten::val ev);
-    void wheelEvent(emscripten::val ev);
-    void paint();
-    void updateSize();
-
-  protected:
-    virtual void invalidate();
-    virtual void invalidate(int x, int y, int w, int h);
-    void drawFifi(JsPainter & qp);
-
-  private:
-    emscripten::val iPaintScheduler;
-    emscripten::val iBottomCanvas;
-    emscripten::val iTopCanvas;
-    emscripten::val iBottomCtx;
-    emscripten::val iTopCtx;
-    bool iNeedPaint;
-    double iDpr;
-  };
-
-} // namespace
+class PathView {
+public:
+  PathView();
+  void setColor(const Color & color);
+  void set(const AllAttributes &all, Cascade *sheet);
+  void paint(emscripten::val canvas);
+private:
+  Cascade *iCascade;
+  AllAttributes iAll;
+  Color iColor;
+};
 
 // --------------------------------------------------------------------
 #endif

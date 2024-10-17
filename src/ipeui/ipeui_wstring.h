@@ -42,6 +42,9 @@ class WString : public std::wstring {
   void init(const char *s, int len);
 };
 
+extern void buildFlags(std::vector<short> &t, DWORD flags);
+extern void buildString(std::vector<short> &t, const char *s);
+extern void buildControl(std::vector<short> &t, short what, const char *s = nullptr);
 extern BOOL setWindowText(HWND h, const char *s);
 extern void sendMessage(HWND h, UINT code, const char *t, WPARAM wParam = 0);
 

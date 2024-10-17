@@ -81,7 +81,7 @@ static std::string wideToUtf8(const wchar_t *wbuf)
   return std::string(multi.data());
 }
 
-static void buildFlags(std::vector<short> &t, DWORD flags)
+void buildFlags(std::vector<short> &t, DWORD flags)
 {
   union {
     DWORD dw;
@@ -94,7 +94,7 @@ static void buildFlags(std::vector<short> &t, DWORD flags)
   t.push_back(0);
 }
 
-static void buildString(std::vector<short> &t, const char *s)
+void buildString(std::vector<short> &t, const char *s)
 {
   WString w(s);
   const wchar_t *p = w.data();
@@ -103,7 +103,7 @@ static void buildString(std::vector<short> &t, const char *s)
   t.push_back(0);
 }
 
-static void buildControl(std::vector<short> &t, short what, const char *s = nullptr)
+void buildControl(std::vector<short> &t, short what, const char *s)
 {
   t.push_back(0xffff);
   t.push_back(what);
@@ -123,7 +123,7 @@ public:
 
 protected:
   virtual void setMapped(lua_State *L, int idx);
-  virtual bool buildAndRun(int w, int h);
+  virtual Result buildAndRun(int w, int h);
   void buildElements(std::vector<short> &t);
   virtual void retrieveValues();
   virtual void enableItem(int idx, bool value);
@@ -503,7 +503,7 @@ void PDialog::buildElements(std::vector<short> &t)
   }
 }
 
-bool PDialog::buildAndRun(int w, int h)
+Dialog::Result PDialog::buildAndRun(int w, int h)
 {
   // converts dimensions to dialog units and possibly changes them
   computeDimensions(w, h);
@@ -540,7 +540,7 @@ bool PDialog::buildAndRun(int w, int h)
 			    iParent, (DLGPROC) dialogProc, (LPARAM) this);
   // retrieveValues() has been called before EndDialog!
   hDialog = nullptr; // already destroyed by Windows
-  return (res > 0);
+  return (res > 0) ? Result::ACCEPTED : Result::CLOSED;
 }
 
 // converts (w, h) from pixels to dialog units and possibly increases them to fit dialog
@@ -732,12 +732,11 @@ int PMenu::execute(lua_State *L)
   if (1 <= result && result <= int(items.size())) {
     result -= 1;
     lua_pushstring(L, items[result].name.c_str());
-    lua_pushinteger(L, items[result].itemIndex);
     if (items[result].itemName.c_str())
       lua_pushstring(L, items[result].itemName.c_str());
     else
       lua_pushstring(L, "");
-    return 3;
+    return 2;
   }
   return 0;
 }
@@ -1167,143 +1166,6 @@ static int ipeui_messageBox(lua_State *L)
 
 // --------------------------------------------------------------------
 
-struct SDialogHandle {
-  HWND hwnd;
-  HANDLE thread;
-};
-
-BOOL CALLBACK waitDialogProc(HWND hwnd, UINT message,
-			     WPARAM wParam, LPARAM lParam)
-{
-  switch (message) {
-  case WM_INITDIALOG: {
-    SDialogHandle *d = (SDialogHandle *) lParam;
-    d->hwnd = hwnd;
-    if (d->thread) {
-      ResumeThread(d->thread);
-      // delay showing the dialog by 300ms
-      // if Latex is fast, the dialog never gets shown
-      Sleep(300);
-    }
-    return TRUE; }
-  default:
-    return FALSE;
-  }
-}
-
-VOID CALLBACK waitCallback(PVOID lpParameter, BOOLEAN timerOrWaitFired)
-{
-  SDialogHandle *d = (SDialogHandle *) lpParameter;
-  EndDialog(d->hwnd, 1);
-}
-
-DWORD CALLBACK waitLuaThreadProc(LPVOID lpParameter)
-{
-  lua_State *L = (lua_State *) lpParameter;
-  lua_callk(L, 0, 0, 0, nullptr);
-  return 0;
-}
-
-static int ipeui_wait(lua_State *L)
-{
-  Dialog **dlg = (Dialog **) luaL_testudata(L, 1, "Ipe.dialog");
-  HWND parent = dlg ? (*dlg)->winId() : check_winid(L, 1);
-
-  const char *cmd = nullptr;
-  if (!lua_isfunction(L, 2))
-    cmd = luaL_checklstring(L, 2, nullptr);
-
-  const char *label = "Waiting for external editor";
-  if (lua_isstring(L, 3))
-    label = luaL_checklstring(L, 3, nullptr);
-
-  std::vector<short> t;
-
-  // Dialog flags
-  buildFlags(t, WS_POPUP | WS_BORDER | DS_SHELLFONT |
-	     WS_SYSMENU | DS_MODALFRAME | WS_CAPTION);
-  t.push_back(1);
-  t.push_back(0); // offset of popup-window from parent window
-  t.push_back(0);
-  t.push_back(240);
-  t.push_back(60);
-  // menu
-  t.push_back(0);
-  // class
-  t.push_back(0);
-  // title
-  buildString(t, "Ipe: waiting");
-  // for DS_SHELLFONT
-  t.push_back(10);
-  buildString(t,"MS Shell Dlg");
-  if (t.size() % 2 != 0)
-    t.push_back(0);
-  buildFlags(t, WS_CHILD|WS_VISIBLE|SS_LEFT);
-  t.push_back(40);
-  t.push_back(20);
-  t.push_back(120);
-  t.push_back(20);
-  t.push_back(IDBASE);
-  buildControl(t, 0x0082, label);
-
-  SDialogHandle dialogHandle = { nullptr, nullptr };
-
-  HANDLE waitHandle;
-
-  if (cmd) {
-    // call external process
-
-    // Declare and initialize process blocks
-    PROCESS_INFORMATION processInformation;
-    STARTUPINFOW startupInfo;
-    memset(&processInformation, 0, sizeof(processInformation));
-    memset(&startupInfo, 0, sizeof(startupInfo));
-    startupInfo.cb = sizeof(startupInfo);
-
-    WString wcmd(cmd);
-
-    int result = CreateProcessW(nullptr, wcmd.data(), nullptr, nullptr, FALSE,
-				NORMAL_PRIORITY_CLASS|CREATE_NO_WINDOW,
-				nullptr, nullptr, &startupInfo, &processInformation);
-    if (result == 0)
-      return 0;
-
-    RegisterWaitForSingleObject(&waitHandle, processInformation.hProcess, waitCallback, &dialogHandle,
-				INFINITE, WT_EXECUTEINWAITTHREAD|WT_EXECUTEONLYONCE);
-
-    DialogBoxIndirectParamW((HINSTANCE) GetWindowLongPtr(parent, GWLP_HINSTANCE),
-			    (LPCDLGTEMPLATE) t.data(),
-			    parent, (DLGPROC) waitDialogProc,
-			    (LPARAM) &dialogHandle);
-
-    UnregisterWait(waitHandle);
-    CloseHandle(processInformation.hProcess);
-    CloseHandle(processInformation.hThread);
-
-  } else {
-    // call Lua function
-
-    dialogHandle.thread = CreateThread(nullptr, 0, &waitLuaThreadProc, L, CREATE_SUSPENDED, nullptr);
-    if (dialogHandle.thread == nullptr)
-      return 0;
-
-    RegisterWaitForSingleObject(&waitHandle, dialogHandle.thread, waitCallback, &dialogHandle,
-				INFINITE, WT_EXECUTEINWAITTHREAD|WT_EXECUTEONLYONCE);
-
-    lua_pushvalue(L, 2);
-
-    DialogBoxIndirectParamW((HINSTANCE) GetWindowLongPtr(parent, GWLP_HINSTANCE),
-			    (LPCDLGTEMPLATE) t.data(),
-			    parent, (DLGPROC) waitDialogProc,
-			    (LPARAM) &dialogHandle);
-    UnregisterWait(waitHandle);
-    CloseHandle(dialogHandle.thread);
-  }
-  return 0;
-}
-
-// --------------------------------------------------------------------
-
 static int ipeui_currentDateTime(lua_State *L)
 {
   SYSTEMTIME st;
@@ -1333,10 +1195,8 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "getColor", ipeui_getColor },
   { "fileDialog", ipeui_fileDialog },
   { "messageBox", ipeui_messageBox },
-  { "waitDialog", ipeui_wait },
   { "currentDateTime", ipeui_currentDateTime },
   { "startBrowser", ipeui_startBrowser },
-  { "downloadFileIfIpeWeb", ipeui_downloadFileIfIpeWeb },
   { nullptr, nullptr }
 };
 

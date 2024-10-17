@@ -55,7 +55,7 @@ function MODEL:init(fname)
     snapcustom = prefs.snap.custom,
     snapauto = prefs.snap.autoangle,
     grid_visible = prefs.initial.grid_visible,
-    pretty_display = false,
+    pretty_display = prefs.initial.pretty_display,
     gridsize = prefs.initial.grid_size,
     anglesize = prefs.initial.angle_size,
     snap_distance = prefs.snap_distance,
@@ -68,6 +68,8 @@ function MODEL:init(fname)
   self.ui = AppUi(self)
   self.pristine = false
   self.first_show = true
+  self.current_action = nil
+  self.okay_close = false
 
   self.type3_font = false
 
@@ -136,6 +138,74 @@ end
 
 ----------------------------------------------------------------------
 
+-- every call from the UI into Lua code must be wrapped:
+-- 1. inside a thread, so actions can yield and wait for UI or
+--    background activity
+-- 2. if an error happens in Lua code, there will be a message and
+--    Ipe continues to run, instead of crashing.
+
+function MODEL:wrapCall(f, ...)
+  local wrapper = function(f, ...)
+    local result, err = xpcall(f, debug.traceback, ...)
+    if not result then
+      messageBox(nil, "critical",
+		 "Lua error\n\n"..
+		   "Data may have been corrupted. \n" ..
+		   "Save your file!",
+		 err)
+    end
+  end
+  if self.current_action then
+    local status = coroutine.status(self.current_action)
+    if status == "suspended" then
+      messageBox(nil, "warning",
+		 "An operation is still waiting for a dialog, Latex, "
+		   .. "or an external editor, yet a new action happens.")
+      coroutine.close(self.current_action)
+    elseif status == "normal" then
+      print("DANGER! THIS SHOULD NOT HAPPEN!")
+      print("Calling into Lua while an operation is ongoing.  What's going on?")
+    end
+  end
+  self.current_action = coroutine.create(wrapper)
+  coroutine.resume(self.current_action, f, ...)
+end
+
+-- called by the UI to resume when Lua has yielded in an async operation
+function MODEL:resumeLua(arg)
+  if self.current_action then coroutine.resume(self.current_action, arg) end
+end
+
+function MODEL:preloadFile(fname)
+  if config.platform == "electron" then
+    self.ui.preloadFile(fname, os.tmpname())
+    coroutine.yield()
+  end
+end
+
+function MODEL:persistFile(fname)
+  if config.platform == "electron" then
+    self.ui.persistFile(fname)
+    return coroutine.yield()
+  elseif config.platform == "web" and config.toolkit == "qt" then
+    ipeui.downloadFileIfIpeWeb(fname)
+    return true
+  else
+    return true
+  end
+end
+
+function MODEL:clipboard(allowBitmap)
+  if config.toolkit == "htmljs" then
+    self.ui:getClipboardAsync(allowBitmap)
+    return coroutine.yield()
+  else
+    return self.ui:getClipboard(allowBitmap)
+  end
+end
+
+----------------------------------------------------------------------
+
 function MODEL:resetGridSize()
   self.snap.gridsize = prefs.initial.grid_size
   self.snap.anglesize = prefs.initial.angle_size
@@ -173,6 +243,25 @@ function MODEL:getString(msg, caption, start)
   end
 end
 
+function MODEL:getColorJS(msg, r, g, b, caption)
+  if caption == nil then caption = "Ipe" end
+  local d = ipeui.Dialog(self.ui:win(), caption)
+  d:add("label", "label", {label=msg}, 1, 1)
+  d:add("color", "input", {color_picker=true}, 2, 1)
+  d:addButton("ok", "Ok", "accept")
+  d:addButton("cancel", "Cancel", "reject")
+  d:set("color", string.format("#%02x%02x%02x", r * 255, g * 255, b * 255))
+  if d:execute() then
+    local s = d:get("color")
+    if #s == 7 and s:sub(1,1) == "#" then
+      r = tonumber2(s:sub(2,3), 16) / 255.0
+      g = tonumber2(s:sub(4,5), 16) / 255.0
+      b = tonumber2(s:sub(6,7), 16) / 255.0
+      return r, g, b
+    end
+  end
+end
+
 function MODEL:getDouble(caption, label, value, minv, maxv)
   local s = self:getString(label, caption, tostring(value))
   if s then
@@ -181,6 +270,11 @@ function MODEL:getDouble(caption, label, value, minv, maxv)
       return n
     end
   end
+end
+
+function MODEL:waitDialog(cmd, text)
+  local done = self.ui:waitDialog(cmd, text)
+  if not done then coroutine.yield() end
 end
 
 ----------------------------------------------------------------------
@@ -443,9 +537,10 @@ end
 
 ----------------------------------------------------------------------
 
-local function showSource(d)
+function MODEL:showSource()
   local fname = config.latexdir .. "ipetemp.tex"
-  ipeui.waitDialog(d, string.format(prefs.external_editor, fname))
+  self:waitDialog(string.format(prefs.external_editor, fname),
+		  "Waiting for external editor")
 end
 
 function MODEL:latexErrorBox(log)
@@ -456,7 +551,7 @@ function MODEL:latexErrorBox(log)
 	1, 1)
   d:add("text", "text", { read_only=true, syntax="logfile", focus=true }, 2, 1)
   if prefs.external_editor then
-    d:addButton("editor", "&Source", function (d) showSource(d) end)
+    d:addButton("editor", "&Source", function () self.showSource() end)
   end
   d:addButton("ok", "Ok", "accept")
   d:set("text", log)
@@ -469,14 +564,12 @@ function MODEL:runLatex()
   self.type3_font = false
   local success, errmsg, result, log
   if prefs.freeze_in_latex then
-    success, errmsg, result, log = self.doc:runLatex(self.file_name) -- sync
+    success, errmsg, result, log = self.doc:runLatex(self.file_name)
   else
-    ipeui.waitDialog(self.ui:win(),
-		     function ()
-		       success, errmsg, result, log = self.doc:runLatex(self.file_name, true) -- async
-		     end, "Compiling Latex")
-    if success and success ~= true then
-      self.doc:completeLatexRun(success) -- on ui thread
+    success, converter = self.doc:prepareLatexRun()
+    if success then
+      self:waitDialog(self.doc:howToRunLatex(self.file_name), "Compiling Latex")
+      success, errmsg, result, log = self.doc:completeLatexRun(converter)
     end
   end
   if success then
@@ -563,6 +656,7 @@ function MODEL:newDocument()
 end
 
 function MODEL:loadDocument(fname)
+  self:preloadFile(fname)
   local err = self:tryLoadDocument(fname)
   if err then
     self:warning("Document '" .. fname .. "' could not be opened", err)
@@ -597,7 +691,8 @@ function MODEL:tryLoadDocument(fname)
 
     self:updateRecentFiles(fname)
 
-    if self.auto_latex then
+    if self.auto_latex and (config.toolkit ~= "htmljs" or
+			    not self.first_show) then
       self:runLatex()
     end
 
@@ -635,11 +730,10 @@ function MODEL:saveDocument(fname)
   props.creator = config.version
   self.doc:setProperties(props)
 
-  if not self.doc:save(fname, fm) then
+  if not self.doc:save(fname, fm) or not self:persistFile(fname) then
     self:warning("File not saved!", "Error saving the document")
     return
   end
-  ipeui.downloadFileIfIpeWeb(fname)
 
   if fm == "xml" and #prefs.auto_export > 0 then
     self:auto_export(fname)
@@ -668,6 +762,10 @@ function MODEL:auto_export(fname)
 	self.ui:renderPage(self.doc, 1, 1,
 			   format, ename, prefs.auto_export_resolution / 72.0,
 			   true, false) -- transparent, nocrop
+      end
+      if not self:persistFile(ename) then
+	self:warning("Auto-exporting failed",
+		     "I could not persist the exported file '" .. ename .. "'.")
       end
     end
   end
@@ -699,7 +797,6 @@ end
 
 -- on OSX called without a MODEL
 function action_recent_file(fname)
-  print("action recent file", fname)
   MODEL.new(nil, fname)
 end
 
@@ -746,13 +843,13 @@ function MODEL:closeEvent()
 			 "The document has been modified",
 			 "Do you wish to save the document?",
 			 "savediscardcancel")
-    if r == 1 then
-      return self:action_save()
-    else
-      return r == 0
+    if r == 0 or (r == 1 and self:action_save()) then
+      self.okay_close = true
+      self.ui:close()
     end
   else
-    return true
+    self.okay_close = true
+    self.ui:close()
   end
 end
 

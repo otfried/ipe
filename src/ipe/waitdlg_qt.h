@@ -1,6 +1,6 @@
 // -*- C++ -*-
 // --------------------------------------------------------------------
-// ipe::Canvas for HTML, Javascript, and webassembly
+// Wait dialog for QT
 // --------------------------------------------------------------------
 /*
 
@@ -29,50 +29,49 @@
 
 */
 
-#ifndef IPECANVAS_JS_H
-#define IPECANVAS_JS_H
+#ifndef WAITDLG_QT_H
+#define WAITDLG_QT_H
 
-#include "ipecanvas.h"
+#include "appui.h"
 
-#include <emscripten/bind.h>
+#include <QDialog>
+#include <QMutex>
 
 // --------------------------------------------------------------------
 
-namespace ipe {
+class Waiter : public QObject
+{
+  Q_OBJECT
 
-  // --------------------------------------------------------------------
+public:
+  Waiter(const QString &cmd);
 
-  class JsPainter;
+signals:
+  void completed();
+public slots:
+  void process();
+private:
+  QString iCommand;
+};
 
-  class Canvas : public CanvasBase {
-  public:
-    Canvas(emscripten::val bottomCanvas, emscripten::val topCanvas);
+class WaitDialog : public QDialog
+{
+  Q_OBJECT
 
-    virtual void setCursor(TCursor cursor, double w = 1.0,
-			   Color *color = nullptr);
-
-    void mouseButtonEvent(emscripten::val event, int button, bool press);
-    void mouseMoveEvent(emscripten::val ev);
-    void wheelEvent(emscripten::val ev);
-    void paint();
-    void updateSize();
-
-  protected:
-    virtual void invalidate();
-    virtual void invalidate(int x, int y, int w, int h);
-    void drawFifi(JsPainter & qp);
-
-  private:
-    emscripten::val iPaintScheduler;
-    emscripten::val iBottomCanvas;
-    emscripten::val iTopCanvas;
-    emscripten::val iBottomCtx;
-    emscripten::val iTopCtx;
-    bool iNeedPaint;
-    double iDpr;
-  };
-
-} // namespace
+public:
+  WaitDialog(QString label, AppUiBase *observer);
+  bool showDialog(); // returns true if dialog is showing now
+  bool isRunning() const noexcept { return running; }
+public slots:
+  void completed();
+protected:
+  void keyPressEvent(QKeyEvent *e);
+  void closeEvent(QCloseEvent *ev);
+private:
+  AppUiBase *observer;
+  bool running; // the waiter has not yet signaled completed
+  QMutex mutex; // locked when dialog is waiting modally
+};
 
 // --------------------------------------------------------------------
 #endif
