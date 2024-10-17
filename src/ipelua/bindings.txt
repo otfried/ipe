@@ -946,7 +946,7 @@ The result value of \e get is:
 Popup menus are constructed and shown as follows:
 \verbatim
 m = ipeui.Menu(parent)	
-item, no, subitem = m:execute(global_position)
+item, subitem = m:execute(global_position)
 \endverbatim
 When the menu is cancelled, \e execute returns \e nil.
 
@@ -955,14 +955,14 @@ like this:
 \verbatim
 m:add("name", "Label")
 \endverbatim
-When this item is selected, execute returns \a name, 0, and an empty string.
+When this item is selected, execute returns \a name, and an empty string.
 
 The following line adds an entire submenu:
 \verbatim
 m:add("name", "Submenu", { "alpha", "beta", "gamma" } )
 \endverbatim
 When an item from this submenu is selected, \e execute returns \a
-name, the index into the submenu, and the name of the submenu item.
+name and the name of the submenu item.
 
 When the strings in the table are not directly the visible labels for
 the submenu, a Lua function can be used to convert them:

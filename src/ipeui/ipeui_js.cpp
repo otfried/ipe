@@ -141,8 +141,8 @@ int PDialog::takeDown(lua_State *L)
   luaL_argcheck(L, results != nullptr && !results->isNull(), 2,
 		"argument is not a Javascript object");
   release(L); // release references to Lua objects
-  bool accepted = (*results)["result"].as<bool>();
-  if (accepted) {
+  int result = (*results)["result"].as<int>();
+  if (result == 1) {
     emscripten::val values = (*results)["values"];
     for (int i = 0; i < int(iElements.size()); ++i) {
       SElement &m = iElements[i];
@@ -158,7 +158,7 @@ int PDialog::takeDown(lua_State *L)
       }
     }
   }
-  lua_pushboolean(L, accepted);
+  lua_pushboolean(L, result == 1);
   return 1;
 }
 
@@ -198,11 +198,9 @@ PMenu::PMenu()
 
 int PMenu::execute(lua_State *L)
 {
-  emscripten::val menu = emscripten::val::object();
-  menu.set("x", (int) luaL_checknumber(L, 2));
-  menu.set("y", (int) luaL_checknumber(L, 3));
-  menu.set("items", iItems);
-  emscripten::val::global("window")["ipeui"].call<void>("menu", menu);
+  int vx = (int) luaL_checknumber(L, 2);
+  int vy = (int) luaL_checknumber(L, 3);
+  emscripten::val::global("window")["ipeui"].call<void>("showPopupMenu", vx, vy, iItems);
   return 0;
 }
 
@@ -210,7 +208,7 @@ int PMenu::add(lua_State *L)
 {
   emscripten::val item = emscripten::val::object();
   item.set("name", checkstring(L, 2));
-  item.set("title", checkstring(L, 3));
+  item.set("label", checkstring(L, 3));
   if (lua_gettop(L) > 3) {
     luaL_argcheck(L, lua_istable(L, 4), 4, "argument is not a table");
     bool hasmap = !lua_isnoneornil(L, 5) && lua_isfunction(L, 5);
@@ -232,12 +230,12 @@ int PMenu::add(lua_State *L)
       lua_rawgeti(L, 4, i);
       luaL_argcheck(L, lua_isstring(L, -1), 4, "items must be strings");
       std::string item = tostring(L, -1);
-      subitem.set("item", item);
-      std::string text = item;
+      subitem.set("name", item);
+      std::string label = item;
       if (hastable) {
 	lua_rawgeti(L, 5, i);
 	luaL_argcheck(L, lua_isstring(L, -1), 5, "labels must be strings");
-	text = tostring(L, -1);
+	label = tostring(L, -1);
 	lua_pop(L, 1);
       }
       if (hasmap) {
@@ -247,10 +245,10 @@ int PMenu::add(lua_State *L)
 	lua_call(L, 2, 1);     // function returns label
 	luaL_argcheck(L, lua_isstring(L, -1), 5,
 		      "function does not return string");
-	text = tostring(L, -1);
+	label = tostring(L, -1);
 	lua_pop(L, 1);         // pop result
       }
-      subitem.set("text", text);
+      subitem.set("label", label);
       if (hascolor) {
 	emscripten::val color = emscripten::val::object();
 	lua_pushvalue(L, 6);   // function
@@ -263,7 +261,6 @@ int PMenu::add(lua_State *L)
 	lua_pop(L, 3);         // pop result
 	subitem.set("color", color);
       }
-      subitem.set("checkable", hascheck);
       lua_pop(L, 1); // item
       submenu.call<void>("push", subitem);
     }
@@ -531,6 +528,7 @@ int luaopen_ipeui(lua_State *L)
   luaL_newlib(L, ipeui_functions);
   addMethod(L, "messageBox",
 	    "return function (...) ipeui.messageBoxAsync(...)"
+	    "local r = coroutine.yield()"
 	    "return ipeui.val(coroutine.yield(), 'result') end");
   addMethod(L, "fileDialog",
 	    "return function (...) ipeui.fileDialogAsync(...)"

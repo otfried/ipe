@@ -92,6 +92,7 @@ public:
 	 EUiView, EUiPage, EUiViewMarked, EUiPageMarked };
 
   // tags for submenus
+  // change list submenuNames if enum changes
   enum { ESubmenuGridSize = 1000, ESubmenuAngleSize,
 	 ESubmenuTextStyle, ESubmenuLabelStyle,
 	 ESubmenuSelectLayer, ESubmenuMoveLayer,

@@ -473,12 +473,11 @@ int PMenu::execute(lua_State *L)
 
   if (0 <= iSelectedItem && iSelectedItem < int(items.size())) {
     lua_pushstring(L, items[iSelectedItem].name);
-    lua_pushinteger(L, items[iSelectedItem].itemIndex);
     if (items[iSelectedItem].itemName)
       lua_pushstring(L, items[iSelectedItem].itemName);
     else
       lua_pushstring(L, "");
-    return 3;
+    return 2;
   } else
     return 0;
 }

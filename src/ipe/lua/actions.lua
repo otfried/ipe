@@ -364,7 +364,7 @@ function MODEL:showPathStylePopup(v)
   m:add("fillrule", "Fill rule", { "normal", "evenodd", "wind" },
 	nil, a.fillrule)
 
-  local r, n, value = m:execute(v.x, v.y)
+  local r, value = m:execute(v.x, v.y)
   if r then self:selector(r, value) end
 end
 
@@ -412,7 +412,7 @@ function MODEL:showLayerBoxPopup(v, layer)
 	  function (i, l) if l == "_top_" then return "to top"
 	    else return "after " .. l end end)
   end
-  local r, no, subitem = m:execute(v.x, v.y)
+  local r, subitem = m:execute(v.x, v.y)
   if r then
     self:layerAction(r, layer, subitem)
   end
@@ -960,6 +960,7 @@ function action_about_ipelets(win)
   local d = ipeui.Dialog(win, "Ipe: About the ipelets")
   d:add("text", "text", { read_only=true }, 1, 1)
   d:set("text", s)
+  d:setStretch("row", 1, 1)
   d:addButton("ok", "Ok", "accept")
   d:execute(prefs.latexlog_size)
 end
@@ -1640,6 +1641,8 @@ function MODEL:action_edit_view()
   d:add("tfm", "text", {}, -1, 2)
   d:add("effect-label", "label", { label="Effect" }, 0, 1)
   d:add("combo", "combo", list, -1, 2)
+  d:setStretch("row", 4, 1)
+  d:setStretch("row", 5, 1)  
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:set("name", name0)

@@ -736,12 +736,11 @@ int PMenu::execute(lua_State *L)
 					 inView:nil];
   if (result && iSelected) {
     lua_pushstring(L, N2C(iSelected.ipeName));
-    lua_pushinteger(L, iSelected.ipeSubmenuIndex);
     if (iSelected.ipeSubmenuName)
       lua_pushstring(L, N2C(iSelected.ipeSubmenuName));
     else
       lua_pushliteral(L, "");
-    return 3;
+    return 2;
   } else
     return 0;
 }

@@ -575,9 +575,8 @@ int PMenu::execute(lua_State *L)
   MenuAction *ma = qobject_cast<MenuAction *>(a);
   if (ma) {
     push_string(L, ma->name());
-    lua_pushnumber(L, ma->number());
     push_string(L, ma->itemName());
-    return 3;
+    return 2;
   }
   return 0;
 }

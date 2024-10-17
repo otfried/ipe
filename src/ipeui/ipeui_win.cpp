@@ -732,12 +732,11 @@ int PMenu::execute(lua_State *L)
   if (1 <= result && result <= int(items.size())) {
     result -= 1;
     lua_pushstring(L, items[result].name.c_str());
-    lua_pushinteger(L, items[result].itemIndex);
     if (items[result].itemName.c_str())
       lua_pushstring(L, items[result].itemName.c_str());
     else
       lua_pushstring(L, "");
-    return 3;
+    return 2;
   }
   return 0;
 }

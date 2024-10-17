@@ -1411,8 +1411,10 @@ function MODEL:action_edit_text(prim, obj)
   d:add("label", "label", { label="Edit latex source" }, 1, 1, 1, 2)
   d:add("text", "text", { syntax="latex", focus=true,
 			  spell_check=prefs.spell_check}, 0, 1, 1, 4)
-  d:addButton("apply", "&Apply",
-	      function (d) apply_text_edit(d, data, true) end)
+  if config.toolkit ~= "htmljs" then
+    d:addButton("apply", "&Apply",
+		function (d) apply_text_edit(d, data, true) end)
+  end
   self:addEditorField(d, "text")
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")

@@ -782,7 +782,7 @@ static void make_metatable(lua_State *L, const char *name,
 			     "m:executeAsync(x, y)"
 			     "local r = coroutine.yield()"
 			     "if r then return ipeui.val(r, 'action'),"
-			     "ipeui.val(r, 'subitem'),ipeui.val(r, 'current') end end");
+			     "ipeui.val(r, 'current') end end");
     if (ok != LUA_OK)
       luaL_error(L, "cannot prepare m:execute function");
     lua_call(L, 0, 1);

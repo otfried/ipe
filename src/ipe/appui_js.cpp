@@ -48,6 +48,16 @@ using std::string;
 
 // --------------------------------------------------------------------
 
+static const char *submenuNames[] = {
+  "submenu-gridsize",
+  "submenu-anglesize",
+  "submenu-textstyle",
+  "submenu-labelstyle",
+  "submenu-selectlayer",
+  "submenu-movelayer",
+  "submenu-recentfiles",
+};
+
 static val tojs(const char *s) noexcept
 {
   if (s == nullptr)
@@ -115,36 +125,36 @@ void AppUi::createIcon(String name)
 // --------------------------------------------------------------------
 
 static void requestMenu(const char *what, int id, const char *name,
-			const char * title, int tag, const char * shortcut)
+			const char * label, const char * shortcut)
 {
   jsUi().call<void>("buildMenu", tojs(what), id, tojs(name),
-		    tojs(title), tag, tojs(shortcut));
+		    tojs(label), tojs(shortcut));
 }
 
 void AppUi::addRootMenu(int id, const char *name)
 {
-  requestMenu("addRootMenu", id, name, nullptr, 0, nullptr);
+  requestMenu("rootmenu", id, nullptr, name, nullptr);
 }
 
-void AppUi::addItem(int id, const char *title, const char *name)
+void AppUi::addItem(int id, const char *label, const char *name)
 {
-  if (title == nullptr) {
-    requestMenu("addSeparator", id, nullptr, nullptr, 0, nullptr);
+  if (label == nullptr) {
+    requestMenu("separator", id, nullptr, nullptr, nullptr);
   } else {
     if (name[0] == '@')
       name = name + 1;
-    int tag = 0;
+    const char * type = "normal";
     if (name[0] == '*') {
-      tag = 1;
+      type = "checkbox";
       name = name + 1;
     } else if ((id == EModeMenu) ||
 	       (String(name).find('|') >= 0)) {
-      tag = 2; // radio button
+      type = "radio";
     }
     lua_getglobal(L, "shortcuts");
     lua_getfield(L, -1, name);
     createIcon(String(name));
-    requestMenu("addItem", id, name, title, tag,
+    requestMenu(type, id, name, label,
 		lua_isstring(L, -1) ? lua_tostring(L, -1) : nullptr);
     lua_pop(L, 2);
   }
@@ -152,15 +162,18 @@ void AppUi::addItem(int id, const char *title, const char *name)
 
 static MENUHANDLE currentSubmenu = -1;
 
-void AppUi::startSubMenu(int id, const char *name, int tag)
+void AppUi::startSubMenu(int id, const char *label, int tag)
 {
   currentSubmenu = tag;
-  requestMenu("startSubMenu", id, name, nullptr, tag, nullptr);
+  if (ESubmenuGridSize <= tag && tag < ESubmenuFin)
+    requestMenu("submenu", id, submenuNames[tag - ESubmenuGridSize], label, nullptr);
+  else
+    requestMenu("submenu", id, "submenu", label, nullptr);
 }
 
-void AppUi::addSubItem(const char *title, const char *name)
+void AppUi::addSubItem(const char *label, const char *name)
 {
-  addItem(-1, title, name);
+  addItem(-1, label, name);
 }
 
 MENUHANDLE AppUi::endSubMenu()
@@ -240,6 +253,7 @@ void AppUi::setLayers(const Page *page, int view)
   std::vector<int> objCounts;
   page->objectsPerLayer(objCounts);
   val layers = val::array();
+  val items = val::array();
   for (int i = 0; i < page->countLayers(); ++i) {
     val item = val::object();
     item.set("name", page->layer(i).s());
@@ -259,8 +273,13 @@ void AppUi::setLayers(const Page *page, int view)
       break;
     }
     layers.call<void>("push", item);
+    items.call<void>("push", page->layer(i).s());
   }
   jsUi().call<void>("setLayers", layers);
+  jsUi().call<void>("setSubmenu", tojs("submenu-selectlayer"),
+		    tojs("selectinlayer-"), tojs("normal"), items);
+  jsUi().call<void>("setSubmenu", tojs("submenu-movelayer"),
+		    tojs("movetolayer-"), tojs("normal"), items);
 }
 
 void AppUi::setBookmarks(int no, const String *s)
@@ -286,27 +305,32 @@ void AppUi::setZoom(double zoom)
 
 void AppUi::setupSymbolicNames(const Cascade *sheet)
 {
+  auto setSubmenu = [](int sm, val items) {
+    const char * id = submenuNames[sm - ESubmenuGridSize];
+    std::string action = std::string(id + 8) + "|";
+    jsUi().call<void>("setSubmenu", tojs(id), action, tojs("radio"), items);
+  };
   AppUiBase::setupSymbolicNames(sheet);
   val submenu1 = val::array();
   for (String s : iComboContents[EUiGridSize] )
     submenu1.call<void>("push", s.s());
-  jsUi().call<void>("setSubmenu", int(ESubmenuGridSize), submenu1);
+  setSubmenu(ESubmenuGridSize, submenu1);
   val submenu2 = val::array();
   for (String s : iComboContents[EUiAngleSize] )
     submenu2.call<void>("push", s.s());
-  jsUi().call<void>("setSubmenu", int(ESubmenuAngleSize), submenu2);
+  setSubmenu(ESubmenuAngleSize, submenu2);
   AttributeSeq seq;
   sheet->allNames(ETextStyle, seq);
   val submenu3 = val::array();
   for (auto &attr : seq)
     submenu3.call<void>("push", attr.string().s());
-  jsUi().call<void>("setSubmenu", int(ESubmenuTextStyle), submenu3);
+  setSubmenu(ESubmenuTextStyle, submenu3);
   seq.clear();
   sheet->allNames(ELabelStyle, seq);
   val submenu4 = val::array();
   for (auto &attr : seq)
     submenu4.call<void>("push", attr.string().s());
-  jsUi().call<void>("setSubmenu", int(ESubmenuLabelStyle), submenu4);
+  setSubmenu(ESubmenuLabelStyle, submenu4);
 }
 
 // --------------------------------------------------------------------

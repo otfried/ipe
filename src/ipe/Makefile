@@ -13,6 +13,9 @@ CPPFLAGS += -I../include -I../ipecanvas -I../ipecairo -I../ipelua \
 LIBS += -L$(buildlib) -lipecanvas -lipecairo -lipelua -lipe -lipeui \
 	$(LUA_LIBS) $(UI_LIBS) $(CAIRO_LIBS) $(ZLIB_LIBS) $(DL_LIBS)
 
+MAKE_ASSETS =
+WASM_LIBS =
+
 ifdef IPEWASM
 ifdef IPEWASMTARGET
 TARGET = $(IPEWASMTARGET)/ipe.js
@@ -21,6 +24,8 @@ endif
 LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -sALLOW_MEMORY_GROWTH=1
 LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS,IDBFS
 LDFLAGS += -lembind -lidbfs.js --embed-file opt
+MAKE_ASSETS = bash mkipewebassets.sh
+WASM_LIBS = $(BUILDDIR)/lib/libipeui.so $(BUILDDIR)/lib/libipe.so 
 endif
 
 ifndef IPEBUNDLE
@@ -67,8 +72,9 @@ else
 nib = 
 endif
 
-$(TARGET): $(objects) $(resource) $(nib) Makefile
+$(TARGET): $(objects) $(resource) $(nib) Makefile $(WASM_LIBS)
 	$(MAKE_BINDIR)
+	$(MAKE_ASSETS)
 	$(CXX) $(LDFLAGS) -o $@ $(objects) $(resource) $(LIBS)
 
 clean:
