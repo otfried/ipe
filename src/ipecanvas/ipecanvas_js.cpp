@@ -251,7 +251,7 @@ static int convertModifiers(val ev)
 
 void Canvas::mouseButtonEvent(emscripten::val ev, int button, bool press)
 {
-  iGlobalPos = Vector(ev["screenX"].as<double>(), ev["screenY"].as<double>());
+  iGlobalPos = Vector(ev["clientX"].as<double>(), ev["clientY"].as<double>());
   computeFifi(ev["offsetX"].as<double>(), ev["offsetY"].as<double>());
   int mod = convertModifiers(ev) | iAdditionalModifiers;
   // ipeDebug("mouseButton %g, %g %d %d %d", iUnsnappedMousePos.x, iUnsnappedMousePos.y, press, button, mod);

@@ -181,12 +181,12 @@ static void layerAction(AppUi *ui, string name, string layer) {
   ui->luaLayerAction(String(name), String(layer));
 }
 
-static void showLayerBoxPopup(AppUi *ui, string layer) {
-  ui->luaShowLayerBoxPopup(Vector(0,0), String(layer));
+static void showLayerBoxPopup(AppUi *ui, string layer, double x, double y) {
+  ui->luaShowLayerBoxPopup(Vector(x, y), String(layer));
 }
 
-static void showPathStylePopup(AppUi *ui) {
-  ui->luaShowPathStylePopup(Vector(0,0));
+static void showPathStylePopup(AppUi *ui, double x, double y) {
+  ui->luaShowPathStylePopup(Vector(x, y));
 }
 
 static void bookmarkSelected(AppUi *ui, int row) {
