@@ -566,8 +566,8 @@ function MODEL:runLatex()
   if prefs.freeze_in_latex then
     success, errmsg, result, log = self.doc:runLatex(self.file_name)
   else
-    success, converter = self.doc:prepareLatexRun()
-    if success then
+    success, converter, errmsg, result = self.doc:prepareLatexRun()
+    if converter then
       self:waitDialog(self.doc:howToRunLatex(self.file_name), "Compiling Latex")
       success, errmsg, result, log = self.doc:completeLatexRun(converter)
     end

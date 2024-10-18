@@ -332,6 +332,10 @@ static int document_runLatex(lua_State *L)
       lua_pushliteral(L, "There was an error reading the Pdflatex output");
       lua_pushliteral(L, "latexoutput");
       break;
+    default:
+      lua_pushliteral(L, "There was an unknown error running latex");
+      lua_pushliteral(L, "errlatex");
+      break;
     }
   }
   push_string(L, log);
@@ -344,15 +348,35 @@ static int document_prepareLatexRun(lua_State *L)
   Document **d = check_document(L, 1);
   Latex *converter = nullptr;
   int result = (*d)->prepareLatexRun(&converter);
-  // TODO: return precise error
   if (result == 0) {
     lua_pushboolean(L, true);
     lua_pushlightuserdata(L, converter);
+    lua_pushnil(L);
+    lua_pushnil(L);
+  } else if (result == Document::ErrNoText) {
+    lua_pushboolean(L, true);
+    lua_pushnil(L);
+    lua_pushnil(L);
+    lua_pushliteral(L, "notext");
   } else {
     lua_pushboolean(L, false);
     lua_pushnil(L);
+    switch (result) {
+    case Document::ErrNoDir:
+      lua_pushliteral(L, "Directory does not exist and cannot be created");
+      lua_pushliteral(L, "nodir");
+      break;
+    case Document::ErrWritingSource:
+      lua_pushliteral(L, "Error writing Latex source");
+      lua_pushliteral(L, "writingsource");
+      break;
+    default:
+      lua_pushliteral(L, "There was an unknown error preparing to run latex");
+      lua_pushliteral(L, "errlatex");
+      break;
+    }
   }
-  return 2;
+  return 4;
 }
 
 static int document_howToRunLatex(lua_State *L)
@@ -382,21 +406,9 @@ static int document_completeLatexRun(lua_State *L)
     lua_pushboolean(L, true);
     lua_pushnil(L);
     lua_pushnil(L);
-  } else if (result == Document::ErrNoText) {
-    lua_pushboolean(L, true);
-    lua_pushnil(L);
-    lua_pushliteral(L, "notext");
   } else {
     lua_pushboolean(L, false);
     switch (result) {
-    case Document::ErrNoDir:
-      lua_pushliteral(L, "Directory does not exist and cannot be created");
-      lua_pushliteral(L, "nodir");
-      break;
-    case Document::ErrWritingSource:
-      lua_pushliteral(L, "Error writing Latex source");
-      lua_pushliteral(L, "writingsource");
-      break;
     case Document::ErrRunLatex:
       lua_pushliteral(L, "There was an error trying to run Pdflatex");
       lua_pushliteral(L, "runlatex");
@@ -408,6 +420,10 @@ static int document_completeLatexRun(lua_State *L)
     case Document::ErrLatexOutput:
       lua_pushliteral(L, "There was an error reading the Pdflatex output");
       lua_pushliteral(L, "latexoutput");
+      break;
+    default:
+      lua_pushliteral(L, "There was an unknown error running latex");
+      lua_pushliteral(L, "errlatex");
       break;
     }
   }
