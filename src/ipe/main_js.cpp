@@ -157,7 +157,7 @@ static void initLib(std::string home, bool usePreloader) {
 
 static void ipeAction(AppUi *ui, std::string name)
 {
-  ui->action(String(name.c_str()));
+  ui->action(name);
 }
 
 static void resumeLua(AppUi *ui, val arg) {

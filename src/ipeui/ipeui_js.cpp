@@ -528,7 +528,6 @@ int luaopen_ipeui(lua_State *L)
   luaL_newlib(L, ipeui_functions);
   addMethod(L, "messageBox",
 	    "return function (...) ipeui.messageBoxAsync(...)"
-	    "local r = coroutine.yield()"
 	    "return ipeui.val(coroutine.yield(), 'result') end");
   addMethod(L, "fileDialog",
 	    "return function (...) ipeui.fileDialogAsync(...)"

@@ -25,9 +25,9 @@ LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -sALLOW_MEMORY_GROWTH
 LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS,IDBFS
 LDFLAGS += -lembind -lidbfs.js --embed-file opt
 MAKE_ASSETS = bash mkipewebassets.sh
-WASM_LIBS = $(BUILDDIR)/lib/libipeui.so \
-	$(BUILDDIR)/lib/libipecanvas.so \
-	$(BUILDDIR)/lib/libipe.so
+WASM_LIBS = $(BUILDDIR)/lib/libipeui.so $(BUILDDIR)/lib/libipecanvas.so \
+	$(BUILDDIR)/lib/libipelua.so $(BUILDDIR)/lib/libipe.so \
+	lua/model.lua lua/actions.lua
 endif
 
 ifndef IPEBUNDLE
