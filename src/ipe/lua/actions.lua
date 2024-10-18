@@ -2656,8 +2656,10 @@ local function sheets_del(d, dd)
   local i = d:get("list")
   if not i then return end
   if dd.list[i]:isStandard() then
-    dd.model:warning("Cannot delete stylesheet",
-		     "The standard stylesheet cannot be removed")
+    if config.toolkit ~= "htmljs" then
+      dd.model:warning("Cannot delete stylesheet",
+		       "The standard stylesheet cannot be removed")
+    end
     return
   end
   table.remove(dd.list, i)
@@ -2723,18 +2725,20 @@ function MODEL:action_style_sheets()
   local d = ipeui.Dialog(self.ui:win(), "Ipe style sheets")
   d:add("label1", "label", { label="Style sheets"}, 1, 1, 1, 4)
   d:add("list", "list", sheets_namelist(dd.list), 2, 1, 7, 3)
-  d:add("add", "button",
-	{ label="&Add", action=function (d) sheets_add(d, dd) end }, 2, 4)
   d:add("del", "button",
 	{ label="Del", action=function (d) sheets_del(d, dd) end }, 3, 4)
-  d:add("edit", "button",
-	{ label="Edit", action=function (d) sheets_edit(d, dd) end }, 4, 4)
   d:add("up", "button",
 	{ label="&Up", action=function (d) sheets_up(d, dd) end }, 5, 4)
   d:add("down", "button",
 	{ label="&Down", action=function (d) sheets_down(d, dd) end }, 6, 4)
+  if config.toolkit ~= "htmljs" then
+  d:add("add", "button",
+	{ label="&Add", action=function (d) sheets_add(d, dd) end }, 2, 4)
+  d:add("edit", "button",
+	{ label="Edit", action=function (d) sheets_edit(d, dd) end }, 4, 4)
   d:add("save", "button",
 	{ label="&Save", action=function (d) sheets_save(d, dd) end }, 7, 4)
+  end
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("column", 2, 1)
