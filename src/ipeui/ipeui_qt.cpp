@@ -206,9 +206,6 @@ protected:
   virtual void acceptDialog(lua_State *L);
 
 private:
-  void takeDown();
-
-private:
   IpeUiQDialog * qDialog;
   std::vector<QWidget *> iWidgets;
   QGridLayout *iGrid;
@@ -450,27 +447,23 @@ Dialog::Result PDialog::buildAndRun(int w, int h)
   qDialog->setMinimumSize(w, h);
   qDialog->setModal(true);
   qDialog->show();
-  QObject::connect(qDialog, &QDialog::finished, [this]() { this->takeDown(); });
+  QObject::connect(qDialog, &QDialog::finished, [this]() {
+    int nresults = 0;
+    // resume will then call the public takeDown
+    lua_resume(L, nullptr, 0, &nresults);
+  });
   return Result::MODAL;
 }
 
-// this is called by dialog callback
-void PDialog::takeDown()
+int PDialog::takeDown(lua_State *L)
 {
   bool accepted = qDialog->result() == QDialog::Accepted;
   retrieveValues(); // for future reference
   release(L); // release references to Lua objects
   qDialog->deleteLater(); // schedule for deletion
   qDialog = nullptr; // and forget it
-  int nresults = 0;
   lua_pushboolean(L, accepted);
-  // resume will then call the public takeDown
-  lua_resume(L, nullptr, 1, &nresults);
-}
-
-int PDialog::takeDown(lua_State *L)
-{
-  return 1; // simply pass on accepted
+  return 1;
 }
 
 void PDialog::retrieveValues()

@@ -34,6 +34,12 @@
 #include <emscripten/val.h>
 #include <emscripten.h>
 
+using emscripten::val;
+
+static val jsUi() {
+  return val::global("window")["ipeui"];
+}
+
 // --------------------------------------------------------------------
 
 class PDialog : public Dialog {
@@ -49,6 +55,9 @@ protected:
 
   virtual Dialog::Result buildAndRun(int w, int h);
   virtual void retrieveValues();
+
+private:
+  val iOptions; // dialog description for JS
 };
 
 // --------------------------------------------------------------------
@@ -75,7 +84,20 @@ void PDialog::acceptDialog(lua_State *L)
 
 void PDialog::retrieveValues()
 {
-  luaL_error(L, "Dialog:retrieveValues is not implemented for JS dialogs");
+  val values = jsUi().call<val>("dialogRetrieveValues", iOptions);
+  for (int i = 0; i < int(iElements.size()); ++i) {
+    SElement &m = iElements[i];
+    if (m.row < 0)  continue;
+    val value = values[m.name];
+    if (!value.isUndefined()) {
+      if (m.type == ETextEdit || m.type == EInput)
+	m.text = value.as<std::string>();
+      else if (m.type == ECheckBox)
+	m.value = value.as<bool>() ? 1 : 0;
+      else if (m.type == EList || m.type == ECombo)
+	m.value = value.as<int>();
+    }
+  }
 }
 
 static const char *typenames[] = {
@@ -84,25 +106,25 @@ static const char *typenames[] = {
 
 Dialog::Result PDialog::buildAndRun(int w, int h)
 {
-  emscripten::val buttons = emscripten::val::array();
-  emscripten::val elements = emscripten::val::array();  
+  val buttons = val::array();
+  val elements = val::array();  
   for (int i = 0; i < int(iElements.size()); ++i) {
     SElement &m = iElements[i];
     if (m.row < 0) {
       // a button in the button bar
-      emscripten::val b = emscripten::val::object();  
+      val b = val::object();  
       b.set("name", m.text);
       b.set("flags", m.flags);
       buttons.call<void>("push", b);
     } else {
-      emscripten::val w = emscripten::val::object();
+      val w = val::object();
       w.set("name", m.name);
       w.set("type", std::string(typenames[m.type]));
       w.set("text", m.text);
       w.set("flags", m.flags);
       w.set("value", m.value);
       if (!m.items.empty()) {
-	emscripten::val items = emscripten::val::array();
+	val items = val::array();
 	for (int k = 0; k < int(m.items.size()); ++k)
 	  items.call<void>("push", m.items[k]);
 	w.set("items", items);
@@ -118,46 +140,28 @@ Dialog::Result PDialog::buildAndRun(int w, int h)
     iColStretch.push_back(0);
   while (int(iRowStretch.size()) < iNoRows)
     iRowStretch.push_back(0);
-  emscripten::val rowstretch = emscripten::val::array();
+  val rowstretch = val::array();
   for (int s : iRowStretch)
     rowstretch.call<void>("push", s);
-  emscripten::val colstretch = emscripten::val::array();
+  val colstretch = val::array();
   for (int s : iColStretch)
     colstretch.call<void>("push", s);
-  emscripten::val arg = emscripten::val::object();
-  arg.set("type", std::string("dialog"));
-  arg.set("caption", iCaption);
-  arg.set("buttons", buttons);
-  arg.set("elements", elements);
-  arg.set("rowstretch", rowstretch);
-  arg.set("colstretch", colstretch);
-  emscripten::val::global("window")["ipeui"].call<void>("dialog", arg);
+  iOptions = val::object();
+  iOptions.set("type", std::string("dialog"));
+  iOptions.set("caption", iCaption);
+  iOptions.set("buttons", buttons);
+  iOptions.set("elements", elements);
+  iOptions.set("rowstretch", rowstretch);
+  iOptions.set("colstretch", colstretch);
+  jsUi().call<void>("dialog", iOptions);
   return Result::MODAL;
 }
 
 int PDialog::takeDown(lua_State *L)
 {
-  emscripten::val * results = (emscripten::val *) lua_touserdata(L, 2);
-  luaL_argcheck(L, results != nullptr && !results->isNull(), 2,
-		"argument is not a Javascript object");
+  int result = luaL_checkinteger(L, 2);
   release(L); // release references to Lua objects
-  int result = (*results)["result"].as<int>();
-  if (result == 1) {
-    emscripten::val values = (*results)["values"];
-    for (int i = 0; i < int(iElements.size()); ++i) {
-      SElement &m = iElements[i];
-      if (m.row < 0)  continue;
-      emscripten::val value = values[m.name];
-      if (!value.isUndefined()) {
-	if (m.type == ETextEdit || m.type == EInput)
-	  m.text = value.as<std::string>();
-	else if (m.type == ECheckBox)
-	  m.value = value.as<bool>() ? 1 : 0;
-	else if (m.type == EList || m.type == ECombo)
-	  m.value = value.as<int>();
-      }
-    }
-  }
+  retrieveValues();
   lua_pushboolean(L, result == 1);
   return 1;
 }
@@ -188,25 +192,25 @@ public:
   virtual int add(lua_State *L);
   virtual int execute(lua_State *L);
 private:
-  emscripten::val iItems;
+  val iItems;
 };
 
 PMenu::PMenu()
 {
-  iItems = emscripten::val::array();
+  iItems = val::array();
 }
 
 int PMenu::execute(lua_State *L)
 {
   int vx = (int) luaL_checknumber(L, 2);
   int vy = (int) luaL_checknumber(L, 3);
-  emscripten::val::global("window")["ipeui"].call<void>("showPopupMenu", vx, vy, iItems);
+  jsUi().call<void>("showPopupMenu", vx, vy, iItems);
   return 0;
 }
 
 int PMenu::add(lua_State *L)
 {
-  emscripten::val item = emscripten::val::object();
+  val item = val::object();
   item.set("name", checkstring(L, 2));
   item.set("label", checkstring(L, 3));
   if (lua_gettop(L) > 3) {
@@ -224,9 +228,9 @@ int PMenu::add(lua_State *L)
       item.set("current", checkstring(L, 6));
     }
     int no = lua_rawlen(L, 4);
-    emscripten::val submenu = emscripten::val::array();
+    val submenu = val::array();
     for (int i = 1; i <= no; ++i) {
-      emscripten::val subitem = emscripten::val::object();
+      val subitem = val::object();
       lua_rawgeti(L, 4, i);
       luaL_argcheck(L, lua_isstring(L, -1), 4, "items must be strings");
       std::string item = tostring(L, -1);
@@ -250,7 +254,7 @@ int PMenu::add(lua_State *L)
       }
       subitem.set("label", label);
       if (hascolor) {
-	emscripten::val color = emscripten::val::object();
+	val color = val::object();
 	lua_pushvalue(L, 6);   // function
 	lua_pushnumber(L, i);  // index
 	lua_pushvalue(L, -3);  // name
@@ -294,13 +298,13 @@ public:
   virtual int start(lua_State *L) override;
   virtual int stop(lua_State *L) override;
 private:
-  emscripten::val iTimer;
+  val iTimer;
 };
 
 PTimer::PTimer(lua_State *L0, int lua_object, const char *method)
   : Timer(L0, lua_object, method)
 {
-  iTimer = emscripten::val::module_property("createIpeTimer")();
+  iTimer = val::module_property("createIpeTimer")();
   iTimer.set("callback", this);
 }
 
@@ -372,32 +376,32 @@ static int ipeui_fileDialog(lua_State *L)
   if (!lua_istable(L, 4))
     luaL_argerror(L, 4, "table expected for filters");
   int nFilters = lua_rawlen(L, 4);
-  emscripten::val filters = emscripten::val::array();
+  val filters = val::array();
   for (int i = 1; i <= nFilters; i += 2) { // skip Windows versions
     lua_rawgeti(L, 4, i);
     luaL_argcheck(L, lua_isstring(L, -1), 4, "filter entry is not a string");
-    filters.call<void>("push", emscripten::val(checkstring(L, -1)));
+    filters.call<void>("push", val(checkstring(L, -1)));
     lua_pop(L, 1); // element i
   }
 
-  emscripten::val dir = emscripten::val::null();
+  val dir = val::null();
   if (!lua_isnoneornil(L, 5))
-    dir = emscripten::val(checkstring(L, 5));
-  emscripten::val path = emscripten::val::null();
+    dir = val(checkstring(L, 5));
+  val path = val::null();
   if (!lua_isnoneornil(L, 6))
-    path = emscripten::val(checkstring(L, 6));
+    path = val(checkstring(L, 6));
   int selected = 0;
   if (!lua_isnoneornil(L, 7))
     selected = luaL_checkinteger(L, 7);
 
-  emscripten::val arg = emscripten::val::object();
+  val arg = val::object();
   arg.set("type", std::string(typenames[type]));
   arg.set("caption", caption);
   arg.set("filters", filters);
   arg.set("dir", dir);
   arg.set("path", path);
   arg.set("selected", selected);
-  emscripten::val::global("window")["ipeui"].call<void>("fileDialog", arg);
+  jsUi().call<void>("fileDialog", arg);
   return 0;
 }
 
@@ -423,12 +427,12 @@ static int ipeui_messageBox(lua_State *L)
   else if (!lua_isnoneornil(L, 5))
     buttons = luaL_checkoption(L, 5, nullptr, buttontype);
 
-  emscripten::val arg = emscripten::val::object();
+  val arg = val::object();
   arg.set("type", std::string(options[type]));
   arg.set("text", text);
   arg.set("details", details);
   arg.set("buttons", buttons);
-  emscripten::val::global("window")["ipeui"].call<void>("messageBox", arg);
+  jsUi().call<void>("messageBox", arg);
   return 0;
 }
 
@@ -436,7 +440,7 @@ static int ipeui_messageBox(lua_State *L)
 
 static int ipeui_currentDateTime(lua_State *L)
 {
-  emscripten::val dt = emscripten::val::global("Date").new_();
+  val dt = val::global("Date").new_();
   char buf[15];
   sprintf(buf, "%04d%02d%02d%02d%02d%02d",
 	  dt.call<int>("getFullYear"),
@@ -453,11 +457,11 @@ static int ipeui_currentDateTime(lua_State *L)
 
 static int ipeui_val(lua_State *L)
 {
-  emscripten::val * arg = (emscripten::val *) lua_touserdata(L, 1);
+  val * arg = (val *) lua_touserdata(L, 1);
   luaL_argcheck(L, arg != nullptr && !arg->isNull(), 1,
 		"argument is not a Javascript object");
   const char *tag = luaL_checkstring(L, 2);
-  emscripten::val v = (*arg)[tag];
+  val v = (*arg)[tag];
   if (v.isNumber())
     lua_pushnumber(L, v.as<double>());
   else if (v.isString())
@@ -528,12 +532,10 @@ int luaopen_ipeui(lua_State *L)
   luaL_newlib(L, ipeui_functions);
   addMethod(L, "messageBox",
 	    "return function (...) ipeui.messageBoxAsync(...)"
-	    "return ipeui.val(coroutine.yield(), 'result') end");
+	    "return coroutine.yield() end");
   addMethod(L, "fileDialog",
 	    "return function (...) ipeui.fileDialogAsync(...)"
-	    "local r = coroutine.yield()"
-	    "if ipeui.val(r, 'result') == 1 then "
-	    "return ipeui.val(r, 'path'), ipeui.val(r, 'selected') end end");
+	    "return coroutine.yield(), 1 end");
   lua_setglobal(L, "ipeui");
   luaopen_ipeui_common(L);
   addJSClasses();
