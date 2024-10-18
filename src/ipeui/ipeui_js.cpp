@@ -545,6 +545,7 @@ int luaopen_ipeui(lua_State *L)
 EMSCRIPTEN_BINDINGS(ipeui) {
   emscripten::class_<PTimer>("Timer")
     .function("trigger", &PTimer::trigger);
+  emscripten::class_<Dialog>("Dialog");
 }
 
 // --------------------------------------------------------------------
