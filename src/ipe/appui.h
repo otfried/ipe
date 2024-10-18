@@ -120,6 +120,7 @@ public:
 
   inline void setInkMode(bool ink) { isInkMode = ink; }
   static int readImage(lua_State *L, String fn);
+  int model() const noexcept { return iModel; }
 
 public:  // What platforms must implement:
   virtual WINID windowId() = 0;

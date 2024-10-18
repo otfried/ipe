@@ -286,17 +286,24 @@ void Canvas::wheelEvent(emscripten::val ev)
   }
 }
 
-#if 0
-void Canvas::keyPressEvent(QKeyEvent *ev)
+bool Canvas::keyPressEvent(emscripten::val ev)
 {
-  if (iTool &&
-      iTool->key(IpeQ(ev->text()),
-		 (convertModifiers(ev->modifiers()) | iAdditionalModifiers)))
-    ev->accept();
-  else
-    ev->ignore();
+  if (iTool) {
+    int mod = convertModifiers(ev);
+    String key{ev["key"].as<std::string>()};
+    if (key == "Escape")
+      key = "\x1b";
+    else if (key == "Delete" || key == "Backspace")
+      key = "\x08";
+    else if ((mod & EControl) && key.size() == 1 && 'a' <= key[0] && key[0] <= 'z') {
+      const char ctrlKey = key[0] & 0x1f;
+      key = ""; key += ctrlKey;
+    }
+    iTool->key(key, mod | iAdditionalModifiers);
+    return true;
+  } else
+    return false;
 }
-#endif
 
 static void draw_plus(const Vector &p, JsPainter &q)
 {
@@ -434,7 +441,9 @@ EMSCRIPTEN_BINDINGS(ipecanvas) {
     .property("zoom", &Canvas::zoom, &Canvas::setZoom)
     .function("mouseButtonEvent", &Canvas::mouseButtonEvent)
     .function("mouseMoveEvent", &Canvas::mouseMoveEvent)
-    .function("wheelEvent", &Canvas::wheelEvent);
+    .function("wheelEvent", &Canvas::wheelEvent)
+    .function("keyPressEvent", &Canvas::keyPressEvent)
+    ;
 }
 
 // --------------------------------------------------------------------

@@ -54,6 +54,8 @@ namespace ipe {
     void mouseButtonEvent(emscripten::val event, int button, bool press);
     void mouseMoveEvent(emscripten::val ev);
     void wheelEvent(emscripten::val ev);
+    bool keyPressEvent(emscripten::val ev);
+
     void paint();
     void updateSize();
 
