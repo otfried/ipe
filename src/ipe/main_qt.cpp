@@ -62,7 +62,11 @@ static void setup_globals(lua_State *L, int width, int height, double devicePixe
   lua_setfield(L, -2, "path");
 
   lua_newtable(L);  // config table
+#ifdef __EMSCRIPTEN__
+  lua_pushliteral(L, "web");
+#else
   lua_pushliteral(L, "unix");
+#endif
   lua_setfield(L, -2, "platform");
   lua_pushliteral(L, "qt");
   lua_setfield(L, -2, "toolkit");

@@ -35,6 +35,7 @@
 #include <cstdlib>
 
 #include "appui_js.h"
+#include "controls_js.h"
 #include "ipecanvas_js.h"
 
 using namespace ipe;
@@ -44,9 +45,15 @@ using namespace ipelua;
 
 #include <emscripten/bind.h>
 
+#include <format>
+
+using namespace emscripten;
+using std::string;
+
 // --------------------------------------------------------------------
 
-static void setup_globals(lua_State *L, int width, int height, double devicePixelRatio)
+static void setup_globals(lua_State *L, int width, int height,
+			  double devicePixelRatio, std::string platform)
 {
   lua_getglobal(L, "package");
   const char *luapath = getenv("IPELUAPATH");
@@ -62,9 +69,9 @@ static void setup_globals(lua_State *L, int width, int height, double devicePixe
   lua_setfield(L, -2, "path");
 
   lua_newtable(L);  // config table
-  lua_pushliteral(L, "web");
+  lua_pushstring(L, platform.c_str());
   lua_setfield(L, -2, "platform");
-  lua_pushliteral(L, "html");
+  lua_pushliteral(L, "htmljs");
   lua_setfield(L, -2, "toolkit");
 
 #ifdef IPEBUNDLE
@@ -91,6 +98,9 @@ static void setup_globals(lua_State *L, int width, int height, double devicePixe
 
   lua_setglobal(L, "config");
 
+  lua_getglobal(L, "tonumber");
+  lua_setglobal(L, "tonumber2");
+
   lua_pushcfunction(L, ipe_tonumber);
   lua_setglobal(L, "tonumber");
 }
@@ -115,7 +125,8 @@ int mainloop(lua_State *L)
   return 0;
 }
 
-AppUi *startIpe(Canvas *canvas, int width, int height, double dpr)
+AppUi *startIpe(Canvas *canvas, int width, int height, double dpr,
+		std::string platform)
 {
   theCanvas = canvas;
 
@@ -124,35 +135,118 @@ AppUi *startIpe(Canvas *canvas, int width, int height, double dpr)
 
   // TODO: Should we support command line options?
   
-  lua_createtable(L, 0, 1);
-  lua_pushstring(L, "tiling.ipe");
-  lua_rawseti(L, -2, 1);
+  lua_createtable(L, 0, 0);
   lua_setglobal(L, "argv");
 
-  setup_globals(L, width, height, dpr);
+  setup_globals(L, width, height, dpr, platform);
 
   lua_run_ipe(L, mainloop);
+
+  theCanvas->setObserver(theAppUi);
   return theAppUi;
 }
 
-static void initLib() {
+// TODO: simply pass a list of VAR=VALUE settings instead
+static void initLib(std::string home, bool usePreloader) {
+  if (usePreloader)
+    putenv(strdup("IPEPRELOADER=1"));
   putenv(strdup("IPEDEBUG=1"));
+  putenv(strdup(std::format("HOME={}", home).c_str()));
   ipe::Platform::initLib(ipe::IPELIB_VERSION);
 }
 
 static void ipeAction(AppUi *ui, std::string name)
 {
-  ui->action(String(name.c_str()));
+  ui->action(name);
+}
+
+static void resumeLua(AppUi *ui, val arg) {
+  ui->resumeLua(arg);
+}
+
+static void absoluteButton(AppUi *ui, val sel) {
+  ui->luaAbsoluteButton(sel.as<std::string>().c_str());
+}
+
+static void selector(AppUi *ui, val sel, val value) {
+  ui->luaSelector(sel.as<std::string>().c_str(),
+		  value.as<std::string>().c_str());
+}
+
+static void paintPathView(AppUi *ui, val canvas) {
+  ui->iPathView->paint(canvas);
+}
+
+static void layerAction(AppUi *ui, string name, string layer) {
+  ui->luaLayerAction(String(name), String(layer));
+}
+
+static void showLayerBoxPopup(AppUi *ui, string layer, double x, double y) {
+  ui->luaShowLayerBoxPopup(Vector(x, y), String(layer));
+}
+
+static void showPathStylePopup(AppUi *ui, double x, double y) {
+  ui->luaShowPathStylePopup(Vector(x, y));
+}
+
+static void bookmarkSelected(AppUi *ui, int row) {
+  ui->luaBookmarkSelected(row);
+}
+
+static val createTarball(std::string tex) {
+  // need to send Latex source as a tarball
+  Buffer tarHeader(512);
+  char *p = tarHeader.data();
+  memset(p, 0, 512);
+  strcpy(p, "ipetemp.tex");
+  strcpy(p + 100, "0000644"); // mode
+  strcpy(p + 108, "0001750"); // uid 1000
+  strcpy(p + 116, "0001750"); // gid 1000
+  sprintf(p + 124, "%011o", (unsigned int) tex.size());
+  p[136] = '0';  // time stamp, fudge it
+  p[156] = '0';  // normal file
+  // checksum
+  strcpy(p + 148, "        ");
+  uint32_t checksum = 0;
+  for (const char *q = p; q < p + 512; ++q)
+    checksum += uint8_t(*q);
+  sprintf(p + 148, "%06o", checksum);
+  p[155] = ' ';
+
+  String tar;
+  StringStream ss(tar);
+  for (const char *q = p; q < p + 512;)
+    ss.putChar(*q++);
+  ss << tex;
+  int i = tex.size();
+  while ((i & 0x1ff) != 0) {  // fill a 512-byte block
+    ss.putChar('\0');
+    ++i;
+  }
+  for (int i = 0; i < 1024; ++i)  // add two empty blocks
+    ss.putChar('\0');
+  return val(typed_memory_view(tar.size(), (uint8_t *) tar.data()));
 }
 
 // --------------------------------------------------------------------
 
 EMSCRIPTEN_BINDINGS(ipe) {
-  emscripten::class_<ipe::Platform>("Platform")
+  class_<ipe::Platform>("Platform")
     .class_function("initLib", &initLib);
-  emscripten::class_<AppUi>("AppUi")
-    .function("action", &ipeAction, emscripten::allow_raw_pointers());
-  emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());
+
+  class_<AppUi>("AppUi")
+    .function("action", &ipeAction, allow_raw_pointers())
+    .function("resume", &resumeLua, allow_raw_pointers())
+    .function("absoluteButton", &absoluteButton, allow_raw_pointers())
+    .function("selector", &selector, allow_raw_pointers())
+    .function("paintPathView", &paintPathView, allow_raw_pointers())
+    .function("layerAction", &layerAction, allow_raw_pointers())
+    .function("showLayerBoxPopup", &showLayerBoxPopup, allow_raw_pointers())
+    .function("showPathStylePopup", &showPathStylePopup, allow_raw_pointers())
+    .function("bookmarkSelected", &bookmarkSelected, allow_raw_pointers());
+    
+  function("startIpe", &startIpe, allow_raw_pointers());
+  function("createTarball", &createTarball);
 }
 
 // --------------------------------------------------------------------

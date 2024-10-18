@@ -88,6 +88,12 @@ inline void luacall(lua_State *L, int nargs, int nresults) {
 
 class Dialog {
 public:
+  enum class Result {
+    CLOSED = 0,
+    ACCEPTED = 1,
+    MODAL = 2,
+  };
+
   Dialog(lua_State *L0, WINID parent, const char *caption, const char *language);
   virtual ~Dialog();
 
@@ -99,7 +105,10 @@ public:
   int setEnabled(lua_State *L);
   int setStretch(lua_State *L);
 
-  bool execute(lua_State *L, int w, int h);
+  Result execute(lua_State *L, int w, int h);
+  virtual void retrieveValues() = 0;
+  void release(lua_State *LM);
+  virtual int takeDown(lua_State *L);
   virtual void acceptDialog(lua_State *L) = 0;
 
   WINID winId() const { return hDialog; }
@@ -109,7 +118,7 @@ protected:
 		EAccept = 0x004, EReject = 0x008,
 		EReadOnly = 0x010, EDisabled = 0x020,
 		ESelectAll = 0x080, EFocused = 0x100,
-		ESpellCheck = 0x200,
+		ESpellCheck = 0x200, EColorPicker = 0x400,
   };
   enum TType { EButton = 0, ETextEdit, EList, ELabel, ECombo,
 	       ECheckBox, EInput };
@@ -133,8 +142,7 @@ protected:
   void setUnmapped(lua_State *L, int idx);
 
   virtual void setMapped(lua_State *L, int idx) = 0;
-  virtual bool buildAndRun(int w, int h) = 0;
-  virtual void retrieveValues() = 0;
+  virtual Result buildAndRun(int w, int h) = 0;
   virtual void enableItem(int idx, bool value) = 0;
 
   void addButtonItem(lua_State *L, SElement &m);
@@ -220,8 +228,6 @@ inline Timer **check_timer(lua_State *L, int i)
 // --------------------------------------------------------------------
 
 extern int luaopen_ipeui_common(lua_State *L);
-
-int ipeui_downloadFileIfIpeWeb(lua_State *L);
 
 // --------------------------------------------------------------------
 #endif

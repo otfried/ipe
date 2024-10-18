@@ -270,7 +270,7 @@ bool SelectTool::key(String text, int modifiers)
       iCur = 0;
     iCanvas->updateTool();
     return true;
-  } else if (text == "\027") {
+  } else if (text == "\x1b") {
     iCanvas->finishTool();
     return true;
   } else

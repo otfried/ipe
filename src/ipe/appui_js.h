@@ -75,6 +75,10 @@ public:
   virtual void setRecentFileMenu(const std::vector<String> & names) override;
   virtual void action(String name) override;
 
+  virtual bool waitDialog(const char *cmd, const char *label) override;
+  void resumeLua(emscripten::val result);
+  virtual void setupSymbolicNames(const Cascade *sheet) override;
+
 private:
   virtual void addRootMenu(int id, const char *name) override;
   virtual void addItem(int id, const char *title, const char *name) override;
@@ -92,7 +96,10 @@ private:
   virtual void setButtonColor(int sel, Color color) override;
 
 private:
-  void aboutIpe();
+  void createIcon(String name);
+
+public:
+  PathView *iPathView;
 };
 
 // --------------------------------------------------------------------
