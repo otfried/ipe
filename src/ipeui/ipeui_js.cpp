@@ -45,7 +45,8 @@ static val jsUi() {
 class PDialog : public Dialog {
 public:
   PDialog(lua_State *L0, WINID parent, const char *caption, const char * language);
-  // TODO bool ignoresEscapeKey();
+  bool ignoresEscapeKey();
+  void callLuaMethod(int method);
   virtual int takeDown(lua_State *L);
 
 protected:
@@ -56,30 +57,73 @@ protected:
   virtual Dialog::Result buildAndRun(int w, int h);
   virtual void retrieveValues();
 
+  val element(const SElement &m);
+
 private:
   val iOptions; // dialog description for JS
 };
 
 // --------------------------------------------------------------------
 
+static const char *typenames[] = {
+  "button", "textedit", "list", "label", "combo", "checkbox", "input",
+};
+
+val PDialog::element(const SElement &m)
+{
+  val w = val::object();
+  w.set("name", m.name);
+  w.set("type", std::string(typenames[m.type]));
+  w.set("text", m.text);
+  w.set("flags", m.flags);
+  w.set("value", m.value);
+  if (!m.items.empty()) {
+    val items = val::array();
+    for (int k = 0; k < int(m.items.size()); ++k)
+      items.call<void>("push", m.items[k]);
+    w.set("items", items);
+  }
+  w.set("method", m.lua_method != LUA_NOREF ? val(m.lua_method) : val::null());
+  w.set("row", m.row);
+  w.set("col", m.col);
+  w.set("rowspan", m.rowspan);
+  w.set("colspan", m.colspan);
+  return w;
+}
+
 PDialog::PDialog(lua_State *L0, WINID parent, const char *caption, const char *language)
   : Dialog(L0, parent, caption, language)
 {
 }
 
+void PDialog::callLuaMethod(int method)
+{
+  callLua(method);
+}
+
 void PDialog::setMapped(lua_State *L, int idx)
 {
-  luaL_error(L, "Dialog:setMapped is not implemented for JS dialogs");
+  jsUi().call<void>("dialogSet", element(iElements[idx]));
 }
 
 void PDialog::enableItem(int idx, bool value)
 {
-  luaL_error(L, "Dialog:enableItem is not implemented for JS dialogs");
+  jsUi().call<void>("dialogSetEnabled", iElements[idx].name, value);
 }
 
 void PDialog::acceptDialog(lua_State *L)
 {
   luaL_error(L, "Dialog:acceptDialog is not implemented for JS dialogs");
+}
+
+bool PDialog::ignoresEscapeKey()
+{
+  if (iIgnoreEscapeField >= 0) {
+    retrieveValues();
+    if (iElements[iIgnoreEscapeField].text != iIgnoreEscapeText)
+      return true;  // text has been modified, do not allow ESC
+  }
+  return false;
 }
 
 void PDialog::retrieveValues()
@@ -100,10 +144,6 @@ void PDialog::retrieveValues()
   }
 }
 
-static const char *typenames[] = {
-  "button", "textedit", "list", "label", "combo", "checkbox", "input",
-};
-
 Dialog::Result PDialog::buildAndRun(int w, int h)
 {
   val buttons = val::array();
@@ -117,23 +157,7 @@ Dialog::Result PDialog::buildAndRun(int w, int h)
       b.set("flags", m.flags);
       buttons.call<void>("push", b);
     } else {
-      val w = val::object();
-      w.set("name", m.name);
-      w.set("type", std::string(typenames[m.type]));
-      w.set("text", m.text);
-      w.set("flags", m.flags);
-      w.set("value", m.value);
-      if (!m.items.empty()) {
-	val items = val::array();
-	for (int k = 0; k < int(m.items.size()); ++k)
-	  items.call<void>("push", m.items[k]);
-	w.set("items", items);
-      }
-      w.set("row", m.row);
-      w.set("col", m.col);
-      w.set("rowspan", m.rowspan);
-      w.set("colspan", m.colspan);
-      elements.call<void>("push", w);
+      elements.call<void>("push", element(m));
     }
   }
   while (int(iColStretch.size()) < iNoCols)
@@ -153,7 +177,8 @@ Dialog::Result PDialog::buildAndRun(int w, int h)
   iOptions.set("elements", elements);
   iOptions.set("rowstretch", rowstretch);
   iOptions.set("colstretch", colstretch);
-  jsUi().call<void>("dialog", iOptions);
+  iOptions.set("dialog", this);
+  jsUi().call<void>("showDialog", iOptions);
   return Result::MODAL;
 }
 
@@ -547,7 +572,10 @@ int luaopen_ipeui(lua_State *L)
 EMSCRIPTEN_BINDINGS(ipeui) {
   emscripten::class_<PTimer>("Timer")
     .function("trigger", &PTimer::trigger);
-  emscripten::class_<Dialog>("Dialog");
+  emscripten::class_<PDialog>("Dialog")
+    .function("ignoresEscapeKey", &PDialog::ignoresEscapeKey)
+    .function("callLua", &PDialog::callLuaMethod)
+    ;
 }
 
 // --------------------------------------------------------------------

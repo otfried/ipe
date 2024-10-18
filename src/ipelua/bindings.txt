@@ -881,8 +881,8 @@ value = d:get(name)
 -- enable/disable elements
 d:setEnabled(name, true_or_false)
 
--- set whether escape should be ignored (true/false)
-d:set("ignore-escape", flag)
+-- set to ignore escape when the value of field is equal to originalValue
+d:set("ignore-escape", field, originalValue)
 
 -- show dialog modally
 accepted = d:execute()
