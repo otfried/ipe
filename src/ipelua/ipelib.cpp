@@ -292,7 +292,6 @@ static int document_replaceSheets(lua_State *L)
   return 1;
 }
 
-#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
 static int document_runLatex(lua_State *L)
 {
   Document **d = check_document(L, 1);
@@ -341,7 +340,6 @@ static int document_runLatex(lua_State *L)
   push_string(L, log);
   return 4;
 }
-#endif
 
 static int document_prepareLatexRun(lua_State *L)
 {
@@ -579,9 +577,7 @@ static const struct luaL_Reg document_methods[] = {
   { "countTotalViews", document_countTotalViews },
   { "sheets", document_sheets },
   { "replaceSheets", document_replaceSheets },
-#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
   { "runLatex", document_runLatex },
-#endif
   { "prepareLatexRun", document_prepareLatexRun },
   { "howToRunLatex", document_howToRunLatex },
   { "completeLatexRun", document_completeLatexRun },

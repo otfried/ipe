@@ -130,11 +130,9 @@ AppUi *startIpe(Canvas *canvas, int width, int height, double dpr,
 {
   theCanvas = canvas;
 
-  Platform::initLib(IPELIB_VERSION);
   lua_State *L = setup_lua();
 
   // TODO: Should we support command line options?
-  
   lua_createtable(L, 0, 0);
   lua_setglobal(L, "argv");
 
@@ -147,11 +145,15 @@ AppUi *startIpe(Canvas *canvas, int width, int height, double dpr,
 }
 
 // TODO: simply pass a list of VAR=VALUE settings instead
-static void initLib(std::string home, bool usePreloader) {
-  if (usePreloader)
-    putenv(strdup("IPEPRELOADER=1"));
-  putenv(strdup("IPEDEBUG=1"));
-  putenv(strdup(std::format("HOME={}", home).c_str()));
+static void initLib(val env) {
+  int n = env["length"].as<int>();
+  for (int i = 0; i < n; ++i) {
+    std::string e = env[i].as<std::string>();
+    fprintf(stderr, "ENV: %d : %s\n", i, e.c_str());
+    putenv(strdup(e.c_str()));
+  }
+  // putenv(strdup("IPEDEBUG=1"));
+  // putenv(strdup(std::format("HOME={}", home).c_str()));
   ipe::Platform::initLib(ipe::IPELIB_VERSION);
 }
 

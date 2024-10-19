@@ -355,7 +355,7 @@ namespace ipe {
 #ifdef WIN32
     static FILE *fopen(const char *fname, const char *mode);
     static int mkdir(const char *dname);
-#elif defined(IPEWEB)
+#elif defined(IPEWASM)
     static FILE *fopen(const char *fname, const char *mode);
 #else
     inline static FILE *fopen(const char *fname, const char *mode) {
@@ -374,9 +374,7 @@ namespace ipe {
     static String realPath(String fname);
     static String readFile(String fname);
     static String howToRunLatex(String dir, LatexType engine, String docname) noexcept;
-#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
     static int system(String cmd);
-#endif
     static double toDouble(String s);
     static int toNumber(String s, int &iValue, double &dValue);
     static String spiroVersion();

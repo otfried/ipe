@@ -11,16 +11,13 @@ endif
 subdirs_libraries = ipelib ipecairo ipelua ipecanvas ipeui
 subdirs_cli = ipetoipe iperender ipescript ipe6upgrade ipeextract
 
-subdirs = $(subdirs_libraries) ipelets/lua ipe
+subdirs = $(subdirs_libraries) $(subdirs_cli) ipelets/lua ipe
 
 ifdef IPEWASM
 undefine IPEQVORONOI
 subdirs += ipejs
-ifdef IPENODEJS
-subdirs += $(subdirs_cli)
-endif
 else
-subdirs += $(subdirs_cli) ipepresenter ipecurl
+subdirs += ipepresenter ipecurl
 endif
 
 ifdef IPEQVORONOI

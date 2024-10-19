@@ -10,6 +10,10 @@ TARGET = $(call exe_target,ipeextract)
 CPPFLAGS += -I../include
 LIBS += -L$(buildlib) -lipe
 
+ifdef IPEWASM
+LDFLAGS += --pre-js $(NODEJSPRE) -lembind -lnoderawfs.js -lnodefs.js
+endif
+
 all: $(TARGET)
 
 sources	= ipeextract.cpp

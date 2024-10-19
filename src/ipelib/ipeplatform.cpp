@@ -111,8 +111,13 @@ static LPStrtodL p_strtod_l = nullptr;
 locale_t ipeLocale;
 #endif
 
-#ifdef IPEWEB
-static bool usePreloader = false;
+#ifdef IPEWASM
+inline bool usePreloader() {
+  return getenv("IPEPRELOADER") != nullptr;
+}
+inline bool useJSLatex() {
+  return getenv("IPEJSLATEX") != nullptr;
+}
 #endif
 
 #ifndef WIN32
@@ -146,7 +151,7 @@ static void readIpeConf()
 #else
 static void readIpeConf()
 {
-#ifndef IPEWEB
+#ifndef IPEWASM
   String fname = Platform::dotIpe() + "ipe.conf";
   String conf = Platform::readFile(fname);
   if (conf.empty())
@@ -204,9 +209,6 @@ void Platform::initLib(int version)
   if (showDebug)
     fprintf(stderr, "Debug messages enabled\n");
   debugHandler = debugHandlerImpl;
-#ifdef IPEWEB
-  usePreloader = getenv("IPEPRELOADER") != nullptr;
-#endif
 #ifdef WIN32
   HMODULE hDll = LoadLibraryA("msvcrt.dll");
   if (hDll) {
@@ -308,7 +310,7 @@ String Platform::ipeDrive()
 #ifdef IPEBUNDLE
 String Platform::ipeDir(const char *suffix, const char *fname)
 {
-#ifdef IPEWEB
+#ifdef IPEWASM
   String exe("/opt/ipe/");
 #else  
 #ifdef WIN32
@@ -404,9 +406,11 @@ String Platform::latexDirectory()
   }
   latexDir += "\\";
   return latexDir;
-#elif defined(IPEWEB)
-  return String("/tmp/latexrun/");
 #else
+#ifdef IPEWASM
+  if (useJSLatex())
+    return String("/tmp/latexrun/");
+#endif
   const char *p = getenv("IPELATEXDIR");
   String latexDir;
   if (p) {
@@ -501,7 +505,6 @@ String Platform::readFile(String fname)
   return s;
 }
 
-#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
 // amazingly, this actually works in NodeJS as is.
 // to make this async, need to run it on a different thread
 //! Returns command to run latex on file ipetemp.tex in given directory.
@@ -511,6 +514,11 @@ String Platform::howToRunLatex(String dir, LatexType engine, String docname) noe
   const char *latex = (engine == LatexType::Xetex) ?
     "xelatex" : (engine == LatexType::Luatex) ?
     "lualatex" : "pdflatex";
+  if (useJSLatex()) {
+    String how("runlatex:");
+    how += latex;
+    return how;
+  }
   String url = Platform::readFile(dir + "url1.txt");
   bool online = (url.left(4) == "http");
   String texinputs;
@@ -651,18 +659,6 @@ int Platform::system(String cmd)
   return result;
 }
 #endif
-#endif
-
-#if defined(__EMSCRIPTEN__) && !defined(IPENODEJS)
-String Platform::howToRunLatex(String dir, LatexType engine, String docname) noexcept
-{
-  String how("runlatex:");
-  how += (engine == LatexType::Xetex) ?
-    "xelatex" : (engine == LatexType::Luatex) ?
-    "lualatex" : "pdflatex";
-  return how;
-}
-#endif
 
 #ifdef WIN32
 FILE *Platform::fopen(const char *fname, const char *mode)
@@ -702,10 +698,10 @@ String::String(const wchar_t *wbuf)
 }
 #endif
 
-#ifdef IPEWEB
+#ifdef IPEWASM
 FILE *Platform::fopen(const char *fname, const char *mode)
 {
-  if (!usePreloader || !strncmp(fname, "/tmp/latexrun/", 14) || !strncmp(fname, "/opt/ipe", 8))
+  if (!usePreloader() || !strncmp(fname, "/tmp/", 5) || !strncmp(fname, "/opt/ipe", 8))
     return ::fopen(fname, mode);
   emscripten::val preloadCache = emscripten::val::global("window")["ipeui"]["preloadCache"];
   emscripten::val s = preloadCache[fname];

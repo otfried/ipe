@@ -10,8 +10,8 @@ TARGET = $(call exe_target,iperender)
 CPPFLAGS += -I../include $(CAIRO_CFLAGS) -I../ipecairo
 LIBS += -L$(buildlib) -lipecairo -lipe $(CAIRO_LIBS)
 
-ifdef IPENODEJS
-LDFLAGS += --pre-js $(NODEJSPRE) -lnoderawfs.js -lnodefs.js
+ifdef IPEWASM
+LDFLAGS += --pre-js $(NODEJSPRE) -lembind -lnoderawfs.js -lnodefs.js
 endif
 
 all: $(TARGET)

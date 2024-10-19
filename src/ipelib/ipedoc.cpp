@@ -695,7 +695,6 @@ int Document::completeLatexRun(String &texLog, Latex *converter)
   return okay ? ErrNone : ErrLatexOutput;
 }
 
-#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
 int Document::runLatex(String docname, String &texLog)
 {
   Latex *converter = nullptr;
@@ -739,6 +738,5 @@ int Document::runLatex(String docname)
     return 0;
   }
 }
-#endif
 
 // --------------------------------------------------------------------

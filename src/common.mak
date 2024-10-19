@@ -239,13 +239,7 @@ ifdef IPEWASM
   CC             = emcc
   CXXFLAGS	 += -O3
   CPPFLAGS	 += -DIPEWASM
-ifdef IPENODEJS
-  # compile code that will run under NodeJS, not in a browser
-  CPPFLAGS       += -DIPENODEJS
-else
-  IPEBUNDLE = 1
-  CPPFLAGS       += -DIPEWEB
-endif
+  IPEBUNDLE      = 1
   ZLIB_CFLAGS    =
   ZLIB_LIBS      = -lz
   PNG_CFLAGS     := -I$(IPEDEPS)/include/libpng16
