@@ -248,8 +248,19 @@ function MODEL:absoluteButton(button)
   end
 end
 
+function MODEL:selectPage(pno, vno)
+  if self.ui.selectPageAsync then
+    -- self.ui:selectPageAsync(pno, vno)
+    -- return coroutine.yield()
+    messageBox(self.ui:win(), "warning", "Not yet implemented")
+    return nil
+  else
+    return self.ui:selectPage(pno, vno)
+  end
+end
+
 function MODEL:action_jump_view()
-  local d = self.ui:selectPage(self.doc, self.pno, self.vno)
+  local d = self:selectPage(self.pno, self.vno)
   if d then
     self.vno = d
     self:setPage()
@@ -257,7 +268,7 @@ function MODEL:action_jump_view()
 end
 
 function MODEL:action_jump_page()
-  local d = self.ui:selectPage(self.doc, nil, self.pno)
+  local d = self:selectPage(nil, self.pno)
   if d then
     self.pno = d
     self.vno = 1
@@ -1955,8 +1966,18 @@ function mark_pages(doc, marks)
   return originalMarks
 end
 
+function MODEL:pageSorter(pno)
+  if self.ui.pageSorterAsync then
+    -- self.ui:pageSorterAsync(self.doc, pno)
+    -- return coroutine.yield()
+    messageBox(self.ui:win(), "warning", "Not yet implemented")
+  else
+    return 
+  end
+end
+
 function MODEL:action_page_sorter()
-  local arr, marks = self.ui:pageSorter(self.doc)
+  local arr, marks = self:pageSorter()
   if not arr then return end -- canceled
   if #arr == 0 then
     self:warning("You cannot delete all pages of the document")
@@ -2028,7 +2049,7 @@ function arrange_views(p, arr, marks)
 end
 
 function MODEL:action_view_sorter()
-  local arr, marks = self.ui:pageSorter(self.doc, self.pno)
+  local arr, marks = self:pageSorter(self.pno)
   if not arr then return end -- canceled
   if #arr == 0 then
     self:warning("You cannot delete all views of the page")

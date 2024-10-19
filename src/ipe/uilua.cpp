@@ -803,14 +803,16 @@ static const struct luaL_Reg appui_methods[] = {
   { "setNotes", appui_setNotes },
   { "setRecentFiles", appui_setRecentFiles },
   { "showTool", appui_showTool },
-  { "selectPage", appui_selectPage },
-  { "pageSorter", appui_pageSorter },
   { "renderPage", appui_renderPage },
 #ifdef IPEUI_JS
   { "preloadFile", appui_preloadFile },
   { "persistFile", appui_persistFile },
   { "getClipboardAsync", appui_clipboard },
+  { "selectPageAsync", appui_selectPage },
+  { "pageSorterAsync", appui_pageSorter },
 #else
+  { "selectPage", appui_selectPage },
+  { "pageSorter", appui_pageSorter },
   { "getClipboard", appui_clipboard },
 #endif
   { nullptr, nullptr }

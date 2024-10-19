@@ -365,14 +365,6 @@ void AppUi::action(String name)
 
 // --------------------------------------------------------------------
 
-int AppUi::pageSorter(lua_State *L, Document *doc, int pno,
-		      int width, int height, int thumbWidth)
-{
-  return 0;
-}
-
-// --------------------------------------------------------------------
-
 WINID AppUi::windowId()
 {
   return this;
@@ -472,6 +464,16 @@ int appui_persistFile(lua_State *L)
 {
   string fname{luaL_checklstring(L, 1, nullptr)};
   jsUi().call<void>("persistFile", fname);
+  return 0;
+}
+
+// --------------------------------------------------------------------
+
+int AppUi::pageSorter(lua_State *L, Document *doc, int pno,
+		      int width, int height, int thumbWidth)
+{
+  // TODO
+  explain("Not yet implemented", 0);
   return 0;
 }
 

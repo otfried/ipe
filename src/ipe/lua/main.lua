@@ -227,8 +227,8 @@ function messageBox(parent, type, text, details, buttons)
   end
 end
 
-filter_ipe = { "Ipe files (*.ipe *.pdf *.eps *.xml)",
-	       "*.ipe;*.pdf;*.eps;*.xml",
+filter_ipe = { "Ipe files (*.ipe *.pdf *.xml)",
+	       "*.ipe;*.pdf;*.xml",
 	       "All files (*.*)", "*.*" }
 filter_save = { "XML (*.ipe *.xml)", "*.ipe;*.xml",
 		"PDF (*.pdf)", "*.pdf" }
