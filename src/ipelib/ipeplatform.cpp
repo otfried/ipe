@@ -514,11 +514,13 @@ String Platform::howToRunLatex(String dir, LatexType engine, String docname) noe
   const char *latex = (engine == LatexType::Xetex) ?
     "xelatex" : (engine == LatexType::Luatex) ?
     "lualatex" : "pdflatex";
+#ifdef IPEWASM
   if (useJSLatex()) {
     String how("runlatex:");
     how += latex;
     return how;
   }
+#endif
   String url = Platform::readFile(dir + "url1.txt");
   bool online = (url.left(4) == "http");
   String texinputs;
