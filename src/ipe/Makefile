@@ -27,6 +27,7 @@ LDFLAGS += -lembind -lidbfs.js --embed-file opt
 MAKE_ASSETS = bash mkipewebassets.sh
 WASM_LIBS = $(BUILDDIR)/lib/libipeui.so $(BUILDDIR)/lib/libipecanvas.so \
 	$(BUILDDIR)/lib/libipelua.so $(BUILDDIR)/lib/libipe.so \
+	$(BUILDDIR)/lib/libipecairo.so \
 	lua/model.lua lua/actions.lua
 endif
 
