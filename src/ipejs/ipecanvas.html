@@ -2,16 +2,17 @@
 <!-- 
  test ipecanvas_js in a webbrowser
 
- to run it, embed 'tiling1.ipe' using 
- LDFLAGS += --embed-file tiling1.ipe
+ to run it, embed 'test.ipe' using
+ LDFLAGS += --embed-file test.ipe
 -->
 <html>
   <script type="module">
-import initIpe from './ipecanvas.js';
+import initIpe from './ipejs.js';
 
 initIpe().then((ipe) => {
   console.log("Ipe bindings loaded");
-  const doc = new ipe.loadWithErrorReport("tiling1.ipe");
+  ipe.Platform.initLib(["HOME=/home/ipe", "IPEJSLATEX=1", "IPEDEBUG=1"]);
+  const doc = new ipe.loadWithErrorReport("test.ipe");
   console.log(`Doc has ${doc.countPages} pages`);
   const p = doc.page(0);
   console.log(`The first page has ${p.count} objects`);
@@ -19,19 +20,20 @@ initIpe().then((ipe) => {
   console.log(`The document has ${cascade.count} style sheets`);
 
   const htmlCanvas = document.getElementById("canvas");
-  const canvas = new ipe.Canvas(htmlCanvas);
+  const canvas = new ipe.Canvas(bottomCanvas, topCanvas);
+  canvas.updateSize();
   console.log("Got my canvas: ", canvas, canvas.width, canvas.height);
 
   canvas.setPage(p, 0, 0, cascade);
   canvas.update();
   console.log("Pan, zoom: ", canvas.pan, canvas.zoom);
-  canvas.pan = {x:300, y:200};
+  canvas.pan = {x:150, y:100};
   console.log("Pan, zoom: ", canvas.pan, canvas.zoom);
   canvas.update();
 
   let dragging = false;
   let pos = null;
-  htmlCanvas.addEventListener("mouseup", (event) => {
+  topCanvas.addEventListener("mouseup", (event) => {
     // console.log("Mouse up: ", event);
     if (dragging) {
       dragging = false;
@@ -40,15 +42,15 @@ initIpe().then((ipe) => {
       canvas.update();
     }
   });
-  htmlCanvas.addEventListener("mousedown", (event) => {
+  topCanvas.addEventListener("mousedown", (event) => {
     // console.log("Mouse down: ", event);
     pos = {x: event.clientX, y: event.clientY};
     dragging = true;
   });
-  htmlCanvas.addEventListener("mousemove", (event) => {
+  topCanvas.addEventListener("mousemove", (event) => {
     // console.log("Mouse move: ", event);
   });
-  htmlCanvas.addEventListener("wheel", (event) => {
+  topCanvas.addEventListener("wheel", (event) => {
     // console.log("Wheel: ", event);
     if (event.deltaY > 0)
       canvas.zoom = canvas.zoom * 1.1;
@@ -56,23 +58,31 @@ initIpe().then((ipe) => {
       canvas.zoom = canvas.zoom / 1.1;
     canvas.update();
   });
-  htmlCanvas.addEventListener("keydown", (event) => {
+  topCanvas.addEventListener("keydown", (event) => {
     console.log("Key down: ", event);
   });
-  htmlCanvas.addEventListener("contextmenu", (event) => {
+  topCanvas.addEventListener("contextmenu", (event) => {
     // console.log("Context menu: ", event);
     console.log("Pan, zoom: ", canvas.pan, canvas.zoom);
     event.preventDefault();
   });
-
 });
   </script>
+  <style>
+    canvas#bottomCanvas {
+	position: absolute;
+	z-index: 1;
+    }
+    canvas#topCanvas {
+	position: absolute;
+	z-index: 2;
+    }
+  </style>
   <body>
     <h3>Hello from Ipe!</h3>
     <div>
-      <canvas id="canvas" width="600px" height="400px">
-	Your browser does not support canvas :-(
-      </canvas>
+      <canvas id="topCanvas" width="600px" height="400px"></canvas>
+      <canvas id="bottomCanvas" width="600px" height="400px"></canvas>
     </div>
   </body>
 </html>

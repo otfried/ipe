@@ -35,8 +35,12 @@
 using namespace emscripten;
 
 namespace {
-  void initLib() {
-    putenv(strdup("IPEDEBUG=1"));
+  void initLib(val env) {
+    int n = env["length"].as<int>();
+    for (int i = 0; i < n; ++i) {
+      std::string e = env[i].as<std::string>();
+      putenv(strdup(e.c_str()));
+    }
     ipe::Platform::initLib(ipe::IPELIB_VERSION);
   }
   ipe::Document *loadWithErrorReport(std::string s) {
