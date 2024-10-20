@@ -424,6 +424,9 @@ namespace {
   void update(Canvas * canvas) {
     canvas->update();
   }
+  void setResources(Canvas * canvas, Document * doc) {
+    canvas->setResources(doc->resources());
+  }
 }
 
 // --------------------------------------------------------------------
@@ -443,6 +446,7 @@ EMSCRIPTEN_BINDINGS(ipecanvas) {
     .function("mouseMoveEvent", &Canvas::mouseMoveEvent)
     .function("wheelEvent", &Canvas::wheelEvent)
     .function("keyPressEvent", &Canvas::keyPressEvent)
+    .function("setResources", &setResources, emscripten::allow_raw_pointers())
     ;
 }
 

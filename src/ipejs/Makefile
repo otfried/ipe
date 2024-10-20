@@ -21,6 +21,8 @@ LIBS += -L$(buildlib) -lipe -lipecairo $(CAIRO_LIBS) $(FREETYPE_LIBS)
 LDFLAGS += -sSINGLE_FILE=1 --embed-file test.ipe
 # fur use in ipecanvas.html, also add libipecanvas:
 LIBS += -lipecanvas
+# for use in ipelatex.html, also need file system and faked Latex run output:
+LDFLAGS += -sEXPORTED_RUNTIME_METHODS=FS --embed-file ipetemp.pdf
 
 all: $(TARGET)
 

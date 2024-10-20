@@ -35,6 +35,8 @@
 using namespace emscripten;
 
 namespace {
+  ipe::Latex *converter = nullptr;
+
   void initLib(val env) {
     int n = env["length"].as<int>();
     for (int i = 0; i < n; ++i) {
@@ -46,9 +48,20 @@ namespace {
   ipe::Document *loadWithErrorReport(std::string s) {
     return ipe::Document::loadWithErrorReport(s.c_str());
   }
+
+  int prepareLatexRun(ipe::Document *doc) {
+    return doc->prepareLatexRun(&converter);
+  }
+
+  int completeLatexRun(ipe::Document *doc) {
+    ipe::String log;
+    return doc->completeLatexRun(log, converter);
+  }
+
   ipe::Page *getPage(ipe::Document *doc, int pno) {
     return doc->page(pno);
   }
+
   val getBytes(ipe::Buffer & buffer) {
     return val(typed_memory_view(buffer.size(), (uint8_t *) buffer.data()));
   }
@@ -77,6 +90,8 @@ EMSCRIPTEN_BINDINGS(ipe) {
   class_<ipe::Document>("Document")
     .constructor<>()
     .property("countPages", &ipe::Document::countPages)
+    .function("prepareLatexRun", &prepareLatexRun, allow_raw_pointers())
+    .function("completeLatexRun", &completeLatexRun, allow_raw_pointers())
     .function("page", &getPage, allow_raw_pointers())
     .function("cascade", select_overload<ipe::Cascade *()>(&ipe::Document::cascade),
 	      allow_raw_pointers());

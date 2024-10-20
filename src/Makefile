@@ -50,7 +50,7 @@ ipescript: ipelib ipelua
 ipe: ipelib ipecanvas ipelua ipeui $(IPEICO)
 ipepresenter: ipecanvas $(IPEICO)
 ipecurl: ipelib
-ipejs: ipelib ipecairo
+ipejs: ipelib ipecairo ipecanvas
 
 $(subdirs):
 	$(MAKE) --directory=$@ $(GOAL)

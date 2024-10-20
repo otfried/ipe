@@ -244,8 +244,6 @@ namespace ipe {
     std::shared_ptr<std::vector<char>> iData;
   };
 
-  extern void ipeDebugBuffer(Buffer data, int maxsize);
-
   // --------------------------------------------------------------------
 
   class Stream {
@@ -413,6 +411,8 @@ namespace ipe {
   }
 
 } // namespace
+
+extern void ipeDebugBuffer(ipe::Buffer data, int maxsize);
 
 // --------------------------------------------------------------------
 #endif

@@ -276,7 +276,13 @@ void ipeDebugBuffer(Buffer data, int maxsize)
     ss << " ";
   }
   debugHandler(s.z());
+  int checksum = 0;
+  for (int i = 0; i < data.size(); ++i) {
+    checksum += data[i];
+  }
+  ipeDebug("Checksum: %x", checksum);
 }
+
 
 // --------------------------------------------------------------------
 
