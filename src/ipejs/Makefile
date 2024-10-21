@@ -26,7 +26,7 @@ LDFLAGS += -sEXPORTED_RUNTIME_METHODS=FS --embed-file ipetemp.pdf
 
 all: $(TARGET)
 
-sources	= ipejs.cpp ipecairojs.cpp
+sources	= ipecairojs.cpp
 
 $(TARGET): $(objects) Makefile
 	$(MAKE_BINDIR)

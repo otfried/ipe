@@ -144,15 +144,6 @@ AppUi *startIpe(Canvas *canvas, int width, int height, double dpr,
   return theAppUi;
 }
 
-static void initLib(val env) {
-  int n = env["length"].as<int>();
-  for (int i = 0; i < n; ++i) {
-    std::string e = env[i].as<std::string>();
-    putenv(strdup(e.c_str()));
-  }
-  ipe::Platform::initLib(ipe::IPELIB_VERSION);
-}
-
 static void ipeAction(AppUi *ui, std::string name)
 {
   ui->action(name);
@@ -229,9 +220,6 @@ static val createTarball(std::string tex) {
 // --------------------------------------------------------------------
 
 EMSCRIPTEN_BINDINGS(ipe) {
-  class_<ipe::Platform>("Platform")
-    .class_function("initLib", &initLib);
-
   class_<AppUi>("AppUi")
     .function("action", &ipeAction, allow_raw_pointers())
     .function("resume", &resumeLua, allow_raw_pointers())

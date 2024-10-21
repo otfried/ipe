@@ -63,6 +63,9 @@ sources += ipebitmap_win.cpp
 else
 sources += ipebitmap_unix.cpp
 endif
+ifdef IPEWASM
+sources += ipe_js.cpp
+endif
 
 $(TARGET): $(objects)
 	$(MAKE_LIBDIR)
