@@ -44,22 +44,36 @@ using namespace ipe;
 
 // --------------------------------------------------------------------
 
+struct FaceEntry {
+  String iName;
+  uint32_t iChecksum;
+  Buffer iFontFile;
+  FT_Face iFace;
+  cairo_font_face_t *iCairoFont;
+};
+
+static const cairo_user_data_key_t datakey = { 0 };
+
 struct Engine {
 public:
   Engine();
   ~Engine();
   cairo_font_face_t *screenFont();
+  std::pair<cairo_font_face_t *, FT_Face> getCairoFont(String name, const Buffer & data);
+  void discard(FT_Face ftFace);
 
 private:
   bool iScreenFontLoaded;
   cairo_font_face_t *iScreenFont;
+  std::vector<FaceEntry> iCache;
 
 public:
   bool iOk;
   FT_Library iLib;
+  int iFacesCreated;
+  int iFacesDiscarded;
   int iFacesLoaded;
   int iFacesUnloaded;
-  int iFacesDiscarded;
 };
 
 // Auto-constructed and destructed Freetype engine.
@@ -72,9 +86,10 @@ Engine::Engine()
   iOk = false;
   iScreenFont = nullptr;
   iScreenFontLoaded = false;
+  iFacesCreated = 0;
+  iFacesDiscarded = 0;
   iFacesLoaded = 0;
   iFacesUnloaded = 0;
-  iFacesDiscarded = 0;
   if (FT_Init_FreeType(&iLib))
     return;
   iOk = true;
@@ -82,28 +97,88 @@ Engine::Engine()
 
 Engine::~Engine()
 {
-  ipeDebug("Freetype engine: %d faces loaded, %d faces unloaded, "
-	   "%d faces discarded",
-	   iFacesLoaded, iFacesUnloaded, iFacesDiscarded);
   if (iScreenFont)
     cairo_font_face_destroy(iScreenFont);
-  if (iOk)
-    FT_Done_FreeType(iLib);
-  // causes an assert in cairo to fail:
-  // cairo_debug_reset_static_data();
-  ipeDebug("Freetype engine done: %d faces discarded", iFacesDiscarded);
+  // clear Cairo caches so we can check we have unloaded everything
+  cairo_debug_reset_static_data();
+  ipeDebug("Freetype engine: %d faces created, %d faces discarded, "
+	   "%d faces loaded, %d faces unloaded.",
+	   iFacesCreated, iFacesDiscarded, iFacesLoaded, iFacesUnloaded);
+  FT_Done_FreeType(iLib);
 }
 
 // --------------------------------------------------------------------
 
 cairo_font_face_t *Engine::screenFont()
 {
+  if (!iOk) return nullptr;
   if (!iScreenFontLoaded) {
     iScreenFontLoaded = true;
     iScreenFont = cairo_toy_font_face_create("Sans", CAIRO_FONT_SLANT_NORMAL,
 					     CAIRO_FONT_WEIGHT_BOLD);
   }
   return iScreenFont;
+}
+
+void Engine::discard(FT_Face ftFace)
+{
+  ++iFacesDiscarded;
+  auto it = std::find_if(iCache.begin(), iCache.end(),
+			 [ftFace](const FaceEntry & entry) {
+			   return entry.iFace == ftFace;
+			 });
+  if (it != iCache.end()) {
+    ipeDebug("Discarding face %s", it->iName.z());
+    FT_Done_Face(ftFace);  // discard Freetype face
+    iCache.erase(it); // frees the buffer
+  } else
+    ipeDebug("Discarded face not found in cache!");
+}
+
+static void face_data_destroy(FT_Face ftFace)
+{
+  engine.discard(ftFace);
+}
+
+std::pair<cairo_font_face_t *, FT_Face> Engine::getCairoFont(String name, const Buffer & data)
+{
+  uint32_t checksum = data.checksum();
+  for (auto & entry : iCache) {
+    if (entry.iName == name && entry.iChecksum == checksum) {
+      ipeDebug("Found font %s in cache with %d references", name.z(),
+	       cairo_font_face_get_reference_count(entry.iCairoFont));
+      cairo_font_face_reference(entry.iCairoFont);
+      return std::pair{entry.iCairoFont, entry.iFace};
+    }
+  }
+
+  FaceEntry entry;
+  entry.iName = name;
+  entry.iChecksum = checksum;
+  entry.iFontFile = data;
+  int error = FT_New_Memory_Face(engine.iLib, (const uint8_t *) entry.iFontFile.data(),
+				 entry.iFontFile.size(), 0, &entry.iFace);
+  if (error) {
+    ipeDebug("Error creating Cairo font %s", name.z());
+    return std::pair{nullptr, nullptr};
+  }
+
+  entry.iCairoFont = cairo_ft_font_face_create_for_ft_face(entry.iFace, 0);
+
+  // see cairo_ft_font_face_create_for_ft_face docs,
+  // it explains why the user_data is necessary
+  cairo_status_t status =
+    cairo_font_face_set_user_data(entry.iCairoFont, &datakey, entry.iFace,
+				  (cairo_destroy_func_t) face_data_destroy);
+  if (status) {
+    ipeDebug("Failed to set user data for Cairo font %s", name.z());
+    cairo_font_face_destroy(entry.iCairoFont);
+    FT_Done_Face(entry.iFace);
+    return std::pair{nullptr, nullptr};
+  }
+  ++engine.iFacesCreated;
+  iCache.push_back(entry);
+  return std::pair{entry.iCairoFont, entry.iFace};
 }
 
 // --------------------------------------------------------------------
@@ -132,7 +207,7 @@ String Fonts::freetypeVersion()
 //! Return a Cairo font to render to the screen w/o Latex font.
 cairo_font_face_t *Fonts::screenFont()
 {
-  return engine.iOk ? engine.screenFont() : nullptr;
+  return engine.screenFont();
 }
 
 //! Get a typeface.
@@ -163,20 +238,6 @@ bool Fonts::hasType3Font() const noexcept
 
 // --------------------------------------------------------------------
 
-struct FaceData {
-  Buffer iData;
-  FT_Face iFace;
-};
-
-static void face_data_destroy(FaceData *face_data)
-{
-  ++engine.iFacesDiscarded;
-  FT_Done_Face(face_data->iFace);  // discard Freetype face
-  delete face_data;  // discard memory buffer
-}
-
-static const cairo_user_data_key_t datakey = { 0 };
-
 /*! \class ipe::Face
   \ingroup cairo
   \brief A typeface (aka font), actually loaded (from a font file or PDF file).
@@ -195,6 +256,7 @@ Face::Face(const PdfDict *d, const PdfResourceBase *resources) noexcept
     /BaseFont /YEHLEP+CMR10
     /FontDescriptor 7 0 R
   */
+  ++engine.iFacesLoaded;
   const PdfObj *type = d->get("Type");
   if (!type || !type->name() || type->name()->value() != "Font")
     return;
@@ -250,30 +312,11 @@ Face::Face(const PdfDict *d, const PdfResourceBase *resources) noexcept
     return;
   }
 
-  if (FT_New_Memory_Face(engine.iLib, (const uint8_t *) data.data(),
-			 data.size(), 0, &iFace))
-    return;
-
-  FaceData *face_data = new FaceData;
-  face_data->iData = data;
-  face_data->iFace = iFace;
-
-  // see cairo_ft_font_face_create_for_ft_face docs,
-  // it explains why the user_data is necessary
-  iCairoFont = cairo_ft_font_face_create_for_ft_face(iFace, 0);
-  cairo_status_t status =
-    cairo_font_face_set_user_data(iCairoFont, &datakey, face_data,
-				  (cairo_destroy_func_t) face_data_destroy);
-  if (status) {
-    ipeDebug("Failed to set user data for Cairo font");
-    cairo_font_face_destroy(iCairoFont);
-    FT_Done_Face(iFace);
-    delete face_data;
-    iCairoFont = nullptr;
-    iFace = nullptr;
+  std::tie(iCairoFont, iFace) = engine.getCairoFont(iName, data);
+  if (!iCairoFont) {
+    ipeDebug("Failed to create Cairo font for %s", iName.z());
     return;
   }
-  ++engine.iFacesLoaded;
 
   if (iType == FontType::CIDType0 || iType == FontType::CIDType2) {
     getCIDWidth(d);
@@ -294,12 +337,14 @@ Face::Face(const PdfDict *d, const PdfResourceBase *resources) noexcept
     else
       setupTruetypeEncoding();
   }
+  ipeDebug("Loaded font %s with %d references", iName.z(),
+	   cairo_font_face_get_reference_count(iCairoFont));
 }
 
 Face::~Face() noexcept
 {
   if (iCairoFont) {
-    ipeDebug("Done with Cairo face %s (%d references left)", iName.z(),
+    ipeDebug("Unloading Cairo face %s (%d references left)", iName.z(),
 	     cairo_font_face_get_reference_count(iCairoFont));
     ++engine.iFacesUnloaded;
     cairo_font_face_destroy(iCairoFont);
@@ -521,6 +566,7 @@ bool Face::getFontFile(const PdfDict *d, Buffer &data) noexcept
   data = fontFile->dict()->inflate();
   // Fix strange header in some pdftex fonts that will cause EPS
   // export to break.
+  /*
   size_t m = data.size() > 1024 ? 1024 : data.size();
   std::string s { (const char *) data.data(), m };
   size_t i = s.find("FontDirectory");
@@ -529,6 +575,7 @@ bool Face::getFontFile(const PdfDict *d, Buffer &data) noexcept
     if (j != std::string::npos)
       memset(data.data() + i, ' ', j - i + 38);
   }
+  */
   return true;
 }
 

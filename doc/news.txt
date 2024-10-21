@@ -1,4 +1,7 @@
-Ipe 7.2.31
+Ipe 7.3.1
+
+ * After 15 years, finally fix the memory leak in Freetype/Cairo font
+   allocation.
 
  * Fix graph node moving tool leaving edges in a weird state (bug #512).
 

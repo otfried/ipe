@@ -235,6 +235,7 @@ namespace ipe {
     inline char *data() noexcept { return iData ? iData->data() : nullptr; }
     //! Return pointer to buffer data (const version).
     inline const char *data() const noexcept { return iData ? iData->data() : nullptr; }
+    uint32_t checksum() const;
 
   private:
     std::shared_ptr<std::vector<char>> iData;

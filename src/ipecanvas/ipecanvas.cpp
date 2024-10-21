@@ -120,8 +120,11 @@ CanvasBase::CanvasBase()
 //! destructor.
 CanvasBase::~CanvasBase()
 {
-  if (iSurface)
+  if (iSurface) {
+    ipeDebug("Surface has %d references left", cairo_surface_get_reference_count(iSurface));
+    cairo_surface_finish(iSurface);
     cairo_surface_destroy(iSurface);
+  }
   delete iTool;
   ipeDebug("CanvasBase::~CanvasBase");
 }

@@ -106,7 +106,7 @@ namespace ipe {
       Buffer iData;               // native-endian ARGB32 or DCT encoded
       Buffer iPixelData;          // native-endian ARGB32 pre-multiplied for Cairo
       bool iPixelsComputed;
-      int iChecksum;
+      uint32_t iChecksum;
       mutable int iObjNum;        // Object number (e.g. in PDF file)
     };
 
