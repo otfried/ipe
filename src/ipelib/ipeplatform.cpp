@@ -728,6 +728,41 @@ FILE *Platform::fopen(const char *fname, const char *mode)
 }
 #endif
 
+// package Latex source as a tarball to send to online Latex conversion
+String Platform::createTarball(String tex) {
+  Buffer tarHeader(512);
+  char *p = tarHeader.data();
+  memset(p, 0, 512);
+  strcpy(p, "ipetemp.tex");
+  strcpy(p + 100, "0000644"); // mode
+  strcpy(p + 108, "0001750"); // uid 1000
+  strcpy(p + 116, "0001750"); // gid 1000
+  sprintf(p + 124, "%011o", (unsigned int) tex.size());
+  p[136] = '0';  // time stamp, fudge it
+  p[156] = '0';  // normal file
+  // checksum
+  strcpy(p + 148, "        ");
+  uint32_t checksum = 0;
+  for (const char *q = p; q < p + 512; ++q)
+    checksum += uint8_t(*q);
+  sprintf(p + 148, "%06o", checksum);
+  p[155] = ' ';
+
+  String tar;
+  StringStream ss(tar);
+  for (const char *q = p; q < p + 512;)
+    ss.putChar(*q++);
+  ss << tex;
+  int i = tex.size();
+  while ((i & 0x1ff) != 0) {  // fill a 512-byte block
+    ss.putChar('\0');
+    ++i;
+  }
+  for (int i = 0; i < 1024; ++i)  // add two empty blocks
+    ss.putChar('\0');
+  return tar;
+}
+
 // --------------------------------------------------------------------
 
 static double ipestrtod(const char *s, char ** fin)

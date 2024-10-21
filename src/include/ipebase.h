@@ -373,6 +373,7 @@ namespace ipe {
     static String readFile(String fname);
     static String howToRunLatex(String dir, LatexType engine, String docname) noexcept;
     static int system(String cmd);
+    static String createTarball(String tex);
     static double toDouble(String s);
     static int toNumber(String s, int &iValue, double &dValue);
     static String spiroVersion();
