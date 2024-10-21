@@ -731,7 +731,8 @@ FILE *Platform::fopen(const char *fname, const char *mode)
 // package Latex source as a tarball to send to online Latex conversion
 String Platform::createTarball(String tex) {
   Buffer tarHeader(512);
-  char *p = tarHeader.data();
+  // volatile is necessary to appease compiler in strcpy etc.
+  char * volatile p = tarHeader.data();
   memset(p, 0, 512);
   strcpy(p, "ipetemp.tex");
   strcpy(p + 100, "0000644"); // mode
