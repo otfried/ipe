@@ -160,45 +160,19 @@ int main(int argc, char *argv[])
     return -7;
   }
 
-  // need to send Latex source as a tarball
-  Buffer tarHeader(512);
-  char *p = tarHeader.data();
-  memset(p, 0, 512);
-  strcpy(p, "ipetemp.tex");
-  strcpy(p + 100, "0000644"); // mode
-  strcpy(p + 108, "0001750"); // uid 1000
-  strcpy(p + 116, "0001750"); // gid 1000
-  sprintf(p + 124, "%011o", tex.size());
-  p[136] = '0';  // time stamp, fudge it
-  p[156] = '0';  // normal file
-  // checksum
-  strcpy(p + 148, "        ");
-  uint32_t checksum = 0;
-  for (const char *q = p; q < p + 512; ++q)
-    checksum += uint8_t(*q);
-  sprintf(p + 148, "%06o", checksum);
-  p[155] = ' ';
-
+  String boundary{"------------------------f0324ce8daa3cc53"};
   String mime;
   StringStream ss(mime);
-  ss << "--------------------------f0324ce8daa3cc53\r\n"
-     << "Content-Disposition: form-data; name=\"file\"; filename=\"tar.txt\"\r\n"
+  ss << "--" << boundary << "\r\n"
+     << "Content-Disposition: form-data; name=\"file\"; filename=\"latexTarball.tar\"\r\n"
      << "Content-Type: text/plain\r\n\r\n";
-  for (const char *q = p; q < p + 512;)
-    ss.putChar(*q++);
-  ss << tex;
-  int i = tex.size();
-  while ((i & 0x1ff) != 0) {  // fill a 512-byte block
-    ss.putChar('\0');
-    ++i;
-  }
-  for (int i = 0; i < 1024; ++i)  // add two empty blocks
-    ss.putChar('\0');
-  ss << "\r\n--------------------------f0324ce8daa3cc53--\r\n";
+  // need to send Latex source as a tarball
+  ss << Platform::createTarball(tex) << "\r\n";
+  ss << "--" << boundary << "--\r\n";
 
   String additionalHeaders;
   StringStream hs(additionalHeaders);
-  hs << "Content-Type: multipart/form-data; boundary=------------------------f0324ce8daa3cc53\r\n"
+  hs << "Content-Type: multipart/form-data; boundary=" << boundary << "\r\n"
      << "Content-Length: " << mime.size() << "\r\n";
 
   std::wstring wAdditionalHeaders = additionalHeaders.w();

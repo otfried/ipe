@@ -1,5 +1,6 @@
+// -*- C++ -*-
 // --------------------------------------------------------------------
-// Helper class for Win32 Unicode interface
+// Wait dialog for QT
 // --------------------------------------------------------------------
 /*
 
@@ -28,27 +29,49 @@
 
 */
 
-#ifndef IPEUI_WSTRING_H
-#define IPEUI_WSTRING_H
+#ifndef WAITDLG_QT_H
+#define WAITDLG_QT_H
 
-class WString : public std::wstring {
- public:
-#ifdef IPEBASE_H
-  WString(const ipe::String &s) : std::wstring( std::move(s.w()) ) { /* nothing */ }
-#endif
-  WString(const std::string &s)  { init(s.data(), s.size()); }
-  WString(const char *s) { init(s, -1); }
- private:
-  void init(const char *s, int len);
+#include "appui.h"
+
+#include <QDialog>
+#include <QMutex>
+
+// --------------------------------------------------------------------
+
+class Waiter : public QObject
+{
+  Q_OBJECT
+
+public:
+  Waiter(const QString &cmd);
+
+signals:
+  void completed();
+public slots:
+  void process();
+private:
+  QString iCommand;
 };
 
-extern void buildFlags(std::vector<short> &t, DWORD flags);
-extern void buildString(std::vector<short> &t, const char *s);
-extern void buildControl(std::vector<short> &t, short what, const char *s = nullptr);
-extern BOOL setWindowText(HWND h, const char *s);
-extern void sendMessage(HWND h, UINT code, const char *t, WPARAM wParam = 0);
+class WaitDialog : public QDialog
+{
+  Q_OBJECT
 
+public:
+  WaitDialog(QString label, AppUiBase *observer);
+  bool showDialog(); // returns true if dialog is showing now
+  bool isRunning() const noexcept { return running; }
+public slots:
+  void completed();
+protected:
+  void keyPressEvent(QKeyEvent *e);
+  void closeEvent(QCloseEvent *ev);
+private:
+  AppUiBase *observer;
+  bool running; // the waiter has not yet signaled completed
+  QMutex mutex; // locked when dialog is waiting modally
+};
 
 // --------------------------------------------------------------------
 #endif
-

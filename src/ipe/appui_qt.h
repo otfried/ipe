@@ -90,6 +90,8 @@ public:
 
   virtual void setRecentFileMenu(const std::vector<String> & names) override;
 
+  virtual bool waitDialog(const char *cmd, const char *label) override;
+
 public slots:
   void action(String name) override;
   void qAction(const QString &name);

@@ -49,27 +49,6 @@ extern HBITMAP createBitmap(uint32_t *p, int w, int h);
 #define BORDER 6
 #define BUTTONHEIGHT 14
 
-static void buildFlags(std::vector<short> &t, DWORD flags)
-{
-  union {
-    DWORD dw;
-    short s[2];
-  } a;
-  a.dw = flags;
-  t.push_back(a.s[0]);
-  t.push_back(a.s[1]);
-  t.push_back(0);
-  t.push_back(0);
-}
-
-static void buildString(std::vector<short> &t, const char *s)
-{
-  const char *p = s;
-  while (*p)
-    t.push_back(*p++);
-  t.push_back(0);
-}
-
 static void buildButton(std::vector<short> &t, UINT flags, int id,
 			int h, int x, const char *s)
 {

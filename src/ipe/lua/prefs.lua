@@ -112,7 +112,7 @@ else
   prefs.editable_textfile = nil
 end
 
-if config.platform == "apple" then
+if config.platform == "apple" or config.toolkit == "htmljs" then
   prefs.delete_key = "\8"
 else
   prefs.delete_key = "\127"
@@ -248,6 +248,7 @@ prefs.snap = { vertex = false,
 prefs.initial = {
   grid_size = 16,     -- points
   angle_size = 45,    -- degrees
+  pretty_display = false,
   grid_visible = true,
 }
 

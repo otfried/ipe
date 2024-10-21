@@ -35,6 +35,7 @@
 #include <cstdlib>
 
 #include "appui_js.h"
+#include "controls_js.h"
 #include "ipecanvas_js.h"
 
 using namespace ipe;
@@ -44,9 +45,15 @@ using namespace ipelua;
 
 #include <emscripten/bind.h>
 
+#include <format>
+
+using namespace emscripten;
+using std::string;
+
 // --------------------------------------------------------------------
 
-static void setup_globals(lua_State *L, int width, int height, double devicePixelRatio)
+static void setup_globals(lua_State *L, int width, int height,
+			  double devicePixelRatio, std::string platform)
 {
   lua_getglobal(L, "package");
   const char *luapath = getenv("IPELUAPATH");
@@ -62,9 +69,9 @@ static void setup_globals(lua_State *L, int width, int height, double devicePixe
   lua_setfield(L, -2, "path");
 
   lua_newtable(L);  // config table
-  lua_pushliteral(L, "web");
+  lua_pushstring(L, platform.c_str());
   lua_setfield(L, -2, "platform");
-  lua_pushliteral(L, "html");
+  lua_pushliteral(L, "htmljs");
   lua_setfield(L, -2, "toolkit");
 
 #ifdef IPEBUNDLE
@@ -91,6 +98,9 @@ static void setup_globals(lua_State *L, int width, int height, double devicePixe
 
   lua_setglobal(L, "config");
 
+  lua_getglobal(L, "tonumber");
+  lua_setglobal(L, "tonumber2");
+
   lua_pushcfunction(L, ipe_tonumber);
   lua_setglobal(L, "tonumber");
 }
@@ -115,44 +125,79 @@ int mainloop(lua_State *L)
   return 0;
 }
 
-AppUi *startIpe(Canvas *canvas, int width, int height, double dpr)
+AppUi *startIpe(Canvas *canvas, int width, int height, double dpr,
+		std::string platform)
 {
   theCanvas = canvas;
 
-  Platform::initLib(IPELIB_VERSION);
   lua_State *L = setup_lua();
 
   // TODO: Should we support command line options?
-  
-  lua_createtable(L, 0, 1);
-  lua_pushstring(L, "tiling.ipe");
-  lua_rawseti(L, -2, 1);
+  lua_createtable(L, 0, 0);
   lua_setglobal(L, "argv");
 
-  setup_globals(L, width, height, dpr);
+  setup_globals(L, width, height, dpr, platform);
 
   lua_run_ipe(L, mainloop);
-  return theAppUi;
-}
 
-static void initLib() {
-  putenv(strdup("IPEDEBUG=1"));
-  ipe::Platform::initLib(ipe::IPELIB_VERSION);
+  theCanvas->setObserver(theAppUi);
+  return theAppUi;
 }
 
 static void ipeAction(AppUi *ui, std::string name)
 {
-  ui->action(String(name.c_str()));
+  ui->action(name);
+}
+
+static void resumeLua(AppUi *ui, val arg) {
+  ui->resumeLua(arg);
+}
+
+static void absoluteButton(AppUi *ui, val sel) {
+  ui->luaAbsoluteButton(sel.as<std::string>().c_str());
+}
+
+static void selector(AppUi *ui, val sel, val value) {
+  ui->luaSelector(sel.as<std::string>().c_str(),
+		  value.as<std::string>().c_str());
+}
+
+static void paintPathView(AppUi *ui, val canvas) {
+  ui->iPathView->paint(canvas);
+}
+
+static void layerAction(AppUi *ui, string name, string layer) {
+  ui->luaLayerAction(String(name), String(layer));
+}
+
+static void showLayerBoxPopup(AppUi *ui, string layer, double x, double y) {
+  ui->luaShowLayerBoxPopup(Vector(x, y), String(layer));
+}
+
+static void showPathStylePopup(AppUi *ui, double x, double y) {
+  ui->luaShowPathStylePopup(Vector(x, y));
+}
+
+static void bookmarkSelected(AppUi *ui, int row) {
+  ui->luaBookmarkSelected(row);
 }
 
 // --------------------------------------------------------------------
 
-EMSCRIPTEN_BINDINGS(ipe) {
-  emscripten::class_<ipe::Platform>("Platform")
-    .class_function("initLib", &initLib);
-  emscripten::class_<AppUi>("AppUi")
-    .function("action", &ipeAction, emscripten::allow_raw_pointers());
-  emscripten::function("startIpe", &startIpe, emscripten::allow_raw_pointers());
+EMSCRIPTEN_BINDINGS(appui) {
+  class_<AppUi>("AppUi")
+    .function("action", &ipeAction, allow_raw_pointers())
+    .function("resume", &resumeLua, allow_raw_pointers())
+    .function("absoluteButton", &absoluteButton, allow_raw_pointers())
+    .function("selector", &selector, allow_raw_pointers())
+    .function("paintPathView", &paintPathView, allow_raw_pointers())
+    .function("layerAction", &layerAction, allow_raw_pointers())
+    .function("showLayerBoxPopup", &showLayerBoxPopup, allow_raw_pointers())
+    .function("showPathStylePopup", &showPathStylePopup, allow_raw_pointers())
+    .function("bookmarkSelected", &bookmarkSelected, allow_raw_pointers())
+    ;
+    
+  function("startIpe", &startIpe, allow_raw_pointers());
 }
 
 // --------------------------------------------------------------------

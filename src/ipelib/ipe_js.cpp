@@ -32,50 +32,80 @@
 
 #include <emscripten/bind.h>
 
+using namespace ipe;
 using namespace emscripten;
 
 namespace {
-  void initLib() {
-    putenv(strdup("IPEDEBUG=1"));
-    ipe::Platform::initLib(ipe::IPELIB_VERSION);
+  Latex *converter = nullptr;
+
+  void initLib(val env) {
+    int n = env["length"].as<int>();
+    for (int i = 0; i < n; ++i) {
+      std::string e = env[i].as<std::string>();
+      putenv(strdup(e.c_str()));
+    }
+    Platform::initLib(IPELIB_VERSION);
   }
-  ipe::Document *loadWithErrorReport(std::string s) {
-    return ipe::Document::loadWithErrorReport(s.c_str());
+
+  Document *loadWithErrorReport(std::string s) {
+    return Document::loadWithErrorReport(s.c_str());
   }
-  ipe::Page *getPage(ipe::Document *doc, int pno) {
+
+  int prepareLatexRun(Document *doc) {
+    converter = nullptr;
+    return doc->prepareLatexRun(&converter);
+  }
+
+  int completeLatexRun(Document *doc) {
+    String log;
+    return doc->completeLatexRun(log, converter);
+  }
+
+  Page *getPage(Document *doc, int pno) {
     return doc->page(pno);
   }
-  val getBytes(ipe::Buffer & buffer) {
+
+  val getBytes(Buffer & buffer) {
     return val(typed_memory_view(buffer.size(), (uint8_t *) buffer.data()));
+  }
+
+  Buffer createTarball(std::string texfile) {
+    String tar = Platform::createTarball(String(texfile));
+    return Buffer(tar.data(), tar.size());
   }
 };
 
-EMSCRIPTEN_BINDINGS(ipe) {
-  class_<ipe::Platform>("Platform")
-    .class_function("initLib", &initLib);
+EMSCRIPTEN_BINDINGS(ipelib) {
+  class_<Platform>("Platform")
+    .class_function("initLib", &initLib)
+    .class_function("createTarball", &createTarball);
+  ;
 
-  value_object<ipe::Vector>("Vector")
-    .field("x", &ipe::Vector::x)
-    .field("y", &ipe::Vector::y);
+  value_object<Vector>("Vector")
+    .field("x", &Vector::x)
+    .field("y", &Vector::y);
 
-  class_<ipe::Buffer>("Buffer")
-    .property("size", &ipe::Buffer::size)
+  class_<Buffer>("Buffer")
+    .property("size", &Buffer::size)
     .function("data", &getBytes);
 
-  class_<ipe::Page>("Page")
-    .property("count", &ipe::Page::count)
-    .property("countLayers", &ipe::Page::countLayers)
-    .property("countViews", &ipe::Page::countViews);
+  class_<Page>("Page")
+    .property("count", &Page::count)
+    .property("countLayers", &Page::countLayers)
+    .property("countViews", &Page::countViews);
 
-  class_<ipe::Cascade>("Cascade")
-    .property("count", &ipe::Cascade::count);
+  class_<Cascade>("Cascade")
+    .property("count", &Cascade::count);
 
-  class_<ipe::Document>("Document")
+  class_<Document>("Document")
     .constructor<>()
-    .property("countPages", &ipe::Document::countPages)
+    .property("countPages", &Document::countPages)
+    .function("prepareLatexRun", &prepareLatexRun, allow_raw_pointers())
+    .function("completeLatexRun", &completeLatexRun, allow_raw_pointers())
     .function("page", &getPage, allow_raw_pointers())
-    .function("cascade", select_overload<ipe::Cascade *()>(&ipe::Document::cascade),
-	      allow_raw_pointers());
+    .function("cascade", select_overload<Cascade *()>(&Document::cascade),
+	      allow_raw_pointers())
+    ;
   function("loadWithErrorReport", &loadWithErrorReport, return_value_policy::take_ownership());
 
 }

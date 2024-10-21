@@ -94,10 +94,12 @@ void push_button(lua_State *L, int button)
 
 // --------------------------------------------------------------------
 
-LuaTool::LuaTool(CanvasBase *canvas, lua_State *L0, int luatool)
+LuaTool::LuaTool(CanvasBase *canvas, lua_State *L0, int luatool, int model)
   : Tool(canvas)
 {
-  L = L0;
+  lua_rawgeti(L0, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+  L = lua_tothread(L0, -1);
+  iModel =model;
   iLuaTool = luatool;
   iColor = Color(0, 0, 0);
 }
@@ -107,44 +109,46 @@ LuaTool::~LuaTool()
   luaL_unref(L, LUA_REGISTRYINDEX, iLuaTool);
 }
 
+void LuaTool::wrapCall(String method, int nArgs, int nResults)
+{
+  lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
+  lua_getfield(L, -1, "wrapCall");
+  lua_insert(L, -2); // move before model
+  lua_rawgeti(L, LUA_REGISTRYINDEX, iLuaTool);
+  lua_getfield(L, -1, method.z());
+  lua_insert(L, -2); // move before luaTool
+  if (nArgs)
+    lua_rotate(L, -nArgs - 4, 4);
+  // calling: model.wrapCall model method luaTool <nArgs>
+  luacall(L, nArgs + 3, nResults);
+}
+
 void LuaTool::mouseButton(int button, bool press)
 {
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iLuaTool);
-  lua_getfield(L, -1, "mouseButton");
-  lua_pushvalue(L, -2); // model
-  lua_remove(L, -3);
   push_button(L, button);
   lua_pushboolean(L, press);
-  lua_callk(L, 4, 0, 0, nullptr);
+  wrapCall("mouseButton", 3, 0);
 }
 
 void LuaTool::mouseMove()
 {
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iLuaTool);
-  lua_getfield(L, -1, "mouseMove");
-  lua_pushvalue(L, -2); // model
-  lua_remove(L, -3);
-  lua_callk(L, 1, 0, 0, nullptr);
+  wrapCall("mouseMove", 0, 0);
 }
 
 bool LuaTool::key(String text, int modifiers)
 {
-  lua_rawgeti(L, LUA_REGISTRYINDEX, iLuaTool);
-  lua_getfield(L, -1, "key");
-  lua_pushvalue(L, -2); // model
-  lua_remove(L, -3);
+  lua_State *L0 = L; // need to save L since
   push_string(L, text);
   push_modifiers(L, modifiers);
-  lua_State *L0 = L; // need to save L since
-  lua_callk(L, 3, 1, 0, nullptr); // this may delete tool
+  wrapCall("key", 2, 1); // this may delete tool
   bool used = lua_toboolean(L0, -1);
   return used;
 }
 
 // --------------------------------------------------------------------
 
-ShapeTool::ShapeTool(CanvasBase *canvas, lua_State *L0, int luatool)
-  : LuaTool(canvas, L0, luatool)
+ShapeTool::ShapeTool(CanvasBase *canvas, lua_State *L0, int luatool, int model)
+  : LuaTool(canvas, L0, luatool, model)
 {
   iPen = 1.0;
   iSnap = false;
@@ -284,8 +288,8 @@ void ShapeTool::snapVtx(const Vector &mouse, Vector &pos,
 // --------------------------------------------------------------------
 
 PasteTool::PasteTool(CanvasBase *canvas, lua_State *L0, int luatool,
-		     Object *obj)
-  : LuaTool(canvas, L0, luatool)
+		     int model, Object *obj)
+  : LuaTool(canvas, L0, luatool, model)
 {
   iObject = obj;
 }

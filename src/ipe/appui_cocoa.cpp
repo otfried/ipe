@@ -1555,6 +1555,67 @@ int AppUi::setClipboard(lua_State *L)
 
 // --------------------------------------------------------------------
 
+@interface IpePanelDelegate : NSObject <NSWindowDelegate>
+@property void (^threadFunction)();
+@property BOOL threadStarted;
+@end
+
+@implementation IpePanelDelegate
+- (instancetype) init
+{
+  self = [super init];
+  if (self) {
+    _threadStarted = false;
+  }
+  return self;
+}
+
+- (void) windowDidBecomeKey:(NSNotification *) notification
+{
+  if (!self.threadStarted && self.threadFunction) {
+    [NSThread detachNewThreadSelector:@selector(startThread:)
+			     toTarget:self
+			   withObject:nil];
+    self.threadStarted = true;
+  }
+}
+
+- (void) startThread:(id) arg
+{
+  self.threadFunction();
+}
+@end
+
+bool AppUi::waitDialog(const char *cmd, const char *label)
+{
+  NSPanel *panel = [[NSPanel alloc]
+		     initWithContentRect:NSMakeRect(400.,800., 200, 100)
+			       styleMask:NSTitledWindowMask
+				 backing:NSBackingStoreBuffered
+				   defer:YES];
+  panel.title = @"Ipe: waiting";
+  NSTextField *l = [[NSTextField alloc]
+		     initWithFrame:NSMakeRect(0., 0., 200., 100.)];
+  l.stringValue = C2N(text);
+  l.editable = NO;
+  l.bordered = NO;
+  l.drawsBackground = NO;
+
+  addToLayout(panel.contentView, l);
+  layout(panel.contentView, l, "x=x");
+  layout(panel.contentView, l, "y=y");
+
+  auto delegate = [[IpePanelDelegate alloc] init];
+  panel.delegate = delegate;
+
+  delegate.threadFunction = ^() { (void) std::system(cmd); [NSApp abortModal]; };
+  [NSApp runModalForWindow:panel];
+  [panel close];
+  return 0;
+}
+
+// --------------------------------------------------------------------
+
 AppUiBase *createAppUi(lua_State *L0, int model)
 {
   return new AppUi(L0, model);
