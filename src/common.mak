@@ -240,7 +240,7 @@ ifdef IPEWASM
   CXXFLAGS	 += -O3
   CPPFLAGS	 += -DIPEWASM
   IPEBUNDLE      = 1
-  ZLIB_CFLAGS    =
+  ZLIB_CFLAGS    = --use-port=zlib
   ZLIB_LIBS      = -lz
   PNG_CFLAGS     := -I$(IPEDEPS)/include/libpng16
   PNG_LIBS       := -L$(IPEDEPS)/lib -lpng16 -lz

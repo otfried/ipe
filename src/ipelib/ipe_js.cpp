@@ -69,9 +69,9 @@ namespace {
     return val(typed_memory_view(buffer.size(), (uint8_t *) buffer.data()));
   }
 
-  std::string createTarball(std::string texfile) {
+  Buffer createTarball(std::string texfile) {
     String tar = Platform::createTarball(String(texfile));
-    return tar.s();
+    return Buffer(tar.data(), tar.size());
   }
 };
 
