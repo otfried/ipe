@@ -950,6 +950,10 @@ function MODEL:createText(mode, pos, width, pinned)
   if ((prefs.auto_external_editor and prefs.editor_closes_dialog)
     or d:execute(prefs.editor_size)) then
     local t = d:get("text")
+    if t:match("^%s*$") ~= nil then
+      -- do not create Text containing only white space
+      return
+    end
     local style = styles[d:get("style")]
     local size = sizes[d:get("size")]
     local obj = ipe.Text(self.attributes, t, pos, width)
