@@ -62,7 +62,7 @@ public:
   virtual void closeWindow() override;
   virtual bool actionState(const char *name) override;
   virtual void setActionState(const char *name, bool value) override;
-  virtual void setWindowCaption(bool mod, const char *s) override;
+  virtual void setWindowCaption(bool mod, const char *caption, const char *fn) override;
   virtual void explain(const char *s, int t) override;
   virtual void showWindow(int width, int height, int x, int y, const Color & pathViewColor) override;
   virtual void setFullScreen(int mode) override;
@@ -75,6 +75,8 @@ public:
 
   virtual void setRecentFileMenu(const std::vector<String> & names) override;
   virtual void action(String name) override;
+
+  void openFile(String fn);
 
   virtual bool waitDialog(const char *cmd, const char *label) override;
   void resumeLua(emscripten::val result);

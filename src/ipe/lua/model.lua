@@ -341,7 +341,7 @@ function MODEL:setCaption()
     s = s .. string.format("(View %d/%d) ", self.vno, self:page():countViews())
   end
 --]]
-  self.ui:setWindowTitle(self:isModified(), s)
+  self.ui:setWindowTitle(self:isModified(), s, self.file_name)
 end
 
 function MODEL:setSnap()

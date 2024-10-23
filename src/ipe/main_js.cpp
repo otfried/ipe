@@ -203,6 +203,12 @@ extern "C" void action(const char *name) {
 }
 
 EMSCRIPTEN_KEEPALIVE
+extern "C" void openFile(const char *fn) {
+  theAppUi->openFile(String(fn));
+  std::free((void *) fn);
+}
+
+EMSCRIPTEN_KEEPALIVE
 extern "C"  void absoluteButton(const char * sel) {
   theAppUi->luaAbsoluteButton(sel);
   std::free((void *) sel);

@@ -131,7 +131,7 @@ public:  // What platforms must implement:
   virtual void setNumbers(String vno, bool vm, String pno, bool pm) = 0;
   virtual void setLayers(const Page *page, int view) = 0;
   virtual void setZoom(double zoom) = 0;
-  virtual void setWindowCaption(bool mod, const char *s) = 0;
+  virtual void setWindowCaption(bool mod, const char *caption, const char *fn) = 0;
   virtual void setNotes(String notes) = 0;
   virtual void explain(const char *s, int t) = 0;
   virtual void showWindow(int width, int height, int x, int y, const Color & pathViewColor) = 0;

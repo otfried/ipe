@@ -588,8 +588,9 @@ static int appui_setWindowTitle(lua_State *L)
 {
   AppUiBase **ui = check_appui(L, 1);
   bool mod = lua_toboolean(L, 2);
-  const char *s = luaL_checklstring(L, 3, nullptr);
-  (*ui)->setWindowCaption(mod, s);
+  const char *caption = luaL_checklstring(L, 3, nullptr);
+  const char *fn = lua_isnil(L, 4) ? "" : luaL_checklstring(L, 4, nullptr);
+  (*ui)->setWindowCaption(mod, caption, fn);
   return 0;
 }
 

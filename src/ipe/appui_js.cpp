@@ -342,6 +342,7 @@ void AppUi::setupSymbolicNames(const Cascade *sheet)
 
 void AppUi::setActionsEnabled(bool mode)
 {
+  // TODO: disable actions during drawing
 }
 
 // --------------------------------------------------------------------
@@ -380,12 +381,9 @@ void AppUi::closeWindow()
   // handled by JS
 }
 
-void AppUi::setWindowCaption(bool mod, const char *s)
+void AppUi::setWindowCaption(bool mod, const char *caption, const char *fn)
 {
-  // TODO: macOS can use the actual filename and whether the file has been modified
-  // (documentEdited and representedFilename on BrowserWindow)
-  val htmlDocument = val::global("document");
-  htmlDocument.set("title", s);
+  jsUi().call<void>("setTitle", mod, std::string(caption), std::string(fn));
 }
 
 void AppUi::setMouseIndicator(const char *s)
@@ -459,6 +457,12 @@ void AppUi::resumeLua(val result)
   else
     lua_pushlightuserdata(L, &result);
   luacall(L, 2, 0);
+}
+
+void AppUi::openFile(String fn)
+{
+  push_string(L, fn);
+  wrapCall("loadDocument", 1);
 }
 
 // --------------------------------------------------------------------

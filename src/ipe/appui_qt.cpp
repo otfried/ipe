@@ -1042,10 +1042,10 @@ void AppUi::closeWindow()
   QTimer::singleShot(0, this, &AppUi::close);
 }
 
-void AppUi::setWindowCaption(bool mod, const char *s)
+void AppUi::setWindowCaption(bool mod, const char *caption, const char *fn)
 {
   setWindowModified(mod);
-  setWindowTitle(QString::fromUtf8(s));
+  setWindowTitle(QString::fromUtf8(caption));
 }
 
 void AppUi::setMouseIndicator(const char *s)
