@@ -166,6 +166,12 @@ extern "C" bool canvasKeyPressEvent(EM_VAL ev)
   return canvas()->keyPressEvent(val::take_ownership(ev));
 }
 
+EMSCRIPTEN_KEEPALIVE
+extern "C" void canvasSetAdditionalModifiers(int mod)
+{
+  canvas()->setAdditionalModifiers(mod);
+}
+
 // ------------------------------------------------------------------------
 
 EMSCRIPTEN_KEEPALIVE

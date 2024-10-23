@@ -101,6 +101,7 @@ AppUi::AppUi(lua_State *L0, int model)
     buildMenus();
   build_menus = false; // all Windows share the same main menu
   createIcon(String("pen"));
+  createIcon(String("shift_key"));
   createIcon(String("stop"));
   jsUi().call<void>("setupMenu");
   iCanvas->setObserver(this);
