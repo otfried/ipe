@@ -298,7 +298,7 @@ void Canvas::wheelEvent(QWheelEvent *ev)
   if (iObserver) {
     if (ev->modifiers() & Qt::ShiftModifier)
       // switch x and y
-      iObserver->canvasObserverWheelMoved(p.y() / 8.0, p.x() / 8.0, kind);
+      iObserver->canvasObserverWheelMoved(-p.y() / 8.0, p.x() / 8.0, kind);
     else
       iObserver->canvasObserverWheelMoved(p.x() / 8.0, p.y() / 8.0, kind);
   }
