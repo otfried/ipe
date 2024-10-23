@@ -868,7 +868,7 @@ void AppUi::closeEvent(QCloseEvent* ce)
 // --------------------------------------------------------------------
 
 // Determine if action is checked
-// Used for snapXXX, grid_visible, viewmarked, and pagemarked
+// Used for snapXXX, grid_visible, pretty_display, viewmarked, and pagemarked
 bool AppUi::actionState(const char *name)
 {
   if (!strcmp(name, "viewmarked"))

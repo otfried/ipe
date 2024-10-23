@@ -315,10 +315,9 @@ void AppUi::explain(const char *s, int t)
   gtk_statusbar_push(GTK_STATUSBAR(iStatusBar), iStatusBarContextid, s);
 }
 
-void AppUi::setWindowCaption(bool mod, const char *s)
+void AppUi::setWindowCaption(bool modified, const char *caption, const char *filename)
 {
-  // TODO: What is mod for?
-  gtk_window_set_title(GTK_WINDOW(iWindow), s);
+  gtk_window_set_title(GTK_WINDOW(iWindow), caption);
 }
 
 void AppUi::setMouseIndicator(const char *s)

@@ -55,7 +55,7 @@ public:
   virtual void closeWindow();
   virtual bool actionState(const char *name);
   virtual void setActionState(const char *name, bool value);
-  virtual void setWindowCaption(bool mod, const char *s);
+  virtual void setWindowCaption(bool mod, const char *caption, const char *fn);
   virtual void explain(const char *s, int t);
   virtual void showWindow(int width, int height, int x, int y, const Color & pathViewColor);
   virtual void setFullScreen(int mode);

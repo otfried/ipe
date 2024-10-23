@@ -1381,9 +1381,9 @@ WINID AppUi::windowId()
   return iWindow;
 }
 
-void AppUi::setWindowCaption(bool mod, const char *s)
+void AppUi::setWindowCaption(bool mod, const char *caption, const char *fn)
 {
-  [iWindow setTitle:[[NSString alloc] initWithUTF8String:s]];
+  [iWindow setTitle:[[NSString alloc] initWithUTF8String:caption]];
 }
 
 void AppUi::showWindow(int width, int height, int x, int y, const Color & pathViewColor)

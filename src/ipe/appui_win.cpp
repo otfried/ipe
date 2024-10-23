@@ -1423,9 +1423,9 @@ WINID AppUi::windowId()
   return hwnd;
 }
 
-void AppUi::setWindowCaption(bool mod, const char *s)
+void AppUi::setWindowCaption(bool mod, const char *caption, const char *fn)
 {
-  setWindowText(hwnd, s);
+  setWindowText(hwnd, caption);
 }
 
 void AppUi::showWindow(int width, int height, int x, int y, const Color &pathViewColor)

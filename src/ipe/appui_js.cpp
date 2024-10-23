@@ -239,6 +239,8 @@ void AppUi::setPathView(const AllAttributes &all, Cascade *sheet)
 
 void AppUi::setCheckMark(String name, Attribute a)
 {
+  String s = name + "|" + a.string();
+  jsUi().call<void>("setCheckMark", s.s());
 }
 
 void AppUi::setNumbers(String vno, bool vm, String pno, bool pm)
