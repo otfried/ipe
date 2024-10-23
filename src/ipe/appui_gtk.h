@@ -70,6 +70,8 @@ public:
 
   virtual void setRecentFileMenu(const std::vector<String> & names) override;
 
+  virtual bool waitDialog(const char *cmd, const char *label) override;
+
 private:
   int actionId(const char *name) const;
   virtual void addRootMenu(int id, const char *name);

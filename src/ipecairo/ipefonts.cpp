@@ -99,8 +99,10 @@ Engine::~Engine()
 {
   if (iScreenFont)
     cairo_font_face_destroy(iScreenFont);
+#ifndef __APPLE__
   // clear Cairo caches so we can check we have unloaded everything
   cairo_debug_reset_static_data();
+#endif
   ipeDebug("Freetype engine: %d faces created, %d faces discarded, "
 	   "%d faces loaded, %d faces unloaded.",
 	   iFacesCreated, iFacesDiscarded, iFacesLoaded, iFacesUnloaded);

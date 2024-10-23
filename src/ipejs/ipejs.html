@@ -2,8 +2,8 @@
 <!-- 
  a basic test of the js bindings to ipelib 
 
- to run it, embed 'tiling1.ipe' using 
- LDFLAGS += --embed-file tiling1.ipe
+ to run it, embed 'test.ipe' using
+ LDFLAGS += --embed-file test.ipe
 -->
 <html>
   <script type="module">
@@ -19,7 +19,7 @@ initIpe().then((ipe) => {
   const doc1 = new ipe.Document();
   console.log("Document: ", doc1);
   console.log("has pages: ", doc1.countPages);
-  const doc2 = new ipe.loadWithErrorReport("tiling1.ipe");
+  const doc2 = new ipe.loadWithErrorReport("test.ipe");
   console.log("Document: ", doc2);
   console.log("has pages: ", doc2.countPages);
   const p = doc2.page(0);
@@ -50,9 +50,7 @@ initIpe().then((ipe) => {
   <body>
     <h3>Hello from Ipe!</h3>
     <div>
-      <canvas id="canvas" width="200px" height="300px">
-	Your browser does not support canvas :-(
-      </canvas>
+      <canvas id="canvas" width="200px" height="300px"></canvas>
     </div>
   </body>
 </html>

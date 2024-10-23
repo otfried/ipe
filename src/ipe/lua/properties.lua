@@ -54,7 +54,7 @@ function MODEL:emptyPopup()
   m:add("action_pan_here", "Pan canvas")
   m:add("grid", "Toggle grid")
   local gp = self.ui:globalPos()
-  local item, num, value = m:execute(gp.x, gp.y)
+  local item, value = m:execute(gp.x, gp.y)
   if item then
     if item:sub(1,7) == "action_" then
       self:action(item:sub(8))
@@ -77,7 +77,7 @@ function MODEL:singlePopup(prim)
     m:add("grid", "Toggle grid")
   end
   local gp = self.ui:globalPos()
-  local item, num, value = m:execute(gp.x, gp.y)
+  local item, value = m:execute(gp.x, gp.y)
   if item then
     if item == "layer" then
       self:changeLayerOfPrimary(prim, value)
@@ -508,7 +508,7 @@ function MODEL:multiPopup()
     m:add("grid", "Toggle grid")
   end
   local gp = self.ui:globalPos()
-  local item, num, value = m:execute(gp.x, gp.y)
+  local item, value = m:execute(gp.x, gp.y)
   if item then
     if item == "layer" then
       self:action_move_to_layer(value)

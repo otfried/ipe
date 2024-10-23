@@ -57,7 +57,7 @@ private:
 
 class LuaTool  : public Tool {
 public:
-  LuaTool(CanvasBase *canvas, lua_State *L0, int luatool);
+  LuaTool(CanvasBase *canvas, lua_State *L0, int luatool, int model);
   ~LuaTool();
 
   void setColor(Color color) { iColor = color; }
@@ -65,8 +65,13 @@ public:
   virtual void mouseButton(int button, bool press);
   virtual void mouseMove();
   virtual bool key(String text, int modifiers);
+
+private:
+  void wrapCall(String method, int nArgs, int nResults);
+
 protected:
   lua_State *L;
+  int iModel;
   int iLuaTool;
   Color iColor;
 };
@@ -77,7 +82,7 @@ public:
 		   ERadius, EMinor, ECurrent, EScissor,
 		   ENumMarkTypes };
 
-  ShapeTool(CanvasBase *canvas, lua_State *L0, int luatool);
+  ShapeTool(CanvasBase *canvas, lua_State *L0, int luatool, int model);
 
   void setShape(Shape shape, int which = 0, double pen=1.0);
   void setSnapping(bool snap, bool skipLast);
@@ -102,7 +107,7 @@ private:
 
 class PasteTool : public LuaTool {
 public:
-  PasteTool(CanvasBase *canvas, lua_State *L0, int luatool, Object *obj);
+  PasteTool(CanvasBase *canvas, lua_State *L0, int luatool, int model, Object *obj);
   ~PasteTool();
 
   void setMatrix(Matrix m) { iMatrix = m; }

@@ -10,8 +10,8 @@ TARGET = $(call exe_target,ipescript)
 CPPFLAGS += -I../include -I../ipelua $(LUA_CFLAGS)
 LIBS += -L$(buildlib) -lipelua -lipe $(LUA_LIBS) $(DL_LIBS)
 
-ifdef IPENODEJS
-LDFLAGS += --pre-js $(NODEJSPRE) -lnoderawfs.js -lnodefs.js
+ifdef IPEWASM
+LDFLAGS += --pre-js $(NODEJSPRE) -lembind -lnoderawfs.js -lnodefs.js
 endif
 
 ifndef IPEBUNDLE

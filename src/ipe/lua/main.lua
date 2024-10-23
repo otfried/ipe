@@ -227,8 +227,8 @@ function messageBox(parent, type, text, details, buttons)
   end
 end
 
-filter_ipe = { "Ipe files (*.ipe *.pdf *.eps *.xml)",
-	       "*.ipe;*.pdf;*.eps;*.xml",
+filter_ipe = { "Ipe files (*.ipe *.pdf *.xml)",
+	       "*.ipe;*.pdf;*.xml",
 	       "All files (*.*)", "*.*" }
 filter_save = { "XML (*.ipe *.xml)", "*.ipe;*.xml",
 		"PDF (*.pdf)", "*.pdf" }
@@ -387,8 +387,9 @@ else
     if userdir then
       config.ipeletDirs[#config.ipeletDirs + 1] = userdir .. "\\Ipelets"
     end
+  elseif config.platform == "web" then
+    config.ipeletDirs[#config.ipeletDirs + 1] = home .. "/ipelets"
   else
-    config.ipeletDirs[#config.ipeletDirs + 1] = home .. "/.ipe/ipelets"
     if config.platform == "apple" then
       config.ipeletDirs[#config.ipeletDirs + 1] = home.."/Library/Ipe/Ipelets"
     end
@@ -407,7 +408,9 @@ if ipestyles then
   end
 else
   config.styleDirs = { config.system_styles }
-  if config.platform ~= "win" then
+  if config.platform == "web" then
+    table.insert(config.styleDirs, 1, home .. "/styles")
+  elseif config.platform ~= "win" then
     table.insert(config.styleDirs, 1, home .. "/.ipe/styles")
     if config.platform == "apple" then
       table.insert(config.styleDirs, 2, home .. "/Library/Ipe/Styles")

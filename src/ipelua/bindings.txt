@@ -752,6 +752,45 @@ ui:transformTool()
 ui:shapeTool()
 \endverbatim
 
+\subsection luaipewaitdialog Wait dialog
+
+This dialog is for running an external program (that is, latex or a
+text editor).  The dialog is modal, so that the program refreshes but
+otherwise waits for the running command.
+
+\verbatim
+ui:waitDialog(command, text)
+\endverbatim
+
+Here, 'command' is a string that is passed to a shell to run the
+command.  The argument 'text' appears in the dialog.
+
+The behaviour is different on differen platforms:
+
+1. On Win32 and MacOS, the dialog has its own event loop.  A thread is
+started for the command, and when the command terminates, the dialog
+is closed and the function returns with the value 'true'.
+
+2. On Qt, the dialog is modal, but lives on the main event loop. A
+thread is started for the command.  If this thread terminates quickly
+(e.g. around 300ms), then the function immediately returns with value
+'true'.  Otherwise, the dialog appears, and the function immediately
+returns with value 'false'.  In this case, the calling Lua code should
+yield to return to the main event loop.  When the thread terminates,
+the method 'resumeLua' on the model of the ui object will be called to
+resume the incomplete action.
+
+3. On JS, the dialog is modal on the normal browser event loop.
+'command' must be the name of a tex engine.  The method now calls the
+'runLatex' method on the JS 'window' object with the command as an
+argument.  This method is supposed to be an async JS function that
+returns with a promise.  The 'waitDialog' method immediately returns
+with value 'false'.  The JS code that hosts the Ipe WASM libraries
+must ensure that when the promise is fulfilled, the 'resume' method in
+the JS bindings of the 'ui' is called.  No additional threads are
+started by Ipelib.
+
+
 \page luaipeui Lua bindings for dialogs and menus
 
 The ipeui module provides dialogs and popup menus for Lua.  It does
@@ -818,14 +857,6 @@ ipeui.getColor(parent, title, r, g, b)
 ipeui.messageBox(parent, type, text, details, buttons)
 \endverbatim
 
-\subsection luaipewaitdialog Wait dialog
-
-This dialog executes an external program.  The function returns only
-after the external program has finished executing.  
-\verbatim
-ipeui.waitDialog(parent, command) 
-\endverbatim
-
 \section luaipeuidialogs Dialogs
 
 Other dialogs can be constructed programmatically.  A dialog consists
@@ -835,7 +866,7 @@ filling the button row using 'addButton'.  The 'action' for
 'addButton' can be one of the strings "accept" or "reject", or a Lua
 method.
 \verbatim
-d = ipeui.Dialog(parent, window_title)
+d = ipeui.Dialog(parent, window_title, language)
 
 -- row == -1 means last row, row == 0 means start new row
 d:add(name, what, options, row, column, row_span, column_span)
@@ -850,13 +881,16 @@ value = d:get(name)
 -- enable/disable elements
 d:setEnabled(name, true_or_false)
 
--- set whether escape should be ignored (true/false)
-d:set("ignore-escape", flag)
+-- set to ignore escape when the value of field is equal to originalValue
+d:set("ignore-escape", field, originalValue)
 
--- returns true if dialog was accepted
-d:execute()
-d:execute(size)   -- where size == { width, height }
+-- show dialog modally
+accepted = d:execute()
+accepted = d:execute(size)   -- where size == { width, height }
 \endverbatim
+
+Note that on some platforms (Qt and JS), `d:execute` may yield.
+Closing the dialog causes the Lua thread to be resumed.
 
 \e name can be an arbitrary string. \e what must be one of 
 \verbatim
@@ -912,7 +946,7 @@ The result value of \e get is:
 Popup menus are constructed and shown as follows:
 \verbatim
 m = ipeui.Menu(parent)	
-item, no, subitem = m:execute(global_position)
+item, subitem = m:execute(global_position)
 \endverbatim
 When the menu is cancelled, \e execute returns \e nil.
 
@@ -921,14 +955,14 @@ like this:
 \verbatim
 m:add("name", "Label")
 \endverbatim
-When this item is selected, execute returns \a name, 0, and an empty string.
+When this item is selected, execute returns \a name, and an empty string.
 
 The following line adds an entire submenu:
 \verbatim
 m:add("name", "Submenu", { "alpha", "beta", "gamma" } )
 \endverbatim
 When an item from this submenu is selected, \e execute returns \a
-name, the index into the submenu, and the name of the submenu item.
+name and the name of the submenu item.
 
 When the strings in the table are not directly the visible labels for
 the submenu, a Lua function can be used to convert them:

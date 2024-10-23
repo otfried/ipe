@@ -67,8 +67,9 @@
 #include <cstring>
 #include <cerrno>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten/bind.h>
+#ifdef IPEWASM
+#include <emscripten.h>
+#include <emscripten/val.h>
 #endif
 
 using namespace ipe;
@@ -110,12 +111,15 @@ static LPStrtodL p_strtod_l = nullptr;
 locale_t ipeLocale;
 #endif
 
-#if defined(IPEWASM) && !defined(IPENODEJS)
-String Platform::dotIpe()
-{
-  return String("/home/ipe/.ipe");
+#ifdef IPEWASM
+inline bool usePreloader() {
+  return getenv("IPEPRELOADER") != nullptr;
 }
-#else
+inline bool useJSLatex() {
+  return getenv("IPEJSLATEX") != nullptr;
+}
+#endif
+
 #ifndef WIN32
 String Platform::dotIpe()
 {
@@ -127,7 +131,6 @@ String Platform::dotIpe()
     return String();
   return res + "/";
 }
-#endif
 #endif
 
 #ifdef WIN32
@@ -148,6 +151,7 @@ static void readIpeConf()
 #else
 static void readIpeConf()
 {
+#ifndef IPEWASM
   String fname = Platform::dotIpe() + "ipe.conf";
   String conf = Platform::readFile(fname);
   if (conf.empty())
@@ -158,6 +162,7 @@ static void readIpeConf()
     String line = conf.getLine(i);
     putenv(strdup(line.z()));  // a leak, but necessary
   }
+#endif
 }
 #endif
 
@@ -306,7 +311,7 @@ String Platform::ipeDrive()
 #ifdef IPEBUNDLE
 String Platform::ipeDir(const char *suffix, const char *fname)
 {
-#if defined(__EMSCRIPTEN__) && !defined(IPENODEJS)
+#ifdef IPEWASM
   String exe("/opt/ipe/");
 #else  
 #ifdef WIN32
@@ -403,6 +408,10 @@ String Platform::latexDirectory()
   latexDir += "\\";
   return latexDir;
 #else
+#ifdef IPEWASM
+  if (useJSLatex())
+    return String("/tmp/latexrun/");
+#endif
   const char *p = getenv("IPELATEXDIR");
   String latexDir;
   if (p) {
@@ -497,15 +506,22 @@ String Platform::readFile(String fname)
   return s;
 }
 
-#if !defined(__EMSCRIPTEN__) || defined(IPENODEJS)
 // amazingly, this actually works in NodeJS as is.
-//! Runs latex on file ipetemp.tex in given directory.
+// to make this async, need to run it on a different thread
+//! Returns command to run latex on file ipetemp.tex in given directory.
 /*! directory of docname is added to TEXINPUTS if its non-empty. */
-int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
+String Platform::howToRunLatex(String dir, LatexType engine, String docname) noexcept
 {
   const char *latex = (engine == LatexType::Xetex) ?
     "xelatex" : (engine == LatexType::Luatex) ?
     "lualatex" : "pdflatex";
+#ifdef IPEWASM
+  if (useJSLatex()) {
+    String how("runlatex:");
+    how += latex;
+    return how;
+  }
+#endif
   String url = Platform::readFile(dir + "url1.txt");
   bool online = (url.left(4) == "http");
   String texinputs;
@@ -563,40 +579,11 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
   String s = dir + "runlatex.bat";
   std::FILE *f = Platform::fopen(s.z(), "wb");
   if (!f)
-    return -1;
+    return String();
   std::fwrite(bat.data(), 1, bat.size(), f);
   std::fclose(f);
-
-  // Declare and initialize process blocks
-  PROCESS_INFORMATION processInformation;
-  STARTUPINFOW startupInfo;
-
-  memset(&processInformation, 0, sizeof(processInformation));
-  memset(&startupInfo, 0, sizeof(startupInfo));
-  startupInfo.cb = sizeof(startupInfo);
-
-  // Call the executable program
-  String cmd = String("cmd /c call \"") + dir + String("runlatex.bat\"");
-  std::wstring wcmd = cmd.w();
-
-  int result = CreateProcessW(nullptr, wcmd.data(), nullptr, nullptr, FALSE,
-			      NORMAL_PRIORITY_CLASS|CREATE_NO_WINDOW,
-			      nullptr, nullptr, &startupInfo, &processInformation);
-  if (result == 0)
-    return -1;  // failure to create process
-
-  // Wait until child process exits.
-  WaitForSingleObject(processInformation.hProcess, INFINITE);
-
-  // Close process and thread handles.
-  CloseHandle(processInformation.hProcess);
-  CloseHandle(processInformation.hThread);
-
-  // Apparently WaitForSingleObject doesn't work in Wine
-  const char *wine = getenv("IPEWINE");
-  if (wine)
-    Sleep(Lex(wine).getInt());
-  return 0;
+  
+  return String("cmd /c call \"") + dir + String("runlatex.bat\"");
 #else
   if (!online && getenv("IPETEXFORMAT")) {
     latex = (engine == LatexType::Xetex) ?
@@ -629,37 +616,50 @@ int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
     s += " ipetemp.tex";
   }
   s += " > /dev/null";
-  int result = std::system(s.z());
+  return s;
+#endif
+}
+
+#ifdef WIN32
+int Platform::system(String cmd)
+{
+  // Declare and initialize process blocks
+  PROCESS_INFORMATION processInformation;
+  STARTUPINFOW startupInfo;
+
+  memset(&processInformation, 0, sizeof(processInformation));
+  memset(&startupInfo, 0, sizeof(startupInfo));
+  startupInfo.cb = sizeof(startupInfo);
+
+  // Call the executable program
+  std::wstring wcmd = cmd.w();
+
+  int result = CreateProcessW(nullptr, wcmd.data(), nullptr, nullptr, FALSE,
+			      NORMAL_PRIORITY_CLASS|CREATE_NO_WINDOW,
+			      nullptr, nullptr, &startupInfo, &processInformation);
+  if (result == 0)
+    return -1;  // failure to create process
+
+  // Wait until child process exits.
+  WaitForSingleObject(processInformation.hProcess, INFINITE);
+
+  // Close process and thread handles.
+  CloseHandle(processInformation.hProcess);
+  CloseHandle(processInformation.hThread);
+
+  // Apparently WaitForSingleObject doesn't work in Wine
+  const char *wine = getenv("IPEWINE");
+  if (wine)
+    Sleep(Lex(wine).getInt());
+  return 0;
+}
+#else
+int Platform::system(String cmd)
+{
+  int result = std::system(cmd.z());
   if (result != -1)
     result = WEXITSTATUS(result);
   return result;
-#endif
-}
-#endif
-
-#if defined(IPEWASM) && !defined(IPENODEJS)
-int Platform::runLatex(String dir, LatexType engine, String docname) noexcept
-{
-  ipeDebug("Platform::runLatex %s", dir.z());
-  std::string latex = (engine == LatexType::Xetex) ?
-    "xelatex" : (engine == LatexType::Luatex) ?
-    "lualatex" : "pdflatex";
-  String ipetemp = readFile(dir + "latexrun/ipetemp.tex");
-  String ipepdf = dir + "latexrun/ipetemp.pdf";
-  String ipelog = dir + "latexrun/ipetemp.log";
-  emscripten::val ipc = emscripten::val::global("window")["ipc"];
-  emscripten::val result = ipc.call<emscripten::val>("runlatex", latex, std::string(ipetemp.z()));
-  /*
-  std::string pdf = result["pdf"].as<std::string>();
-  std::string log = result["log"].as<std::string>();
-  std::FILE *pdfFile = Platform::fopen(ipepdf.z(), "wb");
-  std::fwrite(pdf.data(), 1, pdf.size(), pdfFile);
-  std::fclose(pdfFile);
-  std::FILE *logFile = Platform::fopen(ipelog.z(), "wb");
-  std::fwrite(log.data(), 1, log.size(), logFile);
-  std::fclose(logFile);
-  */
-  return 0;
 }
 #endif
 
@@ -700,6 +700,64 @@ String::String(const wchar_t *wbuf)
   }
 }
 #endif
+
+#ifdef IPEWASM
+FILE *Platform::fopen(const char *fname, const char *mode)
+{
+  if (!usePreloader() || !strncmp(fname, "/tmp/", 5) || !strncmp(fname, "/opt/ipe", 8))
+    return ::fopen(fname, mode);
+  emscripten::val preloadCache = emscripten::val::global("window")["ipeui"]["preloadCache"];
+  emscripten::val s = preloadCache[fname];
+  if (!s.isUndefined()) {
+    std::string t = s.as<std::string>();
+    return ::fopen(t.c_str(), mode);
+  } else if (mode[0] == 'w') {
+    char tmpname[] = "/tmp/ipeXXXXXX";
+    int fd = ::mkstemp(tmpname);
+    if (fd < 0)
+      return nullptr;
+    preloadCache.set(fname, tmpname);
+    return ::fdopen(fd, mode);
+  } else
+    return nullptr;
+}
+#endif
+
+// package Latex source as a tarball to send to online Latex conversion
+String Platform::createTarball(String tex) {
+  Buffer tarHeader(512);
+  // volatile is necessary to appease compiler in strcpy etc.
+  char * volatile p = tarHeader.data();
+  memset(p, 0, 512);
+  strcpy(p, "ipetemp.tex");
+  strcpy(p + 100, "0000644"); // mode
+  strcpy(p + 108, "0001750"); // uid 1000
+  strcpy(p + 116, "0001750"); // gid 1000
+  sprintf(p + 124, "%011o", (unsigned int) tex.size());
+  p[136] = '0';  // time stamp, fudge it
+  p[156] = '0';  // normal file
+  // checksum
+  strcpy(p + 148, "        ");
+  uint32_t checksum = 0;
+  for (const char *q = p; q < p + 512; ++q)
+    checksum += uint8_t(*q);
+  sprintf(p + 148, "%06o", checksum);
+  p[155] = ' ';
+
+  String tar;
+  StringStream ss(tar);
+  for (const char *q = p; q < p + 512;)
+    ss.putChar(*q++);
+  ss << tex;
+  int i = tex.size();
+  while ((i & 0x1ff) != 0) {  // fill a 512-byte block
+    ss.putChar('\0');
+    ++i;
+  }
+  for (int i = 0; i < 1024; ++i)  // add two empty blocks
+    ss.putChar('\0');
+  return tar;
+}
 
 // --------------------------------------------------------------------
 
@@ -769,3 +827,19 @@ String Platform::gslVersion()
 
 // --------------------------------------------------------------------
 
+#ifdef IPEWASM
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" void initLib(emscripten::EM_VAL environment) {
+  emscripten::val env = emscripten::val::take_ownership(environment);
+  int n = env["length"].as<int>();
+  for (int i = 0; i < n; ++i) {
+    std::string e = env[i].as<std::string>();
+    putenv(strdup(e.c_str()));
+  }
+  Platform::initLib(IPELIB_VERSION);
+}
+
+#endif
+
+// ------------------------------------------------------------------------

@@ -36,6 +36,7 @@
 
 #include "ipecanvas_qt.h"
 
+
 #include <QGuiApplication>
 #include <QMenu>
 #include <QContextMenuEvent>
@@ -444,3 +445,4 @@ void PageSorter::contextMenuEvent(QContextMenuEvent *ev)
 }
 
 // --------------------------------------------------------------------
+

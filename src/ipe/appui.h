@@ -92,6 +92,7 @@ public:
 	 EUiView, EUiPage, EUiViewMarked, EUiPageMarked };
 
   // tags for submenus
+  // change list submenuNames if enum changes
   enum { ESubmenuGridSize = 1000, ESubmenuAngleSize,
 	 ESubmenuTextStyle, ESubmenuLabelStyle,
 	 ESubmenuSelectLayer, ESubmenuMoveLayer,
@@ -103,15 +104,23 @@ public:
 
   CanvasBase *canvas() { return iCanvas; }
 
-  void setupSymbolicNames(const Cascade *sheet);
+  virtual void setupSymbolicNames(const Cascade *sheet);
   void setGridAngleSize(Attribute abs_grid, Attribute abs_angle);
   void setAttributes(const AllAttributes &all, Cascade *sheet);
 
+  void wrapCall(String method, int nArgs);
   void luaShowPathStylePopup(Vector v);
   void luaBookmarkSelected(int index);
   void luaRecentFileSelected(String name);
+  void resumeLua();
+  void luaAbsoluteButton(const char *s);
+  void luaSelector(String name, String value);
+  void luaLayerAction(String name, String layer);
+  void luaShowLayerBoxPopup(Vector v, String layer);
+
   inline void setInkMode(bool ink) { isInkMode = ink; }
   static int readImage(lua_State *L, String fn);
+  int model() const noexcept { return iModel; }
 
 public:  // What platforms must implement:
   virtual WINID windowId() = 0;
@@ -142,6 +151,8 @@ public:  // What platforms must implement:
 
   virtual void setRecentFileMenu(const std::vector<String> & names) = 0;
 
+  virtual bool waitDialog(const char *cmd, const char *label) = 0; 
+
 protected:   // What platforms must implement:
   virtual void addRootMenu(int id, const char *name) = 0;
   // if title == 0, add separator
@@ -169,11 +180,7 @@ protected:
   AppUiBase(lua_State *L0, int model);
   static const char * const selectorNames[];
 
-  void luaSelector(String name, String value);
   void luaAction(String name);
-  void luaShowLayerBoxPopup(Vector v, String layer);
-  void luaLayerAction(String name, String layer);
-  void luaAbsoluteButton(const char *s);
 
   void buildMenus();
   void showInCombo(const Cascade *sheet, Kind kind,

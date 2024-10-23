@@ -10,8 +10,8 @@ TARGET = $(call exe_target,ipetoipe)
 CPPFLAGS += -I../include
 LIBS += -L$(buildlib) -lipe
 
-ifdef IPENODEJS
-LDFLAGS += --pre-js $(NODEJSPRE) -lnoderawfs.js -lnodefs.js
+ifdef IPEWASM
+LDFLAGS += --pre-js $(NODEJSPRE) -lembind -lnoderawfs.js -lnodefs.js
 endif
 
 all: $(TARGET)

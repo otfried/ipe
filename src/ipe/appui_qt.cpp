@@ -31,6 +31,7 @@
 #include "appui_qt.h"
 #include "ipecanvas_qt.h"
 #include "controls_qt.h"
+#include "waitdlg_qt.h"
 
 #include "ipelua.h"
 
@@ -53,6 +54,8 @@
 #include <QMimeData>
 #include <QWindow>
 #include <QScreen>
+#include <QThread>
+#include <QTimer>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -851,17 +854,15 @@ void AppUi::setActionsEnabled(bool mode)
 //! Window has been closed
 void AppUi::closeEvent(QCloseEvent* ce)
 {
-  // calls model
   lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-  lua_getfield(L, -1, "closeEvent");
-  lua_pushvalue(L, -2); // model
-  lua_remove(L, -3);
-  lua_call(L, 1, 1);
-  bool result = lua_toboolean(L, -1);
-  if (result)
+  lua_getfield(L, -1, "okay_close");
+  if (lua_toboolean(L, -1)) {
     ce->accept();
-  else
+  } else {
     ce->ignore();
+    // give Lua code a chance to consider the case and close again
+    wrapCall("closeEvent", 0);
+  }
 }
 
 // --------------------------------------------------------------------
@@ -1036,7 +1037,9 @@ WINID AppUi::windowId()
 
 void AppUi::closeWindow()
 {
-  close();
+  // call it from the event loop so closeEvent calls into Lua outside
+  // of the current Lua action
+  QTimer::singleShot(0, this, &AppUi::close);
 }
 
 void AppUi::setWindowCaption(bool mod, const char *s)
@@ -1137,6 +1140,105 @@ int AppUi::clipboard(lua_State *L)
   lua_pushstring(L, data.toUtf8());
   return 1;
 }
+
+// --------------------------------------------------------------------
+
+Waiter::Waiter(const QString &cmd) : iCommand{cmd}
+{
+  // nothing
+}
+
+void Waiter::process()
+{
+  // compiler will complain if we do not look at the return value
+  int result = std::system(iCommand.toUtf8());
+  (void) result;
+  emit completed();
+}
+
+// --------------------------------------------------------------------
+
+WaitDialog::WaitDialog(QString label, AppUiBase *observer)
+  : observer{observer}, running{true}
+{
+  QGridLayout *lo = new QGridLayout;
+  setLayout(lo);
+  setWindowTitle("Ipe: waiting");
+  QLabel *l = new QLabel(label, this);
+  lo->addWidget(l, 0, 0);
+  setModal(true);
+}
+
+void WaitDialog::keyPressEvent(QKeyEvent *e)
+{
+  // do not let Escape close the dialog
+  if (e->key() != Qt::Key_Escape)
+    QDialog::keyPressEvent(e);
+}
+
+void WaitDialog::closeEvent(QCloseEvent *ev)
+{
+  // do not let user close the dialog
+  ev->ignore();
+}
+
+// show modal dialog if the thread has not yet signaled and keep mutex locked
+bool WaitDialog::showDialog()
+{
+  mutex.lock();
+  if (!running) {
+    mutex.unlock();
+    return false; // already signaled
+  }
+  this->show();
+  return true;
+};
+
+void WaitDialog::completed()
+{
+  if (mutex.tryLock()) {
+    // the mutex was free, so dialog is not yet showing
+    running = false;
+    mutex.unlock();
+  } else {
+    mutex.unlock();
+    done(0);
+    deleteLater(); // schedule myself for deletion
+    observer->resumeLua();
+  }
+}
+
+// --------------------------------------------------------------------
+
+bool AppUi::waitDialog(const char *cmd, const char *label)
+{
+  QThread *thread = new QThread();
+  Waiter *waiter = new Waiter(cmd);
+  waiter->moveToThread(thread);
+  WaitDialog *dialog = new WaitDialog(QIpe(label), this);
+
+  // waiter is in a different thread, but connect does this right
+  QObject::connect(thread, &QThread::started, waiter, &Waiter::process);
+  QObject::connect(waiter, &Waiter::completed, thread, &QThread::quit);
+  QObject::connect(waiter, &Waiter::completed, waiter, &QObject::deleteLater);
+  QObject::connect(thread, &QThread::finished, thread, &QObject::deleteLater);
+  QObject::connect(waiter, &Waiter::completed, dialog, &WaitDialog::completed);
+
+  thread->start();
+  for (int i = 0; i < 3 && dialog->isRunning(); ++i) {
+    QThread::msleep(100);
+    QCoreApplication::processEvents();
+  }
+  if (!dialog->isRunning()) {
+    // task completed, no need to show dialog, just return with done==true
+    delete dialog;
+    return true;
+  }
+  dialog->showDialog();
+  return false;
+}
+
+// --------------------------------------------------------------------
 
 AppUiBase *createAppUi(lua_State *L0, int model)
 {

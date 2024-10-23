@@ -3,6 +3,15 @@ Ipe 7.3.1
  * After 15 years, finally fix the memory leak in Freetype/Cairo font
    allocation.
 
+ * Refactor UI code to make use of Lua coroutines.  It's now possible
+   to use aynchronous services (like online Latex) without a blocking
+   wait on a second thread.  All calls into Lua are now protected, so
+   a bug in the Lua code will not cause Ipe to crash.  Hopefully this
+   will also improve the robustness of the wait dialog with respect to
+   the various versions of Qt.
+
+ * Another version of the Ipe UI using HTML/CSS/JS.
+
  * Fix graph node moving tool leaving edges in a weird state (bug #512).
 
 ----------------------------------------------------------------------
