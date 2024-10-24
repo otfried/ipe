@@ -1,3 +1,5 @@
+----------------------------------------------------------------------
+
 Ipe 7.3.1
 
  * After 15 years, finally fix the memory leak in Freetype/Cairo font
@@ -11,6 +13,8 @@ Ipe 7.3.1
    the various versions of Qt.
 
  * Another version of the Ipe UI using HTML/CSS/JS.
+
+ * New function to add several style sheets at once by name.
 
  * Fix graph node moving tool leaving edges in a weird state (bug #512).
 

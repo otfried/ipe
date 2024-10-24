@@ -159,6 +159,12 @@ void AppUiBase::buildMenus()
   addItem(EFileMenu, "Automatically run Latex", "*auto_latex");
   addItem(EFileMenu, "Run Latex", "run_latex");
   addItem(EFileMenu);
+  addItem(EFileMenu, "Document properties", "document_properties");
+  addItem(EFileMenu, "Add style sheets", "add_style_sheets");
+  addItem(EFileMenu, "Style sheets", "style_sheets");
+  addItem(EFileMenu, "Update style sheets", "update_style_sheets");
+  addItem(EFileMenu, "Check symbolic attributes", "check_style");
+  addItem(EFileMenu);
   addItem(EFileMenu, "Close", "close");
 
   addItem(EEditMenu, "Undo", "undo");
@@ -193,11 +199,6 @@ void AppUiBase::buildMenus()
   addItem(EEditMenu);
   addItem(EEditMenu, "Edit group", "edit_group");
   addItem(EEditMenu, "End group edit", "end_group_edit");
-  addItem(EEditMenu);
-  addItem(EEditMenu, "Document properties", "document_properties");
-  addItem(EEditMenu, "Style sheets", "style_sheets");
-  addItem(EEditMenu, "Update style sheets", "update_style_sheets");
-  addItem(EEditMenu, "Check symbolic attributes", "check_style");
 
   startSubMenu(EPropertiesMenu, "Pinned");
   addSubItem("none", "pinned|none");

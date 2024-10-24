@@ -2762,16 +2762,16 @@ function MODEL:action_style_sheets()
   d:add("label1", "label", { label="Style sheets"}, 1, 1, 1, 4)
   d:add("list", "list", sheets_namelist(dd.list), 2, 1, 7, 3)
   d:add("del", "button",
-	{ label="Del", action=function (d) sheets_del(d, dd) end }, 3, 4)
+	{ label="Del", action=function (d) sheets_del(d, dd) end }, 2, 4)
   d:add("up", "button",
-	{ label="&Up", action=function (d) sheets_up(d, dd) end }, 5, 4)
+	{ label="&Up", action=function (d) sheets_up(d, dd) end }, 3, 4)
   d:add("down", "button",
-	{ label="&Down", action=function (d) sheets_down(d, dd) end }, 6, 4)
+	{ label="&Down", action=function (d) sheets_down(d, dd) end }, 4, 4)
   if config.toolkit ~= "htmljs" then
   d:add("add", "button",
-	{ label="&Add", action=function (d) sheets_add(d, dd) end }, 2, 4)
+	{ label="&Add", action=function (d) sheets_add(d, dd) end }, 5, 4)
   d:add("edit", "button",
-	{ label="Edit", action=function (d) sheets_edit(d, dd) end }, 4, 4)
+	{ label="Edit", action=function (d) sheets_edit(d, dd) end }, 6, 4)
   d:add("save", "button",
 	{ label="&Save", action=function (d) sheets_save(d, dd) end }, 7, 4)
   end
@@ -2786,6 +2786,52 @@ function MODEL:action_style_sheets()
   for i,s in ipairs(dd.list) do
     t.final:insert(i, s)
   end
+  t.undo = function (t, doc)
+	     t.final = doc:replaceSheets(t.original)
+	   end
+  t.redo = function (t, doc)
+	     t.original = doc:replaceSheets(t.final)
+	   end
+  self:register(t)
+  self:action_check_style()
+end
+
+----------------------------------------------------------------------
+
+function MODEL:action_add_style_sheets()
+  local d = ipeui.Dialog(self.ui:win(), "Ipe: add style sheets")
+  d:add("label", "label", { label="Names of sheets to add, separated by spaces" }, 0, 1)
+  d:add("sheets", "input", {}, 0, 1)
+  d:add("nobasic", "checkbox", { label="Remove basic stylesheet" }, 0, 1)
+  d:addButton("ok", "&Ok", "accept")
+  d:addButton("cancel", "&Cancel", "reject")
+  if not d:execute() then return end
+  local final = self.doc:sheets():clone()
+  if d:get("nobasic") then
+    for i = 1,final:count() do
+      if final:sheet(i):name() == "basic" then
+	final:remove(i)
+	break
+      end
+    end
+  end
+  for name in string.gmatch(d:get("sheets"), "%S+") do
+    local s = findStyle(name .. ".isy", nil)
+    if not s then
+      messageBox(self.ui:win(), "warning", "No style sheet found for '" .. name .. "'")
+      return
+    end
+    local nsheet = ipe.Sheet(s)
+    if not nsheet then
+      messageBox(self.ui:win(), "warning", "Failed to load style sheet '" .. s .. "'")
+      return
+    end
+    final:insert(1, nsheet)
+  end
+  local t = { label="add style sheets",
+	      final = final,
+	      style_sheets_changed = true,
+	    }
   t.undo = function (t, doc)
 	     t.final = doc:replaceSheets(t.original)
 	   end
