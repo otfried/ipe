@@ -117,6 +117,7 @@ public:
   void luaSelector(String name, String value);
   void luaLayerAction(String name, String layer);
   void luaShowLayerBoxPopup(Vector v, String layer);
+  void luaLayerOrderChanged(std::vector<String> & order);
 
   inline void setInkMode(bool ink) { isInkMode = ink; }
   static int readImage(lua_State *L, String fn);

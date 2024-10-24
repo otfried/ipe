@@ -522,6 +522,7 @@ p:renameLayer(oldname, newname)
 -- if layer is nil, automatically create name for new layer:
 p:addLayer(layer)     -- add layer at the end, return name of new layer
 p:removeLayer(layer)
+p:reorderLayers(order) -- order is a table with layer names
 p:moveLayer(layer, target_index)
 p:visible(view, layer)   -- is layer visible in view?
 p:setVisible(view, layer, boolean)

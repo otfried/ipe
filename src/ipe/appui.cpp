@@ -585,7 +585,7 @@ void AppUiBase::luaAction(String name)
     int i = name.find('|');
     luaSelector(name.left(i), name.substr(i+1));
   } else {
-    push_string(L, name); 
+    push_string(L, name);
     wrapCall(String{"action"}, 1);
   }
 }
@@ -632,6 +632,16 @@ void AppUiBase::luaRecentFileSelected(String name)
 {
   push_string(L, name);
   wrapCall("recent_file", 1);
+}
+
+void AppUiBase::luaLayerOrderChanged(std::vector<String> & order)
+{
+  lua_createtable(L, size(order), 0);
+  for (int i = 0; i < size(order); ++i) {
+    push_string(L, order[i]);
+    lua_rawseti(L, -2, i+1);
+  }
+  wrapCall("layerOrderChanged", 1);
 }
 
 void AppUiBase::resumeLua()
@@ -718,6 +728,9 @@ void AppUiBase::setGridAngleSize(Attribute abs_grid, Attribute abs_angle)
   for (int i = 0; i < size(seq); ++i) {
     if (iCascade->find(EGridSize, seq[i]) == abs_grid) {
       setComboCurrent(EUiGridSize, i);
+#ifdef IPEUI_JS
+      setCheckMark("gridsize", seq[i]);
+#endif
       break;
     }
   }
@@ -728,6 +741,9 @@ void AppUiBase::setGridAngleSize(Attribute abs_grid, Attribute abs_angle)
   for (int i = 0; i < size(seq); ++i) {
     if (iCascade->find(EAngleSize, seq[i]) == abs_angle) {
       setComboCurrent(EUiAngleSize, i);
+#ifdef IPEUI_JS
+      setCheckMark("anglesize", seq[i]);
+#endif
       break;
     }
   }
@@ -783,6 +799,11 @@ void AppUiBase::setAttributes(const AllAttributes &all, Cascade *sheet)
   setCheckMark("linejoin", Attribute(iAll.iLineJoin));
   setCheckMark("linecap", Attribute(iAll.iLineCap));
   setCheckMark("fillrule", Attribute(iAll.iFillRule));
+
+#ifdef IPEUI_JS
+  setCheckMark("textstyle", Attribute(iAll.iTextStyle));
+  setCheckMark("labelstyle", Attribute(iAll.iLabelStyle));
+#endif
 }
 
 int AppUiBase::ipeIcon(String action)

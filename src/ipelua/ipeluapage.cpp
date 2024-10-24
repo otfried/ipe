@@ -317,6 +317,22 @@ static int page_moveLayer(lua_State *L)
   return 0;
 }
 
+static int page_reorderLayers(lua_State *L)
+{
+  Page *p = check_page(L, 1)->page;
+  luaL_argcheck(L, lua_istable(L, 2), 2, "argument is not a table");
+  std::vector<String> order;
+  int no = lua_rawlen(L, 2);
+  for (int i = 1; i <= no; ++i) {
+    lua_rawgeti(L, -1, i);
+    luaL_argcheck(L, lua_isstring(L, -1), 2, "element is not a string");
+    order.push_back(String(lua_tostring(L, -1)));
+    lua_pop(L, 1);
+  }
+  p->reorderLayers(order);
+  return 0;
+}
+
 // --------------------------------------------------------------------
 
 static int page_select(lua_State *L)
@@ -802,6 +818,7 @@ static const struct luaL_Reg page_methods[] = {
   { "addLayer", page_addLayer },
   { "removeLayer", page_removeLayer },
   { "moveLayer", page_moveLayer },
+  { "reorderLayers", page_reorderLayers },
   { "select", page_select },
   { "setSelect", page_setSelect },
   { "layerOf", page_layerOf },

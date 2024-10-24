@@ -179,6 +179,21 @@ function MODEL:layerAction(a, layer, target)
   end
 end
 
+function MODEL:layerOrderChanged(order)
+  local p = self:page()
+  local t = { label="reorder layers ",
+	      pno=self.pno,
+	      vno=self.vno,
+	      original=p:clone(),
+	      order=order,
+	      undo=revertOriginal
+	    }
+  t.redo = function (t, doc)
+	     doc[t.pno]:reorderLayers(t.order)
+	   end
+  self:register(t)
+end
+
 function MODEL:bookmark(index)
   -- print("Bookmark", index)
   self.pno = self:findPageForBookmark(index)

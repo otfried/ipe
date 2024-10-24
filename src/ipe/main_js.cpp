@@ -251,6 +251,17 @@ extern "C"  void bookmarkSelected(int row) {
   theAppUi->luaBookmarkSelected(row);
 }
 
+EMSCRIPTEN_KEEPALIVE
+extern "C"  void layerOrderChanged(EM_VAL orderh) {
+  val order1 = val::take_ownership(orderh);
+  std::vector<String> order;
+  int n = order1["length"].as<int>();
+  for (int i = 0; i < n; ++i) {
+    order.push_back(String(order1[i].as<std::string>()));
+  }
+  theAppUi->luaLayerOrderChanged(order);
+}
+
 // make sure the memory remains allocated while JS uses it
 static String tarball;
 

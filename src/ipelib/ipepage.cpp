@@ -288,6 +288,26 @@ void Page::moveLayer(int index, int newIndex)
   }
 }
 
+//! Rearranges the order of all layers in the layer list.
+void Page::reorderLayers(const std::vector<String> & order)
+{
+  assert(order.size() == iLayers.size());
+  std::vector<int> mapping(iLayers.size(), -1);
+  LayerSeq newLayers;
+  for (int newIdx = 0; newIdx < size(order); ++newIdx) {
+    int oldIdx = findLayer(order[newIdx]);
+    assert(oldIdx >= 0 && mapping[oldIdx] == -1);
+    mapping[oldIdx] = newIdx;
+    newLayers.push_back(iLayers[oldIdx]);
+  }
+  iLayers = newLayers;
+
+  // Layers of all objects need to be updated
+  for (ObjSeq::iterator it = iObjects.begin(); it != iObjects.end(); ++it) {
+    it->iLayer = mapping[it->iLayer];
+  }
+}
+
 //! Removes an empty layer from the page.
 /*! All objects are adjusted.  Panics if there are objects in the
   deleted layer, of if it is the only layer.

@@ -75,6 +75,7 @@ namespace ipe {
     void addLayer();
     void removeLayer(String name);
     void renameLayer(String oldName, String newName);
+    void reorderLayers(const std::vector<String> & order);
     void setLayerData(int index, String data);
     //! Return layer data.
     inline String layerData(int index) const { return iLayers[index].iData; }
