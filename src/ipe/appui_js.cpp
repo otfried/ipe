@@ -444,21 +444,45 @@ bool AppUi::waitDialog(const char *cmd, const char *label)
   return false;
 }
 
+static void convertVal(lua_State *L, val value)
+{
+  if (value.isNull() || value.isUndefined())
+    lua_pushnil(L);
+  else if (value.isString())
+    lua_pushstring(L, value.as<string>().c_str());
+  else if (value.isNumber())
+    lua_pushnumber(L, value.as<double>());
+  else if (value.isTrue())
+    lua_pushboolean(L, true);
+  else if (value.isFalse())
+    lua_pushboolean(L, false);
+  else if (value.isArray()) {
+    int n = value["length"].as<int>();
+    lua_createtable(L, n, 0);
+    for (int i = 0; i < n; ++i) {
+      convertVal(L, value[i]);
+      lua_rawseti(L, -2, i + 1);
+    }
+  } else {
+    ipeDebug("Unsupported Javascript type");
+    lua_pushnil(L);
+  }
+}
+
 void AppUi::resumeLua(val result)
 {
   // calls model:resumeLua with an argument
   lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
   lua_getfield(L, -1, "resumeLua");
   lua_insert(L, -2); // before model
-  if (result.isNull())
-    lua_pushnil(L);
-  else if (result.isString())
-    lua_pushstring(L, result.as<string>().c_str());
-  else if (result.isNumber())
-    lua_pushnumber(L, result.as<double>());
-  else
-    lua_pushlightuserdata(L, &result);
-  luacall(L, 2, 0);
+  int nArgs = 1;
+  if (result.isArray()) {
+    nArgs = result["length"].as<int>();
+    for (int i = 0; i < nArgs; ++i)
+      convertVal(L, result[i]);
+  } else
+    convertVal(L, result);
+  luacall(L, 1 + nArgs, 0); // model is self argument
 }
 
 void AppUi::openFile(String fn)

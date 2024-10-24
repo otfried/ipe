@@ -479,30 +479,6 @@ static int ipeui_currentDateTime(lua_State *L)
 
 // --------------------------------------------------------------------
 
-static int ipeui_val(lua_State *L)
-{
-  val * arg = (val *) lua_touserdata(L, 1);
-  luaL_argcheck(L, arg != nullptr && !arg->isNull(), 1,
-		"argument is not a Javascript object");
-  const char *tag = luaL_checkstring(L, 2);
-  val v = (*arg)[tag];
-  if (v.isNumber())
-    lua_pushnumber(L, v.as<double>());
-  else if (v.isString())
-    lua_pushstring(L, v.as<std::string>().c_str());
-  else if (v.isNull())
-    lua_pushnil(L);
-  else if (v.isTrue())
-    lua_pushboolean(L, true);
-  else if (v.isFalse())
-    lua_pushboolean(L, false);
-  else
-    luaL_error(L, "unsupported Javascript type");
-  return 1;
-}
-
-// --------------------------------------------------------------------
-  
 static const struct luaL_Reg ipeui_functions[] = {
   { "Dialog", dialog_constructor },
   { "Menu", menu_constructor },
@@ -510,7 +486,6 @@ static const struct luaL_Reg ipeui_functions[] = {
   { "fileDialogAsync", ipeui_fileDialog },
   { "messageBoxAsync", ipeui_messageBox },
   { "currentDateTime", ipeui_currentDateTime },
-  { "val", ipeui_val },
   { nullptr, nullptr }
 };
 

@@ -187,8 +187,8 @@ function MODEL:wrapCall(f, ...)
 end
 
 -- called by the UI to resume when Lua has yielded in an async operation
-function MODEL:resumeLua(arg)
-  if self.current_action then coroutine.resume(self.current_action, arg) end
+function MODEL:resumeLua(...)
+  if self.current_action then coroutine.resume(self.current_action, ...) end
 end
 
 function MODEL:preloadFile(fname)

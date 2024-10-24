@@ -780,9 +780,7 @@ static void make_metatable(lua_State *L, const char *name,
   if (!strcmp(name, "Ipe.menu")) {
     int ok = luaL_loadstring(L, "return function (m, x, y)"
 			     "m:executeAsync(x, y)"
-			     "local r = coroutine.yield()"
-			     "if r then return ipeui.val(r, 'action'),"
-			     "ipeui.val(r, 'current') end end");
+			     "return coroutine.yield() end");
     if (ok != LUA_OK)
       luaL_error(L, "cannot prepare m:execute function");
     lua_call(L, 0, 1);
