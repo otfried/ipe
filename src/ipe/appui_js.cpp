@@ -486,21 +486,67 @@ int appui_persistFile(lua_State *L)
 
 // --------------------------------------------------------------------
 
+static val createPageItems(Document *doc, int pno, int thumbWidth)
+{
+  Thumbnail r(doc, thumbWidth);
+  r.setTransparent(false);
+  r.setNoCrop(true);
+  double zoom = thumbWidth / doc->cascade()->findLayout()->paper().width();
+  val pages = val::array();
+  if (pno >= 0) {
+    Page *p = doc->page(pno);
+    for (int i = 0; i < p->countViews(); ++i) {
+      val item = val::object();
+      std::string fn = std::format("/tmp/pages/select-{}.png", i);
+      r.saveRender(Thumbnail::EPNG, fn.c_str(), p, i, zoom);
+      if (!p->viewName(i).empty())
+	item.set("label", std::format("{}: {}", i+1, p->viewName(i).z()));
+      else
+	item.set("label", std::format("View {}", i+1));
+      item.set("marked", p->markedView(i));
+      pages.call<void>("push", item);
+    }
+  } else {
+    for (int i = 0; i < doc->countPages(); ++i) {
+      val item = val::object();
+      Page *p = doc->page(i);
+      std::string fn = std::format("/tmp/pages/select-{}.png", i);
+      r.saveRender(Thumbnail::EPNG, fn.c_str(), p, p->countViews() - 1, zoom);
+      if (!p->title().empty())
+	item.set("label", std::format("{}: {}", i+1, p->title().z()));
+      else
+	item.set("label", std::format("Page {}", i+1));
+      item.set("marked", p->marked());
+      pages.call<void>("push", item);
+    }
+  }
+  return pages;
+}
+
 int AppUi::pageSorter(lua_State *L, Document *doc, int pno,
 		      int width, int height, int thumbWidth)
 {
-  // TODO pageSorter
-  explain("Not yet implemented", 0);
+  std::string caption = (pno >= 0) ? "Ipe View Sorter" : "Ipe Page Sorter";
+  val pages = createPageItems(doc, pno, thumbWidth);
+  jsUi().call<void>("selectPage", caption, pages, true);
+  return 0;
+}
+
+//! Show dialog to select a page or a view.
+/*! If \a page is negative (the default), shows thumbnails of all
+    pages of the document in a dialog.  If the user selects a page,
+    the page number is returned. If the dialog is canceled, -1 is
+    returned.
+
+    If \a page is non-negative, all views of this page are shown, and
+    the selected view number is returned. */
+int CanvasBase::selectPageOrView(Document *doc, int pno, int startIndex,
+				 int thumbWidth, int width, int height)
+{
+  std::string caption = (pno >= 0) ? "Ipe: select view" : "Ipe: select page";
+  val pages = createPageItems(doc, pno, thumbWidth);
+  jsUi().call<void>("selectPage", caption, pages, false);
   return 0;
 }
 
 // --------------------------------------------------------------------
-
-int CanvasBase::selectPageOrView(Document *doc, int page, int startIndex,
-				 int pageWidth, int width, int height)
-{
-  // TODO selectPage
-  return -1;
-}
-
-// ------------------------------------------------------------------------

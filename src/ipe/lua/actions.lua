@@ -265,12 +265,10 @@ end
 
 function MODEL:selectPage(pno, vno)
   if self.ui.selectPageAsync then
-    -- self.ui:selectPageAsync(pno, vno)
-    -- return coroutine.yield()
-    messageBox(self.ui:win(), "warning", "Not yet implemented")
-    return nil
+    self.ui:selectPageAsync(self.doc, pno, vno)
+    return coroutine.yield()
   else
-    return self.ui:selectPage(pno, vno)
+    return self.ui:selectPage(self.doc, pno, vno)
   end
 end
 
@@ -1983,11 +1981,10 @@ end
 
 function MODEL:pageSorter(pno)
   if self.ui.pageSorterAsync then
-    -- self.ui:pageSorterAsync(self.doc, pno)
-    -- return coroutine.yield()
-    messageBox(self.ui:win(), "warning", "Not yet implemented")
+    self.ui:pageSorterAsync(self.doc, pno)
+    return coroutine.yield()
   else
-    return 
+    return self.ui:pageSorter(self.doc, pno)
   end
 end
 
