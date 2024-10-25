@@ -193,17 +193,17 @@ end
 
 function MODEL:preloadFile(fname)
   if config.platform == "electron" then
-    self.ui.preloadFile(fname, os.tmpname())
+    self.ui.js("preloadFile", fname, os.tmpname())
     coroutine.yield()
   end
 end
 
 function MODEL:persistFile(fname)
   if config.platform == "electron" then
-    self.ui.persistFile(fname)
+    self.ui.js("persistFile", fname)
     return coroutine.yield()
-  elseif config.platform == "web" and config.toolkit == "qt" then
-    ipeui.downloadFileIfIpeWeb(fname)
+  elseif config.platform == "web" then
+    self.ui.js("persistFile", fname)
     return true
   else
     return true

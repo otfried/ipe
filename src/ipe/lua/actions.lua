@@ -755,6 +755,16 @@ function MODEL:action_save()
   end
 end
 
+function MODEL:action_download()
+  if not self.file_name then
+    self:warning("Download failed", "Document does not have a filename")
+  elseif not self:saveDocument() then
+    self:warning("Download failed", "Failed saving the document")
+  else
+    self.ui.js("download")
+  end
+end
+
 function MODEL:action_save_as()
   local dir
   if self.file_name then dir = self.file_name:match(prefs.dir_pattern) end

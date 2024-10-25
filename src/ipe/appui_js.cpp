@@ -493,18 +493,37 @@ void AppUi::openFile(String fn)
 
 // --------------------------------------------------------------------
 
-int appui_preloadFile(lua_State *L)
+static val convertLua(lua_State *L, int index)
 {
-  string fname{luaL_checklstring(L, 1, nullptr)};
-  string tmpname{luaL_checklstring(L, 2, nullptr)};
-  jsUi().call<void>("preloadFile", fname, tmpname);
-  return 0;
+  if (lua_isnil(L, index))
+    return val::null();
+  if (lua_isboolean(L, index))
+    return val(lua_toboolean(L, index));
+  if (lua_isstring(L, index))
+    return val::u8string(lua_tostring(L, index));
+  if (lua_isinteger(L, index))
+    return val(lua_tointeger(L, index));
+  if (lua_isnumber(L, index))
+    return val(lua_tonumber(L, index));
+  ipeDebug("Unsupported Lua type");
+  return val::undefined();
 }
 
-int appui_persistFile(lua_State *L)
+int appui_jsCall(lua_State *L)
 {
-  string fname{luaL_checklstring(L, 1, nullptr)};
-  jsUi().call<void>("persistFile", fname);
+  const char * method = luaL_checklstring(L, 1, nullptr);
+  int nArgs = lua_gettop(L) - 1;
+  if (nArgs == 0) {
+    jsUi().call<void>(method);
+  } else if (nArgs == 1) {
+    jsUi().call<void>(method, convertLua(L, 2));
+  } else if (nArgs == 2) {
+    jsUi().call<void>(method, convertLua(L, 2), convertLua(L, 3));
+  } else if (nArgs == 3) {
+    jsUi().call<void>(method, convertLua(L, 2),
+		      convertLua(L, 3), convertLua(L, 4));
+  } else
+    luaL_error(L, "too many arguments");
   return 0;
 }
 
