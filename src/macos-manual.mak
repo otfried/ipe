@@ -33,7 +33,7 @@ SPIRO_LIBS      ?= -L$(IPEDEPS)/lib -lspiro
 GSL_CFLAGS      ?= -I$(IPEDEPS)/include
 GSL_LIBS        ?= -L$(IPEDEPS)/lib -lgsl -lgslcblas -lm
 #
-IPEVERS = 7.2.30
+IPEVERS = 7.3.1
 #
 CXX = clang++
 #
