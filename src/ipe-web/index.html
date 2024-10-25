@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="apple-mobile-web-app-title" content="Ipe">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="application-name" content="Ipe">
+    <meta name="description" content="The Ipe extensible drawing editor" />
+    <meta property="og:title" content="Ipe Web Edition" />
+    <meta property="og:url" content="https://ipe-web.otfried.org/index.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://ipe-web.otfried.org/icon.svg" />
+    <meta property="og:description" content="The Ipe extensible drawing editor" />
+    <title>Ipe Web Edition</title>
+  </head>
+  <body>
+    <div id="world">
+    <div id="mainmenu">
+      <button id="menu-file" class="mainmenu">File</button>
+      <button id="menu-edit" class="mainmenu">Edit</button>
+      <button id="menu-properties" class="mainmenu">Properties</button>
+      <button id="menu-snap" class="mainmenu">Snap</button>
+      <button id="menu-mode" class="mainmenu">Mode</button>
+      <button id="menu-zoom" class="mainmenu">Zoom</button>
+      <button id="menu-layers" class="mainmenu">Layers</button>
+      <button id="menu-views" class="mainmenu">Views</button>
+      <button id="menu-pages" class="mainmenu">Pages</button>
+      <button id="menu-ipelets" class="mainmenu">Ipelets</button>
+      <button id="menu-help" class="mainmenu">Help</button>
+    </div>
+    <div id="toolbarContainer" class="toolbars">
+      <div id="toolbarSnap" class="toolbar">
+        <span id="snapvtx" class="toolbutton"></span>
+        <span id="snapctl" class="toolbutton"></span>
+        <span id="snapbd" class="toolbutton"></span>
+        <span id="snapint" class="toolbutton"></span>
+        <span id="snapgrid" class="toolbutton"></span>
+        <select id="gridsize"></select>
+        <span id="snapangle" class="toolbutton"></span>
+        <select id="anglesize"></select>
+        <span id="snapcustom" class="toolbutton"></span>
+        <span id="snapauto" class="toolbutton"></span>
+      </div>
+      <div id="toolbarEdit" class="toolbar">
+        <span id="copy" class="toolbutton"></span>
+        <span id="cut" class="toolbutton"></span>
+        <span id="paste" class="toolbutton"></span>
+        <span id="delete" class="toolbutton"></span>
+        <span id="undo" class="toolbutton"></span>
+        <span id="redo" class="toolbutton"></span>
+        <span id="zoom_in" class="toolbutton"></span>
+        <span id="zoom_out" class="toolbutton"></span>
+        <span id="fit_objects" class="toolbutton"></span>
+        <span id="fit_page" class="toolbutton"></span>
+        <span id="fit_width" class="toolbutton"></span>
+        <span id="grid_visible" class="toolbutton"></span>
+        <span id="shift_key" class="toolbutton"></span>
+        <span id="stop" class="toolbutton"></span>
+      </div>
+      <div id="toolbarMode" class="toolbar">
+        <span id="mode_select" class="toolbutton"></span>
+        <span id="mode_translate" class="toolbutton"></span>
+        <span id="mode_rotate" class="toolbutton"></span>
+        <span id="mode_stretch" class="toolbutton"></span>
+        <span id="mode_shear" class="toolbutton"></span>
+        <span id="mode_graph" class="toolbutton"></span>
+        <span id="mode_pan" class="toolbutton"></span>
+        <span id="mode_shredder" class="toolbutton"></span>
+        <span id="mode_laser" class="toolbutton"></span>
+        <span id="mode_label" class="toolbutton"></span>
+        <span id="mode_math" class="toolbutton"></span>
+        <span id="mode_paragraph" class="toolbutton"></span>
+        <span id="mode_marks" class="toolbutton"></span>
+        <span id="mode_rectangles1" class="toolbutton"></span>
+        <span id="mode_rectangles2" class="toolbutton"></span>
+        <span id="mode_rectangles3" class="toolbutton"></span>
+        <span id="mode_parallelogram" class="toolbutton"></span>
+        <span id="mode_lines" class="toolbutton"></span>
+        <span id="mode_polygons" class="toolbutton"></span>
+        <span id="mode_splines" class="toolbutton"></span>
+        <span id="mode_splinegons" class="toolbutton"></span>
+        <span id="mode_arc1" class="toolbutton"></span>
+        <span id="mode_arc2" class="toolbutton"></span>
+        <span id="mode_arc3" class="toolbutton"></span>
+        <span id="mode_circle1" class="toolbutton"></span>
+        <span id="mode_circle2" class="toolbutton"></span>
+        <span id="mode_circle3" class="toolbutton"></span>
+        <span id="mode_ink" class="toolbutton"></span>
+      </div>
+    </div>
+    <div id="middle">
+      <div id="leftDock" class="dock">
+        <div id="propertiesPanel" class="panel">
+          <span class="panelTitle">Properties</span>
+          <div class="propertiesGrid">
+            <button id="abs-stroke" class="absButton" title="Absolute stroke color"></button>
+            <select id="stroke" class="propertySelector" title="Symbolic stroke color"></select>
+            <button id="abs-fill" class="absButton" title="Absolute fill color"></button>
+            <select id="fill" class="propertySelector" title="Symbolic fill color"></select>
+            <button id="abs-pen" class="absButton" title="Absolute pen width"></button>
+            <select id="pen" class="propertySelector" title="Symbolic pen width"></select>
+            <select id="dashstyle" class="propertySelector" title="Dash style"></select>
+            <span id="modeIndicator"></span>
+            <canvas id="pathView" title="Here you can toggle the arrows and the path mode"></canvas>
+            <button id="abs-textsize" class="absButton" title="Absolute text size"></button>
+            <select id="textsize" class="propertySelector" title="Symbolic text size"></select>
+            <button id="abs-symbolsize" class="absButton" title="Absolute symbol size"></button>
+            <select id="markshape" class="propertySelector" title="Mark shape"></select>
+            <select id="symbolsize" class="propertySelector" title="Symbolic symbol size"></select>
+            <select id="opacity" class="propertySelector" title="Opacity"></select>
+          </div>
+          <div id="pageNumberPanel" class="page-number">
+            <input type="checkbox" id="viewMarked" class="page-number" />
+            <button id="viewNumber" class="page-number" ></button>
+            <input type="checkbox" id="pageMarked" class="page-number" />
+            <button id="pageNumber" class="page-number" ></button>
+          </div>
+        </div>
+        <div id="layersPanel" class="panel">
+          <span class="panelTitle">Layers</span>
+          <div id="layerbox"></div>
+        </div>
+      </div>
+      <div id="stage">
+        <canvas id="topCanvas" width="600" height="700"></canvas>
+        <canvas id="bottomCanvas" width="600" height="700"></canvas>
+      </div>
+      <div id="rightDock" class="dock">
+        <div id="bookmarksPanel" class="panel">
+          <span class="panelTitle">Bookmarks</span>
+          <div id="bookmarks"></div>
+        </div>
+        <div id="notesPanel" class="panel">
+          <span class="panelTitle">Notes</span>
+          <textarea id="notes" readonly>These are my notes.</textarea>
+        </div>
+      </div>
+    </div>
+    <div id="bottom">
+      <div id="status" class="bottomDisplay"></div>
+      <div id="snapIndicator" class="bottomDisplay"></div>
+      <div id="mouse" class="bottomDisplay"></div>
+      <div id="resolution" class="bottomDisplay"></div>
+    </div>
+    </div>
+    <div id="modal-dialog" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span id="modal-close">&times;</span>
+          <h3 id="modal-header-content"></h3>
+        </div>
+        <div id="modal-body"></div>
+        <div id="modal-file">
+          <div id="filedialog-label">Enter filename</div>
+          <input id="filename" />
+          <div id="directory"></div>
+          <div id="filedialog-error">The filename must not contain a slash (<tt>/</tt>) and must have
+          one of the following extensions: <tt>ipe pdf isy png jpg svg lua</tt></div>
+          <div id="filedialog-upload">
+            Or upload a file:
+            <input id="upload" type="file" />
+            <button id="upload-button">Upload</button>
+          </div>
+        </div>
+        <div id="modal-file-manager">
+          <h3>Documents</h3>
+          <div id="directory-documents" class="file-manager-directory"></div>
+          <h3>Images</h3>
+          <div id="directory-images" class="file-manager-directory"></div>
+          <h3>Style sheets</h3>
+          <div id="directory-styles" class="file-manager-directory"></div>
+          <h3>Ipelets</h3>
+          <div id="directory-ipelets" class="file-manager-directory"></div>
+          <div>Upload a file:
+            <input id="file-manager-upload" type="file" />
+            <button id="file-manager-upload-button">Upload</button>
+          </div>
+          <a id="file-manager-download-link"></a>
+        </div>
+        <div id="modal-footer"></div>
+      </div> 
+    </div>
+    <div id="popup-menu-pane"></div>
+    <div id="popup-submenu-pane"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

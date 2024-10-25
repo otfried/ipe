@@ -1,0 +1,44 @@
+/* Dialogs */
+div#contents {
+	padding: 0;
+	text-align: center;
+	display: grid;
+}
+textarea.dialog-element {
+	resize: vertical;
+	height: 120px;
+}
+select.dialog-element {
+	height: 30px;
+}
+div.dialog-buttons {
+	display: flex;
+	justify-content: center;
+	column-gap: 30px;
+	align-items: flex-end;
+	margin-bottom: 1em;
+}
+.dialog-button {
+	padding: 8px 2em;
+}
+
+button.dialog-element {
+	padding: 6px 1em;
+}
+
+.dialog-list {
+	border: 1px solid black;
+	padding: 3px;
+	display: flex;
+	flex-direction: column;
+	row-gap: 10px;
+}
+
+.dialog-list-item {
+	padding: 6px 1em;
+	text-align: left;
+}
+
+.dialog-list-item.selected {
+	background-color: lightskyblue;
+}

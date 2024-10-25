@@ -1,0 +1,16 @@
+{
+	"files": {
+		"include": ["src/**/*.ts"]
+	},
+	"linter": {
+		"rules": {
+			"suspicious": {
+				"noExplicitAny": "off"
+			},
+			"style": {
+				"noNonNullAssertion": "off",
+				"noParameterAssign": "off"
+			}
+		}
+	}
+}

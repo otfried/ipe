@@ -1,0 +1,30 @@
+{
+  "name": "ipe-web",
+  "private": true,
+  "version": "7.3.1",
+  "type": "module",
+  "scripts": {
+    "serve": "vite",
+    "build": "biome format && biome check && tsc --noEmit && vite build",
+    "check-type": "tsc --noEmit",
+    "check": "biome check",
+    "preview": "vite preview",
+    "format": "biome format --write",
+    "fix": "biome check --write"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.3",
+    "vite": "^5.4.8",
+    "@types/emscripten": "^1.39.13",
+    "@types/sortablejs": "^1.15.8",
+    "@biomejs/biome": "^1.7.3"
+  },
+  "author": {
+    "name": "Otfried Cheong",
+    "email": "ipe@otfried.org"
+  },
+  "dependencies": {
+    "@melloware/coloris": "^0.24.0",
+    "sortablejs": "^1.15.3"
+  }
+}

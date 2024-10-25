@@ -1,0 +1,220 @@
+* {
+	box-sizing: border-box;
+}
+body {
+	font-family: Roboto, Helvetica, Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+}
+div#world {
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+div.toolbars {
+	display: flex;
+	flex-wrap: wrap;
+	column-gap: 20px;
+}
+
+div#middle {
+	display: flex;
+	flex-direction: row;
+	flex-grow: 1;
+	min-height: 0;
+}
+div.dock {
+	display: flex;
+	flex-direction: column;
+	row-gap: 10px;
+}
+div.panel {
+	padding: 4px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+span.panelTitle {
+	font-size: 14px;
+}
+div#layersPanel {
+	flex-grow: 1;
+	min-height: 0;
+}
+div#stage {
+	margin: 4px;
+	flex-grow: 1;
+}
+canvas#bottomCanvas {
+	position: absolute;
+	z-index: 1;
+}
+canvas#topCanvas {
+	position: absolute;
+	z-index: 2;
+}
+div#rightDock {
+	width: 200px;
+	display: none;
+}
+
+div#bottom {
+	height: 30px;
+	display: flex;
+	flex-direction: row;
+	column-gap: 10px;
+}
+div.bottomDisplay {
+	padding: 8px;
+	font-size: 14px;
+}
+div#status {
+	flex-grow: 1;
+}
+
+/* Toolbars */
+div.toolbar {
+	padding: 4px;
+	display: flex;
+	gap: 4px;
+}
+span.toolbutton {
+	width: 30px;
+	height: 30px;
+	border: 1px solid black;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+span.toolbutton > svg {
+	flex-shrink: 0;
+}
+span.toolbutton.selected {
+	background-color: lightskyblue;
+}
+span.toolbutton:active {
+	background-color: yellow;
+}
+
+/* Property panel */
+div.propertiesGrid {
+	display: grid;
+	grid-template-columns: 28px 170px;
+	grid-template-rows: 28px 28px 28px 28px 60px 28px 28px 28px 28px;
+	gap: 2px;
+}
+button#abs-pen {
+	grid-area: 3 / 1 / 5 / 1;
+}
+button#abs-symbolsize {
+	grid-area: 7 / 1 / 9 / 1;
+}
+select {
+	justify-self: "stretch";
+	align-self: "stretch";
+}
+select#opacity {
+	grid-area: 9 / 1 / 10 / 3;
+}
+span#modeIndicator {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+span#modeIndicator > svg {
+	flex-shrink: 0;
+}
+button.absButton {
+	padding: 0;
+}
+canvas#pathView {
+	width: 170px;
+	height: 60px;
+}
+div.page-number {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+}
+
+/* Layer box */
+div#layerbox {
+	display: flex;
+	flex-direction: column;
+	padding: 2px;
+	border: 1px solid black;
+	flex-grow: 1;
+	overflow: scroll;
+	min-height: 0;
+}
+div.layer {
+	display: flex;
+	flex-direction: row;
+}
+div.layer.sortable-drag {
+	border: 2px solid red;
+	color: red;
+	font-weight: 600;
+}
+div.layer > span.layer-text {
+	flex-grow: 1;
+	cursor: pointer;
+}
+span.drag-handle {
+	cursor: grab;
+	font-weight: 600;
+}
+div.layer.active {
+	background-color: lightskyblue;
+}
+div.layer.locked {
+	background-color: pink;
+}
+div.layer.snap-always > span.layer-text::after {
+	content: "❎";
+	font-size: 10px;
+}
+div.layer.snap-never > span.layer-text::after {
+	content: "❌";
+	font-size: 10px;
+}
+
+/* Right dock */
+div#bookmarksPanel {
+	flex-grow: 1;
+}
+div#bookmarks {
+	border: 1px solid black;
+	flex-grow: 1;
+}
+div.bookmark.subsection::before {
+	content: "➤ ";
+}
+div#notesPanel {
+	flex-grow: 1;
+}
+textarea#notes {
+	resize: none;
+	flex-grow: 1;
+}
+
+/* Main menu */
+div#mainmenu {
+	display: flex;
+	margin: 4px;
+	height: 24px;
+	width: 100vw;
+	background-color: #f0f0f4;
+}
+button.mainmenu {
+	border: none;
+	width: 80px;
+	text-align: left;
+	background-color: #f0f0f4;
+}
+button.mainmenu:hover {
+	background-color: lightgray;
+}
