@@ -478,7 +478,10 @@ int main(int argc, char *argv[])
   mw->show();
 
   QObject::connect(&a, SIGNAL(lastWindowClosed()), &a, SLOT(quit()));
-  return a.exec();
+  int result = a.exec();
+  delete mw;
+  delete bv;
+  return result;
 }
 
 // --------------------------------------------------------------------

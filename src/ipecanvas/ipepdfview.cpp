@@ -67,8 +67,11 @@ PdfViewBase::PdfViewBase()
 //! destructor.
 PdfViewBase::~PdfViewBase()
 {
-  if (iSurface)
+  if (iSurface) {
+    ipeDebug("Surface has %d references left", cairo_surface_get_reference_count(iSurface));
+    cairo_surface_finish(iSurface);
     cairo_surface_destroy(iSurface);
+  }
   ipeDebug("PdfViewBase::~PdfViewBase");
 }
 
