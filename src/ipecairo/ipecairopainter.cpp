@@ -728,7 +728,17 @@ void CairoPainter::execute(const PdfDict *xform, const PdfDict *resources, bool 
   }
   std::vector<double> bbox;
   if (xform->getNumberArray("BBox", nullptr, bbox) && bbox.size() == 4) {
-    cairo_rectangle(iCairo, bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1]);
+    Vector bl{bbox[0], bbox[1]};
+    Vector tr{bbox[2], bbox[3]};
+    if (xform->get("IpeId") != nullptr) {
+      if (const TextPadding *pad = cascade()->findTextPadding(); pad != nullptr) {
+	bl.x -= pad->iLeft;
+	bl.y -= pad->iBottom;
+	tr.x += pad->iRight;
+	tr.y += pad->iTop;
+      }
+    }
+    cairo_rectangle(iCairo, bl.x, bl.y, tr.x - bl.x, tr.y - bl.y);
     cairo_clip(iCairo);
   }
   Buffer buffer = xform->inflate();
