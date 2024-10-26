@@ -421,7 +421,8 @@ Object *ImlParser::parseObject(String tag, String &layer)
 	break;
       }
     }
-    assert(!bitmap.isNull());
+    if (bitmap.isNull())
+      return nullptr;
     return ObjectFactory::createImage(tag, attr, bitmap);
   } else
     return ObjectFactory::createObject(tag, attr, pcdata);

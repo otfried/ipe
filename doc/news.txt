@@ -2,6 +2,8 @@
 
 Ipe 7.3.1
 
+ * Ipe Web Edition.
+ 
  * After 15 years, finally fix the memory leak in Freetype/Cairo font
    allocation.
 
@@ -17,6 +19,8 @@ Ipe 7.3.1
  * New function to add several style sheets at once by name.
 
  * Fix graph node moving tool leaving edges in a weird state (bug #512).
+
+ * Fix crash when editing XML of an image object (bug #532).
 
 ----------------------------------------------------------------------
 
