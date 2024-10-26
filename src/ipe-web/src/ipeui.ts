@@ -6,6 +6,7 @@ import {
 	retrieveValues,
 	setElement,
 } from "./dialogs";
+import { buildInfo } from "./gitversion";
 import type { Ipe, ResumeResult } from "./ipejs";
 import {
 	type FileDialogOptions,
@@ -381,9 +382,10 @@ export class IpeUi {
 			'<a target="_blank" href="http://patreon.com/otfried">Ipe patrons</a>. ' +
 			"For the price of a cup of coffee per month you can make a meaningful contribution " +
 			"to the continuing development of Ipe.</p>";
+		const build = `<div class="buildInfo">This Ipe is ${buildInfo}</div>`;
 		this.modal.showBanner(
 			`Ipe ${this.version.version} Web Edition`,
-			`${yearLine}${body}`,
+			`${yearLine}${body}${build}`,
 		);
 	}
 
@@ -892,5 +894,27 @@ export class IpeUi {
 		sorter: boolean,
 	): void {
 		this.modal.pageSelector(caption, items, sorter, this.popupMenu);
+	}
+
+	setActionsEnabled(enabled: boolean): void {
+		const enableMenu = (menu: string) => {
+			(get(`menu-${menu}`) as HTMLButtonElement).disabled = !enabled;
+		};
+		enableMenu("file");
+		enableMenu("edit");
+		enableMenu("mode");
+		enableMenu("properties");
+		enableMenu("layers");
+		enableMenu("views");
+		enableMenu("pages");
+		enableMenu("ipelets");
+
+		const enablePanel = (s: string) => {
+			const p = get(s);
+			p.style.pointerEvents = enabled ? "auto" : "none";
+		};
+		enablePanel("propertiesPanel");
+		enablePanel("layersPanel");
+		enablePanel("bookmarksPanel");
 	}
 }

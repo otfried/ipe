@@ -81,22 +81,26 @@ div.toolbar {
 	display: flex;
 	gap: 4px;
 }
-span.toolbutton {
+button.toolbutton {
 	width: 30px;
 	height: 30px;
 	border: 1px solid black;
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	background-color: ivory;
 }
-span.toolbutton > svg {
+button.toolbutton > svg {
 	flex-shrink: 0;
 }
-span.toolbutton.selected {
+button.toolbutton.selected {
 	background-color: lightskyblue;
 }
-span.toolbutton:active {
-	background-color: yellow;
+button.toolbutton:hover {
+	background-color: lightgray;
+}
+button.toolbutton:disabled {
+	border: 1px solid lightgray;
 }
 
 /* Property panel */
@@ -217,4 +221,8 @@ button.mainmenu {
 }
 button.mainmenu:hover {
 	background-color: lightgray;
+}
+
+div.buildInfo {
+	font-size: 11px;
 }

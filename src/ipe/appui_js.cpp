@@ -344,7 +344,7 @@ void AppUi::setupSymbolicNames(const Cascade *sheet)
 
 void AppUi::setActionsEnabled(bool mode)
 {
-  // TODO: disable actions during drawing
+  jsUi().call<void>("setActionsEnabled", mode);
 }
 
 // --------------------------------------------------------------------

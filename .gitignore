@@ -8,5 +8,6 @@ venv/
 /src/ipejs/ipejs.js
 /src/ipe-web/src/ipe.js
 /src/ipe-web/src/ipe.wasm
+/src/ipe-web/src/gitversion.ts
 node_modules/
 dist/
