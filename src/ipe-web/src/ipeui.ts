@@ -22,6 +22,7 @@ import {
 	PopupMenu,
 } from "./popup-menu";
 import { get, removeChildren } from "./util";
+import { PdfTeXEngine } from "./PdfTeXEngine";
 
 interface Action {
 	name: string;
@@ -624,6 +625,15 @@ export class IpeUi {
 				if (pdf != null)
 					this.ipe.FS.writeFile("/tmp/latexrun/ipetemp.pdf", pdf);
 				this.modal.close(null);
+			} else if (true) {
+				console.log("Loading engine");
+				const engine = new PdfTeXEngine();
+				await engine.loadEngine();
+				engine.setTexliveEndpoint("http://localhost:5000");
+				console.log("Run LaTeX");
+				engine.setEngineMainFile("/tmp/latexrun/ipetemp.tex");
+				const r = await engine.compileLaTeX();
+				console.log("Result: ", r);
 			} else {
 				const tarFile = this.ipe.Emval.toValue(
 					this.ipe._createTarball(this.ipe.stringToNewUTF8(texfile)),
