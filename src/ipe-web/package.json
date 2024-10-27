@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "serve": "vite",
+    "host": "vite --host",
     "build": "bash mkgitstamp.sh && biome format && biome check && tsc --noEmit && vite build",
     "check-type": "tsc --noEmit",
     "check": "biome check",

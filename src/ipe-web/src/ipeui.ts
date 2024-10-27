@@ -21,6 +21,7 @@ import {
 	type PopupItemOptions,
 	PopupMenu,
 } from "./popup-menu";
+import { TouchDragZoom } from "./touch";
 import { get, removeChildren } from "./util";
 
 interface Action {
@@ -71,6 +72,7 @@ export class IpeUi {
 	readonly version: { year: number; version: string };
 	filename: string | null;
 	saveCallback: ((fn: string) => void) | null = null;
+	readonly touch: TouchDragZoom;
 
 	constructor(ipe: Ipe) {
 		this.ipe = ipe;
@@ -79,6 +81,7 @@ export class IpeUi {
 		window.ipeui = this;
 		this.modal = new Modal(ipe, (result) => this.resume(result));
 		this.version = this.ipe.Emval.toValue(this.ipe._ipeVersion());
+		this.touch = new TouchDragZoom(this.topCanvas);
 
 		this._calculateCanvasSize();
 		this.ipe._initLib(
@@ -247,6 +250,10 @@ export class IpeUi {
 
 	private _setupCanvas() {
 		this.topCanvas.addEventListener("pointerup", (event) => {
+			if (event.pointerType === "touch") {
+				event.preventDefault();
+				return;
+			}
 			this.ipe._canvasMouseButtonEvent(
 				this.ipe.Emval.toHandle(event),
 				event.buttons,
@@ -255,7 +262,10 @@ export class IpeUi {
 		});
 		this.topCanvas.addEventListener("pointerdown", (event) => {
 			// ignore event on right mouse button, as it generates contextmenu
-			if (event.buttons === 2) return;
+			if (event.pointerType === "touch" || event.buttons === 2) {
+				event.preventDefault();
+				return;
+			}
 			this.ipe._canvasMouseButtonEvent(
 				this.ipe.Emval.toHandle(event),
 				event.buttons,
@@ -270,6 +280,10 @@ export class IpeUi {
 			);
 		});
 		this.topCanvas.addEventListener("pointermove", (event) => {
+			if (event.pointerType === "touch") {
+				event.preventDefault();
+				return;
+			}
 			this.ipe._canvasMouseMoveEvent(this.ipe.Emval.toHandle(event));
 		});
 		this.topCanvas.addEventListener("wheel", (event) => {
