@@ -212,7 +212,8 @@ void Bitmap::unpack(Buffer alphaChannel) {
     iImp->iData = pixels;
 }
 
-//! Determine if bitmap has alpha channel, colorkey, rgb values (does nothing for JPG).
+//! Determine if bitmap has alpha channel, colorkey, rgb values (does nothing for
+//! JPG).
 void Bitmap::analyze() {
     iImp->iColorKey = -1;
     iImp->iFlags &= EDCT | ERGB; // clear all other flags, we recompute them
@@ -310,10 +311,14 @@ void Bitmap::saveAsXml(Stream & stream, int id, int pdfObjNum) const {
     if (pdfObjNum >= 0) {
 	stream << " pdfObject=\"" << pdfObjNum;
 	if (hasAlpha()) stream << " " << pdfObjNum - 1;
-	stream << "\"/>\n";
-    } else {
+	stream << "\"";
+    }
+
+    if (isExternal()) {
+	stream << " path=\"" << externalPath() << "\"/>\n";
+    } else if (pdfObjNum < 0) {
 	// save data
-	auto data = embed();
+	auto data = getEmbedData();
 	stream << " length=\"" << data.first.size() << "\"";
 	if (hasAlpha()) stream << " alphaLength=\"" << data.second.size() << "\"";
 	stream << " encoding=\"base64\">\n";
@@ -325,6 +330,8 @@ void Bitmap::saveAsXml(Stream & stream, int id, int pdfObjNum) const {
 	}
 	b64.close();
 	stream << "</bitmap>\n";
+    } else {
+	stream << "/>";
     }
 }
 
@@ -352,7 +359,7 @@ void Bitmap::computeChecksum() { iImp->iChecksum = iImp->iData.checksum(); }
 /*! For Jpeg images, this is simply the bitmap data.  For other
   images, rgb/grayscale data and alpha channel are split and deflated
   separately. */
-std::pair<Buffer, Buffer> Bitmap::embed() const {
+std::pair<Buffer, Buffer> Bitmap::getEmbedData() const {
     if (isJpeg()) return std::make_pair(iImp->iData, Buffer());
     int npixels = width() * height();
     uint32_t * src = (uint32_t *)iImp->iData.data();
@@ -665,6 +672,67 @@ Bitmap Bitmap::readJpeg(const char * fname, Vector & dotsPerInch, const char *& 
 
     String a = Platform::readFile(fname);
     return Bitmap(width, height, flags, Buffer(a.data(), a.size()));
+}
+
+//! Read PNG image from file.
+/*! Returns the image as a Bitmap.
+  Sets \a dotsPerInch if the image file contains a resolution,
+  otherwise sets it to (0,0).
+  If reading the file fails, returns a null Bitmap,
+  and sets the error message \a errmsg.
+*/
+Bitmap Bitmap::readPNG(const char * fname, Vector & dotsPerInch, const char *& errmsg) {
+    int width;
+    int height;
+    uint32_t flags;
+    Buffer pixels;
+    errmsg = readPNGData(fname, width, height, flags, pixels, dotsPerInch);
+
+    if (!errmsg) {
+	return Bitmap(width, height, flags, pixels);
+    } else {
+	return Bitmap();
+    }
+}
+
+// --------------------------------------------------------------------
+
+Bitmap Bitmap::readExternal(String path, const XmlAttributes & attr,
+			    const char *& errmsg) {
+    Bitmap ret;
+    ret.init(attr);
+    ret.iImp->iPath = Lex(path).nextToken();
+    Vector dotsPerInch;
+
+    errmsg = readPNGData(ret.iImp->iPath.z(), ret.iImp->iWidth, ret.iImp->iHeight,
+			 ret.iImp->iFlags, ret.iImp->iData, dotsPerInch);
+    if (errmsg) {
+	FILE * file = Platform::fopen(ret.iImp->iPath.z(), "rb");
+	if (!file) {
+	    errmsg = "Error opening file";
+	} else {
+	    errmsg = readJpegInfo(file, ret.iImp->iWidth, ret.iImp->iHeight, dotsPerInch,
+				  ret.iImp->iFlags);
+	    fclose(file);
+	    if (!errmsg) {
+		String a = Platform::readFile(ret.iImp->iPath);
+		ret.iImp->iData = Buffer(a.data(), a.size());
+	    }
+	}
+    }
+    ret.iImp->iFlags |= Bitmap::EExternal;
+
+    if (!errmsg) {
+	assert(ret.iImp->iWidth > 0 && ret.iImp->iHeight > 0);
+	assert(ret.iImp->iData.size() > 0);
+	ret.unpack(Buffer());
+	ret.computeChecksum();
+	ret.analyze();
+	return ret;
+    } else {
+	ipeDebug("Could not load linked image at '%s%': %s", ret.iImp->iPath.z(), errmsg);
+	return Bitmap();
+    }
 }
 
 // --------------------------------------------------------------------

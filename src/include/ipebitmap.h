@@ -43,11 +43,12 @@ namespace ipe {
 class Bitmap {
 public:
     enum Flags {
-	ERGB = 0x01,     // not grayscale
-	EAlpha = 0x02,   // has alpha channel
-	EDCT = 0x04,     // DCT encoded jpg image
-	EInflate = 0x08, // data needs to be inflated
-	ENative = 0x10,  // data is already in native-endian ARGB32
+	ERGB = 0x01,      // not grayscale
+	EAlpha = 0x02,    // has alpha channel
+	EDCT = 0x04,      // DCT encoded jpg image
+	EInflate = 0x08,  // data needs to be inflated
+	ENative = 0x10,   // data is already in native-endian ARGB32
+	EExternal = 0x20, // image is stored externally
     };
 
     Bitmap();
@@ -69,6 +70,8 @@ public:
 
     inline bool isJpeg() const;
     inline bool isGray() const;
+    inline bool isExternal() const;
+    inline String externalPath() const;
     inline bool hasAlpha() const;
     inline int colorKey() const;
 
@@ -77,7 +80,7 @@ public:
     inline int objNum() const;
     inline void setObjNum(int objNum) const;
 
-    std::pair<Buffer, Buffer> embed() const;
+    std::pair<Buffer, Buffer> getEmbedData() const;
 
     inline bool operator==(const Bitmap & rhs) const;
     inline bool operator!=(const Bitmap & rhs) const;
@@ -87,7 +90,12 @@ public:
 				     Vector & dotsPerInch, uint32_t & flags);
     static Bitmap readJpeg(const char * fname, Vector & dotsPerInch,
 			   const char *& errmsg);
+    static const char * readPNGData(const char * fname, int & width, int & height,
+				    uint32_t & flags, Buffer & pixels,
+				    Vector & dotsPerInch);
     static Bitmap readPNG(const char * fname, Vector & dotsPerInch, const char *& errmsg);
+    static Bitmap readExternal(String path, const XmlAttributes & attr,
+			       const char *& errmsg);
 
     void savePixels(const char * fname);
 
@@ -109,6 +117,7 @@ private:
 	bool iPixelsComputed;
 	uint32_t iChecksum;
 	mutable int iObjNum; // Object number (e.g. in PDF file)
+	String iPath;
     };
 
     Imp * iImp;
@@ -130,6 +139,12 @@ inline bool Bitmap::isJpeg() const { return (iImp->iFlags & EDCT) != 0; }
 
 //! Is the bitmap grayscale?
 inline bool Bitmap::isGray() const { return (iImp->iFlags & ERGB) == 0; }
+
+//! Is the bitmap stored externally or embedded?
+inline bool Bitmap::isExternal() const { return (iImp->iFlags & EExternal) != 0; }
+
+//! The path to the external bitmap file
+inline String Bitmap::externalPath() const { return iImp->iPath; }
 
 //! Does the bitmap have transparency?
 /*! Bitmaps with color key will return false here. */

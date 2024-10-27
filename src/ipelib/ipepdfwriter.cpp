@@ -562,7 +562,7 @@ void PdfWriter::createStream(const char * data, int size, bool preCompressed) {
 
 void PdfWriter::embedBitmap(Bitmap bitmap) {
     int smaskNum = -1;
-    auto embed = bitmap.embed();
+    auto embed = bitmap.getEmbedData();
     if (bitmap.hasAlpha() && embed.second.size() > 0) {
 	smaskNum = startObject();
 	iStream << "<<\n";

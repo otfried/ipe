@@ -158,15 +158,28 @@ int ImlParser::parseDocument(Document & doc) {
 bool ImlParser::parseBitmap() {
     XmlAttributes att;
     if (!parseAttributes(att)) return false;
-    String objNumStr;
-    if (att.slash() && att.has("pdfObject", objNumStr)) {
-	Lex lex(objNumStr);
-	Buffer data = pdfStream(lex.getInt());
-	Buffer alpha;
-	lex.skipWhitespace();
-	if (!lex.eos()) alpha = pdfStream(lex.getInt());
-	Bitmap bitmap(att, data, alpha);
-	iBitmaps.push_back(bitmap);
+    String objRefStr;
+    // only load the pdfObject data if the XML contains no base64 data / external path
+    if (att.slash()) {
+	if (att.has("pdfObject", objRefStr)) {
+	    Lex lex(objRefStr);
+	    Buffer data = pdfStream(lex.getInt());
+	    Buffer alpha;
+	    lex.skipWhitespace();
+	    if (!lex.eos()) alpha = pdfStream(lex.getInt());
+	    Bitmap bitmap(att, data, alpha);
+	    iBitmaps.push_back(bitmap);
+	} else if (att.has("path", objRefStr)) {
+	    const char * errmsg = nullptr;
+	    Bitmap bitmap = Bitmap::readExternal(objRefStr, att, errmsg);
+	    if (!errmsg) {
+		iBitmaps.push_back(bitmap);
+	    } else {
+		return false;
+	    }
+	} else {
+	    return false;
+	}
     } else {
 	String bits;
 	if (!parsePCDATA("bitmap", bits)) return false;
