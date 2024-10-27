@@ -254,6 +254,8 @@ export class IpeUi {
 			);
 		});
 		this.topCanvas.addEventListener("pointerdown", (event) => {
+			// ignore event on right mouse button, as it generates contextmenu
+			if (event.buttons === 2) return;
 			this.ipe._canvasMouseButtonEvent(
 				this.ipe.Emval.toHandle(event),
 				event.buttons,
@@ -275,8 +277,9 @@ export class IpeUi {
 			this.ipe._canvasWheelEvent(this.ipe.Emval.toHandle(event));
 		});
 		this.topCanvas.addEventListener("contextmenu", (event) => {
-			// we use only the mouseup/mousedown events
 			event.preventDefault();
+			// report as a press event on right mouse button
+			this.ipe._canvasMouseButtonEvent(this.ipe.Emval.toHandle(event), 2, true);
 		});
 
 		// TODO: use window.matchMedia() to watch for changes in dpr
