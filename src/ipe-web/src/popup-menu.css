@@ -33,7 +33,7 @@ div#popup-submenu-pane {
 	overflow: scroll;
 }
 .popup-menu-item {
-	padding: 6px 10px 3px 10px;
+	padding: 4px 10px 1px 10px;
 	cursor: default;
 }
 .popup-menu-item.checked::before {
@@ -42,7 +42,7 @@ div#popup-submenu-pane {
 .main-menu-item {
 	display: flex;
 	flex-direction: row;
-	padding: 2px 10px 1px 10px;
+	padding: 3px 10px 1px 10px;
 	justify-content: space-between;
 	column-gap:20px;
 }
@@ -90,6 +90,7 @@ div#popup-submenu-pane {
 	flex-direction: column;
 	row-gap: 3px;
 	pointer-events: all;
+	overflow: scroll;
 }
 .popup-submenu-item {
 	padding: 4px 10px 1px 16px;

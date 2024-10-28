@@ -197,13 +197,13 @@ export class PopupMenu {
 				label.innerText = m.label!;
 				label.classList.add("main-menu-label");
 				item.appendChild(label);
+				item.classList.add("main-menu-item");
 				if (m.accelerator) {
 					const s = document.createElement("span");
 					s.innerText = m.accelerator;
 					s.classList.add("main-menu-shortcut");
 					item.appendChild(s);
 				}
-				item.classList.add("main-menu-item");
 				item.addEventListener("click", () => {
 					this.close();
 					cb(m.id!);
@@ -212,6 +212,7 @@ export class PopupMenu {
 			} else if (m.type === "separator") {
 				item.classList.add("popup-menu-separator");
 			} else if (m.type === "submenu") {
+				item.classList.add("main-menu-item");
 				this._createSubmenuItem(item, m.label!, () =>
 					this._openMainSubmenu(item, m.submenu!, cb),
 				);

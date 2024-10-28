@@ -12,6 +12,9 @@ See the [home page](https://ipe.otfried.org/) or the
 
 ### Download Ipe
 
+You can try Ipe, without downloading anything,
+in the [web edition](https://ipe-web.otfried.org).
+
 #### Windows
 
 A Windows package for Ipe is available on the [home page](https://ipe.otfried.org/). 
@@ -30,8 +33,7 @@ Open it, drag `Ipe.app` to your computer, and you are ready to run.
 #### Linux
 
 The file "doc/install.txt" explains how to build and install Ipe
-on Unix.  You can also find precompiled packages for some popular 
-Linux distributions on the [home page](https://ipe.otfried.org/).
+on Unix.
 
 
 ### Copyright
@@ -78,7 +80,7 @@ wiki](https://github.com/otfried/ipe-wiki/wiki).
 You can report bugs on the [Ipe issue
 tracker](https://github.com/otfried/ipe/issues).  Check the existing
 reports to see whether your bug has already been reported.  Please
-**include your operating system** (Linux, Windows, MacOS) in your report.
+**include your operating system** (Linux, Windows, MacOS, Web) in your report.
 
 Please do not send bug reports directly to me (the first thing I would
 do with the report is to enter it into the bug tracking system).
