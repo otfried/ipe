@@ -34,9 +34,9 @@
 
 #include "ipeui_common.h"
 
+#include <QAction>
 #include <QDialog>
 #include <QGridLayout>
-#include <QAction>
 #include <QMenu>
 
 class QTimer;
@@ -44,63 +44,61 @@ class QTextEdit;
 
 // --------------------------------------------------------------------
 
-inline void push_string(lua_State *L, const QString &str)
-{
-  lua_pushstring(L, str.toUtf8());
+inline void push_string(lua_State * L, const QString & str) {
+    lua_pushstring(L, str.toUtf8());
 }
 
-inline QString toqstring(lua_State *L, int i)
-{
-  return QString::fromUtf8(lua_tostring(L, i));
+inline QString toqstring(lua_State * L, int i) {
+    return QString::fromUtf8(lua_tostring(L, i));
 }
 
-inline QString checkqstring(lua_State *L, int i)
-{
-  return QString::fromUtf8(luaL_checkstring(L, i));
+inline QString checkqstring(lua_State * L, int i) {
+    return QString::fromUtf8(luaL_checkstring(L, i));
 }
 
 // --------------------------------------------------------------------
 
 class MenuAction : public QAction {
-  Q_OBJECT
+    Q_OBJECT
 public:
-  MenuAction(const QString &name, int number,
-	     const QString &item, const QString &text,
-	     QWidget *parent);
-  QString name() const { return iName; }
-  QString itemName() const { return iItemName; }
-  int number() const { return iNumber; }
+    MenuAction(const QString & name, int number, const QString & item,
+	       const QString & text, QWidget * parent);
+    QString name() const { return iName; }
+    QString itemName() const { return iItemName; }
+    int number() const { return iNumber; }
 
 private:
-  QString iName;
-  QString iItemName;
-  int iNumber;
+    QString iName;
+    QString iItemName;
+    int iNumber;
 };
 
 class PMenu : public Menu {
 public:
-  PMenu(WINID parent);
-  virtual ~PMenu();
-  virtual int add(lua_State *L);
-  virtual int execute(lua_State *L);
+    PMenu(WINID parent);
+    virtual ~PMenu();
+    virtual int add(lua_State * L);
+    virtual int execute(lua_State * L);
+
 private:
-  QMenu *iMenu;
+    QMenu * iMenu;
 };
 
 // --------------------------------------------------------------------
 
 class PTimer : public QObject, public Timer {
-  Q_OBJECT
+    Q_OBJECT
 public:
-  PTimer(lua_State *L0, int lua_object, const char *method);
-  virtual ~PTimer();
+    PTimer(lua_State * L0, int lua_object, const char * method);
+    virtual ~PTimer();
 
-  virtual int setInterval(lua_State *L);
-  virtual int active(lua_State *L);
-  virtual int start(lua_State *L);
-  virtual int stop(lua_State *L);
+    virtual int setInterval(lua_State * L);
+    virtual int active(lua_State * L);
+    virtual int start(lua_State * L);
+    virtual int stop(lua_State * L);
+
 private:
-  QTimer *iTimer;
+    QTimer * iTimer;
 };
 
 // --------------------------------------------------------------------

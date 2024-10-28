@@ -32,11 +32,11 @@
 #ifndef IPEBASE_H
 #define IPEBASE_H
 
-#include <cstdio>
-#include <vector>
 #include <algorithm>
+#include <cstdio>
 #include <memory>
 #include <string>
+#include <vector>
 
 // --------------------------------------------------------------------
 
@@ -44,122 +44,122 @@
 #define assert(e) ((e) ? (void)0 : ipeAssertionFailed(__FILE__, __LINE__, #e))
 extern void ipeAssertionFailed(const char *, int, const char *);
 
-extern void ipeDebug(const char *msg, ...) noexcept;
+extern void ipeDebug(const char * msg, ...) noexcept;
 
 // --------------------------------------------------------------------
 
 namespace ipe {
 
-  template <typename T>
-  inline int size(const std::vector<T> &v) {
-    return static_cast<int>(v.size()); }
+template <typename T>
+inline int size(const std::vector<T> & v) {
+    return static_cast<int>(v.size());
+}
 
-  constexpr double IPE_PI = 3.14159265358979323846;
+constexpr double IPE_PI = 3.14159265358979323846;
 
 #ifdef WIN32
-  constexpr char IPESEP = '\\';
+constexpr char IPESEP = '\\';
 #else
-  constexpr char IPESEP = '/';
+constexpr char IPESEP = '/';
 #endif
 
-  //! Ipelib version.
-  /*! \ingroup base */
-  const int IPELIB_VERSION = 70301;
+//! Ipelib version.
+/*! \ingroup base */
+const int IPELIB_VERSION = 70301;
 
-  //! Oldest readable file format version.
-  /*! \ingroup base */
-  const int OLDEST_FILE_FORMAT = 70000;
-  //! Current file format version.
-  /*! \ingroup base */
-  const int FILE_FORMAT = 70218;
+//! Oldest readable file format version.
+/*! \ingroup base */
+const int OLDEST_FILE_FORMAT = 70000;
+//! Current file format version.
+/*! \ingroup base */
+const int FILE_FORMAT = 70218;
 
-  enum class LatexType { Default, Pdftex, Xetex, Luatex };
+enum class LatexType { Default, Pdftex, Xetex, Luatex };
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Stream;
+class Stream;
 
-  class String {
-  public:
+class String {
+public:
     String() noexcept;
-    String(const char *str) noexcept;
-    String(const char *str, int len) noexcept;
-    String(const String &rhs) noexcept;
-    String(const String &rhs, int index, int len) noexcept;
-    String(const std::string &rhs) noexcept;
-    String &operator=(const String &rhs) noexcept;
+    String(const char * str) noexcept;
+    String(const char * str, int len) noexcept;
+    String(const String & rhs) noexcept;
+    String(const String & rhs, int index, int len) noexcept;
+    String(const std::string & rhs) noexcept;
+    String & operator=(const String & rhs) noexcept;
 #ifdef WIN32
-    String(const wchar_t *data);
+    String(const wchar_t * data);
     std::wstring w() const noexcept;
 #endif
     ~String() noexcept;
-    static String withData(char *data, int len = 0) noexcept;
+    static String withData(char * data, int len = 0) noexcept;
     //! Return character at index i.
     inline char operator[](int i) const noexcept { return iImp->iData[i]; }
     //! Is the string empty?
     inline bool empty() const noexcept { return (size() == 0); }
     //! Return read-only pointer to the data.
-    const char *data() const noexcept { return iImp->iData; }
+    const char * data() const noexcept { return iImp->iData; }
     //! Return number of bytes in the string.
     inline int size() const noexcept { return iImp->iSize; }
     //! Operator syntax for append.
-    inline void operator+=(const String &rhs) noexcept { append(rhs); }
+    inline void operator+=(const String & rhs) noexcept { append(rhs); }
     //! Operator syntax for append.
-    inline void operator+=(const char *rhs) noexcept { append(rhs); }
+    inline void operator+=(const char * rhs) noexcept { append(rhs); }
     //! Operator syntax for append.
     void operator+=(char ch) noexcept { append(ch); }
     //! Create substring.
     inline String substr(int i, int len = -1) const noexcept {
-      return String(*this, i, len); }
+	return String(*this, i, len);
+    }
     //! Create substring at the left.
-    inline String left(int i) const noexcept {
-      return String(*this, 0, i); }
+    inline String left(int i) const noexcept { return String(*this, 0, i); }
     String right(int i) const noexcept;
     //! Operator !=.
-    inline bool operator!=(const String &rhs) const noexcept {
-      return !(*this == rhs); }
+    inline bool operator!=(const String & rhs) const noexcept { return !(*this == rhs); }
     //! Operator !=.
-    inline bool operator!=(const char *rhs) const noexcept {
-      return !(*this == rhs); }
+    inline bool operator!=(const char * rhs) const noexcept { return !(*this == rhs); }
 
     int find(char ch) const noexcept;
     int rfind(char ch) const noexcept;
-    int find(const char *rhs) const noexcept;
+    int find(const char * rhs) const noexcept;
     void erase() noexcept;
-    void append(const String &rhs) noexcept;
-    void append(const char *rhs) noexcept;
+    void append(const String & rhs) noexcept;
+    void append(const char * rhs) noexcept;
     void append(char ch) noexcept;
     void appendUtf8(uint16_t ch) noexcept;
-    bool hasPrefix(const char *rhs) const noexcept;
-    bool operator==(const String &rhs) const noexcept;
-    bool operator==(const char *rhs) const noexcept;
-    bool operator<(const String &rhs) const noexcept;
-    String operator+(const String &rhs) const noexcept;
-    int unicode(int &index) const noexcept;
-    String getLine(int &index) const noexcept;
-    const char *z() const noexcept;
-    std::string s() const noexcept {
-      return std::string(z());
-    }
-  private:
+    bool hasPrefix(const char * rhs) const noexcept;
+    bool operator==(const String & rhs) const noexcept;
+    bool operator==(const char * rhs) const noexcept;
+    bool operator<(const String & rhs) const noexcept;
+    String operator+(const String & rhs) const noexcept;
+    int unicode(int & index) const noexcept;
+    String getLine(int & index) const noexcept;
+    const char * z() const noexcept;
+    std::string s() const noexcept { return std::string(z()); }
+
+private:
     void detach(int n) noexcept;
-  private:
+
+private:
     struct Imp {
-      int iRefCount;
-      int iSize;
-      int iCapacity;
-      char *iData;
+	int iRefCount;
+	int iSize;
+	int iCapacity;
+	char * iData;
     };
-    static Imp *theEmptyString;
-    static Imp *emptyString() noexcept;
-    Imp *iImp;
-  };
+    static Imp * theEmptyString;
+    static Imp * emptyString() noexcept;
+    Imp * iImp;
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Fixed {
-  public:
-    explicit Fixed(int val) : iValue(val * 1000) { /* nothing */ }
+class Fixed {
+public:
+    explicit Fixed(int val)
+	: iValue(val * 1000) { /* nothing */ }
     explicit Fixed() { /* nothing */ }
     inline static Fixed fromInternal(int32_t val);
     static Fixed fromDouble(double val);
@@ -167,20 +167,21 @@ namespace ipe {
     inline double toDouble() const { return iValue / 1000.0; }
     inline int internal() const { return iValue; }
     Fixed mult(int a, int b) const;
-    inline bool operator==(const Fixed &rhs) const;
-    inline bool operator!=(const Fixed &rhs) const;
-    inline bool operator<(const Fixed &rhs) const;
+    inline bool operator==(const Fixed & rhs) const;
+    inline bool operator!=(const Fixed & rhs) const;
+    inline bool operator<(const Fixed & rhs) const;
     inline bool isInteger() const;
-  private:
+
+private:
     int32_t iValue;
 
-    friend Stream &operator<<(Stream &stream, const Fixed &f);
-  };
+    friend Stream & operator<<(Stream & stream, const Fixed & f);
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Lex {
-  public:
+class Lex {
+public:
     explicit Lex(String str);
 
     String token();
@@ -191,65 +192,69 @@ namespace ipe {
     unsigned long int getHexNumber();
     double getDouble();
     //! Extract next character (not skipping anything).
-    inline char getChar() {
-      return iString[iPos++]; }
+    inline char getChar() { return iString[iPos++]; }
     void skipWhitespace();
 
     //! Operator syntax for getInt().
-    inline Lex &operator>>(int &i) {
-      i = getInt(); return *this; }
+    inline Lex & operator>>(int & i) {
+	i = getInt();
+	return *this;
+    }
     //! Operator syntax for getDouble().
-    inline Lex &operator>>(double &d) {
-      d = getDouble(); return *this; }
+    inline Lex & operator>>(double & d) {
+	d = getDouble();
+	return *this;
+    }
 
     //! Operator syntax for getFixed().
-    inline Lex &operator>>(Fixed &d) {
-      d = getFixed(); return *this; }
+    inline Lex & operator>>(Fixed & d) {
+	d = getFixed();
+	return *this;
+    }
 
     //! Mark the current position.
-    inline void mark() {
-      iMark = iPos; }
+    inline void mark() { iMark = iPos; }
     //! Reset reader to the marked position.
-    inline void fromMark() {
-      iPos = iMark; }
+    inline void fromMark() { iPos = iMark; }
 
     //! Return true if at end of string (not even whitespace left).
-    inline bool eos() const {
-      return (iPos == iString.size()); }
+    inline bool eos() const { return (iPos == iString.size()); }
 
-  private:
+private:
     String iString;
     int iPos;
     int iMark;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Buffer {
-  public:
+class Buffer {
+public:
     explicit Buffer() = default;
     explicit Buffer(int size);
-    explicit Buffer(const char *data, int size);
+    explicit Buffer(const char * data, int size);
     //! Character access.
-    inline char &operator[](int index) noexcept { return (*iData)[index]; }
+    inline char & operator[](int index) noexcept { return (*iData)[index]; }
     //! Character access (const version).
-    inline const char &operator[](int index) const noexcept { return (*iData)[index]; }
+    inline const char & operator[](int index) const noexcept { return (*iData)[index]; }
     //! Return size of buffer;
-    inline int size() const noexcept { return iData ? static_cast<int>((*iData).size()) : 0; }
+    inline int size() const noexcept {
+	return iData ? static_cast<int>((*iData).size()) : 0;
+    }
     //! Return pointer to buffer data.
-    inline char *data() noexcept { return iData ? iData->data() : nullptr; }
+    inline char * data() noexcept { return iData ? iData->data() : nullptr; }
     //! Return pointer to buffer data (const version).
-    inline const char *data() const noexcept { return iData ? iData->data() : nullptr; }
+    inline const char * data() const noexcept { return iData ? iData->data() : nullptr; }
     uint32_t checksum() const;
 
-  private:
+private:
     std::shared_ptr<std::vector<char>> iData;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Stream {
-  public:
+class Stream {
+public:
     //! Virtual destructor.
     virtual ~Stream();
     //! Output character.
@@ -259,107 +264,120 @@ namespace ipe {
     //! Output string.
     virtual void putString(String s);
     //! Output C string.
-    virtual void putCString(const char *s);
-  //! Output raw character data.
-    virtual void putRaw(const char *data, int size);
+    virtual void putCString(const char * s);
+    //! Output raw character data.
+    virtual void putRaw(const char * data, int size);
     //! Output character.
-    inline Stream &operator<<(char ch) { putChar(ch); return *this; }
+    inline Stream & operator<<(char ch) {
+	putChar(ch);
+	return *this;
+    }
     //! Output string.
-    inline Stream &operator<<(const String &s) { putString(s); return *this; }
+    inline Stream & operator<<(const String & s) {
+	putString(s);
+	return *this;
+    }
     //! Output C string.
-    inline Stream &operator<<(const char *s) { putCString(s); return *this; }
-    Stream &operator<<(int i);
-    Stream &operator<<(double d);
+    inline Stream & operator<<(const char * s) {
+	putCString(s);
+	return *this;
+    }
+    Stream & operator<<(int i);
+    Stream & operator<<(double d);
     void putHexByte(char b);
     void putXmlString(String s);
-  };
+};
 
-  /*! \class ipe::TellStream
-    \ingroup base
-    \brief Adds position feedback to IpeStream.
-  */
+/*! \class ipe::TellStream
+  \ingroup base
+  \brief Adds position feedback to IpeStream.
+*/
 
-  class TellStream : public Stream {
-  public:
+class TellStream : public Stream {
+public:
     virtual long tell() const = 0;
-  };
+};
 
-  class StringStream : public TellStream {
-  public:
-    StringStream(String &string);
+class StringStream : public TellStream {
+public:
+    StringStream(String & string);
     virtual void putChar(char ch);
     virtual void putString(String s);
-    virtual void putCString(const char *s);
-    virtual void putRaw(const char *data, int size);
+    virtual void putCString(const char * s);
+    virtual void putRaw(const char * data, int size);
     virtual long tell() const;
-  private:
-    String &iString;
-  };
 
-  class FileStream : public TellStream {
-  public:
-    FileStream(std::FILE *file);
+private:
+    String & iString;
+};
+
+class FileStream : public TellStream {
+public:
+    FileStream(std::FILE * file);
     virtual void putChar(char ch);
     virtual void putString(String s);
-    virtual void putCString(const char *s);
-    virtual void putRaw(const char *data, int size);
+    virtual void putCString(const char * s);
+    virtual void putRaw(const char * data, int size);
     virtual long tell() const;
-  private:
-    std::FILE *iFile;
-  };
 
-  // --------------------------------------------------------------------
+private:
+    std::FILE * iFile;
+};
 
-  class DataSource {
-  public:
+// --------------------------------------------------------------------
+
+class DataSource {
+public:
     virtual ~DataSource() = 0;
     //! Get one more character, or EOF.
     virtual int getChar() = 0;
     virtual int length() const;
     virtual void setPosition(int pos);
     virtual int position() const;
-  };
+};
 
-  class FileSource : public DataSource {
-  public:
-    FileSource(std::FILE *file);
+class FileSource : public DataSource {
+public:
+    FileSource(std::FILE * file);
     virtual int getChar() override;
     virtual int length() const override;
     virtual void setPosition(int pos) override;
     virtual int position() const override;
-  private:
-    std::FILE *iFile;
-  };
 
-  class BufferSource : public DataSource {
-  public:
-    BufferSource(const Buffer &buffer);
+private:
+    std::FILE * iFile;
+};
+
+class BufferSource : public DataSource {
+public:
+    BufferSource(const Buffer & buffer);
     virtual int getChar() override;
     virtual int length() const override;
     virtual void setPosition(int pos) override;
     virtual int position() const override;
-  private:
-    const Buffer &iBuffer;
+
+private:
+    const Buffer & iBuffer;
     int iPos;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Platform {
-  public:
+class Platform {
+public:
     using DebugHandler = void (*)(const char *);
 
 #ifdef IPEBUNDLE
-    static String ipeDir(const char *suffix, const char *fname = nullptr);
+    static String ipeDir(const char * suffix, const char * fname = nullptr);
 #endif
 #ifdef WIN32
-    static FILE *fopen(const char *fname, const char *mode);
-    static int mkdir(const char *dname);
+    static FILE * fopen(const char * fname, const char * mode);
+    static int mkdir(const char * dname);
 #elif defined(IPEWASM)
-    static FILE *fopen(const char *fname, const char *mode);
+    static FILE * fopen(const char * fname, const char * mode);
 #else
-    inline static FILE *fopen(const char *fname, const char *mode) {
-      return ::fopen(fname, mode);
+    inline static FILE * fopen(const char * fname, const char * mode) {
+	return ::fopen(fname, mode);
     }
 #endif
     static String ipeDrive();
@@ -370,50 +388,37 @@ namespace ipe {
     static String latexDirectory();
     static String latexPath();
     static bool fileExists(String fname);
-    static bool listDirectory(String path, std::vector<String> &files);
+    static bool listDirectory(String path, std::vector<String> & files);
     static String realPath(String fname);
     static String readFile(String fname);
     static String howToRunLatex(String dir, LatexType engine, String docname) noexcept;
     static int system(String cmd);
     static String createTarball(String tex);
     static double toDouble(String s);
-    static int toNumber(String s, int &iValue, double &dValue);
+    static int toNumber(String s, int & iValue, double & dValue);
     static String spiroVersion();
     static String gslVersion();
     static std::pair<int, std::vector<const char *>> setupNodeJs();
     static String dotIpe();
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  inline bool Fixed::operator==(const Fixed &rhs) const
-  {
-    return iValue == rhs.iValue;
-  }
+inline bool Fixed::operator==(const Fixed & rhs) const { return iValue == rhs.iValue; }
 
-  inline bool Fixed::operator!=(const Fixed &rhs) const
-  {
-    return iValue != rhs.iValue;
-  }
+inline bool Fixed::operator!=(const Fixed & rhs) const { return iValue != rhs.iValue; }
 
-  inline bool Fixed::operator<(const Fixed &rhs) const
-  {
-    return iValue < rhs.iValue;
-  }
+inline bool Fixed::operator<(const Fixed & rhs) const { return iValue < rhs.iValue; }
 
-  inline bool Fixed::isInteger() const
-  {
-    return (iValue % 1000) == 0;
-  }
+inline bool Fixed::isInteger() const { return (iValue % 1000) == 0; }
 
-  inline Fixed Fixed::fromInternal(int val)
-  {
+inline Fixed Fixed::fromInternal(int val) {
     Fixed f;
     f.iValue = val;
     return f;
-  }
+}
 
-} // namespace
+} // namespace ipe
 
 extern void ipeDebugBuffer(ipe::Buffer data, int maxsize);
 

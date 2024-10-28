@@ -38,14 +38,14 @@
 
 namespace ipe {
 
-  class Painter;
+class Painter;
 
-  class Ellipse;
-  class ClosedSpline;
-  class Curve;
+class Ellipse;
+class ClosedSpline;
+class Curve;
 
-  class CurveSegment {
-  public:
+class CurveSegment {
+public:
     enum Type { EArc, ESegment, ESpline, EOldSpline, ECardinalSpline, ESpiroSpline };
 
     //! Type of segment.
@@ -61,30 +61,31 @@ namespace ipe {
 
     float tension() const;
     Arc arc() const;
-    void beziers(std::vector<Bezier> &bez) const;
+    void beziers(std::vector<Bezier> & bez) const;
 
-    void draw(Painter &painter) const;
-    void addToBBox(Rect &box, const Matrix &m, bool cp) const;
-    double distance(const Vector &v, const Matrix &m, double bound) const;
-    void snapVtx(const Vector &mouse, const Matrix &m,
-		 Vector &pos, double &bound, bool cp) const;
-    void snapBnd(const Vector &mouse, const Matrix &m,
-		 Vector &pos, double &bound) const;
-  private:
-    CurveSegment(const Curve *curve, int index);
+    void draw(Painter & painter) const;
+    void addToBBox(Rect & box, const Matrix & m, bool cp) const;
+    double distance(const Vector & v, const Matrix & m, double bound) const;
+    void snapVtx(const Vector & mouse, const Matrix & m, Vector & pos, double & bound,
+		 bool cp) const;
+    void snapBnd(const Vector & mouse, const Matrix & m, Vector & pos,
+		 double & bound) const;
 
-    const Vector *cps() const;
+private:
+    CurveSegment(const Curve * curve, int index);
 
-  private:
-    const Curve *iCurve;
+    const Vector * cps() const;
+
+private:
+    const Curve * iCurve;
     int index; // index of the segment in the curve
     int iNumCP;
 
     friend class Curve;
-  };
+};
 
-  class SubPath {
-  public:
+class SubPath {
+public:
     //! The subpath types.
     enum Type { ECurve, EEllipse, EClosedSpline };
     virtual ~SubPath() = 0;
@@ -92,82 +93,80 @@ namespace ipe {
     virtual Type type() const = 0;
     virtual bool closed() const;
 
-    virtual const Ellipse *asEllipse() const;
-    virtual const ClosedSpline *asClosedSpline() const;
-    virtual const Curve *asCurve() const;
+    virtual const Ellipse * asEllipse() const;
+    virtual const ClosedSpline * asClosedSpline() const;
+    virtual const Curve * asCurve() const;
 
     //! Save subpath to XML stream.
-    virtual void save(Stream &stream) const = 0;
+    virtual void save(Stream & stream) const = 0;
     //! Draw subpath (does not call drawPath()).
-    virtual void draw(Painter &painter) const = 0;
+    virtual void draw(Painter & painter) const = 0;
     //! Add subpath to box.
-    virtual void addToBBox(Rect &box, const Matrix &m, bool cp) const = 0;
+    virtual void addToBBox(Rect & box, const Matrix & m, bool cp) const = 0;
     //! Return distance from \a v to subpath transformed by \a m.
-    virtual double distance(const Vector &v, const Matrix &m,
-			    double bound) const = 0;
+    virtual double distance(const Vector & v, const Matrix & m, double bound) const = 0;
     //! Snap to vertex.
-    virtual void snapVtx(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound, bool cp) const = 0;
+    virtual void snapVtx(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound, bool cp) const = 0;
     //! Snap to boundary of subpath.
-    virtual void snapBnd(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const = 0;
-  };
+    virtual void snapBnd(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const = 0;
+};
 
-  class Ellipse : public SubPath {
-  public:
-    Ellipse(const Matrix &m);
+class Ellipse : public SubPath {
+public:
+    Ellipse(const Matrix & m);
     virtual Type type() const;
-    virtual const Ellipse *asEllipse() const;
+    virtual const Ellipse * asEllipse() const;
     //! Return matrix that transforms unit circle to the ellipse.
     inline Matrix matrix() const { return iM; }
 
-    virtual void save(Stream &stream) const;
-    virtual void draw(Painter &painter) const;
-    virtual void addToBBox(Rect &box, const Matrix &m, bool cp) const;
-    virtual double distance(const Vector &v, const Matrix &m,
-			    double bound) const;
-    virtual void snapVtx(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound, bool cp) const;
-    virtual void snapBnd(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const;
-  private:
+    virtual void save(Stream & stream) const;
+    virtual void draw(Painter & painter) const;
+    virtual void addToBBox(Rect & box, const Matrix & m, bool cp) const;
+    virtual double distance(const Vector & v, const Matrix & m, double bound) const;
+    virtual void snapVtx(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound, bool cp) const;
+    virtual void snapBnd(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const;
+
+private:
     Matrix iM;
-  };
+};
 
-  class ClosedSpline : public SubPath {
-  public:
-    ClosedSpline(const std::vector<Vector> &v);
+class ClosedSpline : public SubPath {
+public:
+    ClosedSpline(const std::vector<Vector> & v);
     virtual Type type() const;
-    virtual const ClosedSpline *asClosedSpline() const;
-    void beziers(std::vector<Bezier> &bez) const;
-    virtual void save(Stream &stream) const;
-    virtual void draw(Painter &painter) const;
-    virtual void addToBBox(Rect &box, const Matrix &m, bool cp) const;
-    virtual double distance(const Vector &v, const Matrix &m,
-			    double bound) const;
-    virtual void snapVtx(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound, bool cp) const;
-    virtual void snapBnd(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const;
-  public:
-    std::vector<Vector> iCP; // control points
-  };
+    virtual const ClosedSpline * asClosedSpline() const;
+    void beziers(std::vector<Bezier> & bez) const;
+    virtual void save(Stream & stream) const;
+    virtual void draw(Painter & painter) const;
+    virtual void addToBBox(Rect & box, const Matrix & m, bool cp) const;
+    virtual double distance(const Vector & v, const Matrix & m, double bound) const;
+    virtual void snapVtx(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound, bool cp) const;
+    virtual void snapBnd(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const;
 
-  class Curve : public SubPath {
-  public:
+public:
+    std::vector<Vector> iCP; // control points
+};
+
+class Curve : public SubPath {
+public:
     Curve();
     virtual Type type() const;
     inline virtual bool closed() const { return iClosed; }
-    virtual const Curve *asCurve() const;
-    virtual void save(Stream &stream) const;
-    virtual void draw(Painter &painter) const;
-    virtual void addToBBox(Rect &box, const Matrix &m, bool cp) const;
-    virtual double distance(const Vector &v, const Matrix &m,
-			    double bound) const;
-    virtual void snapVtx(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound, bool cp) const;
-    virtual void snapBnd(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const;
+    virtual const Curve * asCurve() const;
+    virtual void save(Stream & stream) const;
+    virtual void draw(Painter & painter) const;
+    virtual void addToBBox(Rect & box, const Matrix & m, bool cp) const;
+    virtual double distance(const Vector & v, const Matrix & m, double bound) const;
+    virtual void snapVtx(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound, bool cp) const;
+    virtual void snapBnd(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const;
 
     /*! \brief Return number of segments.
       This does not include the closing segment for a closed path. */
@@ -178,31 +177,33 @@ namespace ipe {
     CurveSegment segment(int i) const;
     CurveSegment closingSegment() const;
 
-    void appendSegment(const Vector &v0, const Vector &v1);
-    void appendArc(const Matrix &m, const Vector &v0, const Vector &v1);
-    void appendSpline(const std::vector<Vector> &v) {
-      appendSpline(v, CurveSegment::ESpline); }
-    void appendOldSpline(const std::vector<Vector> &v) {
-      appendSpline(v, CurveSegment::EOldSpline); }
-    void appendCardinalSpline(const std::vector<Vector> &v, float tension);
-    void appendSpiroSpline(const std::vector<Vector> &v);
-    void appendSpiroSplinePrecomputed(const std::vector<Vector> &v, int sep);
+    void appendSegment(const Vector & v0, const Vector & v1);
+    void appendArc(const Matrix & m, const Vector & v0, const Vector & v1);
+    void appendSpline(const std::vector<Vector> & v) {
+	appendSpline(v, CurveSegment::ESpline);
+    }
+    void appendOldSpline(const std::vector<Vector> & v) {
+	appendSpline(v, CurveSegment::EOldSpline);
+    }
+    void appendCardinalSpline(const std::vector<Vector> & v, float tension);
+    void appendSpiroSpline(const std::vector<Vector> & v);
+    void appendSpiroSplinePrecomputed(const std::vector<Vector> & v, int sep);
     void setClosed(bool closed);
 
-  private:
-    void appendSpline(const std::vector<Vector> &v, CurveSegment::Type type);
+private:
+    void appendSpline(const std::vector<Vector> & v, CurveSegment::Type type);
 
-  private:
+private:
     struct Seg {
-      CurveSegment::Type iType;
-      int32_t iLastCP;
-      union {
-	int32_t iMatrix;
-	float iTension;
-	// index into iCP separating precomputed Bezier control points
-	// from the spiro control points: the last precomputed cp
-	int32_t iBezier;
-      };
+	CurveSegment::Type iType;
+	int32_t iLastCP;
+	union {
+	    int32_t iMatrix;
+	    float iTension;
+	    // index into iCP separating precomputed Bezier control points
+	    // from the spiro control points: the last precomputed cp
+	    int32_t iBezier;
+	};
     };
     bool iClosed;
     std::vector<Seg> iSeg;
@@ -210,64 +211,66 @@ namespace ipe {
     std::vector<Matrix> iM;  // for arcs
 
     friend class CurveSegment;
-  };
+};
 
-  inline CurveSegment::Type CurveSegment::type() const { return iCurve->iSeg[index].iType; }
+inline CurveSegment::Type CurveSegment::type() const { return iCurve->iSeg[index].iType; }
 
-  inline const Vector *CurveSegment::cps() const {
-    return iCurve->iCP.data() + (iCurve->iSeg[index].iLastCP - iNumCP + 1); }
+inline const Vector * CurveSegment::cps() const {
+    return iCurve->iCP.data() + (iCurve->iSeg[index].iLastCP - iNumCP + 1);
+}
 
-  inline Vector CurveSegment::last() const {
-    return iCurve->iCP[iCurve->iSeg[index].iLastCP]; }
+inline Vector CurveSegment::last() const {
+    return iCurve->iCP[iCurve->iSeg[index].iLastCP];
+}
 
-  inline Matrix CurveSegment::matrix() const {
-    return iCurve->iM[iCurve->iSeg[index].iMatrix]; }
+inline Matrix CurveSegment::matrix() const {
+    return iCurve->iM[iCurve->iSeg[index].iMatrix];
+}
 
-  class Shape {
-  public:
+class Shape {
+public:
     Shape();
-    explicit Shape(const Rect &rect);
-    explicit Shape(const Segment &seg);
-    explicit Shape(const Vector &center, double radius);
-    explicit Shape(const Vector &center, double radius,
-		   double alpha0, double alpha1);
+    explicit Shape(const Rect & rect);
+    explicit Shape(const Segment & seg);
+    explicit Shape(const Vector & center, double radius);
+    explicit Shape(const Vector & center, double radius, double alpha0, double alpha1);
 
     ~Shape();
-    Shape(const Shape &rhs);
-    Shape &operator=(const Shape &rhs);
+    Shape(const Shape & rhs);
+    Shape & operator=(const Shape & rhs);
 
     bool load(String data);
-    void save(Stream &stream) const;
+    void save(Stream & stream) const;
 
-    void addToBBox(Rect &box, const Matrix &m, bool cp) const;
-    double distance(const Vector &v, const Matrix &m, double bound) const;
-    void snapVtx(const Vector &mouse, const Matrix &m,
-		 Vector &pos, double &bound, bool cp) const;
-    void snapBnd(const Vector &mouse, const Matrix &m,
-		 Vector &pos, double &bound) const;
+    void addToBBox(Rect & box, const Matrix & m, bool cp) const;
+    double distance(const Vector & v, const Matrix & m, double bound) const;
+    void snapVtx(const Vector & mouse, const Matrix & m, Vector & pos, double & bound,
+		 bool cp) const;
+    void snapBnd(const Vector & mouse, const Matrix & m, Vector & pos,
+		 double & bound) const;
 
     //! Return number of subpaths.
     inline int countSubPaths() const { return iImp->iSubPaths.size(); }
     //! Return subpath.
-    inline const SubPath *subPath(int i) const { return iImp->iSubPaths[i]; }
+    inline const SubPath * subPath(int i) const { return iImp->iSubPaths[i]; }
 
     bool isSegment() const;
 
-    void appendSubPath(SubPath *sp);
+    void appendSubPath(SubPath * sp);
 
-    void draw(Painter &painter) const;
-  private:
+    void draw(Painter & painter) const;
+
+private:
     typedef std::vector<SubPath *> SubPathSeq;
     struct Imp {
-      ~Imp();
-      int iRefCount;
-      SubPathSeq iSubPaths;
+	~Imp();
+	int iRefCount;
+	SubPathSeq iSubPaths;
     };
-    Imp *iImp;
-  };
+    Imp * iImp;
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif
-

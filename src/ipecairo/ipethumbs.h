@@ -39,48 +39,49 @@
 
 namespace ipe {
 
-  class Thumbnail {
-  public:
+class Thumbnail {
+public:
     enum TargetFormat { ESVG, EPNG, EPS, EPDF };
 
-    Thumbnail(const Document *doc, int width);
+    Thumbnail(const Document * doc, int width);
 
     void setTransparent(bool t) { iTransparent = t; }
-    void setNoCrop(bool n) {iNoCrop = n; }
+    void setNoCrop(bool n) { iNoCrop = n; }
 
     int width() const { return iWidth; }
     int height() const { return iHeight; }
-    Buffer render(const Page *page, int view);
-    bool saveRender(TargetFormat fm, const char *dst,
-		    const Page *page, int view, double zoom,
-		    double tolerance = 0.1);
-  private:
-    const Document *iDoc;
+    Buffer render(const Page * page, int view);
+    bool saveRender(TargetFormat fm, const char * dst, const Page * page, int view,
+		    double zoom, double tolerance = 0.1);
+
+private:
+    const Document * iDoc;
     bool iTransparent;
     bool iNoCrop;
     int iWidth;
     int iHeight;
     double iZoom;
-    const Layout *iLayout;
+    const Layout * iLayout;
     std::unique_ptr<Fonts> iFonts;
-  };
+};
 
-  class PdfThumbnail {
-  public:
-    PdfThumbnail(const PdfFile *pdf, int width);
+class PdfThumbnail {
+public:
+    PdfThumbnail(const PdfFile * pdf, int width);
     int width() const { return iWidth; }
     int height() const { return iHeight; }
-    Buffer render(const PdfDict *page);
-  private:
-    const PdfFile *iPdf;
+    Buffer render(const PdfDict * page);
+
+private:
+    const PdfFile * iPdf;
     int iWidth;
     int iHeight;
     std::unique_ptr<Cascade> iCascade; // dummy stylesheet
     std::unique_ptr<PdfFileResources> iResources;
     std::unique_ptr<Fonts> iFonts;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

@@ -39,74 +39,73 @@
 
 namespace ipe {
 
-  struct Symbol {
+struct Symbol {
     Symbol();
-    Symbol(Object *object);
-    Symbol(const Symbol &rhs);
-    Symbol &operator=(const Symbol &rhs);
+    Symbol(Object * object);
+    Symbol(const Symbol & rhs);
+    Symbol & operator=(const Symbol & rhs);
     ~Symbol();
 
     bool iXForm;
     TTransformations iTransformations;
-    Object *iObject;
+    Object * iObject;
     std::vector<Vector> iSnap;
-  };
+};
 
-  class StyleSheet {
-  public:
-
+class StyleSheet {
+public:
     //! Style of the title on a page.
     struct TitleStyle {
-      //! Has a TitleStyle been defined in the style sheet?
-      bool iDefined;
-      //! Position on the page (in Ipe coordinate system)
-      Vector iPos;
-      //! Text size.
-      Attribute iSize;
-      //! Text color.
-      Attribute iColor;
-      //! Horizontal alignment.
-      THorizontalAlignment iHorizontalAlignment;
-      //! Vertical alignment.
-      TVerticalAlignment iVerticalAlignment;
+	//! Has a TitleStyle been defined in the style sheet?
+	bool iDefined;
+	//! Position on the page (in Ipe coordinate system)
+	Vector iPos;
+	//! Text size.
+	Attribute iSize;
+	//! Text color.
+	Attribute iColor;
+	//! Horizontal alignment.
+	THorizontalAlignment iHorizontalAlignment;
+	//! Vertical alignment.
+	TVerticalAlignment iVerticalAlignment;
     };
 
     //! How to show page numbers on the paper.
     struct PageNumberStyle {
-      //! Has a PageNumberStyle been defined in the style sheet?
-      bool iDefined;
-      //! Position on the page
-      Vector iPos;
-      //! Text size.
-      Attribute iSize;
-      //! Text color.
-      Attribute iColor;
-      //! Text alignment, horizontal.
-      THorizontalAlignment iHorizontalAlignment;
-      //! Text alignment, vertical.
-      TVerticalAlignment iVerticalAlignment;
-      //! Template text.
-      String iText;
+	//! Has a PageNumberStyle been defined in the style sheet?
+	bool iDefined;
+	//! Position on the page
+	Vector iPos;
+	//! Text size.
+	Attribute iSize;
+	//! Text color.
+	Attribute iColor;
+	//! Text alignment, horizontal.
+	THorizontalAlignment iHorizontalAlignment;
+	//! Text alignment, vertical.
+	TVerticalAlignment iVerticalAlignment;
+	//! Template text.
+	String iText;
     };
 
     StyleSheet();
 
-    static StyleSheet *standard();
+    static StyleSheet * standard();
 
-    void addSymbol(Attribute name, const Symbol &symbol);
-    const Symbol *findSymbol(Attribute sym) const;
+    void addSymbol(Attribute name, const Symbol & symbol);
+    const Symbol * findSymbol(Attribute sym) const;
 
-    void addGradient(Attribute name, const Gradient &s);
-    const Gradient *findGradient(Attribute sym) const;
+    void addGradient(Attribute name, const Gradient & s);
+    const Gradient * findGradient(Attribute sym) const;
 
-    void addTiling(Attribute name, const Tiling &s);
-    const Tiling *findTiling(Attribute sym) const;
+    void addTiling(Attribute name, const Tiling & s);
+    const Tiling * findTiling(Attribute sym) const;
 
-    void addEffect(Attribute name, const Effect &e);
-    const Effect *findEffect(Attribute sym) const;
+    void addEffect(Attribute name, const Effect & e);
+    const Effect * findEffect(Attribute sym) const;
 
-    void addPageStyle(Attribute name, const PageStyle &s);
-    const PageStyle *findPageStyle(Attribute sym) const;
+    void addPageStyle(Attribute name, const PageStyle & s);
+    const PageStyle * findPageStyle(Attribute sym) const;
 
     void add(Kind kind, Attribute name, Attribute value);
     bool has(Kind kind, Attribute sym) const;
@@ -114,9 +113,9 @@ namespace ipe {
 
     void remove(Kind kind, Attribute sym);
 
-    void saveAsXml(Stream &stream, bool saveBitmaps = false) const;
+    void saveAsXml(Stream & stream, bool saveBitmaps = false) const;
 
-    void allNames(Kind kind, AttributeSeq &seq) const;
+    void allNames(Kind kind, AttributeSeq & seq) const;
 
     //! Return whether this is the standard style sheet built into Ipe.
     inline bool isStandard() const { return iStandard; }
@@ -124,19 +123,19 @@ namespace ipe {
     //! Return Latex preamble.
     inline String preamble() const { return iPreamble; }
     //! Set LaTeX preamble.
-    inline void setPreamble(const String &str) { iPreamble = str; }
+    inline void setPreamble(const String & str) { iPreamble = str; }
 
-    const Layout *layout() const;
-    void setLayout(const Layout &margins);
+    const Layout * layout() const;
+    void setLayout(const Layout & margins);
 
-    const TextPadding *textPadding() const;
-    void setTextPadding(const TextPadding &pad);
+    const TextPadding * textPadding() const;
+    void setTextPadding(const TextPadding & pad);
 
-    const TitleStyle *titleStyle() const;
-    void setTitleStyle(const TitleStyle &ts);
+    const TitleStyle * titleStyle() const;
+    void setTitleStyle(const TitleStyle & ts);
 
-    const PageNumberStyle *pageNumberStyle() const;
-    void setPageNumberStyle(const PageNumberStyle &pns);
+    const PageNumberStyle * pageNumberStyle() const;
+    void setPageNumberStyle(const PageNumberStyle & pns);
 
     void setLineCap(TLineCap s);
     void setLineJoin(TLineJoin s);
@@ -151,9 +150,9 @@ namespace ipe {
     //! Return name of style sheet.
     inline String name() const { return iName; }
     //! Set name of style sheet.
-    inline void setName(const String &name) { iName = name; }
+    inline void setName(const String & name) { iName = name; }
 
-  private:
+private:
     typedef std::map<int, Symbol> SymbolMap;
     typedef std::map<int, Gradient> GradientMap;
     typedef std::map<int, Tiling> TilingMap;
@@ -178,53 +177,52 @@ namespace ipe {
     TLineJoin iLineJoin;
     TLineCap iLineCap;
     TFillRule iFillRule;
-  };
+};
 
-
-  class Cascade {
-  public:
+class Cascade {
+public:
     Cascade();
-    Cascade(const Cascade &rhs);
-    Cascade &operator=(const Cascade &rhs);
+    Cascade(const Cascade & rhs);
+    Cascade & operator=(const Cascade & rhs);
     ~Cascade();
 
     //! Return number of style sheets.
     inline int count() const { return iSheets.size(); }
     //! Return StyleSheet at \a index.
-    inline StyleSheet *sheet(int index) { return iSheets[index]; }
+    inline StyleSheet * sheet(int index) { return iSheets[index]; }
     //! Return StyleSheet at \a index.
-    inline const StyleSheet *sheet(int index) const { return iSheets[index]; }
+    inline const StyleSheet * sheet(int index) const { return iSheets[index]; }
 
-    void insert(int index, StyleSheet *sheet);
+    void insert(int index, StyleSheet * sheet);
     void remove(int index);
 
-    void saveAsXml(Stream &stream) const;
+    void saveAsXml(Stream & stream) const;
 
     bool has(Kind kind, Attribute sym) const;
     Attribute find(Kind, Attribute sym) const;
-    const Symbol *findSymbol(Attribute sym) const;
-    const Gradient *findGradient(Attribute sym) const;
-    const Tiling *findTiling(Attribute sym) const;
-    const Effect *findEffect(Attribute sym) const;
-    const PageStyle *findPageStyle(Attribute sym) const;
-    const Layout *findLayout() const;
-    const TextPadding *findTextPadding() const;
-    const StyleSheet::TitleStyle *findTitleStyle() const;
-    const StyleSheet::PageNumberStyle *findPageNumberStyle() const;
+    const Symbol * findSymbol(Attribute sym) const;
+    const Gradient * findGradient(Attribute sym) const;
+    const Tiling * findTiling(Attribute sym) const;
+    const Effect * findEffect(Attribute sym) const;
+    const PageStyle * findPageStyle(Attribute sym) const;
+    const Layout * findLayout() const;
+    const TextPadding * findTextPadding() const;
+    const StyleSheet::TitleStyle * findTitleStyle() const;
+    const StyleSheet::PageNumberStyle * findPageNumberStyle() const;
     String findPreamble() const;
 
     TLineCap lineCap() const;
     TLineJoin lineJoin() const;
     TFillRule fillRule() const;
 
-    void allNames(Kind kind, AttributeSeq &seq) const;
+    void allNames(Kind kind, AttributeSeq & seq) const;
     int findDefinition(Kind kind, Attribute sym) const;
 
-  private:
+private:
     std::vector<StyleSheet *> iSheets;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

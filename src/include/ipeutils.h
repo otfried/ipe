@@ -39,134 +39,138 @@
 
 namespace ipe {
 
-  class Page;
+class Page;
 
-  class BitmapFinder : public Visitor {
-  public:
-    void scanPage(const Page *page);
+class BitmapFinder : public Visitor {
+public:
+    void scanPage(const Page * page);
 
-    virtual void visitGroup(const Group *obj);
-    virtual void visitImage(const Image *obj);
-  public:
+    virtual void visitGroup(const Group * obj);
+    virtual void visitImage(const Image * obj);
+
+public:
     std::vector<Bitmap> iBitmaps;
-  };
+};
 
-  class BBoxPainter : public Painter {
-  public:
-    BBoxPainter(const Cascade *style);
+class BBoxPainter : public Painter {
+public:
+    BBoxPainter(const Cascade * style);
     Rect bbox() const { return iBBox; }
 
-  protected:
+protected:
     virtual void doPush();
     virtual void doPop();
     virtual void doNewPath();
-    virtual void doMoveTo(const Vector &v);
-    virtual void doLineTo(const Vector &v);
-    virtual void doCurveTo(const Vector &v1, const Vector &v2,
-			   const Vector &v3);
+    virtual void doMoveTo(const Vector & v);
+    virtual void doLineTo(const Vector & v);
+    virtual void doCurveTo(const Vector & v1, const Vector & v2, const Vector & v3);
     virtual void doDrawPath(TPathMode mode);
     virtual void doDrawBitmap(Bitmap bitmap);
-    virtual void doDrawText(const Text *text);
+    virtual void doDrawText(const Text * text);
     virtual void doAddClipPath();
 
-  private:
+private:
     Rect iBBox;
     Vector iV;
     Rect iPathBox;
     std::list<Rect> iClipBox;
-  };
+};
 
-  class A85Stream : public Stream {
-  public:
-    A85Stream(Stream &stream);
+class A85Stream : public Stream {
+public:
+    A85Stream(Stream & stream);
     virtual void putChar(char ch);
     virtual void close();
-  private:
-    Stream &iStream;
+
+private:
+    Stream & iStream;
     uint8_t iCh[4];
     int iN;
     int iCol;
-  };
+};
 
-  class Base64Stream : public Stream {
-  public:
-    Base64Stream(Stream &stream);
+class Base64Stream : public Stream {
+public:
+    Base64Stream(Stream & stream);
     virtual void putChar(char ch);
     virtual void close();
-  private:
-    Stream &iStream;
+
+private:
+    Stream & iStream;
     uint8_t iCh[3];
     int iN;
     int iCol;
-  };
+};
 
-  class DeflateStream : public Stream {
-  public:
-    DeflateStream(Stream &stream, int level);
+class DeflateStream : public Stream {
+public:
+    DeflateStream(Stream & stream, int level);
     virtual ~DeflateStream();
     virtual void putChar(char ch);
     virtual void close();
 
-    static Buffer deflate(const char *data, int size,
-			  int &deflatedSize, int compressLevel);
+    static Buffer deflate(const char * data, int size, int & deflatedSize,
+			  int compressLevel);
 
-  private:
+private:
     struct Private;
 
-    Stream &iStream;
-    Private *iPriv;
+    Stream & iStream;
+    Private * iPriv;
     int iN;
     Buffer iIn;
     Buffer iOut;
-  };
+};
 
-  class A85Source : public DataSource {
-  public:
-    A85Source(DataSource &source);
+class A85Source : public DataSource {
+public:
+    A85Source(DataSource & source);
     //! Get one more character, or EOF.
     virtual int getChar();
-  private:
-    DataSource &iSource;
+
+private:
+    DataSource & iSource;
     bool iEof;
     int iN;
     int iIndex;
     uint8_t iBuf[4];
-  };
+};
 
-  class Base64Source : public DataSource {
-  public:
-    Base64Source(DataSource &source);
+class Base64Source : public DataSource {
+public:
+    Base64Source(DataSource & source);
     //! Get one more character, or EOF.
     virtual int getChar();
-  private:
-    DataSource &iSource;
-    bool  iEof;
-    int   iIndex;
-    int   iBufLen;
-    uint8_t iBuf[3];
-  };
 
-  class InflateSource : public DataSource {
-  public:
-    InflateSource(DataSource &source);
+private:
+    DataSource & iSource;
+    bool iEof;
+    int iIndex;
+    int iBufLen;
+    uint8_t iBuf[3];
+};
+
+class InflateSource : public DataSource {
+public:
+    InflateSource(DataSource & source);
     virtual ~InflateSource();
     //! Get one more character, or EOF.
     virtual int getChar();
 
-  private:
+private:
     void fillBuffer();
 
-  private:
+private:
     struct Private;
 
-    DataSource &iSource;
-    Private *iPriv;
-    char *iP;
+    DataSource & iSource;
+    Private * iPriv;
+    char * iP;
     Buffer iIn;
     Buffer iOut;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

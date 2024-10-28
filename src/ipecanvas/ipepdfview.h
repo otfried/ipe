@@ -33,7 +33,6 @@
 #include "ipelib.h"
 #include "ipepdfparser.h"
 
-
 // --------------------------------------------------------------------
 
 // Avoid including cairo.h
@@ -44,18 +43,18 @@ typedef struct _cairo_surface cairo_surface_t;
 
 namespace ipe {
 
-  class Fonts;
+class Fonts;
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class PdfViewBase {
+class PdfViewBase {
 
-  public:
+public:
     virtual ~PdfViewBase();
 
-    void setPdf(const PdfFile *pdf, Fonts *fonts);
-    void setPage(const PdfDict *page, const Rect &paper);
-    void setBackground(const Color &bg);
+    void setPdf(const PdfFile * pdf, Fonts * fonts);
+    void setPage(const PdfDict * page, const Rect & paper);
+    void setBackground(const Color & bg);
     void setBlackout(bool bo);
 
     //! Return current pan.
@@ -71,10 +70,10 @@ namespace ipe {
     //! Return current blackout state.
     bool blackout() const { return iBlackout; }
 
-    Vector devToUser(const Vector &arg) const;
-    Vector userToDev(const Vector &arg) const;
+    Vector devToUser(const Vector & arg) const;
+    Vector userToDev(const Vector & arg) const;
 
-    void setPan(const Vector &v);
+    void setPan(const Vector & v);
     void setZoom(double zoom);
 
     Matrix canvasTfm() const;
@@ -83,12 +82,12 @@ namespace ipe {
     virtual void invalidate(int x, int y, int w, int h) = 0;
     virtual void invalidate() = 0;
 
-  protected:
+protected:
     PdfViewBase();
-    void drawPaper(cairo_t *cc);
+    void drawPaper(cairo_t * cc);
     void refreshSurface();
 
-  protected:
+protected:
     double iWidth, iHeight;
     double iBWidth, iBHeight; // size of backing store
     Vector iPan;
@@ -97,18 +96,18 @@ namespace ipe {
     bool iBlackout;
 
     bool iRepaint;
-    cairo_surface_t *iSurface;
+    cairo_surface_t * iSurface;
 
     std::unique_ptr<Cascade> iCascade; // dummy stylesheet
 
-    const PdfDict *iPage;
+    const PdfDict * iPage;
     Rect iPaperBox;
-    const PdfDict *iStream;
-    const PdfFile *iPdf;
-    Fonts *iFonts;
-  };
+    const PdfDict * iStream;
+    const PdfFile * iPdf;
+    Fonts * iFonts;
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

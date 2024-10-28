@@ -32,88 +32,87 @@
 #ifndef IPEDOC_H
 #define IPEDOC_H
 
+#include "ipeimage.h"
 #include "ipeobject.h"
 #include "ipepage.h"
-#include "ipeimage.h"
 #include "ipestyle.h"
 
 // --------------------------------------------------------------------
 
 namespace ipe {
 
-  class BitmapFinder;
-  class PdfResources;
-  class Latex;
+class BitmapFinder;
+class PdfResources;
+class Latex;
 
-  //! Flags for saving Ipe documents (to PDF)
-  class SaveFlag {
-  public:
+//! Flags for saving Ipe documents (to PDF)
+class SaveFlag {
+public:
     enum {
-      SaveNormal = 0,   //!< Nothing special
-      Export = 1,       //!< Don't include Ipe markup
-      NoZip = 2,        //!< Do not compress streams
-      MarkedView = 4,   //!< Create marked views only
-      KeepNotes = 8,    //!< Keep page notes as PDF annotations even when exporting
+	SaveNormal = 0, //!< Nothing special
+	Export = 1,     //!< Don't include Ipe markup
+	NoZip = 2,      //!< Do not compress streams
+	MarkedView = 4, //!< Create marked views only
+	KeepNotes = 8,  //!< Keep page notes as PDF annotations even when exporting
     };
-  };
+};
 
-  //! There are several Ipe document formats.
-  enum class FileFormat {
-    Xml,  //!< Save as XML
-    Pdf,  //!< Save as PDF
+//! There are several Ipe document formats.
+enum class FileFormat {
+    Xml,    //!< Save as XML
+    Pdf,    //!< Save as PDF
     Unknown //!< Unknown file format
-  };
+};
 
-  class Document {
-  public:
+class Document {
+public:
     //! Properties of a document
     struct SProperties {
-      String iTitle;
-      String iAuthor;
-      String iSubject;
-      String iKeywords;
-      String iLanguage;
-      String iPreamble;
-      LatexType iTexEngine { LatexType::Default };
-      bool iFullScreen { false };
-      bool iNumberPages { false };
-      bool iSequentialText { false };
-      //! Date/time in PDF style "D:20010428191400" format.
-      String iCreated;
-      String iModified;
-      //! Program that created this document (e.g. "Ipe 7.5").
-      String iCreator;
+	String iTitle;
+	String iAuthor;
+	String iSubject;
+	String iKeywords;
+	String iLanguage;
+	String iPreamble;
+	LatexType iTexEngine{LatexType::Default};
+	bool iFullScreen{false};
+	bool iNumberPages{false};
+	bool iSequentialText{false};
+	//! Date/time in PDF style "D:20010428191400" format.
+	String iCreated;
+	String iModified;
+	//! Program that created this document (e.g. "Ipe 7.5").
+	String iCreator;
     };
 
     //! Errors that can happen while loading documents
     enum LoadErrors {
-      EVersionTooOld = -1,    //!< The version of the file is too old.
-      EVersionTooRecent = -2, //!< The file version is newer than this Ipelib.
-      EFileOpenError = -3,    //!< Error opening the file
-      ENotAnIpeFile = -4,     //!< The file was not created by Ipe.
+	EVersionTooOld = -1,    //!< The version of the file is too old.
+	EVersionTooRecent = -2, //!< The file version is newer than this Ipelib.
+	EFileOpenError = -3,    //!< Error opening the file
+	ENotAnIpeFile = -4,     //!< The file was not created by Ipe.
     };
 
     Document();
-    Document(const Document &rhs);
-    Document &operator=(const Document &rhs) = delete;
+    Document(const Document & rhs);
+    Document & operator=(const Document & rhs) = delete;
     ~Document();
 
-    static FileFormat fileFormat(DataSource &source);
+    static FileFormat fileFormat(DataSource & source);
     static FileFormat formatFromFilename(String fn);
 
-    static Document *load(DataSource &source, FileFormat format, int &reason);
+    static Document * load(DataSource & source, FileFormat format, int & reason);
 
-    static Document *load(const char *fname, int &reason);
-    static Document *loadWithErrorReport(const char *fname);
+    static Document * load(const char * fname, int & reason);
+    static Document * loadWithErrorReport(const char * fname);
 
-    bool save(TellStream &stream, FileFormat format, uint32_t flags) const;
-    bool save(const char *fname, FileFormat format, uint32_t flags) const;
-    bool exportPages(const char *fname, uint32_t flags,
-		     int fromPage, int toPage) const;
-    bool exportView(const char *fname, FileFormat format,
-		    uint32_t flags, int pno, int vno) const;
+    bool save(TellStream & stream, FileFormat format, uint32_t flags) const;
+    bool save(const char * fname, FileFormat format, uint32_t flags) const;
+    bool exportPages(const char * fname, uint32_t flags, int fromPage, int toPage) const;
+    bool exportView(const char * fname, FileFormat format, uint32_t flags, int pno,
+		    int vno) const;
 
-    void saveAsXml(Stream &stream, bool usePdfBitmaps = false) const;
+    void saveAsXml(Stream & stream, bool usePdfBitmaps = false) const;
 
     //! Return number of pages of document.
     int countPages() const { return int(iPages.size()); }
@@ -121,52 +120,59 @@ namespace ipe {
 
     //! Return page (const version).
     /*! The first page is no 0. */
-    const Page *page(int no) const { return iPages[no]; }
+    const Page * page(int no) const { return iPages[no]; }
     //! Return page.
     /*! The first page is no 0. */
-    Page *page(int no) { return iPages[no]; }
+    Page * page(int no) { return iPages[no]; }
 
     int findPage(String nameOrNumber) const;
 
-    Page *set(int no, Page *page);
-    void insert(int no, Page *page);
-    void push_back(Page *page);
-    Page *remove(int no);
+    Page * set(int no, Page * page);
+    void insert(int no, Page * page);
+    void push_back(Page * page);
+    Page * remove(int no);
 
     //! Return document properties.
     inline SProperties properties() const { return iProperties; }
-    void setProperties(const SProperties &info);
+    void setProperties(const SProperties & info);
 
     //! Return stylesheet cascade.
-    Cascade *cascade() { return iCascade; }
+    Cascade * cascade() { return iCascade; }
     //! Return stylesheet cascade (const version).
-    const Cascade *cascade() const { return iCascade; }
-    Cascade *replaceCascade(Cascade *cascade);
+    const Cascade * cascade() const { return iCascade; }
+    Cascade * replaceCascade(Cascade * cascade);
 
-    void setResources(PdfResources *resources);
+    void setResources(PdfResources * resources);
     //! Return the current PDF resources.
-    inline const PdfResources *resources() const noexcept { return iResources; }
+    inline const PdfResources * resources() const noexcept { return iResources; }
 
-    void findBitmaps(BitmapFinder &bm) const;
-    bool checkStyle(AttributeSeq &seq) const;
+    void findBitmaps(BitmapFinder & bm) const;
+    bool checkStyle(AttributeSeq & seq) const;
 
     //! Error codes returned by RunLatex.
-    enum { ErrNone, ErrNoText, ErrNoDir, ErrWritingSource,
-	   ErrRunLatex, ErrLatex, ErrLatexOutput };
-    int runLatex(String docname, String &logFile);
+    enum {
+	ErrNone,
+	ErrNoText,
+	ErrNoDir,
+	ErrWritingSource,
+	ErrRunLatex,
+	ErrLatex,
+	ErrLatexOutput
+    };
+    int runLatex(String docname, String & logFile);
     int runLatex(String docname);
-    int prepareLatexRun(Latex **pConverter);
+    int prepareLatexRun(Latex ** pConverter);
     void runLatexAsync(String docname);
-    int completeLatexRun(String &texLog, Latex *converter);
+    int completeLatexRun(String & texLog, Latex * converter);
 
-  private:
+private:
     std::vector<Page *> iPages;
-    Cascade *iCascade;
+    Cascade * iCascade;
     SProperties iProperties;
-    PdfResources *iResources;
-  };
+    PdfResources * iResources;
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

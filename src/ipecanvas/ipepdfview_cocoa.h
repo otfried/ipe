@@ -42,7 +42,7 @@ class PdfView;
 
 @interface IpePdfView : NSView
 
-@property PdfView *pdfView;
+@property PdfView * pdfView;
 
 @end
 
@@ -50,18 +50,17 @@ class PdfView;
 
 class PdfView : public ipe::PdfViewBase {
 public:
-  PdfView(IpePdfView *view);
-  virtual ~PdfView();
+    PdfView(IpePdfView * view);
+    virtual ~PdfView();
 
-  void drawRect(NSRect rect);
-
-private:
-  virtual void invalidate();
-  virtual void invalidate(int x, int y, int w, int h);
+    void drawRect(NSRect rect);
 
 private:
-  IpePdfView *iView;
+    virtual void invalidate();
+    virtual void invalidate(int x, int y, int w, int h);
 
+private:
+    IpePdfView * iView;
 };
 
 // --------------------------------------------------------------------

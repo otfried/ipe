@@ -42,35 +42,36 @@ class Canvas;
 
 @interface IpeCanvasView : NSView
 
-@property Canvas *canvas;
+@property Canvas * canvas;
 
 @end
 
 // --------------------------------------------------------------------
 
 class Canvas : public ipe::CanvasBase {
- public:
-  Canvas(IpeCanvasView *view);
-  virtual ~Canvas();
+public:
+    Canvas(IpeCanvasView * view);
+    virtual ~Canvas();
 
-  IpeCanvasView *view() { return iView; }
+    IpeCanvasView * view() { return iView; }
 
-  void button(bool press, NSEvent *event);
-  void mouseMove(NSEvent *event);
-  bool key(NSEvent *event);
-  void scrollWheel(NSEvent *event);
-  void magnify(NSEvent *event);
+    void button(bool press, NSEvent * event);
+    void mouseMove(NSEvent * event);
+    bool key(NSEvent * event);
+    void scrollWheel(NSEvent * event);
+    void magnify(NSEvent * event);
 
-  void drawRect(NSRect rect);
+    void drawRect(NSRect rect);
 
- private:
-  // void refreshLayer();
-  virtual void invalidate();
-  virtual void invalidate(int x, int y, int w, int h);
-  virtual void setCursor(TCursor cursor, double w, ipe::Color *color);
- private:
-  IpeCanvasView *iView;
-  // CGLayer *iLayer;
+private:
+    // void refreshLayer();
+    virtual void invalidate();
+    virtual void invalidate(int x, int y, int w, int h);
+    virtual void setCursor(TCursor cursor, double w, ipe::Color * color);
+
+private:
+    IpeCanvasView * iView;
+    // CGLayer *iLayer;
 };
 
 // --------------------------------------------------------------------

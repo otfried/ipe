@@ -1,0 +1,57 @@
+---
+BasedOnStyle: LLVM
+
+Language:        Cpp
+IndentWidth:     4
+Standard:        Cpp11
+TabWidth:        8
+UseTab:          ForContinuationAndIndentation
+SortIncludes:	 true
+SortUsingDeclarations: true
+ColumnLimit: 	  90
+IndentCaseLabels: false
+NamespaceIndentation: None
+SpaceBeforeParens: ControlStatements
+AllowShortIfStatementsOnASingleLine: true
+AllowShortBlocksOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakAfterReturnType: None
+PointerAlignment: Middle
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeComma
+AlwaysBreakTemplateDeclarations: true
+AccessModifierOffset: -4
+CommentPragmas: '^ -\*- mode'
+...
+
+
+Language: ObjC
+IndentWidth:     4
+Standard:        Cpp11
+TabWidth:        8
+UseTab:          ForContinuationAndIndentation
+SortIncludes:	 true
+SortUsingDeclarations: true
+ColumnLimit: 	  90
+IndentCaseLabels: false
+NamespaceIndentation: None
+SpaceBeforeParens: ControlStatements
+AllowShortIfStatementsOnASingleLine: true
+AllowShortBlocksOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakAfterReturnType: None
+PointerAlignment: Middle
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeComma
+AlwaysBreakTemplateDeclarations: true
+AccessModifierOffset: -4
+CommentPragmas: '^ -\*- mode'
+...
+
+

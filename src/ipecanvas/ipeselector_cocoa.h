@@ -39,42 +39,42 @@
 
 @interface IpeSelectorProvider : NSObject
 
-@property NSMutableArray *images;
-@property ipe::Document *doc;
-@property ipe::Thumbnail *thumb;
+@property NSMutableArray * images;
+@property ipe::Document * doc;
+@property ipe::Thumbnail * thumb;
 @property int page;
 @property NSSize tnSize;
-@property NSMutableArray <NSNumber *> *marks;
+@property NSMutableArray<NSNumber *> * marks;
 
-- (int) count;
-- (NSString *) title:(int) index;
-- (NSImage *) image:(int) index;
-- (BOOL) marked:(int) index;
+- (int)count;
+- (NSString *)title:(int)index;
+- (NSImage *)image:(int)index;
+- (BOOL)marked:(int)index;
 
-- (void) createMarks;
-- (ipe::Buffer) renderImage:(int) index;
-- (NSImage *) createImage:(ipe::Buffer) b;
+- (void)createMarks;
+- (ipe::Buffer)renderImage:(int)index;
+- (NSImage *)createImage:(ipe::Buffer)b;
 
 @end
 
 @interface IpeSelectorItem : NSObject
 
 @property int index;
-@property (assign) IpeSelectorProvider *provider;
+@property(assign) IpeSelectorProvider * provider;
 
 @end
 
 @interface IpeSelectorView : NSView
-@property (assign) NSButton *button;
+@property(assign) NSButton * button;
 
-- (void) ipeSet:(IpeSelectorItem *) item;
+- (void)ipeSet:(IpeSelectorItem *)item;
 @end
 
 @interface IpeSelectorPrototype : NSCollectionViewItem
 @end
 
 extern int showPageSelectDialog(int width, int height, const char * title,
-				IpeSelectorProvider *provider, int startIndex);
+				IpeSelectorProvider * provider, int startIndex);
 
 // --------------------------------------------------------------------
 #endif

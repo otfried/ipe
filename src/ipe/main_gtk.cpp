@@ -43,87 +43,82 @@ using namespace ipelua;
 
 // --------------------------------------------------------------------
 
-static void setup_globals(lua_State *L)
-{
-  lua_getglobal(L, "package");
-  const char *luapath = getenv("IPELUAPATH");
-  if (luapath)
-    lua_pushstring(L, luapath);
-  else
-    lua_pushliteral(L, IPELUADIR "/?.lua");
-  lua_setfield(L, -2, "path");
+static void setup_globals(lua_State * L) {
+    lua_getglobal(L, "package");
+    const char * luapath = getenv("IPELUAPATH");
+    if (luapath)
+	lua_pushstring(L, luapath);
+    else
+	lua_pushliteral(L, IPELUADIR "/?.lua");
+    lua_setfield(L, -2, "path");
 
-  lua_newtable(L);  // config table
-  lua_pushliteral(L, "unix");
-  lua_setfield(L, -2, "platform");
-  lua_pushliteral(L, "gtk");
-  lua_setfield(L, -2, "toolkit");
+    lua_newtable(L); // config table
+    lua_pushliteral(L, "unix");
+    lua_setfield(L, -2, "platform");
+    lua_pushliteral(L, "gtk");
+    lua_setfield(L, -2, "toolkit");
 
-  setup_config(L, "system_styles", nullptr, IPESTYLEDIR);
-  setup_config(L, "system_ipelets", nullptr, IPELETDIR);
-  setup_config(L, "docdir", "IPEDOCDIR", IPEDOCDIR);
+    setup_config(L, "system_styles", nullptr, IPESTYLEDIR);
+    setup_config(L, "system_ipelets", nullptr, IPELETDIR);
+    setup_config(L, "docdir", "IPEDOCDIR", IPEDOCDIR);
 
-  push_string(L, Platform::latexDirectory());
-  lua_setfield(L, -2, "latexdir");
-  push_string(L, Platform::latexPath());
-  lua_setfield(L, -2, "latexpath");
-  push_string(L, ipeIconDirectory());
-  lua_setfield(L, -2, "icons");
+    push_string(L, Platform::latexDirectory());
+    lua_setfield(L, -2, "latexdir");
+    push_string(L, Platform::latexPath());
+    lua_setfield(L, -2, "latexpath");
+    push_string(L, ipeIconDirectory());
+    lua_setfield(L, -2, "icons");
 
-  lua_pushfstring(L, "Ipe %d.%d.%d",
-		  IPELIB_VERSION / 10000,
-		  (IPELIB_VERSION / 100) % 100,
-		  IPELIB_VERSION % 100);
-  lua_setfield(L, -2, "version");
+    lua_pushfstring(L, "Ipe %d.%d.%d", IPELIB_VERSION / 10000,
+		    (IPELIB_VERSION / 100) % 100, IPELIB_VERSION % 100);
+    lua_setfield(L, -2, "version");
 
-  GdkScreen* screen = gdk_screen_get_default();
-  int width = gdk_screen_get_width(screen);
-  int height = gdk_screen_get_height(screen);
-  ipeDebug("Screen resolution is (%d x %d)", width, height);
+    GdkScreen * screen = gdk_screen_get_default();
+    int width = gdk_screen_get_width(screen);
+    int height = gdk_screen_get_height(screen);
+    ipeDebug("Screen resolution is (%d x %d)", width, height);
 
-  setup_common_config(L);
+    setup_common_config(L);
 
-  lua_createtable(L, 0, 2);
-  lua_pushinteger(L, width);
-  lua_rawseti(L, -2, 1);
-  lua_pushinteger(L, height);
-  lua_rawseti(L, -2, 2);
-  lua_setfield(L, -2, "screen_geometry");
+    lua_createtable(L, 0, 2);
+    lua_pushinteger(L, width);
+    lua_rawseti(L, -2, 1);
+    lua_pushinteger(L, height);
+    lua_rawseti(L, -2, 2);
+    lua_setfield(L, -2, "screen_geometry");
 
-  lua_setglobal(L, "config");
+    lua_setglobal(L, "config");
 
-  lua_pushcfunction(L, ipe_tonumber);
-  lua_setglobal(L, "tonumber");
+    lua_pushcfunction(L, ipe_tonumber);
+    lua_setglobal(L, "tonumber");
 }
 
 // --------------------------------------------------------------------
 
-int mainloop(lua_State *L)
-{
-  gtk_main();
-  return 0;
+int mainloop(lua_State * L) {
+    gtk_main();
+    return 0;
 }
 
-int main(int argc, char *argv[])
-{
-  Platform::initLib(IPELIB_VERSION);
-  gtk_init(&argc, &argv);
-  lua_State *L = setup_lua();
+int main(int argc, char * argv[]) {
+    Platform::initLib(IPELIB_VERSION);
+    gtk_init(&argc, &argv);
+    lua_State * L = setup_lua();
 
-  // create table with arguments
-  lua_createtable(L, 0, argc - 1);
-  for (int i = 1; i < argc; ++i) {
-    lua_pushstring(L, argv[i]);
-    lua_rawseti(L, -2, i);
-  }
-  lua_setglobal(L, "argv");
+    // create table with arguments
+    lua_createtable(L, 0, argc - 1);
+    for (int i = 1; i < argc; ++i) {
+	lua_pushstring(L, argv[i]);
+	lua_rawseti(L, -2, i);
+    }
+    lua_setglobal(L, "argv");
 
-  setup_globals(L);
+    setup_globals(L);
 
-  lua_run_ipe(L, mainloop);
+    lua_run_ipe(L, mainloop);
 
-  lua_close(L);
-  return 0;
+    lua_close(L);
+    return 0;
 }
 
 // --------------------------------------------------------------------

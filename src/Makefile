@@ -95,4 +95,7 @@ book:
 documentation:
 	$(MAKE) --directory=ipelib documentation
 
+format:
+	clang-format -i */*.h */*.cpp
+
 # --------------------------------------------------------------------

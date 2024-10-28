@@ -35,11 +35,12 @@
 using namespace emscripten;
 
 EMSCRIPTEN_BINDINGS(ipecairo) {
-  class_<ipe::Thumbnail>("Thumbnail")
-    .constructor<ipe::Document *, int>()
-    .property("width", &ipe::Thumbnail::width)
-    .property("height", &ipe::Thumbnail::height)
-    .function("render", &ipe::Thumbnail::render, return_value_policy::take_ownership());
+    class_<ipe::Thumbnail>("Thumbnail")
+	.constructor<ipe::Document *, int>()
+	.property("width", &ipe::Thumbnail::width)
+	.property("height", &ipe::Thumbnail::height)
+	.function("render", &ipe::Thumbnail::render,
+		  return_value_policy::take_ownership());
 }
 
 // --------------------------------------------------------------------

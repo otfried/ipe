@@ -33,57 +33,57 @@
 #define IPEPSWRITER_H
 
 #include "ipebase.h"
-#include "ipepage.h"
 #include "ipedoc.h"
 #include "ipeimage.h"
+#include "ipepage.h"
 #include "ipepdfwriter.h"
 
 // --------------------------------------------------------------------
 
 namespace ipe {
 
-  struct Font;
+struct Font;
 
-  class PsPainter : public PdfPainter {
-  public:
-    PsPainter(const Cascade *style, Stream &stream);
+class PsPainter : public PdfPainter {
+public:
+    PsPainter(const Cascade * style, Stream & stream);
     ~PsPainter();
 
-  protected:
+protected:
     virtual void doNewPath();
     virtual void doDrawPath(TPathMode mode);
     virtual void doDrawBitmap(Bitmap bitmap);
     virtual void doAddClipPath();
 
-  private:
+private:
     void strokePath();
     void fillPath(bool eoFill, bool preservePath);
 
-  private:
+private:
     int iImageNumber;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class PsWriter {
-  public:
-    PsWriter(TellStream &stream, const Document *doc, bool noColor);
+class PsWriter {
+public:
+    PsWriter(TellStream & stream, const Document * doc, bool noColor);
     ~PsWriter();
     bool createHeader(int pno = 0, int vno = 0);
     void createPageView(int pno = 0, int vno = 0);
     void createXml(int compressLevel);
     void createTrailer();
 
-  private:
-    void embedFont(const Font &font);
+private:
+    void embedFont(const Font & font);
 
 private:
-    TellStream &iStream;
-    const Document *iDoc;
+    TellStream & iStream;
+    const Document * iDoc;
     bool iNoColor;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

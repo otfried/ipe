@@ -39,42 +39,45 @@
 
 namespace ipe {
 
-  class Page;
+class Page;
 
-  class Snap {
-  public:
+class Snap {
+public:
     //! The different snap modes as bitmasks.
-    enum TSnapModes { ESnapNone = 0,
-		      ESnapVtx = 1, ESnapCtl = 2,
-		      ESnapBd = 4, ESnapInt = 8,
-		      ESnapGrid = 0x10, ESnapAngle = 0x20,
-		      ESnapAuto = 0x40, ESnapCustom = 0x80 };
+    enum TSnapModes {
+	ESnapNone = 0,
+	ESnapVtx = 1,
+	ESnapCtl = 2,
+	ESnapBd = 4,
+	ESnapInt = 8,
+	ESnapGrid = 0x10,
+	ESnapAngle = 0x20,
+	ESnapAuto = 0x40,
+	ESnapCustom = 0x80
+    };
 
-    int iSnap;           //!< Activated snapping modes (TSnapModes)
-    bool iGridVisible;   //!< Is the grid visible?
-    int iGridSize;       //!< Snap grid spacing.
-    double iAngleSize;   //!< Angle for angular snapping.
-    int iSnapDistance;   //!< Snap distance (in pixels).
-    bool iWithAxes;      //!< Show coordinate system?
-    Vector iOrigin;      //!< Origin of coordinate system
-    Angle iDir;          //!< Direction of x-axis
+    int iSnap;         //!< Activated snapping modes (TSnapModes)
+    bool iGridVisible; //!< Is the grid visible?
+    int iGridSize;     //!< Snap grid spacing.
+    double iAngleSize; //!< Angle for angular snapping.
+    int iSnapDistance; //!< Snap distance (in pixels).
+    bool iWithAxes;    //!< Show coordinate system?
+    Vector iOrigin;    //!< Origin of coordinate system
+    Angle iDir;        //!< Direction of x-axis
 
-    void intersectionSnap(const Vector &pos,  Vector &fifi,
-			  const Page *page, int view,
-			  double &snapDist) const noexcept;
-    bool snapAngularIntersection(Vector &pos, const Line &l,
-				 const Page *page, int view,
-				 double snapDist) const noexcept;
-    TSnapModes simpleSnap(Vector &pos, const Page *page, int view,
-			  double snapDist, Tool *tool = nullptr) const noexcept;
-    TSnapModes snap(Vector &pos, const Page *page, int view,
-		    double snapDist, Tool *tool = nullptr,
-		    Vector *autoOrg = nullptr) const noexcept;
-    Line getLine(const Vector &mouse, const Vector &base) const noexcept;
-    bool setEdge(const Vector &pos, const Page *page, int view) noexcept;
-  };
+    void intersectionSnap(const Vector & pos, Vector & fifi, const Page * page, int view,
+			  double & snapDist) const noexcept;
+    bool snapAngularIntersection(Vector & pos, const Line & l, const Page * page,
+				 int view, double snapDist) const noexcept;
+    TSnapModes simpleSnap(Vector & pos, const Page * page, int view, double snapDist,
+			  Tool * tool = nullptr) const noexcept;
+    TSnapModes snap(Vector & pos, const Page * page, int view, double snapDist,
+		    Tool * tool = nullptr, Vector * autoOrg = nullptr) const noexcept;
+    Line getLine(const Vector & mouse, const Vector & base) const noexcept;
+    bool setEdge(const Vector & pos, const Page * page, int view) noexcept;
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

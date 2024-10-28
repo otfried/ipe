@@ -30,16 +30,14 @@
 #ifndef IPEUILAYOUT_H
 #define IPEUILAYOUT_H
 
-extern void addToLayout(NSView *view, NSView *subview);
+extern void addToLayout(NSView * view, NSView * subview);
 
-extern id layoutGuide(NSView *owner);
+extern id layoutGuide(NSView * owner);
 
-extern NSLayoutConstraint *layout(id a, id b, const char *rel,
-				  double gap = 0.0,
-				  double multiplier=1.0,
-				  BOOL activate=YES);
+extern NSLayoutConstraint * layout(id a, id b, const char * rel, double gap = 0.0,
+				   double multiplier = 1.0, BOOL activate = YES);
 
-extern NSString *ipeui_set_mnemonic(NSString *title, NSButton *button);
+extern NSString * ipeui_set_mnemonic(NSString * title, NSButton * button);
 
 // --------------------------------------------------------------------
 #endif

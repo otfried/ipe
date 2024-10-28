@@ -53,91 +53,83 @@ using namespace ipe;
   is computed automatically).
 */
 
-PageSelector::PageSelector(QWidget *parent)
-  : QListWidget(parent)
-{
-  setViewMode(QListView::IconMode);
-  setSelectionMode(QAbstractItemView::SingleSelection);
-  setResizeMode(QListView::Adjust);
-  setWrapping(true);
-  setUniformItemSizes(true);
-  setFlow(QListView::LeftToRight);
-  setSpacing(10);
-  setMovement(QListView::Static);
+PageSelector::PageSelector(QWidget * parent)
+    : QListWidget(parent) {
+    setViewMode(QListView::IconMode);
+    setSelectionMode(QAbstractItemView::SingleSelection);
+    setResizeMode(QListView::Adjust);
+    setWrapping(true);
+    setUniformItemSizes(true);
+    setFlow(QListView::LeftToRight);
+    setSpacing(10);
+    setMovement(QListView::Static);
 
-  connect(this, SIGNAL(itemActivated(QListWidgetItem *)),
-	  SLOT(pageSelected(QListWidgetItem *)));
+    connect(this, SIGNAL(itemActivated(QListWidgetItem *)),
+	    SLOT(pageSelected(QListWidgetItem *)));
 }
 
-void PageSelector::pageSelected(QListWidgetItem *item)
-{
-  emit selectionMade();
-}
+void PageSelector::pageSelected(QListWidgetItem * item) { emit selectionMade(); }
 
-void PageSelector::fill(std::vector<QPixmap> &icons, std::vector<String> &labels)
-{
-  int maxWidth = 0;
-  int maxHeight = 0;
-  for (const auto & icon : icons) {
-    if (icon.width() > maxWidth)
-      maxWidth = icon.width();
-    if (icon.height() > maxHeight)
-      maxHeight = icon.height();
-  }
-  setGridSize(QSize(maxWidth + 10, maxHeight + 50));
-  setIconSize(QSize(maxWidth, maxHeight));
+void PageSelector::fill(std::vector<QPixmap> & icons, std::vector<String> & labels) {
+    int maxWidth = 0;
+    int maxHeight = 0;
+    for (const auto & icon : icons) {
+	if (icon.width() > maxWidth) maxWidth = icon.width();
+	if (icon.height() > maxHeight) maxHeight = icon.height();
+    }
+    setGridSize(QSize(maxWidth + 10, maxHeight + 50));
+    setIconSize(QSize(maxWidth, maxHeight));
 
-  for (size_t i = 0; i < icons.size(); ++i) {
-    QString s = QString::fromUtf8(labels[i].z());
-    QListWidgetItem *item = new QListWidgetItem(QIcon(icons[i]), s);
-    item->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-    item->setToolTip(s);
-    addItem(item);
-  }
+    for (size_t i = 0; i < icons.size(); ++i) {
+	QString s = QString::fromUtf8(labels[i].z());
+	QListWidgetItem * item = new QListWidgetItem(QIcon(icons[i]), s);
+	item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+	item->setToolTip(s);
+	addItem(item);
+    }
 }
 
 // --------------------------------------------------------------------
 
-static void fillWithPages(PageSelector *sel, Document *doc, int page, int itemWidth)
-{
-  Thumbnail r(doc, itemWidth);
-  std::vector<QPixmap> icons;
-  std::vector<String> labels;
-  if (page >= 0) {
-    Page *p = doc->page(page);
-    for (int i = 0; i < p->countViews(); ++i) {
-      Buffer b = r.render(p, i);
-      QImage bits((const uchar *) b.data(), itemWidth, r.height(),
-		  QImage::Format_RGB32);
-      // need to copy bits since buffer b is temporary
-      icons.push_back(QPixmap::fromImage(bits.copy()));
-      String s;
-      StringStream ss(s);
-      if (!p->viewName(i).empty())
-	ss << i+1 << ": " << p->viewName(i);
-      else
-	ss << "View " << i+1;
-      labels.push_back(s);
-    }
-  } else {
-    for (int i = 0; i < doc->countPages(); ++i) {
-      Page *p = doc->page(i);
-      Buffer b = r.render(p, p->countViews() - 1);
-      QImage bits((const uchar *) b.data(), itemWidth, r.height(),
-		  QImage::Format_RGB32);
-      // need to copy bits since buffer b is temporary
-      icons.push_back(QPixmap::fromImage(bits.copy()));
+static void fillWithPages(PageSelector * sel, Document * doc, int page, int itemWidth) {
+    Thumbnail r(doc, itemWidth);
+    std::vector<QPixmap> icons;
+    std::vector<String> labels;
+    if (page >= 0) {
+	Page * p = doc->page(page);
+	for (int i = 0; i < p->countViews(); ++i) {
+	    Buffer b = r.render(p, i);
+	    QImage bits((const uchar *)b.data(), itemWidth, r.height(),
+			QImage::Format_RGB32);
+	    // need to copy bits since buffer b is temporary
+	    icons.push_back(QPixmap::fromImage(bits.copy()));
+	    String s;
+	    StringStream ss(s);
+	    if (!p->viewName(i).empty())
+		ss << i + 1 << ": " << p->viewName(i);
+	    else
+		ss << "View " << i + 1;
+	    labels.push_back(s);
+	}
+    } else {
+	for (int i = 0; i < doc->countPages(); ++i) {
+	    Page * p = doc->page(i);
+	    Buffer b = r.render(p, p->countViews() - 1);
+	    QImage bits((const uchar *)b.data(), itemWidth, r.height(),
+			QImage::Format_RGB32);
+	    // need to copy bits since buffer b is temporary
+	    icons.push_back(QPixmap::fromImage(bits.copy()));
 
-      String s;
-      StringStream ss(s);
-      if (!p->title().empty())
-	ss << i+1 << ": " << p->title();
-      else
-	ss << "Page " << i+1;
-      labels.push_back(s);
+	    String s;
+	    StringStream ss(s);
+	    if (!p->title().empty())
+		ss << i + 1 << ": " << p->title();
+	    else
+		ss << "Page " << i + 1;
+	    labels.push_back(s);
+	}
     }
-  }
-  sel->fill(icons, labels);
+    sel->fill(icons, labels);
 }
 
 // --------------------------------------------------------------------
@@ -150,29 +142,27 @@ static void fillWithPages(PageSelector *sel, Document *doc, int page, int itemWi
 
     If \a page is non-negative, all views of this page are shown, and
     the selected view number is returned. */
-int CanvasBase::selectPageOrView(Document *doc, int page, int startIndex,
-				 int pageWidth, int width, int height)
-{
-  QDialog *d = new QDialog();
-  d->setWindowTitle((page >= 0) ? "Ipe: Select view" :
-		    "Ipe: Select page");
+int CanvasBase::selectPageOrView(Document * doc, int page, int startIndex, int pageWidth,
+				 int width, int height) {
+    QDialog * d = new QDialog();
+    d->setWindowTitle((page >= 0) ? "Ipe: Select view" : "Ipe: Select page");
 
-  QLayout *lo = new QVBoxLayout;
-  PageSelector *p = new PageSelector(d);
-  fillWithPages(p, doc, page, pageWidth);
+    QLayout * lo = new QVBoxLayout;
+    PageSelector * p = new PageSelector(d);
+    fillWithPages(p, doc, page, pageWidth);
 
-  lo->addWidget(p);
-  d->setLayout(lo);
+    lo->addWidget(p);
+    d->setLayout(lo);
 
-  QWidget::connect(p, SIGNAL(selectionMade()), d, SLOT(accept()));
+    QWidget::connect(p, SIGNAL(selectionMade()), d, SLOT(accept()));
 
-  d->resize(width, height);
-  p->setCurrentRow(startIndex);
-  int result = d->exec();
-  int sel = p->selectedIndex();
-  delete d;
+    d->resize(width, height);
+    p->setCurrentRow(startIndex);
+    int result = d->exec();
+    int sel = p->selectedIndex();
+    delete d;
 
-  return (result == QDialog::Rejected) ? -1 : sel;
+    return (result == QDialog::Rejected) ? -1 : sel;
 }
 
 // --------------------------------------------------------------------

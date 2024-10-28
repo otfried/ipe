@@ -36,59 +36,51 @@ using namespace ipe;
 using namespace emscripten;
 
 namespace {
-  Latex *converter = nullptr;
+Latex * converter = nullptr;
 
-  Document *loadWithErrorReport(std::string s) {
+Document * loadWithErrorReport(std::string s) {
     return Document::loadWithErrorReport(s.c_str());
-  }
+}
 
-  int prepareLatexRun(Document *doc) {
+int prepareLatexRun(Document * doc) {
     converter = nullptr;
     return doc->prepareLatexRun(&converter);
-  }
+}
 
-  int completeLatexRun(Document *doc) {
+int completeLatexRun(Document * doc) {
     String log;
     return doc->completeLatexRun(log, converter);
-  }
+}
 
-  Page *getPage(Document *doc, int pno) {
-    return doc->page(pno);
-  }
+Page * getPage(Document * doc, int pno) { return doc->page(pno); }
 
-  val getBytes(Buffer & buffer) {
-    return val(typed_memory_view(buffer.size(), (uint8_t *) buffer.data()));
-  }
-};
+val getBytes(Buffer & buffer) {
+    return val(typed_memory_view(buffer.size(), (uint8_t *)buffer.data()));
+}
+}; // namespace
 
 EMSCRIPTEN_BINDINGS(ipelib) {
-  value_object<Vector>("Vector")
-    .field("x", &Vector::x)
-    .field("y", &Vector::y);
+    value_object<Vector>("Vector").field("x", &Vector::x).field("y", &Vector::y);
 
-  class_<Buffer>("Buffer")
-    .property("size", &Buffer::size)
-    .function("data", &getBytes);
+    class_<Buffer>("Buffer").property("size", &Buffer::size).function("data", &getBytes);
 
-  class_<Page>("Page")
-    .property("count", &Page::count)
-    .property("countLayers", &Page::countLayers)
-    .property("countViews", &Page::countViews);
+    class_<Page>("Page")
+	.property("count", &Page::count)
+	.property("countLayers", &Page::countLayers)
+	.property("countViews", &Page::countViews);
 
-  class_<Cascade>("Cascade")
-    .property("count", &Cascade::count);
+    class_<Cascade>("Cascade").property("count", &Cascade::count);
 
-  class_<Document>("Document")
-    .constructor<>()
-    .property("countPages", &Document::countPages)
-    .function("prepareLatexRun", &prepareLatexRun, allow_raw_pointers())
-    .function("completeLatexRun", &completeLatexRun, allow_raw_pointers())
-    .function("page", &getPage, allow_raw_pointers())
-    .function("cascade", select_overload<Cascade *()>(&Document::cascade),
-	      allow_raw_pointers())
-    ;
-  function("loadWithErrorReport", &loadWithErrorReport, return_value_policy::take_ownership());
-
+    class_<Document>("Document")
+	.constructor<>()
+	.property("countPages", &Document::countPages)
+	.function("prepareLatexRun", &prepareLatexRun, allow_raw_pointers())
+	.function("completeLatexRun", &completeLatexRun, allow_raw_pointers())
+	.function("page", &getPage, allow_raw_pointers())
+	.function("cascade", select_overload<Cascade *()>(&Document::cascade),
+		  allow_raw_pointers());
+    function("loadWithErrorReport", &loadWithErrorReport,
+	     return_value_policy::take_ownership());
 }
 
 // --------------------------------------------------------------------

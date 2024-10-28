@@ -39,38 +39,39 @@
 
 // --------------------------------------------------------------------
 
-class Waiter : public QObject
-{
-  Q_OBJECT
+class Waiter : public QObject {
+    Q_OBJECT
 
 public:
-  Waiter(const QString &cmd);
+    Waiter(const QString & cmd);
 
 signals:
-  void completed();
+    void completed();
 public slots:
-  void process();
+    void process();
+
 private:
-  QString iCommand;
+    QString iCommand;
 };
 
-class WaitDialog : public QDialog
-{
-  Q_OBJECT
+class WaitDialog : public QDialog {
+    Q_OBJECT
 
 public:
-  WaitDialog(QString label, AppUiBase *observer);
-  bool showDialog(); // returns true if dialog is showing now
-  bool isRunning() const noexcept { return running; }
+    WaitDialog(QString label, AppUiBase * observer);
+    bool showDialog(); // returns true if dialog is showing now
+    bool isRunning() const noexcept { return running; }
 public slots:
-  void completed();
+    void completed();
+
 protected:
-  void keyPressEvent(QKeyEvent *e);
-  void closeEvent(QCloseEvent *ev);
+    void keyPressEvent(QKeyEvent * e);
+    void closeEvent(QCloseEvent * ev);
+
 private:
-  AppUiBase *observer;
-  bool running; // the waiter has not yet signaled completed
-  QMutex mutex; // locked when dialog is waiting modally
+    AppUiBase * observer;
+    bool running; // the waiter has not yet signaled completed
+    QMutex mutex; // locked when dialog is waiting modally
 };
 
 // --------------------------------------------------------------------

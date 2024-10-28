@@ -39,29 +39,29 @@
 
 namespace ipe {
 
-  class Image : public Object {
-  public:
-    explicit Image(const Rect &rect, Bitmap bitmap);
-    explicit Image(const XmlAttributes &attr, String data);
-    explicit Image(const XmlAttributes &attr, Bitmap bitmap);
+class Image : public Object {
+public:
+    explicit Image(const Rect & rect, Bitmap bitmap);
+    explicit Image(const XmlAttributes & attr, String data);
+    explicit Image(const XmlAttributes & attr, Bitmap bitmap);
 
-    virtual Object *clone() const override;
+    virtual Object * clone() const override;
 
-    virtual Image *asImage() override;
+    virtual Image * asImage() override;
 
     virtual Type type() const override;
 
-    virtual void saveAsXml(Stream &stream, String layer) const override;
-    virtual void draw(Painter &painter) const override;
-    virtual void drawSimple(Painter &painter) const override;
+    virtual void saveAsXml(Stream & stream, String layer) const override;
+    virtual void draw(Painter & painter) const override;
+    virtual void drawSimple(Painter & painter) const override;
 
-    virtual void accept(Visitor &visitor) const override;
+    virtual void accept(Visitor & visitor) const override;
 
-    virtual double distance(const Vector &v, const Matrix &m,
+    virtual double distance(const Vector & v, const Matrix & m,
 			    double bound) const override;
-    virtual void addToBBox(Rect &box, const Matrix &m, bool) const override;
-    virtual void snapCtl(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const override;
+    virtual void addToBBox(Rect & box, const Matrix & m, bool) const override;
+    virtual void snapCtl(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const override;
 
     inline Rect rect() const;
     inline Bitmap bitmap() const;
@@ -73,30 +73,25 @@ namespace ipe {
     //! Return opacity of the opject.
     inline Attribute opacity() const { return iOpacity; }
 
-  private:
-    void init(const XmlAttributes &attr);
-  private:
+private:
+    void init(const XmlAttributes & attr);
+
+private:
     Rect iRect;
     Bitmap iBitmap;
     Attribute iOpacity;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  //! Return the rectangle occupied by the image on the paper.
-  /*! The transformation matrix is applied to this, of course. */
-  inline Rect Image::rect() const
-  {
-    return iRect;
-  }
+//! Return the rectangle occupied by the image on the paper.
+/*! The transformation matrix is applied to this, of course. */
+inline Rect Image::rect() const { return iRect; }
 
-  //! Return Bitmap of the image.
-  inline Bitmap Image::bitmap() const
-  {
-    return iBitmap;
-  }
+//! Return Bitmap of the image.
+inline Bitmap Image::bitmap() const { return iBitmap; }
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

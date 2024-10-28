@@ -3,28 +3,28 @@
 // --------------------------------------------------------------------
 /*
 
-    This file is part of the extensible drawing editor Ipe.
-    Copyright (c) 1993-2024 Otfried Cheong
+	This file is part of the extensible drawing editor Ipe.
+	Copyright (c) 1993-2024 Otfried Cheong
 
-    Ipe is free software; you can redistribute it and/or modify it
-    under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
+	Ipe is free software; you can redistribute it and/or modify it
+	under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 3 of the License, or
+	(at your option) any later version.
 
-    As a special exception, you have permission to link Ipe with the
-    CGAL library and distribute executables, as long as you follow the
-    requirements of the Gnu General Public License in regard to all of
-    the software in the executable aside from CGAL.
+	As a special exception, you have permission to link Ipe with the
+	CGAL library and distribute executables, as long as you follow the
+	requirements of the Gnu General Public License in regard to all of
+	the software in the executable aside from CGAL.
 
-    Ipe is distributed in the hope that it will be useful, but WITHOUT
-    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-    License for more details.
+	Ipe is distributed in the hope that it will be useful, but WITHOUT
+	ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+	or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+	License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Ipe; if not, you can find it at
-    "http://www.gnu.org/copyleft/gpl.html", or write to the Free
-    Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+	You should have received a copy of the GNU General Public License
+	along with Ipe; if not, you can find it at
+	"http://www.gnu.org/copyleft/gpl.html", or write to the Free
+	Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 */
 
@@ -124,8 +124,8 @@
 
 */
 
-#include "ipegeo.h"
 #include "ipeobject.h"
+#include "ipegeo.h"
 #include "ipepainter.h"
 
 using namespace ipe;
@@ -160,246 +160,182 @@ using namespace ipe;
 */
 
 //! Construct from XML stream.
-Object::Object(const XmlAttributes &attr)
-{
-  String str;
-  if (attr.has("matrix", str))
-    iMatrix = Matrix(str);
-  iPinned = ENoPin;
-  if (attr.has("pin", str)) {
-    if (str == "yes")
-      iPinned = EFixedPin;
-    else if (str == "h")
-      iPinned = EHorizontalPin;
-    else if (str == "v")
-      iPinned = EVerticalPin;
-  }
-  iTransformations = ETransformationsAffine;
-  if (attr.has("transformations", str) && !str.empty()) {
-    if (str == "rigid")
-      iTransformations = ETransformationsRigidMotions;
-    else if (str == "translations")
-      iTransformations = ETransformationsTranslations;
-  }
-  iCustom = Attribute::UNDEFINED();
-  if (attr.has("custom", str) && !str.empty())
-    iCustom = Attribute(false, str);
+Object::Object(const XmlAttributes & attr) {
+    String str;
+    if (attr.has("matrix", str)) iMatrix = Matrix(str);
+    iPinned = ENoPin;
+    if (attr.has("pin", str)) {
+	if (str == "yes")
+	    iPinned = EFixedPin;
+	else if (str == "h")
+	    iPinned = EHorizontalPin;
+	else if (str == "v")
+	    iPinned = EVerticalPin;
+    }
+    iTransformations = ETransformationsAffine;
+    if (attr.has("transformations", str) && !str.empty()) {
+	if (str == "rigid")
+	    iTransformations = ETransformationsRigidMotions;
+	else if (str == "translations")
+	    iTransformations = ETransformationsTranslations;
+    }
+    iCustom = Attribute::UNDEFINED();
+    if (attr.has("custom", str) && !str.empty()) iCustom = Attribute(false, str);
 }
 
 /*! Create object by taking pinning/transforming from \a attr and
   setting identity matrix. */
-Object::Object(const AllAttributes &attr)
-{
-  iPinned = attr.iPinned;
-  iTransformations = attr.iTransformations;
-  iCustom = Attribute::UNDEFINED();
+Object::Object(const AllAttributes & attr) {
+    iPinned = attr.iPinned;
+    iTransformations = attr.iTransformations;
+    iCustom = Attribute::UNDEFINED();
 }
 
 /*! Create object with identity matrix, no pinning, all transformations. */
-Object::Object()
-{
-  iPinned = ENoPin;
-  iTransformations = ETransformationsAffine;
-  iCustom = Attribute::UNDEFINED();
+Object::Object() {
+    iPinned = ENoPin;
+    iTransformations = ETransformationsAffine;
+    iCustom = Attribute::UNDEFINED();
 }
 
 //! Copy constructor.
-Object::Object(const Object &rhs)
-{
-  iMatrix = rhs.iMatrix;
-  iPinned = rhs.iPinned;
-  iTransformations = rhs.iTransformations;
-  iCustom = rhs.iCustom;
+Object::Object(const Object & rhs) {
+    iMatrix = rhs.iMatrix;
+    iPinned = rhs.iPinned;
+    iTransformations = rhs.iTransformations;
+    iCustom = rhs.iCustom;
 }
 
 //! Pure virtual destructor.
-Object::~Object()
-{
-  // nothing
+Object::~Object() {
+    // nothing
 }
 
 //! Write layer, pin, transformations, matrix to XML stream.
-void Object::saveAttributesAsXml(Stream &stream, String layer) const
-{
-  if (!layer.empty())
-    stream << " layer=\"" << layer << "\"";
-  if (!iMatrix.isIdentity())
-    stream << " matrix=\"" << iMatrix << "\"";
-  switch (iPinned) {
-  case EFixedPin:
-    stream << " pin=\"yes\"";
-    break;
-  case EHorizontalPin:
-    stream << " pin=\"h\"";
-    break;
-  case EVerticalPin:
-    stream << " pin=\"v\"";
-    break;
-  case ENoPin:
-  default:
-    break;
-  }
-  if (iTransformations == ETransformationsTranslations)
-    stream << " transformations=\"translations\"";
-  else if (iTransformations == ETransformationsRigidMotions)
-    stream << " transformations=\"rigid\"";
-  if (iCustom != Attribute::UNDEFINED())
-    stream << " custom=\"" << iCustom.string() << "\"";
+void Object::saveAttributesAsXml(Stream & stream, String layer) const {
+    if (!layer.empty()) stream << " layer=\"" << layer << "\"";
+    if (!iMatrix.isIdentity()) stream << " matrix=\"" << iMatrix << "\"";
+    switch (iPinned) {
+    case EFixedPin: stream << " pin=\"yes\""; break;
+    case EHorizontalPin: stream << " pin=\"h\""; break;
+    case EVerticalPin: stream << " pin=\"v\""; break;
+    case ENoPin:
+    default: break;
+    }
+    if (iTransformations == ETransformationsTranslations)
+	stream << " transformations=\"translations\"";
+    else if (iTransformations == ETransformationsRigidMotions)
+	stream << " transformations=\"rigid\"";
+    if (iCustom != Attribute::UNDEFINED())
+	stream << " custom=\"" << iCustom.string() << "\"";
 }
 
 //! Return pointer to this object if it is an Group, nullptr otherwise.
-Group *Object::asGroup()
-{
-  return nullptr;
-}
+Group * Object::asGroup() { return nullptr; }
 
 //! Return pointer to this object if it is an Group, nullptr otherwise.
-const Group *Object::asGroup() const
-{
-  return nullptr;
-}
+const Group * Object::asGroup() const { return nullptr; }
 
 //! Return pointer to this object if it is an Text, nullptr otherwise.
-Text *Object::asText()
-{
-  return nullptr;
-}
+Text * Object::asText() { return nullptr; }
 
 //! Return pointer to this object if it is an Path, nullptr otherwise.
-Path *Object::asPath()
-{
-  return nullptr;
-}
+Path * Object::asPath() { return nullptr; }
 
 //! Return pointer to this object if it is an Image , nullptr otherwise.
-Image *Object::asImage()
-{
-  return nullptr;
-}
+Image * Object::asImage() { return nullptr; }
 
 //! Return pointer to this object if it is an Ref, nullptr otherwise.
-Reference *Object::asReference()
-{
-  return nullptr;
-}
+Reference * Object::asReference() { return nullptr; }
 
 // --------------------------------------------------------------------
 
 //! Set the transformation matrix.
 /*! Don't use this on an Object in a Page, because it wouldn't
   invalidate its bounding box.  Call Page::transform instead. */
-void Object::setMatrix(const Matrix &matrix)
-{
-  iMatrix = matrix;
-}
+void Object::setMatrix(const Matrix & matrix) { iMatrix = matrix; }
 
 //! Return pinning mode of the object.
-TPinned Object::pinned() const
-{
-  return iPinned;
-}
+TPinned Object::pinned() const { return iPinned; }
 
 //! Set pinning mode of the object.
-void Object::setPinned(TPinned pin)
-{
-  iPinned = pin;
-}
+void Object::setPinned(TPinned pin) { iPinned = pin; }
 
 //! Set allowed transformations of the object.
-void Object::setTransformations(TTransformations trans)
-{
-  iTransformations = trans;
-}
+void Object::setTransformations(TTransformations trans) { iTransformations = trans; }
 
 //! Return the matrix transforming the object's geometry.
 /*! This takes into account the object's transformations */
-Matrix Object::effectiveMatrix(const Matrix & m, const Vector &pos) const noexcept {
-  Matrix m1 = m * matrix() * Matrix(pos);
-  switch (transformations()) {
-  case ETransformationsAffine:
-  default:
-    return m1;
-  case ETransformationsTranslations:
-    return Matrix(m1.translation());
-  case ETransformationsRigidMotions:
-    return Matrix(Linear(Vector(m1.a[0], m1.a[1]).angle()),
-		  m1.translation());
-  }
+Matrix Object::effectiveMatrix(const Matrix & m, const Vector & pos) const noexcept {
+    Matrix m1 = m * matrix() * Matrix(pos);
+    switch (transformations()) {
+    case ETransformationsAffine:
+    default: return m1;
+    case ETransformationsTranslations: return Matrix(m1.translation());
+    case ETransformationsRigidMotions:
+	return Matrix(Linear(Vector(m1.a[0], m1.a[1]).angle()), m1.translation());
+    }
 }
 
 //! Set an attribute on this object.
 /*! Returns true if an attribute was actually changed.  */
-bool Object::setAttribute(Property prop, Attribute value)
-{
-  switch (prop) {
-  case EPropPinned:
-    assert(value.isEnum());
-    if (value.pinned() != iPinned) {
-      iPinned = value.pinned();
-      return true;
+bool Object::setAttribute(Property prop, Attribute value) {
+    switch (prop) {
+    case EPropPinned:
+	assert(value.isEnum());
+	if (value.pinned() != iPinned) {
+	    iPinned = value.pinned();
+	    return true;
+	}
+	break;
+    case EPropTransformations:
+	assert(value.isEnum());
+	if (value.transformations() != iTransformations) {
+	    iTransformations = value.transformations();
+	    return true;
+	}
+	break;
+    default: break;
     }
-    break;
-  case EPropTransformations:
-    assert(value.isEnum());
-    if (value.transformations() != iTransformations) {
-      iTransformations = value.transformations();
-      return true;
-    }
-    break;
-  default:
-    break;
-  }
-  return false;
+    return false;
 }
 
 //! Get setting of an attribute of this object.
 /*! If object does not have this attribute, returnes "undefined"
   attribute. */
-Attribute Object::getAttribute(Property prop) const noexcept
-{
-  switch (prop) {
-  case EPropPinned:
-    return Attribute(pinned());
-  case EPropTransformations:
-    return Attribute(iTransformations);
-  default:
-    return Attribute::UNDEFINED();
-  }
+Attribute Object::getAttribute(Property prop) const noexcept {
+    switch (prop) {
+    case EPropPinned: return Attribute(pinned());
+    case EPropTransformations: return Attribute(iTransformations);
+    default: return Attribute::UNDEFINED();
+    }
 }
 
 //! Set the 'custom' attribute (not used by Ipe, for users and ipelets)
-void Object::setCustom(Attribute value)
-{
-  assert(value.isString());
-  iCustom = value;
+void Object::setCustom(Attribute value) {
+    assert(value.isString());
+    iCustom = value;
 }
 
 //! Return value of the 'custom' attribute
-Attribute Object::getCustom() const noexcept
-{
-  return iCustom;
-}
+Attribute Object::getCustom() const noexcept { return iCustom; }
 
 // --------------------------------------------------------------------
 
 //! Check all symbolic attributes.
-void Object::checkStyle(const Cascade *, AttributeSeq &) const
-{
-  // nothing
+void Object::checkStyle(const Cascade *, AttributeSeq &) const {
+    // nothing
 }
 
 /*! Check whether attribute \a is either absolute or defined in the
   style sheet cascade \a sheet.  Add \a attr to \a seq if this is not
   the case. */
-void Object::checkSymbol(Kind kind, Attribute attr, const Cascade *sheet,
-			 AttributeSeq &seq)
-{
-  if (attr.isSymbolic() && sheet->findDefinition(kind, attr) < 0) {
-    AttributeSeq::const_iterator it =
-      std::find(seq.begin(), seq.end(), attr);
-    if (it == seq.end())
-      seq.push_back(attr);
-  }
+void Object::checkSymbol(Kind kind, Attribute attr, const Cascade * sheet,
+			 AttributeSeq & seq) {
+    if (attr.isSymbolic() && sheet->findDefinition(kind, attr) < 0) {
+	AttributeSeq::const_iterator it = std::find(seq.begin(), seq.end(), attr);
+	if (it == seq.end()) seq.push_back(attr);
+    }
 }
 
 //! Compute vertex snapping position for transformed object.
@@ -407,10 +343,9 @@ void Object::checkSymbol(Kind kind, Attribute attr, const Cascade *sheet,
   If successful, modify \a pos and \a bound.
   The default implementation does nothing.
 */
-void Object::snapVtx(const Vector &mouse, const Matrix &m,
-		     Vector &pos, double &bound) const
-{
-  // nothing
+void Object::snapVtx(const Vector & mouse, const Matrix & m, Vector & pos,
+		     double & bound) const {
+    // nothing
 }
 
 //! Compute control point snapping position for transformed object.
@@ -418,10 +353,9 @@ void Object::snapVtx(const Vector &mouse, const Matrix &m,
   If successful, modify \a pos and \a bound.
   The default implementation does nothing.
 */
-void Object::snapCtl(const Vector &mouse, const Matrix &m,
-		     Vector &pos, double &bound) const
-{
-  // nothing
+void Object::snapCtl(const Vector & mouse, const Matrix & m, Vector & pos,
+		     double & bound) const {
+    // nothing
 }
 
 //! Compute boundary snapping position for transformed object.
@@ -429,10 +363,9 @@ void Object::snapCtl(const Vector &mouse, const Matrix &m,
   If successful, modify \a pos and \a bound.
   The default implementation does nothing.
 */
-void Object::snapBnd(const Vector &/* mouse */, const Matrix &/* m */,
-		     Vector &/* pos */, double &/* bound */) const
-{
-  // nothing
+void Object::snapBnd(const Vector & /* mouse */, const Matrix & /* m */,
+		     Vector & /* pos */, double & /* bound */) const {
+    // nothing
 }
 
 // --------------------------------------------------------------------
@@ -448,39 +381,33 @@ void Object::snapBnd(const Vector &/* mouse */, const Matrix &/* m */,
 */
 
 //! Pure virtual destructor.
-Visitor::~Visitor()
-{
-  // void
+Visitor::~Visitor() {
+    // void
 }
 
 //! Called on an Group object.
-void Visitor::visitGroup(const Group *)
-{
-  // nothing
+void Visitor::visitGroup(const Group *) {
+    // nothing
 }
 
 //! Called on an Path object.
-void Visitor::visitPath(const Path *)
-{
-  // nothing
+void Visitor::visitPath(const Path *) {
+    // nothing
 }
 
 //! Called on an Image object.
-void Visitor::visitImage(const Image * )
-{
-  // nothing
+void Visitor::visitImage(const Image *) {
+    // nothing
 }
 
 //! Called on an Text object.
-void Visitor::visitText(const Text * )
-{
-  // nothing
+void Visitor::visitText(const Text *) {
+    // nothing
 }
 
 //! Called on an Reference object.
-void Visitor::visitReference(const Reference * )
-{
-  // nothing
+void Visitor::visitReference(const Reference *) {
+    // nothing
 }
 
 // --------------------------------------------------------------------

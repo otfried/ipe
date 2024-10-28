@@ -43,68 +43,73 @@
 
 namespace ipe {
 
-  class PdfResourceBase {
-  public:
+class PdfResourceBase {
+public:
     PdfResourceBase();
     virtual ~PdfResourceBase();
 
-    virtual const PdfObj *object(int num) const noexcept = 0;
+    virtual const PdfObj * object(int num) const noexcept = 0;
 
-    const PdfObj *getDeep(const PdfDict *d, String key) const noexcept;
-    const PdfDict *getDict(const PdfDict *d, String key) const noexcept;
-    const PdfDict *resourcesOfKind(String kind) const noexcept;
-    const PdfDict *findResource(String kind, String name) const noexcept;
-    const PdfDict *findResource(const PdfDict *xf, String kind,
-				String name) const noexcept;
-  protected:
+    const PdfObj * getDeep(const PdfDict * d, String key) const noexcept;
+    const PdfDict * getDict(const PdfDict * d, String key) const noexcept;
+    const PdfDict * resourcesOfKind(String kind) const noexcept;
+    const PdfDict * findResource(String kind, String name) const noexcept;
+    const PdfDict * findResource(const PdfDict * xf, String kind,
+				 String name) const noexcept;
+
+protected:
     std::unique_ptr<PdfDict> iPageResources;
-  };
+};
 
-  class PdfFileResources : public PdfResourceBase {
-  public:
-    PdfFileResources(const PdfFile *file);
+class PdfFileResources : public PdfResourceBase {
+public:
+    PdfFileResources(const PdfFile * file);
     ~PdfFileResources() = default;
 
-    virtual const PdfObj *object(int num) const noexcept;
-  private:
-    const PdfFile *iPdf;
-  };
+    virtual const PdfObj * object(int num) const noexcept;
 
-  class PdfResources : public PdfResourceBase {
-  public:
+private:
+    const PdfFile * iPdf;
+};
+
+class PdfResources : public PdfResourceBase {
+public:
     struct SPageNumber {
-      int page;
-      int view;
-      std::unique_ptr<Text> text;
+	int page;
+	int view;
+	std::unique_ptr<Text> text;
     };
-  public:
+
+public:
     PdfResources();
     virtual ~PdfResources() = default;
-    bool collect(const PdfDict *resources, PdfFile *file);
-    virtual const PdfObj *object(int num) const noexcept;
-    virtual const PdfDict *baseResources() const noexcept;
-    void addPageNumber(SPageNumber &pn) noexcept;
-    const Text *pageNumber(int page, int view) const noexcept;
-    inline const std::vector<int> &embedSequence() const noexcept {
-      return iEmbedSequence; }
+    bool collect(const PdfDict * resources, PdfFile * file);
+    virtual const PdfObj * object(int num) const noexcept;
+    virtual const PdfDict * baseResources() const noexcept;
+    void addPageNumber(SPageNumber & pn) noexcept;
+    const Text * pageNumber(int page, int view) const noexcept;
+    inline const std::vector<int> & embedSequence() const noexcept {
+	return iEmbedSequence;
+    }
     void show() const noexcept;
     bool isIpeXForm(int num) const;
     void setIpeXForm(int num);
-  private:
-    void add(int num, PdfFile *file);
-    void addIndirect(const PdfObj *q, PdfFile *file);
-    bool addToResource(PdfDict *d, String key,
-		       const PdfObj *el, PdfFile *file);
-  private:
+
+private:
+    void add(int num, PdfFile * file);
+    void addIndirect(const PdfObj * q, PdfFile * file);
+    bool addToResource(PdfDict * d, String key, const PdfObj * el, PdfFile * file);
+
+private:
     std::unordered_map<int, std::unique_ptr<const PdfObj>> iObjects;
     std::vector<int> iEmbedSequence;
     // which of the objects in the PDF file are XForms corresponding to Ipe text objects
     std::unordered_set<int> ipeXForms;
     //! Page number objects.
     std::vector<SPageNumber> iPageNumbers;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

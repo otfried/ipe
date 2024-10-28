@@ -32,23 +32,23 @@
 #define IPEUI_WSTRING_H
 
 class WString : public std::wstring {
- public:
+public:
 #ifdef IPEBASE_H
-  WString(const ipe::String &s) : std::wstring( std::move(s.w()) ) { /* nothing */ }
+    WString(const ipe::String & s)
+	: std::wstring(std::move(s.w())) { /* nothing */ }
 #endif
-  WString(const std::string &s)  { init(s.data(), s.size()); }
-  WString(const char *s) { init(s, -1); }
- private:
-  void init(const char *s, int len);
+    WString(const std::string & s) { init(s.data(), s.size()); }
+    WString(const char * s) { init(s, -1); }
+
+private:
+    void init(const char * s, int len);
 };
 
-extern void buildFlags(std::vector<short> &t, DWORD flags);
-extern void buildString(std::vector<short> &t, const char *s);
-extern void buildControl(std::vector<short> &t, short what, const char *s = nullptr);
-extern BOOL setWindowText(HWND h, const char *s);
-extern void sendMessage(HWND h, UINT code, const char *t, WPARAM wParam = 0);
-
+extern void buildFlags(std::vector<short> & t, DWORD flags);
+extern void buildString(std::vector<short> & t, const char * s);
+extern void buildControl(std::vector<short> & t, short what, const char * s = nullptr);
+extern BOOL setWindowText(HWND h, const char * s);
+extern void sendMessage(HWND h, UINT code, const char * t, WPARAM wParam = 0);
 
 // --------------------------------------------------------------------
 #endif
-

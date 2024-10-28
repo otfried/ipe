@@ -34,18 +34,18 @@
 
 #include "appui.h"
 
-#include <QApplication>
-#include <QMainWindow>
 #include <QAction>
-#include <QCheckBox>
-#include <QToolBar>
-#include <QDockWidget>
 #include <QActionGroup>
-#include <QListWidget>
-#include <QLabel>
+#include <QApplication>
+#include <QCheckBox>
 #include <QComboBox>
-#include <QToolButton>
+#include <QDockWidget>
+#include <QLabel>
+#include <QListWidget>
+#include <QMainWindow>
 #include <QTextEdit>
+#include <QToolBar>
+#include <QToolButton>
 
 using namespace ipe;
 
@@ -58,142 +58,144 @@ class QSignalMapper;
 // --------------------------------------------------------------------
 
 class AppUi : public QMainWindow, public AppUiBase {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  AppUi(lua_State *L0, int model, Qt::WindowFlags f=Qt::Widget);
-  ~AppUi();
+    AppUi(lua_State * L0, int model, Qt::WindowFlags f = Qt::Widget);
+    ~AppUi();
 
-  QAction *findAction(const char *name) const;
+    QAction * findAction(const char * name) const;
 
-  virtual void setLayers(const Page *page, int view) override;
+    virtual void setLayers(const Page * page, int view) override;
 
-  virtual void setZoom(double zoom) override;
-  virtual void setActionsEnabled(bool mode) override;
-  virtual void setNumbers(String vno, bool vm, String pno, bool pm) override;
-  virtual void setNotes(String notes) override;
+    virtual void setZoom(double zoom) override;
+    virtual void setActionsEnabled(bool mode) override;
+    virtual void setNumbers(String vno, bool vm, String pno, bool pm) override;
+    virtual void setNotes(String notes) override;
 
-  virtual WINID windowId() override;
-  virtual void closeWindow() override;
-  virtual bool actionState(const char *name) override;
-  virtual void setActionState(const char *name, bool value) override;
-  virtual void setWindowCaption(bool mod, const char *caption, const char *fn) override;
-  virtual void explain(const char *s, int t) override;
-  virtual void showWindow(int width, int height, int x, int y, const Color & pathViewColor) override;
-  virtual void setFullScreen(int mode) override;
-  virtual void setBookmarks(int no, const String *s) override;
-  virtual void setToolVisible(int m, bool vis) override;
-  virtual int pageSorter(lua_State *L, Document *doc, int pno,
-			 int width, int height, int thumbWidth) override;
-  virtual int clipboard(lua_State *L) override;
-  virtual int setClipboard(lua_State *L) override;
+    virtual WINID windowId() override;
+    virtual void closeWindow() override;
+    virtual bool actionState(const char * name) override;
+    virtual void setActionState(const char * name, bool value) override;
+    virtual void setWindowCaption(bool mod, const char * caption,
+				  const char * fn) override;
+    virtual void explain(const char * s, int t) override;
+    virtual void showWindow(int width, int height, int x, int y,
+			    const Color & pathViewColor) override;
+    virtual void setFullScreen(int mode) override;
+    virtual void setBookmarks(int no, const String * s) override;
+    virtual void setToolVisible(int m, bool vis) override;
+    virtual int pageSorter(lua_State * L, Document * doc, int pno, int width, int height,
+			   int thumbWidth) override;
+    virtual int clipboard(lua_State * L) override;
+    virtual int setClipboard(lua_State * L) override;
 
-  virtual void setRecentFileMenu(const std::vector<String> & names) override;
+    virtual void setRecentFileMenu(const std::vector<String> & names) override;
 
-  virtual bool waitDialog(const char *cmd, const char *label) override;
+    virtual bool waitDialog(const char * cmd, const char * label) override;
 
 public slots:
-  void action(String name) override;
-  void qAction(const QString &name);
-  void selectLayerAction(QAction *a);
-  void moveToLayerAction(QAction *a);
-  void textStyleAction(QAction *a);
-  void labelStyleAction(QAction *a);
-  void gridSizeAction(QAction *a);
-  void angleSizeAction(QAction *a);
+    void action(String name) override;
+    void qAction(const QString & name);
+    void selectLayerAction(QAction * a);
+    void moveToLayerAction(QAction * a);
+    void textStyleAction(QAction * a);
+    void labelStyleAction(QAction * a);
+    void gridSizeAction(QAction * a);
+    void angleSizeAction(QAction * a);
 
-  void layerAction(String name, String layer);
-  void toolbarModifiersChanged();
-  void abortDrawing();
-  void aboutIpe();
+    void layerAction(String name, String layer);
+    void toolbarModifiersChanged();
+    void abortDrawing();
+    void aboutIpe();
 
-  void absoluteButton(int id);
-  void selector(int id, String value);
-  void comboSelector(int id);
+    void absoluteButton(int id);
+    void selector(int id, String value);
+    void comboSelector(int id);
 
-  void bookmarkSelected(QListWidgetItem *item);
-  void recentFileAction(QAction *a);
+    void bookmarkSelected(QListWidgetItem * item);
+    void recentFileAction(QAction * a);
 
-  void aboutToShowSelectLayerMenu();
-  void aboutToShowMoveToLayerMenu();
-  void aboutToShowTextStyleMenu();
-  void aboutToShowLabelStyleMenu();
-  void aboutToShowGridSizeMenu();
-  void aboutToShowAngleSizeMenu();
+    void aboutToShowSelectLayerMenu();
+    void aboutToShowMoveToLayerMenu();
+    void aboutToShowTextStyleMenu();
+    void aboutToShowLabelStyleMenu();
+    void aboutToShowGridSizeMenu();
+    void aboutToShowAngleSizeMenu();
 
-  void showPathStylePopup(Vector v);
-  void showLayerBoxPopup(Vector v, String layer);
-
-private:
-  void addItem(QMenu *m, const QString &title, const char *name);
-  void addItem(int m, const QString &title, const char *name);
-  void addSnap(const char *name);
-  void addEdit(const char *name);
-  QIcon prefsIcon(String name);
-  QIcon prefsColorIcon(Color color);
-  QPixmap prefsPixmap(String name);
-  void aboutToShowStyleMenu(Kind kind, MENUHANDLE menu, String current);
-
-  inline int uiscale(int x) { return iUiScale * x / 100; }
+    void showPathStylePopup(Vector v);
+    void showLayerBoxPopup(Vector v, String layer);
 
 private:
-  virtual void addRootMenu(int id, const char *name) override;
-  virtual void addItem(int id, const char *title, const char *name) override;
-  virtual void startSubMenu(int id, const char *name, int tag) override;
-  virtual void addSubItem(const char *title, const char *name) override;
-  virtual MENUHANDLE endSubMenu() override;
-  virtual void setMouseIndicator(const char *s) override;
-  virtual void setSnapIndicator(const char *s) override;
-  virtual void addCombo(int sel, String s) override;
-  virtual void resetCombos() override;
-  virtual void addComboColors(AttributeSeq &sym, AttributeSeq &abs) override;
-  virtual void setComboCurrent(int sel, int idx) override;
-  virtual void setCheckMark(String name, Attribute a) override;
-  virtual void setPathView(const AllAttributes &all, Cascade *sheet) override;
-  virtual void setButtonColor(int sel, Color color) override;
+    void addItem(QMenu * m, const QString & title, const char * name);
+    void addItem(int m, const QString & title, const char * name);
+    void addSnap(const char * name);
+    void addEdit(const char * name);
+    QIcon prefsIcon(String name);
+    QIcon prefsColorIcon(Color color);
+    QPixmap prefsPixmap(String name);
+    void aboutToShowStyleMenu(Kind kind, MENUHANDLE menu, String current);
+
+    inline int uiscale(int x) { return iUiScale * x / 100; }
+
+private:
+    virtual void addRootMenu(int id, const char * name) override;
+    virtual void addItem(int id, const char * title, const char * name) override;
+    virtual void startSubMenu(int id, const char * name, int tag) override;
+    virtual void addSubItem(const char * title, const char * name) override;
+    virtual MENUHANDLE endSubMenu() override;
+    virtual void setMouseIndicator(const char * s) override;
+    virtual void setSnapIndicator(const char * s) override;
+    virtual void addCombo(int sel, String s) override;
+    virtual void resetCombos() override;
+    virtual void addComboColors(AttributeSeq & sym, AttributeSeq & abs) override;
+    virtual void setComboCurrent(int sel, int idx) override;
+    virtual void setCheckMark(String name, Attribute a) override;
+    virtual void setPathView(const AllAttributes & all, Cascade * sheet) override;
+    virtual void setButtonColor(int sel, Color color) override;
 
 protected:
-  void closeEvent(QCloseEvent *ev) override;
+    void closeEvent(QCloseEvent * ev) override;
 
 private:
-  PathView *iPathView;
+    PathView * iPathView;
 
-  QMenu *iMenu[ENumMenu];
+    QMenu * iMenu[ENumMenu];
 
-  QToolButton *iButton[EUiOpacity]; // EUiDashStyle and EUiMarkShape are not used
-  QComboBox *iSelector[EUiView];
+    QToolButton * iButton[EUiOpacity]; // EUiDashStyle and EUiMarkShape are not used
+    QComboBox * iSelector[EUiView];
 
-  QToolButton *iViewNumber;
-  QToolButton *iPageNumber;
+    QToolButton * iViewNumber;
+    QToolButton * iPageNumber;
 
-  QCheckBox *iViewMarked;
-  QCheckBox *iPageMarked;
+    QCheckBox * iViewMarked;
+    QCheckBox * iPageMarked;
 
-  QToolBar *iSnapTools;
-  QToolBar *iEditTools;
-  QToolBar *iObjectTools;
+    QToolBar * iSnapTools;
+    QToolBar * iEditTools;
+    QToolBar * iObjectTools;
 
-  QDockWidget *iPropertiesTools;
-  QDockWidget *iLayerTools;
-  QDockWidget *iBookmarkTools;
-  QDockWidget *iNotesTools;
+    QDockWidget * iPropertiesTools;
+    QDockWidget * iLayerTools;
+    QDockWidget * iBookmarkTools;
+    QDockWidget * iNotesTools;
 
-  QActionGroup *iModeActionGroup;
+    QActionGroup * iModeActionGroup;
 
-  QAction *iShiftKey;
-  QAction *iAbortButton;
+    QAction * iShiftKey;
+    QAction * iAbortButton;
 
-  QListWidget *iBookmarks;
-  LayerBox *iLayerList;
-  QTextEdit *iPageNotes;
+    QListWidget * iBookmarks;
+    LayerBox * iLayerList;
+    QTextEdit * iPageNotes;
 
-  QLabel *iModeIndicator;
-  QLabel *iSnapIndicator;
-  QLabel *iMouse;
-  QLabel *iResolution;
+    QLabel * iModeIndicator;
+    QLabel * iSnapIndicator;
+    QLabel * iMouse;
+    QLabel * iResolution;
 
-  QSignalMapper *iActionMap;
-  std::map<String, QAction *> iActions;
+    QSignalMapper * iActionMap;
+    std::map<String, QAction *> iActions;
 };
 
 // --------------------------------------------------------------------

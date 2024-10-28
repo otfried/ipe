@@ -39,8 +39,8 @@
 
 namespace ipe {
 
-  class PdfView : public PdfViewBase {
-  public:
+class PdfView : public PdfViewBase {
+public:
     static constexpr int WM_PDFVIEW = 0x8000;
 
     static void init(HINSTANCE hInstance);
@@ -48,23 +48,24 @@ namespace ipe {
 
     HWND windowId() const { return hwnd; }
 
-  private:
+private:
     void wndPaint();
     void updateSize();
 
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);
 
-  private:
+private:
     static const wchar_t className[];
-    static LRESULT CALLBACK wndProc(HWND hwnd, UINT Message,
-				    WPARAM wParam, LPARAM lParam);
-  private:
+    static LRESULT CALLBACK wndProc(HWND hwnd, UINT Message, WPARAM wParam,
+				    LPARAM lParam);
+
+private:
     HWND hwnd;
     HWND target;
     int screen;
-  };
-} // namespace
+};
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

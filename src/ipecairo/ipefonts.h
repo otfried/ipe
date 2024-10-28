@@ -36,8 +36,8 @@
 #include "ipegeo.h"
 #include "iperesources.h"
 
-#include <list>
 #include <cairo.h>
+#include <list>
 
 //------------------------------------------------------------------------
 
@@ -45,61 +45,60 @@ struct FT_FaceRec_;
 
 namespace ipe {
 
-  class PdfResourceBase;
-  class PdfDict;
+class PdfResourceBase;
+class PdfDict;
 
-  enum class FontType { Type1, Truetype, CIDType0, CIDType2, Type3, Unsupported };
+enum class FontType { Type1, Truetype, CIDType0, CIDType2, Type3, Unsupported };
 
-  class Face {
-  public:
-    Face(const PdfDict *d, const PdfResourceBase *resources) noexcept;
+class Face {
+public:
+    Face(const PdfDict * d, const PdfResourceBase * resources) noexcept;
     ~Face() noexcept;
-    inline bool matches(const PdfDict *d) const noexcept {
-      return d == iFontDict; }
+    inline bool matches(const PdfDict * d) const noexcept { return d == iFontDict; }
     inline FontType type() const noexcept { return iType; }
     int width(int ch) const noexcept;
     int glyphIndex(int ch) noexcept;
-    inline cairo_font_face_t *cairoFont() noexcept { return iCairoFont; }
+    inline cairo_font_face_t * cairoFont() noexcept { return iCairoFont; }
 
-  private:
-    const PdfObj *getPdf(const PdfDict *d, String key) const noexcept;
-    bool getFontFile(const PdfDict *d, Buffer &data) noexcept;
-    void getSimpleWidth(const PdfDict *d) noexcept;
-    void getType3Width(const PdfDict *d) noexcept;
-    void getType1Encoding(const PdfDict *d) noexcept;
+private:
+    const PdfObj * getPdf(const PdfDict * d, String key) const noexcept;
+    bool getFontFile(const PdfDict * d, Buffer & data) noexcept;
+    void getSimpleWidth(const PdfDict * d) noexcept;
+    void getType3Width(const PdfDict * d) noexcept;
+    void getType1Encoding(const PdfDict * d) noexcept;
     void setupTruetypeEncoding() noexcept;
-    void getCIDWidth(const PdfDict *d) noexcept;
-    void getCIDToGIDMap(const PdfDict *d) noexcept;
+    void getCIDWidth(const PdfDict * d) noexcept;
+    void getCIDToGIDMap(const PdfDict * d) noexcept;
 
-  private:
-    const PdfDict *iFontDict;
-    const PdfResourceBase *iResources;
+private:
+    const PdfDict * iFontDict;
+    const PdfResourceBase * iResources;
     FontType iType;
     String iName;
-    cairo_font_face_t *iCairoFont { nullptr };
-    FT_FaceRec_ *iFace { nullptr };
+    cairo_font_face_t * iCairoFont{nullptr};
+    FT_FaceRec_ * iFace{nullptr};
     std::vector<int> iEncoding;
     std::vector<int> iWidth;
     std::vector<uint16_t> iCID2GID;
-    int iDefaultWidth { 1000 };
-  };
+    int iDefaultWidth{1000};
+};
 
-  class Fonts {
-  public:
-    Fonts(const PdfResourceBase *resources);
+class Fonts {
+public:
+    Fonts(const PdfResourceBase * resources);
 
-    Face *getFace(const PdfDict *d);
-    static cairo_font_face_t *screenFont();
+    Face * getFace(const PdfDict * d);
+    static cairo_font_face_t * screenFont();
     static String freetypeVersion();
-    const PdfResourceBase *resources() const noexcept { return iResources; }
+    const PdfResourceBase * resources() const noexcept { return iResources; }
     bool hasType3Font() const noexcept;
 
-  private:
-    const PdfResourceBase *iResources;
+private:
+    const PdfResourceBase * iResources;
     std::list<std::unique_ptr<Face>> iFaces;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 //------------------------------------------------------------------------
 #endif

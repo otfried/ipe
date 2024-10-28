@@ -38,39 +38,43 @@
 
 namespace ipe {
 
-  class Cascade;
-  struct Symbol;
+class Cascade;
+struct Symbol;
 
-  class Reference : public Object {
-  public:
-    enum { EHasStroke = 0x001, EHasFill = 0x002,
-	   EHasPen = 0x004, EHasSize = 0x008,
-	   EIsMark = 0x010, EIsArrow = 0x020 };
+class Reference : public Object {
+public:
+    enum {
+	EHasStroke = 0x001,
+	EHasFill = 0x002,
+	EHasPen = 0x004,
+	EHasSize = 0x008,
+	EIsMark = 0x010,
+	EIsArrow = 0x020
+    };
 
-    explicit Reference(const AllAttributes &attr, Attribute name, Vector pos);
+    explicit Reference(const AllAttributes & attr, Attribute name, Vector pos);
 
-    explicit Reference(const XmlAttributes &attr, String data);
+    explicit Reference(const XmlAttributes & attr, String data);
 
-    virtual Object *clone() const;
+    virtual Object * clone() const;
 
-    virtual Reference *asReference();
+    virtual Reference * asReference();
 
     virtual Type type() const;
 
-    virtual void accept(Visitor &visitor) const;
+    virtual void accept(Visitor & visitor) const;
 
-    virtual void saveAsXml(Stream &stream, String layer) const;
-    virtual void draw(Painter &painter) const;
-    virtual void drawSimple(Painter &painter) const;
-    virtual void addToBBox(Rect &box, const Matrix &m, bool cp) const;
-    virtual double distance(const Vector &v, const Matrix &m,
-			    double bound) const;
-    virtual void snapVtx(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const;
-    virtual void snapBnd(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const;
+    virtual void saveAsXml(Stream & stream, String layer) const;
+    virtual void draw(Painter & painter) const;
+    virtual void drawSimple(Painter & painter) const;
+    virtual void addToBBox(Rect & box, const Matrix & m, bool cp) const;
+    virtual double distance(const Vector & v, const Matrix & m, double bound) const;
+    virtual void snapVtx(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const;
+    virtual void snapBnd(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const;
 
-    virtual void checkStyle(const Cascade *sheet, AttributeSeq &seq) const;
+    virtual void checkStyle(const Cascade * sheet, AttributeSeq & seq) const;
 
     void setName(Attribute name);
     //! Return symbolic name.
@@ -97,10 +101,10 @@ namespace ipe {
     inline uint32_t flags() const { return iFlags; }
     static uint32_t flagsFromName(String name);
 
-  private:
-    void cacheSnaps(const Symbol *symbol, double size) const;
-    
-  private:
+private:
+    void cacheSnaps(const Symbol * symbol, double size) const;
+
+private:
     Attribute iName;
     Vector iPos;
     Attribute iSize;
@@ -108,10 +112,10 @@ namespace ipe {
     Attribute iFill;
     Attribute iPen;
     uint32_t iFlags;
-    mutable std::vector<Vector> iSnap;   // caching info from the symbol itself
-  };
+    mutable std::vector<Vector> iSnap; // caching info from the symbol itself
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

@@ -47,16 +47,14 @@ using namespace ipe;
     \a itemWidth is the width of the page thumbnails (the height is
     computed automatically).
 */
-int CanvasBase::selectPageOrView(Document *doc, int page, int startIndex,
-				 int pageWidth, int width, int height)
-{
-  // Create image list
-  Thumbnail r(doc, pageWidth);
-  int nItems = (page >= 0) ? doc->page(page)->countViews() :
-    doc->countPages();
-  (void) nItems;
-  // TODO
-  return 0;
+int CanvasBase::selectPageOrView(Document * doc, int page, int startIndex, int pageWidth,
+				 int width, int height) {
+    // Create image list
+    Thumbnail r(doc, pageWidth);
+    int nItems = (page >= 0) ? doc->page(page)->countViews() : doc->countPages();
+    (void)nItems;
+    // TODO
+    return 0;
 }
 
 // --------------------------------------------------------------------

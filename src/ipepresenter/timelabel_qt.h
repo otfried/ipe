@@ -35,26 +35,25 @@
 #include <QTime>
 #include <QTimer>
 
-class TimeLabel: public QLabel
-{
-  Q_OBJECT
+class TimeLabel : public QLabel {
+    Q_OBJECT
 
- public:
-  TimeLabel(QWidget* parent);
-  void    mouseDoubleClickEvent(QMouseEvent* event);
-  void    toggleCounting();
-  void    toggleCountdown();
-  void    setTime();
-  void    resetTime();
+public:
+    TimeLabel(QWidget * parent);
+    void mouseDoubleClickEvent(QMouseEvent * event);
+    void toggleCounting();
+    void toggleCountdown();
+    void setTime();
+    void resetTime();
 
- private:
-  QTimer* timer;
-  QTime   time;
-  bool    counting;
-  bool    countingDown;
+private:
+    QTimer * timer;
+    QTime time;
+    bool counting;
+    bool countingDown;
 
- private slots:
-  void    countTime();
+private slots:
+    void countTime();
 };
 
 // --------------------------------------------------------------------

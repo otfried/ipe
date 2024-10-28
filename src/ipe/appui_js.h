@@ -48,61 +48,63 @@ class LayerBox;
 class AppUi : public AppUiBase {
 
 public:
-  AppUi(lua_State *L0, int model);
-  ~AppUi();
+    AppUi(lua_State * L0, int model);
+    ~AppUi();
 
-  virtual void setLayers(const Page *page, int view) override;
+    virtual void setLayers(const Page * page, int view) override;
 
-  virtual void setZoom(double zoom) override;
-  virtual void setActionsEnabled(bool mode) override;
-  virtual void setNumbers(String vno, bool vm, String pno, bool pm) override;
-  virtual void setNotes(String notes) override;
+    virtual void setZoom(double zoom) override;
+    virtual void setActionsEnabled(bool mode) override;
+    virtual void setNumbers(String vno, bool vm, String pno, bool pm) override;
+    virtual void setNotes(String notes) override;
 
-  virtual WINID windowId() override;
-  virtual void closeWindow() override;
-  virtual bool actionState(const char *name) override;
-  virtual void setActionState(const char *name, bool value) override;
-  virtual void setWindowCaption(bool mod, const char *caption, const char *fn) override;
-  virtual void explain(const char *s, int t) override;
-  virtual void showWindow(int width, int height, int x, int y, const Color & pathViewColor) override;
-  virtual void setFullScreen(int mode) override;
-  virtual void setBookmarks(int no, const String *s) override;
-  virtual void setToolVisible(int m, bool vis) override;
-  virtual int pageSorter(lua_State *L, Document *doc, int pno,
-			 int width, int height, int thumbWidth) override;
-  virtual int clipboard(lua_State *L) override;
-  virtual int setClipboard(lua_State *L) override;
+    virtual WINID windowId() override;
+    virtual void closeWindow() override;
+    virtual bool actionState(const char * name) override;
+    virtual void setActionState(const char * name, bool value) override;
+    virtual void setWindowCaption(bool mod, const char * caption,
+				  const char * fn) override;
+    virtual void explain(const char * s, int t) override;
+    virtual void showWindow(int width, int height, int x, int y,
+			    const Color & pathViewColor) override;
+    virtual void setFullScreen(int mode) override;
+    virtual void setBookmarks(int no, const String * s) override;
+    virtual void setToolVisible(int m, bool vis) override;
+    virtual int pageSorter(lua_State * L, Document * doc, int pno, int width, int height,
+			   int thumbWidth) override;
+    virtual int clipboard(lua_State * L) override;
+    virtual int setClipboard(lua_State * L) override;
 
-  virtual void setRecentFileMenu(const std::vector<String> & names) override;
-  virtual void action(String name) override;
+    virtual void setRecentFileMenu(const std::vector<String> & names) override;
+    virtual void action(String name) override;
 
-  void openFile(String fn);
+    void openFile(String fn);
 
-  virtual bool waitDialog(const char *cmd, const char *label) override;
-  void resumeLua(emscripten::val result);
-  virtual void setupSymbolicNames(const Cascade *sheet) override;
-
-private:
-  virtual void addRootMenu(int id, const char *name) override;
-  virtual void addItem(int id, const char *title, const char *name) override;
-  virtual void startSubMenu(int id, const char *name, int tag) override;
-  virtual void addSubItem(const char *title, const char *name) override;
-  virtual MENUHANDLE endSubMenu() override;
-  virtual void setMouseIndicator(const char *s) override;
-  virtual void setSnapIndicator(const char *s) override;
-  virtual void addCombo(int sel, String s) override;
-  virtual void resetCombos() override;
-  virtual void addComboColors(AttributeSeq &sym, AttributeSeq &abs) override;
-  virtual void setComboCurrent(int sel, int idx) override;
-  virtual void setCheckMark(String name, Attribute a) override;
-  virtual void setPathView(const AllAttributes &all, Cascade *sheet) override;
-  virtual void setButtonColor(int sel, Color color) override;
+    virtual bool waitDialog(const char * cmd, const char * label) override;
+    void resumeLua(emscripten::val result);
+    virtual void setupSymbolicNames(const Cascade * sheet) override;
 
 private:
-  void createIcon(String name);
+    virtual void addRootMenu(int id, const char * name) override;
+    virtual void addItem(int id, const char * title, const char * name) override;
+    virtual void startSubMenu(int id, const char * name, int tag) override;
+    virtual void addSubItem(const char * title, const char * name) override;
+    virtual MENUHANDLE endSubMenu() override;
+    virtual void setMouseIndicator(const char * s) override;
+    virtual void setSnapIndicator(const char * s) override;
+    virtual void addCombo(int sel, String s) override;
+    virtual void resetCombos() override;
+    virtual void addComboColors(AttributeSeq & sym, AttributeSeq & abs) override;
+    virtual void setComboCurrent(int sel, int idx) override;
+    virtual void setCheckMark(String name, Attribute a) override;
+    virtual void setPathView(const AllAttributes & all, Cascade * sheet) override;
+    virtual void setButtonColor(int sel, Color color) override;
+
+private:
+    void createIcon(String name);
 
 public:
-  PathView *iPathView;
+    PathView * iPathView;
 };
 
 // --------------------------------------------------------------------

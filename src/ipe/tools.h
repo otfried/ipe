@@ -32,8 +32,8 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
-#include "ipetool.h"
 #include "ipecanvas.h"
+#include "ipetool.h"
 
 // avoid including Lua headers here
 typedef struct lua_State lua_State;
@@ -42,80 +42,90 @@ typedef struct lua_State lua_State;
 
 using namespace ipe;
 
-extern void push_button(lua_State *L, int button);
+extern void push_button(lua_State * L, int button);
 
 class IpeTransformTool : public TransformTool {
 public:
-  IpeTransformTool(CanvasBase *canvas, Page *page, int view, TType type,
-		   bool withShift, lua_State *L0, int method);
-  ~IpeTransformTool();
-  virtual void report();
+    IpeTransformTool(CanvasBase * canvas, Page * page, int view, TType type,
+		     bool withShift, lua_State * L0, int method);
+    ~IpeTransformTool();
+    virtual void report();
+
 private:
-  lua_State *L;
-  int iMethod;
+    lua_State * L;
+    int iMethod;
 };
 
-class LuaTool  : public Tool {
+class LuaTool : public Tool {
 public:
-  LuaTool(CanvasBase *canvas, lua_State *L0, int luatool, int model);
-  ~LuaTool();
+    LuaTool(CanvasBase * canvas, lua_State * L0, int luatool, int model);
+    ~LuaTool();
 
-  void setColor(Color color) { iColor = color; }
+    void setColor(Color color) { iColor = color; }
 
-  virtual void mouseButton(int button, bool press);
-  virtual void mouseMove();
-  virtual bool key(String text, int modifiers);
+    virtual void mouseButton(int button, bool press);
+    virtual void mouseMove();
+    virtual bool key(String text, int modifiers);
 
 private:
-  void wrapCall(String method, int nArgs, int nResults);
+    void wrapCall(String method, int nArgs, int nResults);
 
 protected:
-  lua_State *L;
-  int iModel;
-  int iLuaTool;
-  Color iColor;
+    lua_State * L;
+    int iModel;
+    int iLuaTool;
+    Color iColor;
 };
 
 class ShapeTool : public LuaTool {
 public:
-  enum TMarkType { EVertex = 1, ESplineCP, ECenter,
-		   ERadius, EMinor, ECurrent, EScissor,
-		   ENumMarkTypes };
+    enum TMarkType {
+	EVertex = 1,
+	ESplineCP,
+	ECenter,
+	ERadius,
+	EMinor,
+	ECurrent,
+	EScissor,
+	ENumMarkTypes
+    };
 
-  ShapeTool(CanvasBase *canvas, lua_State *L0, int luatool, int model);
+    ShapeTool(CanvasBase * canvas, lua_State * L0, int luatool, int model);
 
-  void setShape(Shape shape, int which = 0, double pen=1.0);
-  void setSnapping(bool snap, bool skipLast);
-  void clearMarks();
-  void addMark(const Vector &v, TMarkType t);
+    void setShape(Shape shape, int which = 0, double pen = 1.0);
+    void setSnapping(bool snap, bool skipLast);
+    void clearMarks();
+    void addMark(const Vector & v, TMarkType t);
 
-  virtual void draw(Painter &painter) const;
-  virtual void snapVtx(const Vector &mouse, Vector &pos,
-		       double &bound, bool cp) const;
+    virtual void draw(Painter & painter) const;
+    virtual void snapVtx(const Vector & mouse, Vector & pos, double & bound,
+			 bool cp) const;
+
 private:
-  double iPen;
-  Shape iShape;
-  Shape iAuxShape;
-  struct SMark {
-    Vector v;
-    TMarkType t;
-  };
-  std::vector<SMark> iMarks;
-  bool iSnap;
-  bool iSkipLast;
+    double iPen;
+    Shape iShape;
+    Shape iAuxShape;
+    struct SMark {
+	Vector v;
+	TMarkType t;
+    };
+    std::vector<SMark> iMarks;
+    bool iSnap;
+    bool iSkipLast;
 };
 
 class PasteTool : public LuaTool {
 public:
-  PasteTool(CanvasBase *canvas, lua_State *L0, int luatool, int model, Object *obj);
-  ~PasteTool();
+    PasteTool(CanvasBase * canvas, lua_State * L0, int luatool, int model, Object * obj);
+    ~PasteTool();
 
-  void setMatrix(Matrix m) { iMatrix = m; }
+    void setMatrix(Matrix m) { iMatrix = m; }
 
-  virtual void draw(Painter &painter) const;
+    virtual void draw(Painter & painter) const;
+
 private:
-  Object *iObject;
-  Matrix iMatrix;
+    Object * iObject;
+    Matrix iMatrix;
 };
 
 // --------------------------------------------------------------------

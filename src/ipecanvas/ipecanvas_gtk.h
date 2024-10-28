@@ -39,44 +39,39 @@
 
 namespace ipe {
 
-  class Canvas : public CanvasBase {
-  public:
-    Canvas(GtkWidget *parent);
+class Canvas : public CanvasBase {
+public:
+    Canvas(GtkWidget * parent);
     ~Canvas();
 
-    GtkWidget *window() const { return GTK_WIDGET(iWindow); }
+    GtkWidget * window() const { return GTK_WIDGET(iWindow); }
 
-  private:
-    virtual void setCursor(TCursor cursor, double w = 1.0,
-			   Color *color = nullptr);
+private:
+    virtual void setCursor(TCursor cursor, double w = 1.0, Color * color = nullptr);
 
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);
 
 #if GTK_MAJOR_VERSION >= 3
-    static gboolean expose_cb(GtkWidget *widget, cairo_t *cr, Canvas *canvas);
-    void exposeHandler(cairo_t *cr);
+    static gboolean expose_cb(GtkWidget * widget, cairo_t * cr, Canvas * canvas);
+    void exposeHandler(cairo_t * cr);
 #else
-    static gboolean expose_cb(GtkWidget *widget, GdkEvent *event,
-			      Canvas *canvas);
-    void exposeHandler(GdkEventExpose *event);
+    static gboolean expose_cb(GtkWidget * widget, GdkEvent * event, Canvas * canvas);
+    void exposeHandler(GdkEventExpose * event);
 #endif
-    void buttonHandler(GdkEventButton *event);
-    void motionHandler(GdkEventMotion *event);
-    void scrollHandler(GdkEventScroll *event);
+    void buttonHandler(GdkEventButton * event);
+    void motionHandler(GdkEventMotion * event);
+    void scrollHandler(GdkEventScroll * event);
 
-    static gboolean button_cb(GtkWidget *widget, GdkEvent *event,
-			      Canvas *data);
-    static gboolean motion_cb(GtkWidget *widget, GdkEvent *event,
-			      Canvas *canvas);
-    static gboolean scroll_cb(GtkWidget *widget, GdkEvent *event,
-			      Canvas *canvas);
+    static gboolean button_cb(GtkWidget * widget, GdkEvent * event, Canvas * data);
+    static gboolean motion_cb(GtkWidget * widget, GdkEvent * event, Canvas * canvas);
+    static gboolean scroll_cb(GtkWidget * widget, GdkEvent * event, Canvas * canvas);
 
-  private:
-    GtkWidget *iWindow;
-  };
+private:
+    GtkWidget * iWindow;
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

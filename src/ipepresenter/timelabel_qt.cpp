@@ -32,63 +32,50 @@
 
 #include <QInputDialog>
 
-TimeLabel::TimeLabel(QWidget* parent):
-  QLabel(parent), time(0,0,0), counting(false), countingDown(false)
-{
-  timer = new QTimer(this);
-  connect(timer, SIGNAL(timeout()), this, SLOT(countTime()));
-  timer->start(1000);       // one second
+TimeLabel::TimeLabel(QWidget * parent)
+    : QLabel(parent)
+    , time(0, 0, 0)
+    , counting(false)
+    , countingDown(false) {
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(countTime()));
+    timer->start(1000); // one second
 }
 
-void TimeLabel::countTime()
-{
-  if (!counting) return;
+void TimeLabel::countTime() {
+    if (!counting) return;
 
-  if (countingDown && !(time.hour() == 0 && time.minute() == 0 && time.second() == 0))
-    time = time.addSecs(-1);
+    if (countingDown && !(time.hour() == 0 && time.minute() == 0 && time.second() == 0))
+	time = time.addSecs(-1);
 
-  if (!countingDown)
-    time = time.addSecs(1);
+    if (!countingDown) time = time.addSecs(1);
 
-  setText(time.toString("hh:mm:ss"));
+    setText(time.toString("hh:mm:ss"));
 }
 
-void TimeLabel::mouseDoubleClickEvent(QMouseEvent* event)
-{
-  setTime();
+void TimeLabel::mouseDoubleClickEvent(QMouseEvent * event) { setTime(); }
+
+void TimeLabel::setTime() {
+    bool counting_state = counting;
+    counting = false;
+
+    bool ok;
+    int minutes = QInputDialog::getInt(this, tr("Minutes"), tr("Minutes to count down:"),
+				       0, 0, 10000, 1, &ok);
+    if (ok && minutes >= 0) time.setHMS(minutes / 60, minutes % 60, 0);
+
+    counting = counting_state;
+
+    setText(time.toString("hh:mm:ss"));
 }
 
-void TimeLabel::setTime()
-{
-  bool counting_state = counting;
-  counting = false;
-
-  bool ok;
-  int minutes = QInputDialog::getInt(this, tr("Minutes"),
-				     tr("Minutes to count down:"),
-				     0, 0, 10000, 1, &ok);
-  if (ok && minutes >= 0)
-    time.setHMS(minutes/60,minutes%60,0);
-
-  counting = counting_state;
-
-  setText(time.toString("hh:mm:ss"));
+void TimeLabel::resetTime() {
+    time.setHMS(0, 0, 0);
+    setText(time.toString("hh:mm:ss"));
 }
 
-void TimeLabel::resetTime()
-{
-  time.setHMS(0, 0, 0);
-  setText(time.toString("hh:mm:ss"));
-}
+void TimeLabel::toggleCounting() { counting = !counting; }
 
-void TimeLabel::toggleCounting()
-{
-  counting = !counting;
-}
-
-void TimeLabel::toggleCountdown()
-{
-  countingDown = !countingDown;
-}
+void TimeLabel::toggleCountdown() { countingDown = !countingDown; }
 
 // --------------------------------------------------------------------

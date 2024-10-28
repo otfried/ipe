@@ -30,44 +30,37 @@
 #include "ipecanvas_cocoa.h"
 #include "ipecairopainter.h"
 
-#include <cairo.h>
-#include <cairo-quartz.h>
 #include <CoreGraphics/CoreGraphics.h>
+#include <cairo-quartz.h>
+#include <cairo.h>
 
 using namespace ipe;
 
 // --------------------------------------------------------------------
 
-Canvas::Canvas(IpeCanvasView *view)
-{
-  iView = view;
-  // iLayer = nullptr;
+Canvas::Canvas(IpeCanvasView * view) {
+    iView = view;
+    // iLayer = nullptr;
 }
 
-Canvas::~Canvas()
-{
-  // CGLayerRelease(iLayer);
+Canvas::~Canvas() {
+    // CGLayerRelease(iLayer);
 }
 
-void Canvas::invalidate()
-{
-  [iView setNeedsDisplayInRect:[iView bounds]];
+void Canvas::invalidate() { [iView setNeedsDisplayInRect:[iView bounds]]; }
+
+void Canvas::invalidate(int x, int y, int w, int h) {
+    NSRect rect;
+    rect.origin.x = x;
+    rect.origin.y = iHeight - 1 - y - h;
+    rect.size.width = w;
+    rect.size.height = h;
+    [iView setNeedsDisplayInRect:rect];
 }
 
-void Canvas::invalidate(int x, int y, int w, int h)
-{
-  NSRect rect;
-  rect.origin.x = x;
-  rect.origin.y = iHeight - 1 - y - h;
-  rect.size.width = w;
-  rect.size.height = h;
-  [iView setNeedsDisplayInRect:rect];
-}
-
-void Canvas::setCursor(TCursor cursor, double w, Color *color)
-{
-  // TODO: not implemented
-  // [[NSCursor closedHandCursor] push];
+void Canvas::setCursor(TCursor cursor, double w, Color * color) {
+    // TODO: not implemented
+    // [[NSCursor closedHandCursor] push];
 }
 
 /* not using CGLayer for the moment, because in Cairo 1.16.0 this doesn't handle
@@ -117,247 +110,211 @@ void Canvas::refreshLayer()
 }
 #endif
 
-void Canvas::drawRect(NSRect rect)
-{
-  bool resize = [iView inLiveResize];
-  NSSize s = [iView bounds].size;
-  NSSize sb = [iView convertSizeToBacking:s];
-  iWidth = s.width;
-  iHeight = s.height;
-  iBWidth = sb.width;
-  iBHeight = sb.height;
+void Canvas::drawRect(NSRect rect) {
+    bool resize = [iView inLiveResize];
+    NSSize s = [iView bounds].size;
+    NSSize sb = [iView convertSizeToBacking:s];
+    iWidth = s.width;
+    iHeight = s.height;
+    iBWidth = sb.width;
+    iBHeight = sb.height;
 
-  if (!resize)
-    refreshSurface();  // instead of refreshLayer();
+    if (!resize) refreshSurface(); // instead of refreshLayer();
 
-  CGContextRef myContext = [[NSGraphicsContext currentContext] CGContext];
+    CGContextRef myContext = [[NSGraphicsContext currentContext] CGContext];
 
-  CGContextTranslateCTM(myContext, 0.0, iHeight);
-  CGContextScaleCTM(myContext, 1.0, -1.0);
+    CGContextTranslateCTM(myContext, 0.0, iHeight);
+    CGContextScaleCTM(myContext, 1.0, -1.0);
 
-  // if (iLayer)
-  // CGContextDrawLayerInRect(myContext, [iView bounds], iLayer);
+    // if (iLayer)
+    // CGContextDrawLayerInRect(myContext, [iView bounds], iLayer);
 
-  if (resize)
-    return;
+    if (resize) return;
 
-  cairo_surface_t *surface =
-    cairo_quartz_surface_create_for_cg_context(myContext, iWidth, iHeight);
-  cairo_t *cr = cairo_create(surface);
+    cairo_surface_t * surface =
+	cairo_quartz_surface_create_for_cg_context(myContext, iWidth, iHeight);
+    cairo_t * cr = cairo_create(surface);
 
-  if (iSurface) {
-    cairo_set_source_surface(cr, iSurface, 0.0, 0.0);
-    if (iWidth != iBWidth) {
-      cairo_matrix_t matrix;
-      cairo_matrix_init_scale(&matrix, iBWidth / iWidth, iBHeight / iHeight);
-      cairo_pattern_set_matrix(cairo_get_source(cr), &matrix);
+    if (iSurface) {
+	cairo_set_source_surface(cr, iSurface, 0.0, 0.0);
+	if (iWidth != iBWidth) {
+	    cairo_matrix_t matrix;
+	    cairo_matrix_init_scale(&matrix, iBWidth / iWidth, iBHeight / iHeight);
+	    cairo_pattern_set_matrix(cairo_get_source(cr), &matrix);
+	}
+	cairo_paint(cr);
     }
-    cairo_paint(cr);
-  }
 
-  // don't draw tool during live resize
-  if (!resize) {
-    if (iFifiVisible)
-      drawFifi(cr);
-    if (iPage) {
-      CairoPainter cp(iCascade, iFonts.get(), cr, iZoom, false, false);
-      cp.transform(canvasTfm());
-      cp.pushMatrix();
-      drawTool(cp);
-      cp.popMatrix();
+    // don't draw tool during live resize
+    if (!resize) {
+	if (iFifiVisible) drawFifi(cr);
+	if (iPage) {
+	    CairoPainter cp(iCascade, iFonts.get(), cr, iZoom, false, false);
+	    cp.transform(canvasTfm());
+	    cp.pushMatrix();
+	    drawTool(cp);
+	    cp.popMatrix();
+	}
     }
-  }
-  cairo_destroy(cr);
-  cairo_surface_finish(surface);
-  cairo_surface_destroy(surface);
+    cairo_destroy(cr);
+    cairo_surface_finish(surface);
+    cairo_surface_destroy(surface);
 }
 
-static int getModifiers(NSEvent *event)
-{
-  uint modifierFlags = [event modifierFlags];
-  int mod = 0;
-  if (modifierFlags & NSShiftKeyMask)
-    mod |= CanvasBase::EShift;
-  if (modifierFlags & NSControlKeyMask)
-    mod |= CanvasBase::EControl;
-  if (modifierFlags & NSCommandKeyMask)
-    mod |= CanvasBase::ECommand;
-  if (modifierFlags & NSAlternateKeyMask)
-    mod |= CanvasBase::EAlt;
-  return mod;
+static int getModifiers(NSEvent * event) {
+    uint modifierFlags = [event modifierFlags];
+    int mod = 0;
+    if (modifierFlags & NSShiftKeyMask) mod |= CanvasBase::EShift;
+    if (modifierFlags & NSControlKeyMask) mod |= CanvasBase::EControl;
+    if (modifierFlags & NSCommandKeyMask) mod |= CanvasBase::ECommand;
+    if (modifierFlags & NSAlternateKeyMask) mod |= CanvasBase::EAlt;
+    return mod;
 }
 
-void Canvas::button(bool down, NSEvent *event)
-{
-  // pw is in window coordinates, p in view coordinates,
-  // ps in screen coordinates
-  NSPoint pw = [event locationInWindow];
-  NSRect rw = { pw, { 100.0, 100.0 }};
-  NSRect rs = [[iView window] convertRectToScreen:rw];
-  NSPoint ps = rs.origin;
-  NSPoint p = [iView convertPoint:pw fromView:nil];
-  // flip y-axis
-  p.y = iHeight - 1 - p.y;
-  // 0, 1, 2 for left, right, middle
-  int cbutton = [event buttonNumber];
-  // change to 1, 2, 4 ..
-  int button = 1;
-  while (cbutton--)
-    button *= 2;
-  if (down && button == 1 && [event clickCount] == 2)
-    button = 0x81; // left double click
-  iGlobalPos = Vector(ps.x, ps.y);
-  computeFifi(p.x, p.y);
-  int mod = getModifiers(event) | iAdditionalModifiers;
-  if (iTool)
-    iTool->mouseButton(button | mod, down);
-  else if (down && iObserver)
-    iObserver->canvasObserverMouseAction(button | mod);
+void Canvas::button(bool down, NSEvent * event) {
+    // pw is in window coordinates, p in view coordinates,
+    // ps in screen coordinates
+    NSPoint pw = [event locationInWindow];
+    NSRect rw = {pw, {100.0, 100.0}};
+    NSRect rs = [[iView window] convertRectToScreen:rw];
+    NSPoint ps = rs.origin;
+    NSPoint p = [iView convertPoint:pw fromView:nil];
+    // flip y-axis
+    p.y = iHeight - 1 - p.y;
+    // 0, 1, 2 for left, right, middle
+    int cbutton = [event buttonNumber];
+    // change to 1, 2, 4 ..
+    int button = 1;
+    while (cbutton--) button *= 2;
+    if (down && button == 1 && [event clickCount] == 2)
+	button = 0x81; // left double click
+    iGlobalPos = Vector(ps.x, ps.y);
+    computeFifi(p.x, p.y);
+    int mod = getModifiers(event) | iAdditionalModifiers;
+    if (iTool)
+	iTool->mouseButton(button | mod, down);
+    else if (down && iObserver)
+	iObserver->canvasObserverMouseAction(button | mod);
 }
 
-void Canvas::mouseMove(NSEvent *event)
-{
-  NSPoint p = [iView convertPoint:[event locationInWindow] fromView:nil];
-  computeFifi(p.x, iHeight - 1 - p.y);
-  if (iTool)
-    iTool->mouseMove();
-  if (iObserver)
-    iObserver->canvasObserverPositionChanged();
+void Canvas::mouseMove(NSEvent * event) {
+    NSPoint p = [iView convertPoint:[event locationInWindow] fromView:nil];
+    computeFifi(p.x, iHeight - 1 - p.y);
+    if (iTool) iTool->mouseMove();
+    if (iObserver) iObserver->canvasObserverPositionChanged();
 }
 
-bool Canvas::key(NSEvent *event)
-{
-  if (iTool) {
-    int mod = getModifiers(event);
-    NSString  *characters = [event charactersIgnoringModifiers];
-    String t(characters.UTF8String);
-    return iTool->key(t, mod);
-  } else
-    return false;
+bool Canvas::key(NSEvent * event) {
+    if (iTool) {
+	int mod = getModifiers(event);
+	NSString * characters = [event charactersIgnoringModifiers];
+	String t(characters.UTF8String);
+	return iTool->key(t, mod);
+    } else
+	return false;
 }
 
-void Canvas::magnify(NSEvent *event)
-{
-  NSPoint q = [iView convertPoint:[event locationInWindow] fromView:nil];
-  Vector origin = devToUser(Vector(q.x, iHeight - 1 - q.y));
-  Vector offset = iZoom * (pan() - origin);
-  double nzoom = iZoom * (1.0 + event.magnification);
-  setZoom(nzoom);
-  setPan(origin + (1.0/nzoom) * offset);
-  update();
-  if (iObserver)
-    // scroll wheel hasn't moved, but update display of ppi
-    iObserver->canvasObserverWheelMoved(0, 0, 0);
+void Canvas::magnify(NSEvent * event) {
+    NSPoint q = [iView convertPoint:[event locationInWindow] fromView:nil];
+    Vector origin = devToUser(Vector(q.x, iHeight - 1 - q.y));
+    Vector offset = iZoom * (pan() - origin);
+    double nzoom = iZoom * (1.0 + event.magnification);
+    setZoom(nzoom);
+    setPan(origin + (1.0 / nzoom) * offset);
+    update();
+    if (iObserver)
+	// scroll wheel hasn't moved, but update display of ppi
+	iObserver->canvasObserverWheelMoved(0, 0, 0);
 }
 
-void Canvas::scrollWheel(NSEvent *event)
-{
-  if (iObserver) {
-    double xDelta = [event scrollingDeltaX];
-    double yDelta = [event scrollingDeltaY];
-    int kind = ([event modifierFlags] & (NSCommandKeyMask | NSControlKeyMask)) ? 2:
-      [event hasPreciseScrollingDeltas] ? 1 : 0;
-    iObserver->canvasObserverWheelMoved(-xDelta, yDelta, kind);
-  }
+void Canvas::scrollWheel(NSEvent * event) {
+    if (iObserver) {
+	double xDelta = [event scrollingDeltaX];
+	double yDelta = [event scrollingDeltaY];
+	int kind = ([event modifierFlags] & (NSCommandKeyMask | NSControlKeyMask)) ? 2
+		   : [event hasPreciseScrollingDeltas]                             ? 1
+										   : 0;
+	iObserver->canvasObserverWheelMoved(-xDelta, yDelta, kind);
+    }
 }
 
 // --------------------------------------------------------------------
 
 @implementation IpeCanvasView
 
-- (instancetype) initWithFrame:(NSRect) rect
-{
-  if ([super initWithFrame:rect])
-    _canvas = new Canvas(self);
-  return self;
+- (instancetype)initWithFrame:(NSRect)rect {
+    if ([super initWithFrame:rect]) _canvas = new Canvas(self);
+    return self;
 }
 
-- (BOOL) acceptsFirstResponder
-{
-  return YES;
+- (BOOL)acceptsFirstResponder {
+    return YES;
 }
 
-- (BOOL) isOpaque
-{
-  return YES;
+- (BOOL)isOpaque {
+    return YES;
 }
 
-- (void) drawRect:(NSRect) rect
-{
-  self.canvas->drawRect(rect);
+- (void)drawRect:(NSRect)rect {
+    self.canvas->drawRect(rect);
 }
 
-- (void) mouseDown:(NSEvent *) event
-{
-  self.canvas->button(true, event);
+- (void)mouseDown:(NSEvent *)event {
+    self.canvas->button(true, event);
 }
 
-- (void) mouseUp:(NSEvent *) event
-{
-  self.canvas->button(false, event);
+- (void)mouseUp:(NSEvent *)event {
+    self.canvas->button(false, event);
 }
 
-- (void) mouseDragged:(NSEvent *) event
-{
-  self.canvas->mouseMove(event);
+- (void)mouseDragged:(NSEvent *)event {
+    self.canvas->mouseMove(event);
 }
 
-- (void) rightMouseDown:(NSEvent *) event
-{
-  self.canvas->button(true, event);
+- (void)rightMouseDown:(NSEvent *)event {
+    self.canvas->button(true, event);
 }
 
-- (void) rightMouseUp:(NSEvent *) event
-{
-  self.canvas->button(false, event);
+- (void)rightMouseUp:(NSEvent *)event {
+    self.canvas->button(false, event);
 }
 
-- (void) rightMouseDragged:(NSEvent *) event
-{
-  self.canvas->mouseMove(event);
+- (void)rightMouseDragged:(NSEvent *)event {
+    self.canvas->mouseMove(event);
 }
 
-- (void) otherMouseDown:(NSEvent *) event
-{
-  self.canvas->button(true, event);
+- (void)otherMouseDown:(NSEvent *)event {
+    self.canvas->button(true, event);
 }
 
-- (void) otherMouseUp:(NSEvent *) event
-{
-  self.canvas->button(false, event);
+- (void)otherMouseUp:(NSEvent *)event {
+    self.canvas->button(false, event);
 }
 
-- (void) otherMouseDragged:(NSEvent *) event
-{
-  self.canvas->mouseMove(event);
+- (void)otherMouseDragged:(NSEvent *)event {
+    self.canvas->mouseMove(event);
 }
 
-- (void) mouseMoved:(NSEvent *) event
-{
-  self.canvas->mouseMove(event);
+- (void)mouseMoved:(NSEvent *)event {
+    self.canvas->mouseMove(event);
 }
 
-- (void) keyDown:(NSEvent *) event
-{
-  if (!self.canvas->key(event))
-    [super keyDown:event];
+- (void)keyDown:(NSEvent *)event {
+    if (!self.canvas->key(event)) [super keyDown:event];
 }
 
-- (void) scrollWheel:(NSEvent *) event
-{
-  self.canvas->scrollWheel(event);
+- (void)scrollWheel:(NSEvent *)event {
+    self.canvas->scrollWheel(event);
 }
 
-- (void) magnifyWithEvent:(NSEvent *) event
-{
-  self.canvas->magnify(event);
+- (void)magnifyWithEvent:(NSEvent *)event {
+    self.canvas->magnify(event);
 }
 
-- (void) dealloc
-{
-  // TODO: Is this actually called?
-  NSLog(@"IpeCanvasView:dealloc");
-  delete self.canvas;
+- (void)dealloc {
+    // TODO: Is this actually called?
+    NSLog(@"IpeCanvasView:dealloc");
+    delete self.canvas;
 }
 
 @end

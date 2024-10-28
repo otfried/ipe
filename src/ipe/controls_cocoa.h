@@ -38,56 +38,54 @@
 
 using namespace ipe;
 
-inline String N2I(NSString *aStr) { return String(aStr.UTF8String); }
-inline const char *N2C(NSString *aStr) { return aStr.UTF8String; }
-inline NSString *I2N(String s) {return [NSString stringWithUTF8String:s.z()];}
-inline NSString *C2N(const char *s) {return [NSString stringWithUTF8String:s];}
+inline String N2I(NSString * aStr) { return String(aStr.UTF8String); }
+inline const char * N2C(NSString * aStr) { return aStr.UTF8String; }
+inline NSString * I2N(String s) { return [NSString stringWithUTF8String:s.z()]; }
+inline NSString * C2N(const char * s) { return [NSString stringWithUTF8String:s]; }
 
 @interface IpeMenuItem : NSMenuItem
 @property NSString * ipeAction;
 
-- (instancetype) initWithTitle:(NSString *) aTitle
-		     ipeAction:(NSString *) anIpeAction
-		 keyEquivalent:(NSString *) aKey;
+- (instancetype)initWithTitle:(NSString *)aTitle
+		    ipeAction:(NSString *)anIpeAction
+		keyEquivalent:(NSString *)aKey;
 @end
 
 @protocol IpeControlsDelegate
 
-- (void) pathViewAttributeChanged:(String) attr;
-- (void) pathViewPopup:(NSPoint) p;
-- (void) bookmarkSelected:(int) index;
-- (void) layerMenuAt:(NSPoint) p forLayer:(NSString *) layer;
-- (void) layerAction:(NSString *) actionName forLayer:(NSString *) layer;
+- (void)pathViewAttributeChanged:(String)attr;
+- (void)pathViewPopup:(NSPoint)p;
+- (void)bookmarkSelected:(int)index;
+- (void)layerMenuAt:(NSPoint)p forLayer:(NSString *)layer;
+- (void)layerAction:(NSString *)actionName forLayer:(NSString *)layer;
 
 @end
 
 @interface IpePathView : NSView
 
-@property (weak) id <IpeControlsDelegate> delegate;
+@property(weak) id<IpeControlsDelegate> delegate;
 
-- (void) setAttributes:(const AllAttributes *) all cascade:(Cascade *) sheet;
-
-@end
-
-@interface IpeLayerView : NSScrollView <NSTableViewDataSource,
-					  NSTableViewDelegate>
-
-@property (weak) id<IpeControlsDelegate> delegate;
-
-- (void) setPage:(const Page *) page view:(int) view;
-
-- (void) ipeLayerClicked:(int) row;
-- (void) ipeLayerMenuAt:(NSPoint) p forRow:(int) row;
-- (void) ipeLayerToggled:(id) sender;
+- (void)setAttributes:(const AllAttributes *)all cascade:(Cascade *)sheet;
 
 @end
 
-@interface IpeBookmarksView : NSScrollView <NSTableViewDataSource,
-					      NSTableViewDelegate>
+@interface IpeLayerView : NSScrollView <NSTableViewDataSource, NSTableViewDelegate>
 
-@property (weak) id<IpeControlsDelegate> delegate;
+@property(weak) id<IpeControlsDelegate> delegate;
 
-- (void) setBookmarks:(int) no fromStrings:(const String *) s;
+- (void)setPage:(const Page *)page view:(int)view;
+
+- (void)ipeLayerClicked:(int)row;
+- (void)ipeLayerMenuAt:(NSPoint)p forRow:(int)row;
+- (void)ipeLayerToggled:(id)sender;
+
+@end
+
+@interface IpeBookmarksView : NSScrollView <NSTableViewDataSource, NSTableViewDelegate>
+
+@property(weak) id<IpeControlsDelegate> delegate;
+
+- (void)setBookmarks:(int)no fromStrings:(const String *)s;
 
 @end
 

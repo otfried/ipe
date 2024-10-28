@@ -35,46 +35,46 @@
 #include <list>
 
 #include "ipepage.h"
-#include "ipetext.h"
 #include "ipepdfparser.h"
 #include "iperesources.h"
+#include "ipetext.h"
 
 // --------------------------------------------------------------------
 
 namespace ipe {
 
-  class Cascade;
-  class TextCollectingVisitor;
+class Cascade;
+class TextCollectingVisitor;
 
-  class Latex {
-  public:
-    Latex(const Cascade *sheet, LatexType latexType, bool sequentialText);
+class Latex {
+public:
+    Latex(const Cascade * sheet, LatexType latexType, bool sequentialText);
     ~Latex();
 
-    int scanObject(const Object *obj);
-    int scanPage(Page *page);
+    int scanObject(const Object * obj);
+    int scanPage(Page * page);
     void addPageNumber(int pno, int vno, int npages, int nviews);
-    int createLatexSource(Stream &stream, String preamble);
-    bool readPdf(DataSource &source);
+    int createLatexSource(Stream & stream, String preamble);
+    bool readPdf(DataSource & source);
     bool updateTextObjects();
-    PdfResources *takeResources();
+    PdfResources * takeResources();
 
-  private:
-    bool getXForm(String key, const PdfDict *ipeInfo);
+private:
+    bool getXForm(String key, const PdfDict * ipeInfo);
     void warn(String msg);
 
-  private:
+private:
     struct SText {
-      const Text *iText;
-      Attribute iSize;
-      Fixed iStretch;
-      String iSource;
+	const Text * iText;
+	Attribute iSize;
+	Fixed iStretch;
+	String iSource;
     };
 
     typedef std::vector<SText> TextList;
     typedef std::vector<Text::XForm *> XFormList;
 
-    const Cascade *iCascade;
+    const Cascade * iCascade;
     bool iXetex;
     bool iSequentialText;
     LatexType iLatexType;
@@ -88,12 +88,12 @@ namespace ipe {
     XFormList iXForms;
 
     //! The resources from the generated PDF file.
-    PdfResources *iResources;
+    PdfResources * iResources;
 
     friend class ipe::TextCollectingVisitor;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

@@ -32,38 +32,37 @@
 #ifndef IPEIML_H
 #define IPEIML_H
 
+#include "ipebitmap.h"
+#include "ipedoc.h"
 #include "ipegroup.h"
 #include "ipepage.h"
-#include "ipedoc.h"
-#include "ipebitmap.h"
 
 // --------------------------------------------------------------------
 
 namespace ipe {
 
-  class ImlParser : public XmlParser {
-  public:
-    enum Errors { ESuccess = 0, EVersionTooOld, EVersionTooRecent,
-		  ESyntaxError };
-    explicit ImlParser(DataSource &source);
-    int parseDocument(Document &doc);
-    bool parsePage(Page &page);
-    bool parseView(Page &page, AttributeMap &map);
-    Object *parseObject(String tag, Page *page = nullptr,
-			int *currentLayer = nullptr);
-    Object *parseObject(String tag, String &layer);
-    StyleSheet *parseStyleSheet();
-    bool parseStyle(StyleSheet &sheet);
+class ImlParser : public XmlParser {
+public:
+    enum Errors { ESuccess = 0, EVersionTooOld, EVersionTooRecent, ESyntaxError };
+    explicit ImlParser(DataSource & source);
+    int parseDocument(Document & doc);
+    bool parsePage(Page & page);
+    bool parseView(Page & page, AttributeMap & map);
+    Object * parseObject(String tag, Page * page = nullptr, int * currentLayer = nullptr);
+    Object * parseObject(String tag, String & layer);
+    StyleSheet * parseStyleSheet();
+    bool parseStyle(StyleSheet & sheet);
     // bool parseSelection(PageObjectSeq &seq);
-    Page *parsePageSelection();
+    Page * parsePageSelection();
     virtual Buffer pdfStream(int objNum);
     bool parseBitmap();
-    bool parseAttributeMapping(AttributeMap &map);
-  private:
-    std::vector<Bitmap> iBitmaps;
-  };
+    bool parseAttributeMapping(AttributeMap & map);
 
-} // namespace
+private:
+    std::vector<Bitmap> iBitmaps;
+};
+
+} // namespace ipe
 
 // --------------------------------------------------------------------
 

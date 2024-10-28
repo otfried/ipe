@@ -35,16 +35,16 @@
 // --------------------------------------------------------------------
 
 #include "ipebase.h"
-#include "ipegeo.h"
-#include "ipepath.h"
-#include "ipetext.h"
-#include "ipeimage.h"
-#include "ipereference.h"
-#include "ipegroup.h"
-#include "ipepage.h"
 #include "ipedoc.h"
+#include "ipegeo.h"
+#include "ipegroup.h"
+#include "ipeimage.h"
 #include "ipelet.h"
+#include "ipepage.h"
+#include "ipepath.h"
+#include "ipereference.h"
 #include "ipesnap.h"
+#include "ipetext.h"
 
 // --------------------------------------------------------------------
 #endif

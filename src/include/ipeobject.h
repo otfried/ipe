@@ -39,36 +39,36 @@
 
 namespace ipe {
 
-  class Visitor;
-  class Painter;
-  class Group;
-  class Text;
-  class Path;
-  class Image;
-  class Reference;
-  class StyleSheet;
-  class Cascade;
+class Visitor;
+class Painter;
+class Group;
+class Text;
+class Path;
+class Image;
+class Reference;
+class StyleSheet;
+class Cascade;
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Object {
-  public:
+class Object {
+public:
     enum Type { EGroup, EPath, EText, EImage, EReference };
 
     virtual ~Object() = 0;
 
     //! Calls visitXXX method of the visitor.
-    virtual void accept(Visitor &visitor) const = 0;
+    virtual void accept(Visitor & visitor) const = 0;
 
     //! Make a copy of this object (constant-time).
-    virtual Object *clone() const = 0;
+    virtual Object * clone() const = 0;
 
-    virtual Group *asGroup();
-    virtual const Group *asGroup() const;
-    virtual Text *asText();
-    virtual Path *asPath();
-    virtual Image *asImage();
-    virtual Reference *asReference();
+    virtual Group * asGroup();
+    virtual const Group * asGroup() const;
+    virtual Text * asText();
+    virtual Path * asPath();
+    virtual Image * asImage();
+    virtual Reference * asReference();
 
     virtual Type type() const = 0;
 
@@ -79,9 +79,9 @@ namespace ipe {
     inline TTransformations transformations() const { return iTransformations; }
     void setTransformations(TTransformations trans);
 
-    virtual void setMatrix(const Matrix &matrix);
+    virtual void setMatrix(const Matrix & matrix);
     //! Return transformation matrix.
-    inline const Matrix &matrix() const { return iMatrix; }
+    inline const Matrix & matrix() const { return iMatrix; }
 
     virtual bool setAttribute(Property prop, Attribute value);
     virtual Attribute getAttribute(Property prop) const noexcept;
@@ -90,18 +90,17 @@ namespace ipe {
     Attribute getCustom() const noexcept;
 
     //! Save the object in XML format.
-    virtual void saveAsXml(Stream &stream, String layer) const = 0;
+    virtual void saveAsXml(Stream & stream, String layer) const = 0;
 
     //! Draw the object.
-    virtual void draw(Painter &painter) const = 0;
+    virtual void draw(Painter & painter) const = 0;
 
     //! Draw simple version for selecting and transforming.
-    virtual void drawSimple(Painter &painter) const = 0;
+    virtual void drawSimple(Painter & painter) const = 0;
 
     /*! Return distance of transformed object to point \a v.
       If larger than \a bound, can just return \a bound. */
-    virtual double distance(const Vector &v, const Matrix &m,
-			    double bound) const = 0;
+    virtual double distance(const Vector & v, const Matrix & m, double bound) const = 0;
 
     //! Extend \a box to include the object transformed by \a m.
     /*! For objects in a page, don't call this directly.  The Page
@@ -116,51 +115,50 @@ namespace ipe {
       little leeway in case the boundary is determined by a spline (it
       has to be approximated to perform this operation).
     */
-    virtual void addToBBox(Rect &box, const Matrix &m, bool cp)
-      const = 0;
+    virtual void addToBBox(Rect & box, const Matrix & m, bool cp) const = 0;
 
-    virtual void snapVtx(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const;
-    virtual void snapCtl(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const;
-    virtual void snapBnd(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const;
+    virtual void snapVtx(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const;
+    virtual void snapCtl(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const;
+    virtual void snapBnd(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const;
 
-    virtual void checkStyle(const Cascade *sheet, AttributeSeq &seq) const;
+    virtual void checkStyle(const Cascade * sheet, AttributeSeq & seq) const;
 
-
-  protected:
+protected:
     explicit Object();
-    explicit Object(const AllAttributes &attr);
-    Object(const Object &rhs);
+    explicit Object(const AllAttributes & attr);
+    Object(const Object & rhs);
 
-    explicit Object(const XmlAttributes &attr);
+    explicit Object(const XmlAttributes & attr);
 
-    void saveAttributesAsXml(Stream &stream, String layer) const;
-    static void checkSymbol(Kind kind, Attribute attr,
-			    const Cascade *sheet, AttributeSeq &seq);
-    Matrix effectiveMatrix(const Matrix & m, const Vector &pos = Vector::ZERO) const noexcept;
+    void saveAttributesAsXml(Stream & stream, String layer) const;
+    static void checkSymbol(Kind kind, Attribute attr, const Cascade * sheet,
+			    AttributeSeq & seq);
+    Matrix effectiveMatrix(const Matrix & m,
+			   const Vector & pos = Vector::ZERO) const noexcept;
 
-  protected:
+protected:
     Matrix iMatrix;
     Attribute iCustom;
     TPinned iPinned : 8;
     TTransformations iTransformations : 8;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Visitor {
-  public:
+class Visitor {
+public:
     virtual ~Visitor();
-    virtual void visitGroup(const Group *obj);
-    virtual void visitPath(const Path *obj);
-    virtual void visitText(const Text *obj);
-    virtual void visitImage(const Image *obj);
-    virtual void visitReference(const Reference *obj);
-  };
+    virtual void visitGroup(const Group * obj);
+    virtual void visitPath(const Path * obj);
+    virtual void visitText(const Text * obj);
+    virtual void visitImage(const Image * obj);
+    virtual void visitReference(const Reference * obj);
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

@@ -43,29 +43,31 @@ using namespace ipe;
 class PathView {
 
 public:
-  static void init(HINSTANCE hInstance);
-  PathView(HWND parent, int id);
+    static void init(HINSTANCE hInstance);
+    PathView(HWND parent, int id);
 
-  HWND windowId() const { return hwnd; }
-  void setColor(const Color & color);
-  void set(const AllAttributes &all, Cascade *sheet);
+    HWND windowId() const { return hwnd; }
+    void setColor(const Color & color);
+    void set(const AllAttributes & all, Cascade * sheet);
 
-  inline POINT popupPos() const { return pos; }
-  inline String action() const { return iAction; }
+    inline POINT popupPos() const { return pos; }
+    inline String action() const { return iAction; }
+
 private:
-  static const wchar_t className[];
-  static LRESULT CALLBACK wndProc(HWND hwnd, UINT Message,
-				  WPARAM wParam, LPARAM lParam);
-  void wndPaint();
-  void button(int x, int y);
+    static const wchar_t className[];
+    static LRESULT CALLBACK wndProc(HWND hwnd, UINT Message, WPARAM wParam,
+				    LPARAM lParam);
+    void wndPaint();
+    void button(int x, int y);
+
 private:
-  HWND hwnd;
-  int idBase;
-  POINT pos;
-  Cascade *iCascade;
-  AllAttributes iAll;
-  String iAction;
-  Color iColor;
+    HWND hwnd;
+    int idBase;
+    POINT pos;
+    Cascade * iCascade;
+    AllAttributes iAll;
+    String iAction;
+    Color iColor;
 };
 
 // --------------------------------------------------------------------

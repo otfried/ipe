@@ -40,63 +40,51 @@
 
 namespace ipe {
 
-  inline QPointF QPt(const Vector &v)
-  {
-    return QPointF(v.x, v.y);
-  }
+inline QPointF QPt(const Vector & v) { return QPointF(v.x, v.y); }
 
-  inline String IpeQ(const QString &str)
-  {
-    return String(str.toUtf8());
-  }
+inline String IpeQ(const QString & str) { return String(str.toUtf8()); }
 
-  inline QString QIpe(const String &str)
-  {
-    return QString::fromUtf8(str.z());
-  }
+inline QString QIpe(const String & str) { return QString::fromUtf8(str.z()); }
 
-  inline QColor QIpe(Color color)
-  {
+inline QColor QIpe(Color color) {
     return QColor(int(color.iRed.toDouble() * 255 + 0.5),
 		  int(color.iGreen.toDouble() * 255 + 0.5),
 		  int(color.iBlue.toDouble() * 255 + 0.5));
-  }
+}
 
-  inline Color IpeQ(QColor color) {
-    return Color(color.red() * 1000 / 255,
-		 color.green() * 1000 / 255,
+inline Color IpeQ(QColor color) {
+    return Color(color.red() * 1000 / 255, color.green() * 1000 / 255,
 		 color.blue() * 1000 / 255);
-  }
+}
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Canvas : public QWidget, public CanvasBase {
+class Canvas : public QWidget, public CanvasBase {
     Q_OBJECT
-  public:
-    Canvas(QWidget* parent, Qt::WindowFlags f=Qt::Widget);
+public:
+    Canvas(QWidget * parent, Qt::WindowFlags f = Qt::Widget);
 
-    virtual void setCursor(TCursor cursor, double w = 1.0,
-			   Color *color = nullptr);
+    virtual void setCursor(TCursor cursor, double w = 1.0, Color * color = nullptr);
 
-  protected:
+protected:
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);
-    void drawFifi(QPainter &q);
+    void drawFifi(QPainter & q);
 
-  protected:
-    virtual void paintEvent(QPaintEvent *ev);
-    void mouseButton(QMouseEvent *ev, int button, bool press);
-    virtual void mouseDoubleClickEvent(QMouseEvent *ev);
-    virtual void mousePressEvent(QMouseEvent *ev) ;
-    virtual void mouseReleaseEvent(QMouseEvent *ev);
-    virtual void mouseMoveEvent(QMouseEvent *ev);
-    virtual void tabletEvent(QTabletEvent *ev);
-    virtual void wheelEvent(QWheelEvent *ev);
-    virtual void keyPressEvent(QKeyEvent *ev);
+protected:
+    virtual void paintEvent(QPaintEvent * ev);
+    void mouseButton(QMouseEvent * ev, int button, bool press);
+    virtual void mouseDoubleClickEvent(QMouseEvent * ev);
+    virtual void mousePressEvent(QMouseEvent * ev);
+    virtual void mouseReleaseEvent(QMouseEvent * ev);
+    virtual void mouseMoveEvent(QMouseEvent * ev);
+    virtual void tabletEvent(QTabletEvent * ev);
+    virtual void wheelEvent(QWheelEvent * ev);
+    virtual void keyPressEvent(QKeyEvent * ev);
     virtual QSize sizeHint() const;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

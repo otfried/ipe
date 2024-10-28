@@ -40,25 +40,25 @@
 
 namespace ipe {
 
-  class PdfView : public QWidget, public PdfViewBase {
+class PdfView : public QWidget, public PdfViewBase {
     Q_OBJECT
-  public:
-    PdfView(QWidget* parent, Qt::WindowFlags f = Qt::Widget);
+public:
+    PdfView(QWidget * parent, Qt::WindowFlags f = Qt::Widget);
 
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);
 
-  signals:
+signals:
     void sizeChanged();
     void mouseButton(int, Vector);
 
-  protected:
-    virtual void paintEvent(QPaintEvent *ev);
-    virtual void mousePressEvent(QMouseEvent *ev);
+protected:
+    virtual void paintEvent(QPaintEvent * ev);
+    virtual void mousePressEvent(QMouseEvent * ev);
     virtual QSize sizeHint() const;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

@@ -37,29 +37,30 @@
 
 namespace ipe {
 
-  class CanvasBase;
+class CanvasBase;
 
-  class Tool {
-  public:
+class Tool {
+public:
     virtual ~Tool();
 
-  public:
-    virtual void draw(Painter &painter) const = 0;
+public:
+    virtual void draw(Painter & painter) const = 0;
     // left: 1, right:2, middle: 4,
     // xbutton1: 8, xbutton2: 0x10
     // plus 0x80 for double-click
     virtual void mouseButton(int button, bool press);
     virtual void mouseMove();
     virtual bool key(String text, int modifiers);
-    virtual void snapVtx(const Vector &mouse, Vector &pos,
-			 double &bound, bool cp) const;
-  protected:
-    Tool(CanvasBase *canvas);
+    virtual void snapVtx(const Vector & mouse, Vector & pos, double & bound,
+			 bool cp) const;
 
-  protected:
-    CanvasBase *iCanvas;
-  };
-} // namespace
+protected:
+    Tool(CanvasBase * canvas);
+
+protected:
+    CanvasBase * iCanvas;
+};
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

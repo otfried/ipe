@@ -32,62 +32,52 @@
 
 #include <cairo.h>
 
-#include <QPainter>
 #include <QPaintEvent>
+#include <QPainter>
 
 using namespace ipe;
 
 // --------------------------------------------------------------------
 
-PdfView::PdfView(QWidget* parent, Qt::WindowFlags f)
-  : QWidget(parent, f)
-{
-  setAttribute(Qt::WA_OpaquePaintEvent);
+PdfView::PdfView(QWidget * parent, Qt::WindowFlags f)
+    : QWidget(parent, f) {
+    setAttribute(Qt::WA_OpaquePaintEvent);
 }
 
-QSize PdfView::sizeHint() const
-{
-  return QSize(640, 480);
+QSize PdfView::sizeHint() const { return QSize(640, 480); }
+
+// --------------------------------------------------------------------
+
+void PdfView::invalidate() { QWidget::update(); }
+
+void PdfView::invalidate(int x, int y, int w, int h) {
+    QWidget::update(QRect(x, y, w, h));
 }
 
 // --------------------------------------------------------------------
 
-void PdfView::invalidate()
-{
-  QWidget::update();
+void PdfView::paintEvent(QPaintEvent * ev) {
+    if (iBWidth != width() || iBHeight != height()) {
+	iBWidth = iWidth = width();
+	iBHeight = iHeight = height();
+	emit sizeChanged();
+    }
+
+    refreshSurface();
+
+    QPainter qPainter;
+    qPainter.begin(this);
+    QRect r = ev->rect();
+    QRect source(r.left(), r.top(), r.width(), r.height());
+    QImage bits(cairo_image_surface_get_data(iSurface), iWidth, iHeight,
+		QImage::Format_RGB32);
+    qPainter.drawImage(r, bits, source);
+    qPainter.end();
 }
 
-void PdfView::invalidate(int x, int y, int w, int h)
-{
-  QWidget::update(QRect(x, y, w, h));
-}
-
-// --------------------------------------------------------------------
-
-void PdfView::paintEvent(QPaintEvent * ev)
-{
-  if (iBWidth != width() || iBHeight != height()) {
-    iBWidth = iWidth = width();
-    iBHeight = iHeight = height();
-    emit sizeChanged();
-  }
-
-  refreshSurface();
-
-  QPainter qPainter;
-  qPainter.begin(this);
-  QRect r = ev->rect();
-  QRect source(r.left(), r.top(), r.width(), r.height());
-  QImage bits(cairo_image_surface_get_data(iSurface),
-	      iWidth, iHeight, QImage::Format_RGB32);
-  qPainter.drawImage(r, bits, source);
-  qPainter.end();
-}
-
-void PdfView::mousePressEvent(QMouseEvent *ev)
-{
-  Vector v = devToUser(Vector(ev->position().x(), ev->position().y()));
-  emit mouseButton(ev->button() != Qt::LeftButton ? 1 : 0, v);
+void PdfView::mousePressEvent(QMouseEvent * ev) {
+    Vector v = devToUser(Vector(ev->position().x(), ev->position().y()));
+    emit mouseButton(ev->button() != Qt::LeftButton ? 1 : 0, v);
 }
 
 // --------------------------------------------------------------------

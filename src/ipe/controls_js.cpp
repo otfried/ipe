@@ -40,99 +40,90 @@ using namespace emscripten;
 
 // --------------------------------------------------------------------
 
-PathView::PathView()
-{
-  iCascade = nullptr;
+PathView::PathView() { iCascade = nullptr; }
+
+void PathView::setColor(const Color & color) { iColor = color; }
+
+void PathView::set(const AllAttributes & all, Cascade * sheet) {
+    iCascade = sheet;
+    iAll = all;
 }
 
-void PathView::setColor(const Color & color)
-{
-  iColor = color;
-}
+void PathView::paint(val canvas) {
+    int w = int(canvas["width"].as<double>());
+    int h = int(canvas["height"].as<double>());
 
-void PathView::set(const AllAttributes &all, Cascade *sheet)
-{
-  iCascade = sheet;
-  iAll = all;
-}
+    cairo_surface_t * sf = cairo_image_surface_create(CAIRO_FORMAT_RGB24, w, h);
+    cairo_t * cc = cairo_create(sf);
+    cairo_set_source_rgb(cc, iColor.iRed.toDouble(), iColor.iGreen.toDouble(),
+			 iColor.iBlue.toDouble());
+    cairo_rectangle(cc, 0, 0, w, h);
+    cairo_fill(cc);
 
-void PathView::paint(val canvas)
-{
-  int w = int(canvas["width"].as<double>());
-  int h = int(canvas["height"].as<double>());
+    if (iCascade) {
+	cairo_translate(cc, 0, h);
+	double zoom = w / 70.0;
+	cairo_scale(cc, zoom, -zoom);
+	Vector v0 = (1.0 / zoom) * Vector(0.1 * w, 0.5 * h);
+	Vector v1 = (1.0 / zoom) * Vector(0.7 * w, 0.5 * h);
+	Vector u1 = (1.0 / zoom) * Vector(0.88 * w, 0.8 * h);
+	Vector u2 = (1.0 / zoom) * Vector(0.80 * w, 0.5 * h);
+	Vector u3 = (1.0 / zoom) * Vector(0.88 * w, 0.2 * h);
+	Vector u4 = (1.0 / zoom) * Vector(0.96 * w, 0.5 * h);
+	Vector mid = 0.5 * (v0 + v1);
+	Vector vf = iAll.iFArrowShape.isMidArrow() ? mid : v1;
+	Vector vr = iAll.iRArrowShape.isMidArrow() ? mid : v0;
 
-  cairo_surface_t *sf = cairo_image_surface_create(CAIRO_FORMAT_RGB24, w, h);
-  cairo_t *cc = cairo_create(sf);
-  cairo_set_source_rgb(cc, iColor.iRed.toDouble(),
-		       iColor.iGreen.toDouble(),
-		       iColor.iBlue.toDouble());
-  cairo_rectangle(cc, 0, 0, w, h);
-  cairo_fill(cc);
+	CairoPainter painter(iCascade, nullptr, cc, 3.0, false, false);
+	painter.setPen(iAll.iPen);
+	painter.setDashStyle(iAll.iDashStyle);
+	painter.setStroke(iAll.iStroke);
+	painter.setFill(iAll.iFill);
+	painter.pushMatrix();
+	painter.newPath();
+	painter.moveTo(v0);
+	painter.lineTo(v1);
+	painter.drawPath(EStrokedOnly);
+	if (iAll.iFArrow)
+	    Path::drawArrow(painter, vf, Angle(0), iAll.iFArrowShape, iAll.iFArrowSize,
+			    100.0);
+	if (iAll.iRArrow)
+	    Path::drawArrow(painter, vr, Angle(IpePi), iAll.iRArrowShape,
+			    iAll.iRArrowSize, 100.0);
+	painter.setDashStyle(Attribute::NORMAL());
+	painter.setTiling(iAll.iTiling);
+	painter.newPath();
+	painter.moveTo(u1);
+	painter.lineTo(u2);
+	painter.lineTo(u3);
+	painter.lineTo(u4);
+	painter.closePath();
+	painter.drawPath(iAll.iPathMode);
+	painter.popMatrix();
+    }
 
-  if (iCascade) {
-    cairo_translate(cc, 0, h);
-    double zoom = w / 70.0;
-    cairo_scale(cc, zoom, -zoom);
-    Vector v0 = (1.0/zoom) * Vector(0.1 * w, 0.5 * h);
-    Vector v1 = (1.0/zoom) * Vector(0.7 * w, 0.5 * h);
-    Vector u1 = (1.0/zoom) * Vector(0.88 * w, 0.8 * h);
-    Vector u2 = (1.0/zoom) * Vector(0.80 * w, 0.5 * h);
-    Vector u3 = (1.0/zoom) * Vector(0.88 * w, 0.2 * h);
-    Vector u4 = (1.0/zoom) * Vector(0.96 * w, 0.5 * h);
-    Vector mid = 0.5 * (v0 + v1);
-    Vector vf = iAll.iFArrowShape.isMidArrow() ? mid : v1;
-    Vector vr = iAll.iRArrowShape.isMidArrow() ? mid : v0;
+    cairo_surface_flush(sf);
+    cairo_destroy(cc);
 
-    CairoPainter painter(iCascade, nullptr, cc, 3.0, false, false);
-    painter.setPen(iAll.iPen);
-    painter.setDashStyle(iAll.iDashStyle);
-    painter.setStroke(iAll.iStroke);
-    painter.setFill(iAll.iFill);
-    painter.pushMatrix();
-    painter.newPath();
-    painter.moveTo(v0);
-    painter.lineTo(v1);
-    painter.drawPath(EStrokedOnly);
-    if (iAll.iFArrow)
-      Path::drawArrow(painter, vf, Angle(0),
-		      iAll.iFArrowShape, iAll.iFArrowSize, 100.0);
-    if (iAll.iRArrow)
-      Path::drawArrow(painter, vr, Angle(IpePi),
-		      iAll.iRArrowShape, iAll.iRArrowSize, 100.0);
-    painter.setDashStyle(Attribute::NORMAL());
-    painter.setTiling(iAll.iTiling);
-    painter.newPath();
-    painter.moveTo(u1);
-    painter.lineTo(u2);
-    painter.lineTo(u3);
-    painter.lineTo(u4);
-    painter.closePath();
-    painter.drawPath(iAll.iPathMode);
-    painter.popMatrix();
-  }
+    val options = val::object();
+    options.set("alpha", false);
+    emscripten::val ctx = canvas.call<val>("getContext", val("2d"), options);
 
-  cairo_surface_flush(sf);
-  cairo_destroy(cc);
-
-  val options = val::object();
-  options.set("alpha", false);
-  emscripten::val ctx = canvas.call<val>("getContext", val("2d"), options);
-
-  uint8_t * p = cairo_image_surface_get_data(sf);
-  const uint32_t * source = (uint32_t *) p;
-  int nPixels = cairo_image_surface_get_width(sf) * cairo_image_surface_get_height(sf);
-  const uint32_t * fin = source + nPixels;
-  while (source != fin) {
-    uint32_t bits = *source++;
-    p[0] = (bits & 0x00ff0000) >> 16;
-    p[1] = (bits & 0x0000ff00) >> 8;
-    p[2] = (bits & 0x000000ff);
-    p[3] = 0xff;
-    p += 4;
-  }
-  val buffer1 = val(typed_memory_view(nPixels * 4, cairo_image_surface_get_data(sf)));
-  val::module_property("ipeBlitSurface")(ctx, buffer1, w, h);
-  cairo_surface_destroy(sf);
+    uint8_t * p = cairo_image_surface_get_data(sf);
+    const uint32_t * source = (uint32_t *)p;
+    int nPixels = cairo_image_surface_get_width(sf) * cairo_image_surface_get_height(sf);
+    const uint32_t * fin = source + nPixels;
+    while (source != fin) {
+	uint32_t bits = *source++;
+	p[0] = (bits & 0x00ff0000) >> 16;
+	p[1] = (bits & 0x0000ff00) >> 8;
+	p[2] = (bits & 0x000000ff);
+	p[3] = 0xff;
+	p += 4;
+    }
+    val buffer1 = val(typed_memory_view(nPixels * 4, cairo_image_surface_get_data(sf)));
+    val::module_property("ipeBlitSurface")(ctx, buffer1, w, h);
+    cairo_surface_destroy(sf);
 }
 
 // --------------------------------------------------------------------

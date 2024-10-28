@@ -33,8 +33,8 @@
 #define IPECAIROPAINTER_H
 
 #include "ipeattributes.h"
-#include "ipepainter.h"
 #include "ipefonts.h"
+#include "ipepainter.h"
 
 #include <cairo.h>
 
@@ -42,42 +42,42 @@
 
 namespace ipe {
 
-  class Cascade;
-  class PdfObj;
+class Cascade;
+class PdfObj;
 
-  class CairoPainter : public Painter {
-  public:
-    CairoPainter(const Cascade *sheet, Fonts *fonts, cairo_t *cc,
-		 double zoom, bool pretty, bool filterBest);
-    virtual ~CairoPainter() { }
+class CairoPainter : public Painter {
+public:
+    CairoPainter(const Cascade * sheet, Fonts * fonts, cairo_t * cc, double zoom,
+		 bool pretty, bool filterBest);
+    virtual ~CairoPainter() {}
 
     void setDimmed(bool dim) { iDimmed = dim; }
 
-    void executeStream(const PdfDict *stream, const PdfDict *resources);
+    void executeStream(const PdfDict * stream, const PdfDict * resources);
 
     bool type3Font() const { return iType3Font; }
 
-  protected:
+protected:
     virtual void doPush() override;
     virtual void doPop() override;
-    virtual void doMoveTo(const Vector &v) override;
-    virtual void doLineTo(const Vector &v) override;
-    virtual void doCurveTo(const Vector &v1, const Vector &v2,
-			   const Vector &v3) override;
+    virtual void doMoveTo(const Vector & v) override;
+    virtual void doLineTo(const Vector & v) override;
+    virtual void doCurveTo(const Vector & v1, const Vector & v2,
+			   const Vector & v3) override;
     virtual void doClosePath() override;
-    virtual void doDrawArc(const Arc &arc) override;
+    virtual void doDrawArc(const Arc & arc) override;
 
     virtual void doAddClipPath() override;
     virtual void doDrawPath(TPathMode mode) override;
     virtual void doDrawBitmap(Bitmap bitmap) override;
-    virtual void doDrawText(const Text *text) override;
+    virtual void doDrawText(const Text * text) override;
 
-  private:
-    const PdfDict *findResource(String kind, String name);
-    void drawGlyphs(std::vector<cairo_glyph_t> &glyphs);
-    void collectGlyphs(String s, std::vector<cairo_glyph_t> &glyphs,
-		       Vector &textPos);
-    void execute(const PdfDict *stream, const PdfDict *resources, bool applyMatrix = true);
+private:
+    const PdfDict * findResource(String kind, String name);
+    void drawGlyphs(std::vector<cairo_glyph_t> & glyphs);
+    void collectGlyphs(String s, std::vector<cairo_glyph_t> & glyphs, Vector & textPos);
+    void execute(const PdfDict * stream, const PdfDict * resources,
+		 bool applyMatrix = true);
     void clearArgs();
     void opcm();
     void opBT();
@@ -86,7 +86,7 @@ namespace ipe {
     void opTm();
     void opTd(bool setLeading);
     void opTstar();
-    void opTc(double *p);
+    void opTc(double * p);
     void opTz();
     void opTJ();
     void opTj(bool nextLine, bool setSpacing);
@@ -117,9 +117,9 @@ namespace ipe {
     void opsh();
     void createPattern();
 
-  private:
-    Fonts *iFonts;
-    cairo_t *iCairo;
+private:
+    Fonts * iFonts;
+    cairo_t * iCairo;
 
     double iZoom;
     bool iPretty;
@@ -137,18 +137,18 @@ namespace ipe {
     std::vector<const PdfDict *> iResourceStack;
 
     struct PdfState {
-      double iStrokeRgb[3];
-      double iFillRgb[3];
-      double iStrokeOpacity;
-      double iFillOpacity;
-      Face *iFont;  // not owned
-      double iFontSize;
-      double iTextRise;
-      double iCharacterSpacing;
-      double iWordSpacing;
-      double iHorizontalScaling;
-      double iLeading;
-      String iFillPattern;
+	double iStrokeRgb[3];
+	double iFillRgb[3];
+	double iStrokeOpacity;
+	double iFillOpacity;
+	Face * iFont; // not owned
+	double iFontSize;
+	double iTextRise;
+	double iCharacterSpacing;
+	double iWordSpacing;
+	double iHorizontalScaling;
+	double iLeading;
+	String iFillPattern;
     };
 
     std::vector<PdfState> iPdfState;
@@ -156,9 +156,9 @@ namespace ipe {
     // text matrix is only valid inside BT-ET pairs
     Matrix iTextMatrix;
     Matrix iTextLineMatrix;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

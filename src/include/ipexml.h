@@ -40,10 +40,11 @@
 
 namespace ipe {
 
-  class XmlAttributes {
-  private:
+class XmlAttributes {
+private:
     using Map = std::map<String, String>;
-  public:
+
+public:
     //! Iterator for (key, value) pairs.
     typedef Map::const_iterator const_iterator;
 
@@ -56,48 +57,51 @@ namespace ipe {
     void clear();
     String operator[](String str) const;
     bool has(String str) const;
-    bool has(String str, String &val) const;
+    bool has(String str, String & val) const;
     void add(String key, String val);
     //! Set that the tag contains the final /.
     inline void setSlash() { iSlash = true; }
     //! Return whether tag contains the final /.
     inline bool slash() const { return iSlash; }
 
-  private:
+private:
     Map iMap;
     bool iSlash;
-  };
+};
 
-  class XmlParser {
-  public:
-    XmlParser(DataSource &source);
+class XmlParser {
+public:
+    XmlParser(DataSource & source);
     virtual ~XmlParser();
 
     int parsePosition() const { return iPos; }
 
     String parseToTag();
-    bool parseAttributes(XmlAttributes &attr, bool qm = false);
-    bool parsePCDATA(String tag, String &pcdata);
+    bool parseAttributes(XmlAttributes & attr, bool qm = false);
+    bool parsePCDATA(String tag, String & pcdata);
 
     inline bool isTagChar(int ch) {
-      return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z')
-	|| ch == '-'; }
+	return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ch == '-';
+    }
 
-    inline void getChar() { iCh = iSource.getChar(); ++iPos; }
+    inline void getChar() {
+	iCh = iSource.getChar();
+	++iPos;
+    }
     inline bool eos() { return (iCh == EOF); }
     void skipWhitespace();
 
-  protected:
+protected:
     String parseToTagX();
 
-  protected:
-    DataSource &iSource;
+protected:
+    DataSource & iSource;
     String iTopElement;
     int iCh;  // current character
     int iPos; // position in input stream
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

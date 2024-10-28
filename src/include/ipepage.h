@@ -38,27 +38,26 @@
 
 namespace ipe {
 
-  class StyleSheet;
+class StyleSheet;
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Page {
-  public:
+class Page {
+public:
     enum class SnapMode { Never, Visible, Always };
 
     explicit Page();
 
-    static Page *basic();
+    static Page * basic();
 
-    void saveAsXml(Stream &stream) const;
-    void saveAsIpePage(Stream &stream) const;
-    void saveSelection(Stream &stream) const;
+    void saveAsXml(Stream & stream) const;
+    void saveAsIpePage(Stream & stream) const;
+    void saveSelection(Stream & stream) const;
 
     //! Return number of layers.
     inline int countLayers() const noexcept { return iLayers.size(); }
     //! Return name of layer \a index.
-    inline String layer(int index) const noexcept {
-      return iLayers[index].iName; }
+    inline String layer(int index) const noexcept { return iLayers[index].iName; }
 
     //! Is layer \a i locked?
     inline bool isLocked(int i) const noexcept { return iLayers[i].locked; }
@@ -105,20 +104,22 @@ namespace ipe {
 
     int findView(String viewNumberOrName) const;
 
-    const AttributeMap &pureViewMap(int index) const;
-    const AttributeMap viewMap(int index, const Cascade *sheet) const;
-    void setViewMap(int index, const AttributeMap &map);
+    const AttributeMap & pureViewMap(int index) const;
+    const AttributeMap viewMap(int index, const Cascade * sheet) const;
+    void setViewMap(int index, const AttributeMap & map);
 
     //! Is \a layer visible in \a view?
     inline bool visible(int view, int layer) const {
-      return iLayers[layer].iVisible[view]; }
+	return iLayers[layer].iVisible[view];
+    }
     //! Is object at index \a objno visible in \a view?
     inline bool objectVisible(int view, int objno) const {
-      return iLayers[layerOf(objno)].iVisible[view]; }
+	return iLayers[layerOf(objno)].iVisible[view];
+    }
 
     std::vector<Matrix> layerMatrices(int view) const;
     void clearLayerMatrices(int view) { iViews[view].iLayerMatrices.clear(); }
-    void setLayerMatrix(int view, int layer, const Matrix &m);
+    void setLayerMatrix(int view, int layer, const Matrix & m);
 
     void setVisible(int view, String layer, bool vis);
 
@@ -129,14 +130,14 @@ namespace ipe {
     void setSection(int level, bool useTitle, String name);
     //! Does this section title reflect the page title?
     bool sectionUsesTitle(int level) const { return iUseTitle[level]; }
-    const Text *titleText() const;
-    void applyTitleStyle(const Cascade *sheet);
+    const Text * titleText() const;
+    void applyTitleStyle(const Cascade * sheet);
 
     //! Return page style.
     Attribute style() const { return iStyle; }
     void setStyle(Attribute style);
-    Attribute backgroundSymbol(const Cascade *sheet) const;
-    
+    Attribute backgroundSymbol(const Cascade * sheet) const;
+
     //! Return if page is marked for printing.
     bool marked() const { return iMarked; }
     void setMarked(bool marked);
@@ -148,12 +149,12 @@ namespace ipe {
     //! Return number of objects on the page.
     inline int count() const { return iObjects.size(); }
 
-    void objectsPerLayer(std::vector<int> &objcounts) const;
+    void objectsPerLayer(std::vector<int> & objcounts) const;
 
     //! Return object at index \a i.
-    inline Object *object(int i) { return iObjects[i].iObject; }
+    inline Object * object(int i) { return iObjects[i].iObject; }
     //! Return object at index \a i (const version).
-    inline const Object *object(int i) const { return iObjects[i].iObject; }
+    inline const Object * object(int i) const { return iObjects[i].iObject; }
 
     //! Return selection status of object at index \a i.
     inline TSelect select(int i) const { return iObjects[i].iSelect; }
@@ -165,21 +166,21 @@ namespace ipe {
     //! Set layer of object at index \a i.
     inline void setLayerOf(int i, int layer) { iObjects[i].iLayer = layer; }
 
-    Rect pageBBox(const Cascade *sheet) const;
-    Rect viewBBox(const Cascade *sheet, int view) const;
+    Rect pageBBox(const Cascade * sheet) const;
+    Rect viewBBox(const Cascade * sheet, int view) const;
     Rect bbox(int i) const;
 
-    void transform(int i, const Matrix &m);
-    double distance(int i, const Vector &v, double bound) const;
-    void snapVtx(int i, const Vector &mouse, Vector &pos, double &bound) const;
-    void snapCtl(int i, const Vector &mouse, Vector &pos, double &bound) const;
-    void snapBnd(int i, const Vector &mouse, Vector &pos, double &bound) const;
+    void transform(int i, const Matrix & m);
+    double distance(int i, const Vector & v, double bound) const;
+    void snapVtx(int i, const Vector & mouse, Vector & pos, double & bound) const;
+    void snapCtl(int i, const Vector & mouse, Vector & pos, double & bound) const;
+    void snapBnd(int i, const Vector & mouse, Vector & pos, double & bound) const;
     void invalidateBBox(int i) const;
 
-    void insert(int i, TSelect sel, int layer, Object *obj);
-    void append(TSelect sel, int layer, Object *obj);
+    void insert(int i, TSelect sel, int layer, Object * obj);
+    void append(TSelect sel, int layer, Object * obj);
     void remove(int i);
-    void replace(int i, Object *obj);
+    void replace(int i, Object * obj);
     bool setAttribute(int i, Property prop, Attribute value);
 
     int primarySelection() const;
@@ -187,48 +188,50 @@ namespace ipe {
     void deselectAll();
     void ensurePrimarySelection();
 
-  private:
+private:
     struct SLayer {
     public:
-      SLayer(String name);
+	SLayer(String name);
+
     public:
-      String iName;
-      String iData;
-      bool locked;
-      SnapMode snapMode;
-      // Invariant: iVisible.size() == iViews.size()
-      std::vector<bool> iVisible;
+	String iName;
+	String iData;
+	bool locked;
+	SnapMode snapMode;
+	// Invariant: iVisible.size() == iViews.size()
+	std::vector<bool> iVisible;
     };
     typedef std::vector<SLayer> LayerSeq;
 
     struct SLayerMatrix {
-      String iLayer;
-      Matrix iMatrix;
+	String iLayer;
+	Matrix iMatrix;
     };
 
     struct SView {
     public:
-      SView() { iEffect = Attribute::NORMAL(); }
+	SView() { iEffect = Attribute::NORMAL(); }
+
     public:
-      Attribute iEffect;
-      String iActive;
-      bool iMarked;
-      String iName;
-      AttributeMap iAttributeMap;
-      std::vector<SLayerMatrix> iLayerMatrices;
+	Attribute iEffect;
+	String iActive;
+	bool iMarked;
+	String iName;
+	AttributeMap iAttributeMap;
+	std::vector<SLayerMatrix> iLayerMatrices;
     };
     typedef std::vector<SView> ViewSeq;
 
     struct SObject {
-      SObject();
-      SObject(const SObject &rhs);
-      ~SObject();
-      SObject &operator=(const SObject &rhs);
+	SObject();
+	SObject(const SObject & rhs);
+	~SObject();
+	SObject & operator=(const SObject & rhs);
 
-      TSelect iSelect;
-      int iLayer;
-      mutable Rect iBBox;
-      Object *iObject;
+	TSelect iSelect;
+	int iLayer;
+	mutable Rect iBBox;
+	Object * iObject;
     };
     typedef std::vector<SObject> ObjSeq;
 
@@ -243,9 +246,9 @@ namespace ipe {
     String iNotes;
     bool iMarked;
     Attribute iStyle;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

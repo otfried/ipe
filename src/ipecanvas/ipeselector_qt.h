@@ -43,24 +43,23 @@ using namespace ipe;
 
 namespace ipe {
 
-  class PageSelector : public QListWidget {
+class PageSelector : public QListWidget {
     Q_OBJECT
 
-  public:
-    PageSelector(QWidget *parent = nullptr);
-    void fill(std::vector<QPixmap> &icons, std::vector<String> &labels);
+public:
+    PageSelector(QWidget * parent = nullptr);
+    void fill(std::vector<QPixmap> & icons, std::vector<String> & labels);
 
     int selectedIndex() const { return currentRow(); }
 
-  signals:
+signals:
     void selectionMade();
 
-  private slots:
-    void pageSelected(QListWidgetItem *item);
-  };
+private slots:
+    void pageSelected(QListWidgetItem * item);
+};
 
-
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

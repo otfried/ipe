@@ -40,26 +40,26 @@
 
 namespace ipe {
 
-  class Bitmap {
-  public:
+class Bitmap {
+public:
     enum Flags {
-      ERGB = 0x01,      // not grayscale
-      EAlpha = 0x02,    // has alpha channel
-      EDCT = 0x04,      // DCT encoded jpg image
-      EInflate = 0x08,  // data needs to be inflated
-      ENative = 0x10,   // data is already in native-endian ARGB32
+	ERGB = 0x01,     // not grayscale
+	EAlpha = 0x02,   // has alpha channel
+	EDCT = 0x04,     // DCT encoded jpg image
+	EInflate = 0x08, // data needs to be inflated
+	ENative = 0x10,  // data is already in native-endian ARGB32
     };
 
     Bitmap();
     Bitmap(int width, int height, uint32_t flags, Buffer data);
-    Bitmap(const XmlAttributes &attr, String data);
-    Bitmap(const XmlAttributes &attr, Buffer data, Buffer smask);
+    Bitmap(const XmlAttributes & attr, String data);
+    Bitmap(const XmlAttributes & attr, Buffer data, Buffer smask);
 
-    Bitmap(const Bitmap &rhs);
+    Bitmap(const Bitmap & rhs);
     ~Bitmap();
-    Bitmap &operator=(const Bitmap &rhs);
+    Bitmap & operator=(const Bitmap & rhs);
 
-    void saveAsXml(Stream &stream, int id, int pdfObjNum = -1) const;
+    void saveAsXml(Stream & stream, int id, int pdfObjNum = -1) const;
 
     inline bool isNull() const;
     bool equal(Bitmap rhs) const;
@@ -79,121 +79,88 @@ namespace ipe {
 
     std::pair<Buffer, Buffer> embed() const;
 
-    inline bool operator==(const Bitmap &rhs) const;
-    inline bool operator!=(const Bitmap &rhs) const;
-    inline bool operator<(const Bitmap &rhs) const;
+    inline bool operator==(const Bitmap & rhs) const;
+    inline bool operator!=(const Bitmap & rhs) const;
+    inline bool operator<(const Bitmap & rhs) const;
 
-    static const char *readJpegInfo(FILE *file, int &width, int &height,
-				    Vector &dotsPerInch, uint32_t &flags);
-    static Bitmap readJpeg(const char *fname, Vector &dotsPerInch, const char * &errmsg);
-    static Bitmap readPNG(const char *fname, Vector &dotsPerInch, const char * &errmsg);
+    static const char * readJpegInfo(FILE * file, int & width, int & height,
+				     Vector & dotsPerInch, uint32_t & flags);
+    static Bitmap readJpeg(const char * fname, Vector & dotsPerInch,
+			   const char *& errmsg);
+    static Bitmap readPNG(const char * fname, Vector & dotsPerInch, const char *& errmsg);
 
-    void savePixels(const char *fname);
+    void savePixels(const char * fname);
 
-  private:
-    std::pair<int, int> init(const XmlAttributes &attr);
+private:
+    std::pair<int, int> init(const XmlAttributes & attr);
     void computeChecksum();
     void unpack(Buffer alphaChannel);
     void analyze();
 
-  private:
+private:
     struct Imp {
-      int iRefCount;
-      uint32_t iFlags;
-      int iWidth;
-      int iHeight;
-      int iColorKey;
-      Buffer iData;               // native-endian ARGB32 or DCT encoded
-      Buffer iPixelData;          // native-endian ARGB32 pre-multiplied for Cairo
-      bool iPixelsComputed;
-      uint32_t iChecksum;
-      mutable int iObjNum;        // Object number (e.g. in PDF file)
+	int iRefCount;
+	uint32_t iFlags;
+	int iWidth;
+	int iHeight;
+	int iColorKey;
+	Buffer iData;      // native-endian ARGB32 or DCT encoded
+	Buffer iPixelData; // native-endian ARGB32 pre-multiplied for Cairo
+	bool iPixelsComputed;
+	uint32_t iChecksum;
+	mutable int iObjNum; // Object number (e.g. in PDF file)
     };
 
-    Imp *iImp;
-  };
+    Imp * iImp;
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  //! Is this a null bitmap?
-  inline bool Bitmap::isNull() const
-  {
-    return (iImp == nullptr);
-  }
+//! Is this a null bitmap?
+inline bool Bitmap::isNull() const { return (iImp == nullptr); }
 
-  //! Return width of pixel array.
-  inline int Bitmap::width() const
-  {
-    return iImp->iWidth;
-  }
+//! Return width of pixel array.
+inline int Bitmap::width() const { return iImp->iWidth; }
 
-  //! Return height of pixel array.
-  inline int Bitmap::height() const
-  {
-    return iImp->iHeight;
-  }
+//! Return height of pixel array.
+inline int Bitmap::height() const { return iImp->iHeight; }
 
-  //! Is this bitmap a JPEG photo?
-  inline bool Bitmap::isJpeg() const
-  {
-    return (iImp->iFlags & EDCT) != 0;
-  }
+//! Is this bitmap a JPEG photo?
+inline bool Bitmap::isJpeg() const { return (iImp->iFlags & EDCT) != 0; }
 
-  //! Is the bitmap grayscale?
-  inline bool Bitmap::isGray() const
-  {
-    return (iImp->iFlags & ERGB) == 0;
-  }
+//! Is the bitmap grayscale?
+inline bool Bitmap::isGray() const { return (iImp->iFlags & ERGB) == 0; }
 
-  //! Does the bitmap have transparency?
-  /*! Bitmaps with color key will return false here. */
-  inline bool Bitmap::hasAlpha() const
-  {
-    return (iImp->iFlags & EAlpha) != 0;
-  }
+//! Does the bitmap have transparency?
+/*! Bitmaps with color key will return false here. */
+inline bool Bitmap::hasAlpha() const { return (iImp->iFlags & EAlpha) != 0; }
 
-  //! Return the color key or -1 if none.
-  inline int Bitmap::colorKey() const
-  {
-    return iImp->iColorKey;
-  }
+//! Return the color key or -1 if none.
+inline int Bitmap::colorKey() const { return iImp->iColorKey; }
 
-  //! Return object number of the bitmap.
-  inline int Bitmap::objNum() const
-  {
-    return iImp->iObjNum;
-  }
+//! Return object number of the bitmap.
+inline int Bitmap::objNum() const { return iImp->iObjNum; }
 
-  //! Set object number of the bitmap.
-  inline void Bitmap::setObjNum(int objNum) const
-  {
-    iImp->iObjNum = objNum;
-  }
+//! Set object number of the bitmap.
+inline void Bitmap::setObjNum(int objNum) const { iImp->iObjNum = objNum; }
 
-  //! Two bitmaps are equal if they share the same data.
-  inline bool Bitmap::operator==(const Bitmap &rhs) const
-  {
-    return iImp == rhs.iImp;
-  }
+//! Two bitmaps are equal if they share the same data.
+inline bool Bitmap::operator==(const Bitmap & rhs) const { return iImp == rhs.iImp; }
 
-  //! Two bitmaps are equal if they share the same data.
-  inline bool Bitmap::operator!=(const Bitmap &rhs) const
-  {
-    return iImp != rhs.iImp;
-  }
+//! Two bitmaps are equal if they share the same data.
+inline bool Bitmap::operator!=(const Bitmap & rhs) const { return iImp != rhs.iImp; }
 
-  //! Less operator, to be able to sort bitmaps.
-  /*! The checksum is used, when it is equal, the shared address.
-    This guarantees that bitmaps that are == (share their implementation)
-    are next to each other, and blocks of them are next to blocks that
-    are identical in contents. */
-  inline bool Bitmap::operator<(const Bitmap &rhs) const
-  {
-    return (iImp->iChecksum < rhs.iImp->iChecksum ||
-	    (iImp->iChecksum == rhs.iImp->iChecksum && iImp < rhs.iImp));
-  }
+//! Less operator, to be able to sort bitmaps.
+/*! The checksum is used, when it is equal, the shared address.
+  This guarantees that bitmaps that are == (share their implementation)
+  are next to each other, and blocks of them are next to blocks that
+  are identical in contents. */
+inline bool Bitmap::operator<(const Bitmap & rhs) const {
+    return (iImp->iChecksum < rhs.iImp->iChecksum
+	    || (iImp->iChecksum == rhs.iImp->iChecksum && iImp < rhs.iImp));
+}
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

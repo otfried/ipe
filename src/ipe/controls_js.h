@@ -42,14 +42,15 @@ using namespace ipe;
 
 class PathView {
 public:
-  PathView();
-  void setColor(const Color & color);
-  void set(const AllAttributes &all, Cascade *sheet);
-  void paint(emscripten::val canvas);
+    PathView();
+    void setColor(const Color & color);
+    void set(const AllAttributes & all, Cascade * sheet);
+    void paint(emscripten::val canvas);
+
 private:
-  Cascade *iCascade;
-  AllAttributes iAll;
-  Color iColor;
+    Cascade * iCascade;
+    AllAttributes iAll;
+    Color iColor;
 };
 
 // --------------------------------------------------------------------

@@ -37,46 +37,47 @@
 
 namespace ipe {
 
-  class CanvasBase;
+class CanvasBase;
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class PanTool : public Tool {
-  public:
-    PanTool(CanvasBase *canvas, const Page *page, int view);
-    virtual void draw(Painter &painter) const;
+class PanTool : public Tool {
+public:
+    PanTool(CanvasBase * canvas, const Page * page, int view);
+    virtual void draw(Painter & painter) const;
     virtual void mouseButton(int button, bool press);
     virtual void mouseMove();
-  private:
-    const Page *iPage;
+
+private:
+    const Page * iPage;
     int iView;
     Vector iPan;
     Vector iMouseDown;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class SelectTool : public Tool {
-  public:
-    SelectTool(CanvasBase *canvas, Page *page, int view,
-	       double selectDistance, bool nonDestructive);
+class SelectTool : public Tool {
+public:
+    SelectTool(CanvasBase * canvas, Page * page, int view, double selectDistance,
+	       bool nonDestructive);
 
-    virtual void draw(Painter &painter) const;
+    virtual void draw(Painter & painter) const;
     virtual void mouseButton(int button, bool press);
     virtual void mouseMove();
     virtual bool key(String text, int modifiers);
 
-  private:
+private:
     void ensurePrimary();
 
-  public:
+public:
     struct SObj {
-      int index;
-      double distance;
+	int index;
+	double distance;
     };
 
-  private:
-    Page *iPage;
+private:
+    Page * iPage;
     int iView;
 
     bool iNonDestructive;
@@ -87,30 +88,29 @@ namespace ipe {
 
     bool iDragging;
     Vector iCorner;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class TransformTool : public Tool {
-  public:
+class TransformTool : public Tool {
+public:
     enum TType { ETranslate, EScale, EStretch, ERotate, EShear };
 
-    TransformTool(CanvasBase *canvas, Page *page, int view, TType type,
-		  bool withShift);
+    TransformTool(CanvasBase * canvas, Page * page, int view, TType type, bool withShift);
 
     bool isValid() const;
 
-    virtual void draw(Painter &painter) const;
+    virtual void draw(Painter & painter) const;
     virtual void mouseButton(int button, bool press);
     virtual void mouseMove();
 
     virtual void report();
 
-  protected:
-    void compute(const Vector &v);
+protected:
+    void compute(const Vector & v);
 
-  protected:
-    Page *iPage;
+protected:
+    Page * iPage;
     int iView;
 
     TType iType;
@@ -123,9 +123,9 @@ namespace ipe {
     Angle iDir;
 
     bool iValid;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

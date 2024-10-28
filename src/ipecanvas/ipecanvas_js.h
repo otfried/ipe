@@ -40,16 +40,15 @@
 
 namespace ipe {
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class JsPainter;
+class JsPainter;
 
-  class Canvas : public CanvasBase {
-  public:
+class Canvas : public CanvasBase {
+public:
     Canvas(emscripten::val bottomCanvas, emscripten::val topCanvas);
 
-    virtual void setCursor(TCursor cursor, double w = 1.0,
-			   Color *color = nullptr);
+    virtual void setCursor(TCursor cursor, double w = 1.0, Color * color = nullptr);
 
     void mouseButtonEvent(emscripten::val event, int button, bool press);
     void mouseMoveEvent(emscripten::val ev);
@@ -59,12 +58,12 @@ namespace ipe {
     void paint();
     void updateSize();
 
-  protected:
+protected:
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);
     void drawFifi(JsPainter & qp);
 
-  private:
+private:
     emscripten::val iPaintScheduler;
     emscripten::val iBottomCanvas;
     emscripten::val iTopCanvas;
@@ -72,9 +71,9 @@ namespace ipe {
     emscripten::val iTopCtx;
     bool iNeedPaint;
     double iDpr;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

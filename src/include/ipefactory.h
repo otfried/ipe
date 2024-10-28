@@ -39,15 +39,13 @@
 
 namespace ipe {
 
-  class ObjectFactory {
-  public:
-    static Object *createObject(String name, const XmlAttributes &attr,
-				String data);
-    static Object *createImage(String name, const XmlAttributes &attr,
-			       Bitmap bitmap);
-  };
+class ObjectFactory {
+public:
+    static Object * createObject(String name, const XmlAttributes & attr, String data);
+    static Object * createImage(String name, const XmlAttributes & attr, Bitmap bitmap);
+};
 
-}
+} // namespace ipe
 
 // --------------------------------------------------------------------
 

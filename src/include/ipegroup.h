@@ -39,48 +39,47 @@
 
 namespace ipe {
 
-  class Shape;
+class Shape;
 
-  class Group : public Object {
-  private:
+class Group : public Object {
+private:
     typedef std::vector<Object *> List;
 
-  public:
+public:
     typedef List::const_iterator const_iterator;
 
     explicit Group();
-    Group(const Group &rhs);
+    Group(const Group & rhs);
     virtual ~Group();
 
-    explicit Group(const XmlAttributes &attr);
+    explicit Group(const XmlAttributes & attr);
 
-    Group &operator=(const Group &rhs);
-    virtual Object *clone() const;
+    Group & operator=(const Group & rhs);
+    virtual Object * clone() const;
 
-    virtual Group *asGroup();
-    virtual const Group *asGroup() const;
+    virtual Group * asGroup();
+    virtual const Group * asGroup() const;
 
     virtual Type type() const;
 
     virtual TPinned pinned() const;
 
-    virtual void accept(Visitor &visitor) const;
+    virtual void accept(Visitor & visitor) const;
 
-    virtual void saveAsXml(Stream &stream, String layer) const;
-    virtual void draw(Painter &painter) const;
-    virtual void drawSimple(Painter &painter) const;
-    virtual void addToBBox(Rect &box, const Matrix &m, bool cp) const;
-    virtual double distance(const Vector &v, const Matrix &m,
-			    double bound) const;
-    virtual void snapVtx(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const;
-    virtual void snapCtl(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const;
-    virtual void snapBnd(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const;
+    virtual void saveAsXml(Stream & stream, String layer) const;
+    virtual void draw(Painter & painter) const;
+    virtual void drawSimple(Painter & painter) const;
+    virtual void addToBBox(Rect & box, const Matrix & m, bool cp) const;
+    virtual double distance(const Vector & v, const Matrix & m, double bound) const;
+    virtual void snapVtx(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const;
+    virtual void snapCtl(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const;
+    virtual void snapBnd(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const;
 
-    inline const Shape &clip() const { return iClip; }
-    void setClip(const Shape &clip);
+    inline const Shape & clip() const { return iClip; }
+    void setClip(const Shape & clip);
 
     inline String url() const { return iUrl; }
     void setUrl(String url);
@@ -88,7 +87,7 @@ namespace ipe {
     //! Return number of component objects.
     inline int count() const { return iImp->iObjects.size(); }
     //! Return object at index \a i.
-    inline const Object *object(int i) const { return iImp->iObjects[i]; }
+    inline const Object * object(int i) const { return iImp->iObjects[i]; }
     //! Return iterator for first object.
     inline const_iterator begin() const { return iImp->iObjects.begin(); }
     //! Return iterator for end of sequence.
@@ -96,30 +95,30 @@ namespace ipe {
 
     void push_back(Object *);
 
-    void saveComponentsAsXml(Stream &stream) const;
+    void saveComponentsAsXml(Stream & stream) const;
 
-    virtual void checkStyle(const Cascade *sheet, AttributeSeq &seq) const;
+    virtual void checkStyle(const Cascade * sheet, AttributeSeq & seq) const;
 
     virtual Attribute getAttribute(Property prop) const noexcept;
     virtual bool setAttribute(Property prop, Attribute value);
 
-  private:
+private:
     void detach();
 
-  private:
+private:
     struct Imp {
-      List iObjects;
-      int iRefCount;
-      TPinned iPinned; // is any of the objects in the list pinned?
+	List iObjects;
+	int iRefCount;
+	TPinned iPinned; // is any of the objects in the list pinned?
     };
 
-    Imp *iImp;
+    Imp * iImp;
     Shape iClip;
     String iUrl;
     Attribute iDecoration;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

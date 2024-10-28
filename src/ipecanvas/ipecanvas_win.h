@@ -39,17 +39,17 @@
 
 namespace ipe {
 
-  class Canvas : public CanvasBase {
-  public:
+class Canvas : public CanvasBase {
+public:
     static void init(HINSTANCE hInstance);
     static UINT getDpiForWindow(HWND hwnd);
     Canvas(HWND parent, HINSTANCE hInstance = nullptr);
 
     HWND windowId() const { return hwnd; }
 
-    static HBITMAP createBitmap(uint8_t *p, int w, int h);
+    static HBITMAP createBitmap(uint8_t * p, int w, int h);
 
-  private:
+private:
     void button(int button, bool down, int mod, Vector v);
     void key(WPARAM wParam, LPARAM lParam);
     void mouseMove(Vector v);
@@ -57,21 +57,22 @@ namespace ipe {
     void updateSize();
 
     Vector location(HWND hwnd, POINT q, POINT h);
-    LRESULT handlePointerEvent(HWND hwnd, UINT message,
-			       WPARAM wParam, LPARAM lParam);
-    LRESULT handlePanGesture(DWORD flags, POINTS &p);
-    LRESULT handleZoomGesture(DWORD flags, POINTS &p, ULONG d);
+    LRESULT handlePointerEvent(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+    LRESULT handlePanGesture(DWORD flags, POINTS & p);
+    LRESULT handleZoomGesture(DWORD flags, POINTS & p, ULONG d);
 
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);
-    virtual void setCursor(TCursor cursor, double w, Color *color);
-  private:
+    virtual void setCursor(TCursor cursor, double w, Color * color);
+
+private:
     static const wchar_t className[];
-    static LRESULT CALLBACK wndProc(HWND hwnd, UINT Message,
-				    WPARAM wParam, LPARAM lParam);
-    static void mouseButton(Canvas *canvas, int button, bool down,
-			    WPARAM wParam, LPARAM lParam);
-  private:
+    static LRESULT CALLBACK wndProc(HWND hwnd, UINT Message, WPARAM wParam,
+				    LPARAM lParam);
+    static void mouseButton(Canvas * canvas, int button, bool down, WPARAM wParam,
+			    LPARAM lParam);
+
+private:
     HWND hwnd;
     // Gesture support
     Vector iGestureStart;
@@ -81,9 +82,9 @@ namespace ipe {
     UINT32 iPointerId;
     Vector iHimetric;
     bool isTransient;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

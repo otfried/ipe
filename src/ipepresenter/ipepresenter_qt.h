@@ -32,78 +32,76 @@
 #ifndef IPEPRESENTER_QT_H
 #define IPEPRESENTER_QT_H
 
-#include "ipeselector_qt.h"
 #include "ipepdfview_qt.h"
-#include "timelabel_qt.h"
 #include "ipepresenter.h"
+#include "ipeselector_qt.h"
+#include "timelabel_qt.h"
 
+#include <QAction>
 #include <QMainWindow>
 #include <QPlainTextEdit>
-#include <QAction>
-#include <QTimer>
 #include <QTime>
+#include <QTimer>
 
 // --------------------------------------------------------------------
 
 class MainWindow;
 
-class IpeAction: public QAction
-{
-  Q_OBJECT
+class IpeAction : public QAction {
+    Q_OBJECT
 public:
-  IpeAction(int cmd, const QString &text,
-	    const char *shortcut, MainWindow *parent);
+    IpeAction(int cmd, const QString & text, const char * shortcut, MainWindow * parent);
+
 private:
-  int iCommand;
+    int iCommand;
 };
 
 // --------------------------------------------------------------------
 
-class BeamerView: public QMainWindow
-{
-  Q_OBJECT
+class BeamerView : public QMainWindow {
+    Q_OBJECT
 public:
-  BeamerView(Qt::WindowFlags f = Qt::Widget);
-  PdfView *pdfView() { return iView; }
+    BeamerView(Qt::WindowFlags f = Qt::Widget);
+    PdfView * pdfView() { return iView; }
+
 private:
-  PdfView *iView;
+    PdfView * iView;
 };
 
 // --------------------------------------------------------------------
 
-class MainWindow: public QMainWindow, public Presenter
-{
-  Q_OBJECT
+class MainWindow : public QMainWindow, public Presenter {
+    Q_OBJECT
 public:
-  MainWindow(BeamerView* bv, Qt::WindowFlags f = Qt::Widget);
-  bool load(const char* fn);
-  void cmd(int c);
-  void aboutIpePresenter();
+    MainWindow(BeamerView * bv, Qt::WindowFlags f = Qt::Widget);
+    bool load(const char * fn);
+    void cmd(int c);
+    void aboutIpePresenter();
 
 private:
-  void closeEvent(QCloseEvent *event);
-  void setPdf();
-  void setView();
-  void jumpTo();
-  void selectPage();
-  void showType3Warning(const char *s);
-  void browseLaunch(bool launch, String dest);
+    void closeEvent(QCloseEvent * event);
+    void setPdf();
+    void setView();
+    void jumpTo();
+    void selectPage();
+    void showType3Warning(const char * s);
+    void browseLaunch(bool launch, String dest);
 
 private:
-  QMenu *iViewMenu;
-  QMenu *iTimeMenu;
-  QMenu *iMoveMenu;
-  QMenu *iHelpMenu;
-  IpeAction *iShowPresentationAction;
-  IpeAction *iFullScreenAction;
-  IpeAction *iBlackoutAction;
-  PdfView *iCurrent;
-  PdfView *iNext;
-  BeamerView *iScreen;
-  QPlainTextEdit *iNotes;
-  TimeLabel *iClock;
+    QMenu * iViewMenu;
+    QMenu * iTimeMenu;
+    QMenu * iMoveMenu;
+    QMenu * iHelpMenu;
+    IpeAction * iShowPresentationAction;
+    IpeAction * iFullScreenAction;
+    IpeAction * iBlackoutAction;
+    PdfView * iCurrent;
+    PdfView * iNext;
+    BeamerView * iScreen;
+    QPlainTextEdit * iNotes;
+    TimeLabel * iClock;
 
-  std::vector<QPixmap> iPageIcons;
+    std::vector<QPixmap> iPageIcons;
 };
 
 // --------------------------------------------------------------------

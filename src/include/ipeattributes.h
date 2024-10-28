@@ -39,135 +39,172 @@
 
 namespace ipe {
 
-  /*! \brief The different kinds of attributes.
-    \ingroup attr
+/*! \brief The different kinds of attributes.
+  \ingroup attr
 
-    The same symbolic attribute (say "normal") has a different value
-    in the StyleSheet depending on the Kind of attribute. The main use
-    for Kind is as an argument to StyleSheet::find.
+  The same symbolic attribute (say "normal") has a different value
+  in the StyleSheet depending on the Kind of attribute. The main use
+  for Kind is as an argument to StyleSheet::find.
 
-    ESymbol, EGradient, ETiling, and EEffect have their own lookup
-    methods in the StyleSheet.  The values are still useful as an
-    argument to allNames(), has(), and findDefinition().
-  */
-  enum Kind { EPen = 0, ESymbolSize, EArrowSize, EColor,
-	      EDashStyle, ETextSize, ETextStretch,
-	      ETextStyle, ELabelStyle,
-	      EGridSize, EAngleSize, EOpacity, ETiling,
-	      ESymbol, EGradient, EEffect };
+  ESymbol, EGradient, ETiling, and EEffect have their own lookup
+  methods in the StyleSheet.  The values are still useful as an
+  argument to allNames(), has(), and findDefinition().
+*/
+enum Kind {
+    EPen = 0,
+    ESymbolSize,
+    EArrowSize,
+    EColor,
+    EDashStyle,
+    ETextSize,
+    ETextStretch,
+    ETextStyle,
+    ELabelStyle,
+    EGridSize,
+    EAngleSize,
+    EOpacity,
+    ETiling,
+    ESymbol,
+    EGradient,
+    EEffect
+};
 
-  /*! \ingroup attr */
-  extern const char * const kind_names[];
+/*! \ingroup attr */
+extern const char * const kind_names[];
 
-  /*! \brief A Property identifies an attribute that an object can have.
-    \ingroup attr
+/*! \brief A Property identifies an attribute that an object can have.
+  \ingroup attr
 
-    The Property identifies a unique attribute of an object, while
-    different Property values can be of the same ipe::Kind.  For
-    instance, both EPropStrokeColor and EPropFillColor identify an
-    Attribute of Kind EColor.
-  */
-  enum Property { EPropPen = 0, EPropSymbolSize,
-		  EPropFArrow, EPropRArrow,
-		  EPropFArrowSize, EPropRArrowSize,
-		  EPropFArrowShape, EPropRArrowShape,
-		  EPropStrokeColor, EPropFillColor, EPropMarkShape,
-		  EPropPathMode, EPropDashStyle,
-		  EPropTextSize, EPropTextStyle, EPropLabelStyle,
-		  EPropOpacity, EPropStrokeOpacity, EPropTiling, EPropGradient,
-		  EPropHorizontalAlignment, EPropVerticalAlignment,
-		  EPropLineJoin, EPropLineCap, EPropFillRule,
-		  EPropPinned, EPropTransformations,
-		  EPropTransformableText, EPropSplineType,
-		  EPropMinipage, EPropWidth,
-		  EPropDecoration,
-  };
+  The Property identifies a unique attribute of an object, while
+  different Property values can be of the same ipe::Kind.  For
+  instance, both EPropStrokeColor and EPropFillColor identify an
+  Attribute of Kind EColor.
+*/
+enum Property {
+    EPropPen = 0,
+    EPropSymbolSize,
+    EPropFArrow,
+    EPropRArrow,
+    EPropFArrowSize,
+    EPropRArrowSize,
+    EPropFArrowShape,
+    EPropRArrowShape,
+    EPropStrokeColor,
+    EPropFillColor,
+    EPropMarkShape,
+    EPropPathMode,
+    EPropDashStyle,
+    EPropTextSize,
+    EPropTextStyle,
+    EPropLabelStyle,
+    EPropOpacity,
+    EPropStrokeOpacity,
+    EPropTiling,
+    EPropGradient,
+    EPropHorizontalAlignment,
+    EPropVerticalAlignment,
+    EPropLineJoin,
+    EPropLineCap,
+    EPropFillRule,
+    EPropPinned,
+    EPropTransformations,
+    EPropTransformableText,
+    EPropSplineType,
+    EPropMinipage,
+    EPropWidth,
+    EPropDecoration,
+};
 
-  /*! \ingroup attr */
-  extern const char * const property_names[];
+/*! \ingroup attr */
+extern const char * const property_names[];
 
-  //! Path mode (stroked, filled, or both).
-  /*! \ingroup attr */
-  enum TPathMode { EStrokedOnly, EStrokedAndFilled, EFilledOnly };
+//! Path mode (stroked, filled, or both).
+/*! \ingroup attr */
+enum TPathMode { EStrokedOnly, EStrokedAndFilled, EFilledOnly };
 
-  //! Horizontal alignment.
-  /*! \ingroup attr */
-  enum THorizontalAlignment { EAlignLeft, EAlignRight, EAlignHCenter };
+//! Horizontal alignment.
+/*! \ingroup attr */
+enum THorizontalAlignment { EAlignLeft, EAlignRight, EAlignHCenter };
 
-  //! Vertical alignment.
-  /*! \ingroup attr */
-  enum TVerticalAlignment { EAlignBottom, EAlignBaseline,
-      EAlignTop, EAlignVCenter };
+//! Vertical alignment.
+/*! \ingroup attr */
+enum TVerticalAlignment { EAlignBottom, EAlignBaseline, EAlignTop, EAlignVCenter };
 
-  //! Spline type.
-  /*! \ingroup attr */
-  enum TSplineType { EBSpline, ECardinalSpline, ESpiroSpline };
+//! Spline type.
+/*! \ingroup attr */
+enum TSplineType { EBSpline, ECardinalSpline, ESpiroSpline };
 
-  //! Line join style.
-  /*! \ingroup attr */
-  /*! The EDefaultJoin means to use the setting from the style sheet. */
-  enum TLineJoin { EDefaultJoin, EMiterJoin, ERoundJoin, EBevelJoin };
+//! Line join style.
+/*! \ingroup attr */
+/*! The EDefaultJoin means to use the setting from the style sheet. */
+enum TLineJoin { EDefaultJoin, EMiterJoin, ERoundJoin, EBevelJoin };
 
-  //! Line cap style.
-  /*! \ingroup attr */
-  /*! The EDefaultCap means to use the setting from the style sheet. */
-  enum TLineCap { EDefaultCap, EButtCap, ERoundCap, ESquareCap };
+//! Line cap style.
+/*! \ingroup attr */
+/*! The EDefaultCap means to use the setting from the style sheet. */
+enum TLineCap { EDefaultCap, EButtCap, ERoundCap, ESquareCap };
 
-  //! Fill rule.
-  /*! \ingroup attr */
-  /*! The EDefaultRule means to use the setting from the style sheet. */
-  enum TFillRule { EDefaultRule, EWindRule, EEvenOddRule };
+//! Fill rule.
+/*! \ingroup attr */
+/*! The EDefaultRule means to use the setting from the style sheet. */
+enum TFillRule { EDefaultRule, EWindRule, EEvenOddRule };
 
-  //! Pinning status of objects.
-  /*! \ingroup attr */
-  enum TPinned { ENoPin = 0x00, EHorizontalPin = 0x01,
-      EVerticalPin = 0x02, EFixedPin = 0x03 };
+//! Pinning status of objects.
+/*! \ingroup attr */
+enum TPinned {
+    ENoPin = 0x00,
+    EHorizontalPin = 0x01,
+    EVerticalPin = 0x02,
+    EFixedPin = 0x03
+};
 
-  //! Transformations that are permitted for an object.
-  /*! \ingroup attr */
-  enum TTransformations { ETransformationsTranslations,
-      ETransformationsRigidMotions,
-      ETransformationsAffine };
+//! Transformations that are permitted for an object.
+/*! \ingroup attr */
+enum TTransformations {
+    ETransformationsTranslations,
+    ETransformationsRigidMotions,
+    ETransformationsAffine
+};
 
-  //! Selection status of an object on the page
-  /*! \ingroup attr */
-  enum TSelect { ENotSelected = 0, EPrimarySelected,
-      ESecondarySelected };
+//! Selection status of an object on the page
+/*! \ingroup attr */
+enum TSelect { ENotSelected = 0, EPrimarySelected, ESecondarySelected };
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Color {
-  public:
+class Color {
+public:
     //! Default constructor.
     Color() { /* nothing */ }
     explicit Color(String str);
     explicit Color(int r, int g, int b);
-    void save(Stream &stream) const;
-    void saveRGB(Stream &stream) const;
+    void save(Stream & stream) const;
+    void saveRGB(Stream & stream) const;
     bool isGray() const;
-    bool operator==(const Color &rhs) const;
-    inline bool operator!=(const Color &rhs) const {return !(*this == rhs); }
-  public:
-    Fixed iRed, iGreen, iBlue;
-  };
+    bool operator==(const Color & rhs) const;
+    inline bool operator!=(const Color & rhs) const { return !(*this == rhs); }
 
-  //! A tiling pattern.
-  /*! \ingroup attr */
-  struct Tiling {
+public:
+    Fixed iRed, iGreen, iBlue;
+};
+
+//! A tiling pattern.
+/*! \ingroup attr */
+struct Tiling {
     Angle iAngle;
     double iStep;
     double iWidth;
-  };
+};
 
-  //! A gradient pattern.
-  /*! \ingroup attr */
-  struct Gradient {
+//! A gradient pattern.
+/*! \ingroup attr */
+struct Gradient {
     //! A color stop.
     struct Stop {
-      //! Offset between 0.0 and 1.0.
-      double offset;
-      //! The color at this offset.
-      Color color;
+	//! Offset between 0.0 and 1.0.
+	double offset;
+	//! The color at this offset.
+	Color color;
     };
     //! There are two types of gradients, along an axis or between two circles.
     enum TType { EAxial = 2, ERadial = 3 };
@@ -183,11 +220,11 @@ namespace ipe {
     Matrix iMatrix;
     //! The color stops.
     std::vector<Stop> iStops;
-  };
+};
 
-  //! Layout of a Page.
-  /*! \ingroup attr */
-  struct Layout {
+//! Layout of a Page.
+/*! \ingroup attr */
+struct Layout {
     //! Create null layout.
     Layout() { iPaperSize.x = -1.0; }
     //! Is this an undefined (null) layout?
@@ -204,63 +241,90 @@ namespace ipe {
     double iParagraphSkip;
     //! Crop paper to drawing.
     bool iCrop;
-  };
+};
 
-  //! Padding for text bounding box.
-  /*! \ingroup attr */
-  struct TextPadding {
-  public:
+//! Padding for text bounding box.
+/*! \ingroup attr */
+struct TextPadding {
+public:
     double iLeft, iRight, iTop, iBottom;
-  };
+};
 
-  struct Effect {
-  public:
+struct Effect {
+public:
     //! The various fancy effects that Acrobat Reader will show.
     enum TEffect {
-      ENormal, ESplitHI, ESplitHO, ESplitVI, ESplitVO,
-      EBlindsH, EBlindsV, EBoxI, EBoxO,
-      EWipeLR, EWipeBT, EWipeRL, EWipeTB,
-      EDissolve, EGlitterLR, EGlitterTB, EGlitterD,
-      EFlyILR, EFlyOLR, EFlyITB, EFlyOTB, EPushLR, EPushTB,
-      ECoverLR, ECoverLB, EUncoverLR, EUncoverTB,
-      EFade
+	ENormal,
+	ESplitHI,
+	ESplitHO,
+	ESplitVI,
+	ESplitVO,
+	EBlindsH,
+	EBlindsV,
+	EBoxI,
+	EBoxO,
+	EWipeLR,
+	EWipeBT,
+	EWipeRL,
+	EWipeTB,
+	EDissolve,
+	EGlitterLR,
+	EGlitterTB,
+	EGlitterD,
+	EFlyILR,
+	EFlyOLR,
+	EFlyITB,
+	EFlyOTB,
+	EPushLR,
+	EPushTB,
+	ECoverLR,
+	ECoverLB,
+	EUncoverLR,
+	EUncoverTB,
+	EFade
     };
 
     Effect();
-    void pageDictionary(Stream &stream) const;
+    void pageDictionary(Stream & stream) const;
 
-  public:
+public:
     TEffect iEffect;
     int iTransitionTime;
     int iDuration;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Repository {
-  public:
-    static Repository *get();
+class Repository {
+public:
+    static Repository * get();
     static void cleanup();
     String toString(int index) const;
     int toIndex(String str);
     // int getIndex(String str) const;
-  private:
+private:
     Repository();
-    static Repository *singleton;
+    static Repository * singleton;
     std::vector<String> iStrings;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class Attribute {
-    enum { EMiniMask = 0xc0000000, ETypeMask = 0xe0000000,
-	   ESymbolic = 0x80000000, EFixed = 0x40000000,
-	   EAbsolute = 0xc0000000, EEnum = 0xe0000000,
-	   EFixedMask = 0x3fffffff, ENameMask = 0x1fffffff,
-	   EWhiteValue = ((1000 << 20) + (1000 << 10) + 1000),
-	   EOneValue = EFixed|1000 };
+class Attribute {
+    enum {
+	EMiniMask = 0xc0000000,
+	ETypeMask = 0xe0000000,
+	ESymbolic = 0x80000000,
+	EFixed = 0x40000000,
+	EAbsolute = 0xc0000000,
+	EEnum = 0xe0000000,
+	EFixedMask = 0x3fffffff,
+	ENameMask = 0x1fffffff,
+	EWhiteValue = ((1000 << 20) + (1000 << 10) + 1000),
+	EOneValue = EFixed | 1000
+    };
 
-  public:
+public:
     //! Default constructor.
     explicit Attribute() { /* nothing */ }
 
@@ -268,7 +332,7 @@ namespace ipe {
     explicit Attribute(Fixed value);
     explicit Attribute(Color color);
     static Attribute Boolean(bool flag) { return Attribute(EEnum + flag); }
-    explicit Attribute(THorizontalAlignment align) { iName = EEnum + int(align) +2; }
+    explicit Attribute(THorizontalAlignment align) { iName = EEnum + int(align) + 2; }
     explicit Attribute(TVerticalAlignment align) { iName = EEnum + int(align) + 5; }
     explicit Attribute(TLineJoin join) { iName = EEnum + int(join) + 9; }
     explicit Attribute(TLineCap cap) { iName = EEnum + int(cap) + 13; }
@@ -279,24 +343,18 @@ namespace ipe {
     explicit Attribute(TSplineType st) { iName = EEnum + int(st) + 30; }
 
     //! Is it symbolic?
-    inline bool isSymbolic() const {
-      return ((iName & ETypeMask) == ESymbolic); }
+    inline bool isSymbolic() const { return ((iName & ETypeMask) == ESymbolic); }
     //! Is it an absolute string value?
-    inline bool isString() const {
-      return ((iName & ETypeMask) == EAbsolute); }
+    inline bool isString() const { return ((iName & ETypeMask) == EAbsolute); }
     //! Is it a color?
-    inline bool isColor() const {
-      return ((iName & EMiniMask)  == 0); }
+    inline bool isColor() const { return ((iName & EMiniMask) == 0); }
     //! Is it a number?
-    inline bool isNumber() const {
-      return ((iName & EMiniMask) == EFixed); }
+    inline bool isNumber() const { return ((iName & EMiniMask) == EFixed); }
     //! Is it an enumeration?
-    inline bool isEnum() const {
-      return ((iName & ETypeMask) == EEnum); }
+    inline bool isEnum() const { return ((iName & ETypeMask) == EEnum); }
 
     //! Is it a boolean?
-    inline bool isBoolean() const {
-      return (isEnum() && 0 <= index() && index() <= 1); }
+    inline bool isBoolean() const { return (isEnum() && 0 <= index() && index() <= 1); }
 
     //! Is it the symbolic name "normal"?
     inline bool isNormal() const { return (iName == ESymbolic); }
@@ -312,25 +370,24 @@ namespace ipe {
 
     bool boolean() const { return bool(index()); }
     THorizontalAlignment horizontalAlignment() const {
-      return THorizontalAlignment(index() - 2); }
+	return THorizontalAlignment(index() - 2);
+    }
     TVerticalAlignment verticalAlignment() const {
-      return TVerticalAlignment(index() - 5); }
-    TLineJoin lineJoin() const {return TLineJoin(index() - 9); }
+	return TVerticalAlignment(index() - 5);
+    }
+    TLineJoin lineJoin() const { return TLineJoin(index() - 9); }
     TLineCap lineCap() const { return TLineCap(index() - 13); }
     TFillRule fillRule() const { return TFillRule(index() - 17); }
     TPinned pinned() const { return TPinned(index() - 20); }
-    TTransformations transformations() const {
-      return TTransformations(index() - 24); }
+    TTransformations transformations() const { return TTransformations(index() - 24); }
     TPathMode pathMode() const { return TPathMode(index() - 27); }
     TSplineType splineType() const { return TSplineType(index() - 30); }
 
     //! Are two values equal (only compares index!)
-    inline bool operator==(const Attribute &rhs) const {
-      return iName == rhs.iName; }
+    inline bool operator==(const Attribute & rhs) const { return iName == rhs.iName; }
 
     //! Are two values different (only compares index!)
-    inline bool operator!=(const Attribute &rhs) const {
-      return iName != rhs.iName; }
+    inline bool operator!=(const Attribute & rhs) const { return iName != rhs.iName; }
 
     //! Create absolute black color.
     inline static Attribute BLACK() { return Attribute(0); }
@@ -366,7 +423,7 @@ namespace ipe {
 
     //! Is it one of the symbolic attributes "arrow/*arc(spc)"?
     inline bool isArcArrow() const {
-      return ESymbolic + 8 <= iName && iName <= ESymbolic + 11;
+	return ESymbolic + 8 <= iName && iName <= ESymbolic + 11;
     }
 
     bool isMidArrow() const;
@@ -378,75 +435,78 @@ namespace ipe {
 
     static Attribute normal(Kind kind);
 
-  private:
-    inline Attribute(int index) : iName(index) { /* nothing */ }
+private:
+    inline Attribute(int index)
+	: iName(index) { /* nothing */ }
     explicit Attribute(bool symbolic, int index);
-  private:
+
+private:
     uint32_t iName;
 
     friend class StyleSheet;
-  };
+};
 
-  /*! \var AttributeSeq
-    \ingroup attr
-    \brief A sequence of attribute values.
-  */
-  typedef std::vector<Attribute> AttributeSeq;
+/*! \var AttributeSeq
+  \ingroup attr
+  \brief A sequence of attribute values.
+*/
+typedef std::vector<Attribute> AttributeSeq;
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  /*! \var AttributeMapping
-    \ingroup attr
-    \brief Mapping one symbolic attribute to another one
-  */
-  struct AttributeMapping {
+/*! \var AttributeMapping
+  \ingroup attr
+  \brief Mapping one symbolic attribute to another one
+*/
+struct AttributeMapping {
     Kind kind;
     Attribute from;
     Attribute to;
-  };
+};
 
-  class AttributeMap {
-  public:
+class AttributeMap {
+public:
     int count() const noexcept { return iMap.size(); }
     Attribute map(Kind kind, Attribute sym) const;
-    void saveAsXml(Stream &stream) const;
-    void add(const AttributeMapping &map);
-  public:
-    std::vector<AttributeMapping> iMap;
-  };
+    void saveAsXml(Stream & stream) const;
+    void add(const AttributeMapping & map);
 
-  //! A page style.
-  /*! \ingroup attr */
-  struct PageStyle {
+public:
+    std::vector<AttributeMapping> iMap;
+};
+
+//! A page style.
+/*! \ingroup attr */
+struct PageStyle {
     Attribute iBackground;
     AttributeMap iMapping;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class AllAttributes {
-  public:
+class AllAttributes {
+public:
     AllAttributes();
-    TPathMode iPathMode;        //!< Should we stroke and/or fill?
-    Attribute iStroke;          //!< Stroke color.
-    Attribute iFill;            //!< Fill color.
-    Attribute iDashStyle;       //!< Dash style.
-    Attribute iPen;             //!< Pen (that is, line width).
-    bool iFArrow;               //!< Arrow forward?
-    bool iRArrow;               //!< Reverse arrow?
-    Attribute iFArrowShape;     //!< Shape of forward arrows
-    Attribute iRArrowShape;     //!< Shape of reverse arrows
-    Attribute iFArrowSize;      //!< Forward arrow size.
-    Attribute iRArrowSize;      //!< Reverse arrow size.
-    Attribute iSymbolSize;      //!< Symbol size.
-    Attribute iTextSize;        //!< Text size.
+    TPathMode iPathMode;    //!< Should we stroke and/or fill?
+    Attribute iStroke;      //!< Stroke color.
+    Attribute iFill;        //!< Fill color.
+    Attribute iDashStyle;   //!< Dash style.
+    Attribute iPen;         //!< Pen (that is, line width).
+    bool iFArrow;           //!< Arrow forward?
+    bool iRArrow;           //!< Reverse arrow?
+    Attribute iFArrowShape; //!< Shape of forward arrows
+    Attribute iRArrowShape; //!< Shape of reverse arrows
+    Attribute iFArrowSize;  //!< Forward arrow size.
+    Attribute iRArrowSize;  //!< Reverse arrow size.
+    Attribute iSymbolSize;  //!< Symbol size.
+    Attribute iTextSize;    //!< Text size.
     //! Horizontal alignment of label objects.
     THorizontalAlignment iHorizontalAlignment;
     //! Vertical alignment of label objects.
     TVerticalAlignment iVerticalAlignment;
-    Attribute iTextStyle;       //!< Text style for minipages.
-    Attribute iLabelStyle;      //!< Text style for labels.
-    TPinned iPinned;            //!< Pinned status.
+    Attribute iTextStyle;  //!< Text style for minipages.
+    Attribute iLabelStyle; //!< Text style for labels.
+    TPinned iPinned;       //!< Pinned status.
     //! Should newly created text be transformable?
     /*! If this is false, newly created text will only allow
       translations.  Otherwise, the value of iTranslations is used (as
@@ -456,25 +516,25 @@ namespace ipe {
     TSplineType iSplineType;
     //! Allowed transformations.
     TTransformations iTransformations;
-    TLineJoin iLineJoin;        //!< Line join style.
-    TLineCap iLineCap;          //!< Line cap style.
-    TFillRule iFillRule;        //!< Shape fill rule.
-    Attribute iOpacity;         //!< Opacity.
-    Attribute iStrokeOpacity;   //!< Stroke opacity.
-    Attribute iTiling;          //!< Tiling pattern.
-    Attribute iGradient;        //!< Gradient pattern.
-    Attribute iMarkShape;       //!< Shape of Mark to create.
-  };
+    TLineJoin iLineJoin;      //!< Line join style.
+    TLineCap iLineCap;        //!< Line cap style.
+    TFillRule iFillRule;      //!< Shape fill rule.
+    Attribute iOpacity;       //!< Opacity.
+    Attribute iStrokeOpacity; //!< Stroke opacity.
+    Attribute iTiling;        //!< Tiling pattern.
+    Attribute iGradient;      //!< Gradient pattern.
+    Attribute iMarkShape;     //!< Shape of Mark to create.
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  /*! \relates Color */
-  inline Stream &operator<<(Stream &stream, const Color &attr)
-  {
-    attr.save(stream); return stream;
-  }
+/*! \relates Color */
+inline Stream & operator<<(Stream & stream, const Color & attr) {
+    attr.save(stream);
+    return stream;
+}
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif

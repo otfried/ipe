@@ -35,8 +35,8 @@
 #include <cstdlib>
 
 #include "appui_qt.h"
-#include <QLocale>
 #include <QDir>
+#include <QLocale>
 #include <QScreen>
 
 using namespace ipe;
@@ -46,93 +46,90 @@ using namespace ipelua;
 
 // --------------------------------------------------------------------
 
-static void setup_globals(lua_State *L, int width, int height, double devicePixelRatio)
-{
-  lua_getglobal(L, "package");
-  const char *luapath = getenv("IPELUAPATH");
-  if (luapath)
-    lua_pushstring(L, luapath);
-  else {
+static void setup_globals(lua_State * L, int width, int height, double devicePixelRatio) {
+    lua_getglobal(L, "package");
+    const char * luapath = getenv("IPELUAPATH");
+    if (luapath)
+	lua_pushstring(L, luapath);
+    else {
 #ifdef IPEBUNDLE
-    push_string(L, Platform::ipeDir("lua", "?.lua"));
+	push_string(L, Platform::ipeDir("lua", "?.lua"));
 #else
-    lua_pushliteral(L, IPELUADIR "/?.lua");
+	lua_pushliteral(L, IPELUADIR "/?.lua");
 #endif
-  }
-  lua_setfield(L, -2, "path");
+    }
+    lua_setfield(L, -2, "path");
 
-  lua_newtable(L);  // config table
+    lua_newtable(L); // config table
 #ifdef __EMSCRIPTEN__
-  lua_pushliteral(L, "web");
+    lua_pushliteral(L, "web");
 #else
-  lua_pushliteral(L, "unix");
+    lua_pushliteral(L, "unix");
 #endif
-  lua_setfield(L, -2, "platform");
-  lua_pushliteral(L, "qt");
-  lua_setfield(L, -2, "toolkit");
+    lua_setfield(L, -2, "platform");
+    lua_pushliteral(L, "qt");
+    lua_setfield(L, -2, "toolkit");
 
 #ifdef IPEBUNDLE
-  setup_config(L, "system_styles", nullptr, "styles");
-  setup_config(L, "system_ipelets", nullptr, "ipelets");
-  setup_config(L, "docdir", "IPEDOCDIR", "doc");
+    setup_config(L, "system_styles", nullptr, "styles");
+    setup_config(L, "system_ipelets", nullptr, "ipelets");
+    setup_config(L, "docdir", "IPEDOCDIR", "doc");
 #else
-  setup_config(L, "system_styles", nullptr, IPESTYLEDIR);
-  setup_config(L, "system_ipelets", nullptr, IPELETDIR);
-  setup_config(L, "docdir", "IPEDOCDIR", IPEDOCDIR);
+    setup_config(L, "system_styles", nullptr, IPESTYLEDIR);
+    setup_config(L, "system_ipelets", nullptr, IPELETDIR);
+    setup_config(L, "docdir", "IPEDOCDIR", IPEDOCDIR);
 #endif
-  lua_pushfstring(L, "%s / %s", QT_VERSION_STR, qVersion());
-  lua_setfield(L, -2, "qt_version");
+    lua_pushfstring(L, "%s / %s", QT_VERSION_STR, qVersion());
+    lua_setfield(L, -2, "qt_version");
 
-  setup_common_config(L);
+    setup_common_config(L);
 
-  lua_createtable(L, 0, 2);
-  lua_pushinteger(L, width);
-  lua_rawseti(L, -2, 1);
-  lua_pushinteger(L, height);
-  lua_rawseti(L, -2, 2);
-  lua_setfield(L, -2, "screen_geometry");
+    lua_createtable(L, 0, 2);
+    lua_pushinteger(L, width);
+    lua_rawseti(L, -2, 1);
+    lua_pushinteger(L, height);
+    lua_rawseti(L, -2, 2);
+    lua_setfield(L, -2, "screen_geometry");
 
-  lua_pushnumber(L, devicePixelRatio);
-  lua_setfield(L, -2, "device_pixel_ratio");
+    lua_pushnumber(L, devicePixelRatio);
+    lua_setfield(L, -2, "device_pixel_ratio");
 
-  lua_setglobal(L, "config");
+    lua_setglobal(L, "config");
 
-  lua_pushcfunction(L, ipe_tonumber);
-  lua_setglobal(L, "tonumber");
+    lua_pushcfunction(L, ipe_tonumber);
+    lua_setglobal(L, "tonumber");
 }
 
 // --------------------------------------------------------------------
 
-int mainloop(lua_State *L)
-{
-  QApplication::exec();
-  return 0;
+int mainloop(lua_State * L) {
+    QApplication::exec();
+    return 0;
 }
 
-int main(int argc, char *argv[])
-{
-  Platform::initLib(IPELIB_VERSION);
-  lua_State *L = setup_lua();
+int main(int argc, char * argv[]) {
+    Platform::initLib(IPELIB_VERSION);
+    lua_State * L = setup_lua();
 
-  QApplication a(argc, argv);
-  a.setQuitOnLastWindowClosed(true);
+    QApplication a(argc, argv);
+    a.setQuitOnLastWindowClosed(true);
 
-  // create table with arguments
-  lua_createtable(L, 0, argc - 1);
-  for (int i = 1; i < argc; ++i) {
-    lua_pushstring(L, argv[i]);
-    lua_rawseti(L, -2, i);
-  }
-  lua_setglobal(L, "argv");
+    // create table with arguments
+    lua_createtable(L, 0, argc - 1);
+    for (int i = 1; i < argc; ++i) {
+	lua_pushstring(L, argv[i]);
+	lua_rawseti(L, -2, i);
+    }
+    lua_setglobal(L, "argv");
 
-  auto & screen = a.screens().at(0);
-  QRect r = screen->availableGeometry();
-  setup_globals(L, r.width(), r.height(), screen->devicePixelRatio());
+    auto & screen = a.screens().at(0);
+    QRect r = screen->availableGeometry();
+    setup_globals(L, r.width(), r.height(), screen->devicePixelRatio());
 
-  lua_run_ipe(L, mainloop);
+    lua_run_ipe(L, mainloop);
 
-  lua_close(L);
-  return 0;
+    lua_close(L);
+    return 0;
 }
 
 // --------------------------------------------------------------------

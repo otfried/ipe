@@ -39,16 +39,16 @@
 
 namespace ipe {
 
-  class Path : public Object {
-  public:
-    explicit Path(const AllAttributes &attr, const Shape &shape,
+class Path : public Object {
+public:
+    explicit Path(const AllAttributes & attr, const Shape & shape,
 		  bool withArrows = false);
 
-    static Path *create(const XmlAttributes &attr, String data);
+    static Path * create(const XmlAttributes & attr, String data);
 
-    virtual Object *clone() const override;
+    virtual Object * clone() const override;
 
-    virtual Path *asPath() override;
+    virtual Path * asPath() override;
 
     virtual Type type() const override;
 
@@ -82,26 +82,25 @@ namespace ipe {
     inline TLineJoin lineJoin() const;
     inline TFillRule fillRule() const;
 
-    virtual void saveAsXml(Stream &stream, String layer) const override;
-    virtual void draw(Painter &painter) const override;
-    virtual void drawSimple(Painter &painter) const override;
+    virtual void saveAsXml(Stream & stream, String layer) const override;
+    virtual void draw(Painter & painter) const override;
+    virtual void drawSimple(Painter & painter) const override;
 
-    virtual void accept(Visitor &visitor) const override;
+    virtual void accept(Visitor & visitor) const override;
 
-    virtual void addToBBox(Rect &box, const Matrix &m, bool cp) const override;
-    virtual double distance(const Vector &v, const Matrix &m,
+    virtual void addToBBox(Rect & box, const Matrix & m, bool cp) const override;
+    virtual double distance(const Vector & v, const Matrix & m,
 			    double bound) const override;
-    virtual void snapVtx(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const override;
-    virtual void snapCtl(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const override;
-    virtual void snapBnd(const Vector &mouse, const Matrix &m,
-			 Vector &pos, double &bound) const override;
+    virtual void snapVtx(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const override;
+    virtual void snapCtl(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const override;
+    virtual void snapBnd(const Vector & mouse, const Matrix & m, Vector & pos,
+			 double & bound) const override;
 
-    virtual void checkStyle(const Cascade *sheet,
-			    AttributeSeq &seq) const override;
+    virtual void checkStyle(const Cascade * sheet, AttributeSeq & seq) const override;
 
-    virtual void setMatrix(const Matrix &matrix) override;
+    virtual void setMatrix(const Matrix & matrix) override;
 
     virtual bool setAttribute(Property prop, Attribute value) override;
     virtual Attribute getAttribute(Property prop) const noexcept override;
@@ -116,19 +115,19 @@ namespace ipe {
     void setArrow(bool arrow, Attribute shape, Attribute size);
     void setRarrow(bool arrow, Attribute shape, Attribute size);
 
-    static void drawArrow(Painter &painter, Vector pos, Angle alpha,
-			  Attribute shape, Attribute size, double radius);
+    static void drawArrow(Painter & painter, Vector pos, Angle alpha, Attribute shape,
+			  Attribute size, double radius);
 
     //! Return shape of the path object.
-    const Shape &shape() const { return iShape; }
-    void setShape(const Shape &shape);
+    const Shape & shape() const { return iShape; }
+    void setShape(const Shape & shape);
 
-  private:
-    explicit Path(const XmlAttributes &attr);
-    void init(const AllAttributes &attr, bool withArrows);
+private:
+    explicit Path(const XmlAttributes & attr);
+    void init(const AllAttributes & attr, bool withArrows);
     void makeArrowData();
 
-  private:
+private:
     TPathMode iPathMode : 2;
     unsigned int iHasFArrow : 1;
     unsigned int iHasRArrow : 1;
@@ -158,103 +157,60 @@ namespace ipe {
     Attribute iRArrowSize;
 
     Vector iFArrowPos;
-    Angle  iFArrowDir;
+    Angle iFArrowDir;
     Vector iRArrowPos;
-    Angle  iRArrowDir;
+    Angle iRArrowDir;
     Vector iMArrowPos;
-    Angle  iMArrowDir;
+    Angle iMArrowDir;
 
     Shape iShape;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  //! Is the object stroked and filled?
-  inline TPathMode Path::pathMode() const
-  {
-    return iPathMode;
-  }
+//! Is the object stroked and filled?
+inline TPathMode Path::pathMode() const { return iPathMode; }
 
-  //! Return stroke color.
-  inline Attribute Path::stroke() const
-  {
-    return iStroke;
-  }
+//! Return stroke color.
+inline Attribute Path::stroke() const { return iStroke; }
 
-  //! Return object fill color.
-  inline Attribute Path::fill() const
-  {
-    return iFill;
-  }
+//! Return object fill color.
+inline Attribute Path::fill() const { return iFill; }
 
-  //! Return object pen.
-  inline Attribute Path::pen() const
-  {
-    return iPen;
-  }
+//! Return object pen.
+inline Attribute Path::pen() const { return iPen; }
 
-  //! Return object line style.
-  inline Attribute Path::dashStyle() const
-  {
-    return iDashStyle;
-  }
+//! Return object line style.
+inline Attribute Path::dashStyle() const { return iDashStyle; }
 
-  //! Return line cap style.
-  inline TLineCap Path::lineCap() const
-  {
-    return TLineCap(iLineCap);
-  }
+//! Return line cap style.
+inline TLineCap Path::lineCap() const { return TLineCap(iLineCap); }
 
-  //! Return line join style.
-  inline TLineJoin Path::lineJoin() const
-  {
-    return TLineJoin(iLineJoin);
-  }
+//! Return line join style.
+inline TLineJoin Path::lineJoin() const { return TLineJoin(iLineJoin); }
 
-  //! Return fill rule.
-  inline TFillRule Path::fillRule() const
-  {
-    return TFillRule(iFillRule);
-  }
+//! Return fill rule.
+inline TFillRule Path::fillRule() const { return TFillRule(iFillRule); }
 
-  //! Does object have an arrow?
-  inline bool Path::arrow() const
-  {
-    return iHasFArrow;
-  }
+//! Does object have an arrow?
+inline bool Path::arrow() const { return iHasFArrow; }
 
-  //! Does object have a reverse arrow?
-  inline bool Path::rArrow() const
-  {
-    return iHasRArrow;
-  }
+//! Does object have a reverse arrow?
+inline bool Path::rArrow() const { return iHasRArrow; }
 
-  //! Return shape of arrow.
-  inline Attribute Path::arrowShape() const
-  {
-    return iFArrowShape;
-  }
+//! Return shape of arrow.
+inline Attribute Path::arrowShape() const { return iFArrowShape; }
 
-  //! Return shape of reverse arrow.
-  inline Attribute Path::rArrowShape() const
-  {
-    return iRArrowShape;
-  }
+//! Return shape of reverse arrow.
+inline Attribute Path::rArrowShape() const { return iRArrowShape; }
 
-  //! Return size of arrow.
-  inline Attribute Path::arrowSize() const
-  {
-    return iFArrowSize;
-  }
+//! Return size of arrow.
+inline Attribute Path::arrowSize() const { return iFArrowSize; }
 
-  //! Return size of reverse arrow.
-  inline Attribute Path::rArrowSize() const
-  {
-    return iRArrowSize;
-  }
+//! Return size of reverse arrow.
+inline Attribute Path::rArrowSize() const { return iRArrowSize; }
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif
-

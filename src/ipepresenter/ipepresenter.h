@@ -32,75 +32,88 @@
 #ifndef IPEPRESENTER_H
 #define IPEPRESENTER_H
 
-#include "ipepdfview.h"
 #include "ipefonts.h"
+#include "ipepdfview.h"
 
 using ipe::String;
 
 // --------------------------------------------------------------------
 
 struct SLink {
-  ipe::Rect rect;
-  const ipe::PdfDict *action;
+    ipe::Rect rect;
+    const ipe::PdfDict * action;
 };
 
 class Presenter {
 public:
-  enum TAction {
-    ELeftMouse, EOtherMouse,
-    EOpen, EQuit,
-    EShowPresentation, EFullScreen, EBlackout,
-    EZoomIn, EZoomOut,
-    ESetTime, EToggleTimeCounting, ETimeCountdown,
-    EResetTime,
-    ENextView, EPreviousView, EFirstView, ELastView,
-    ENextPage, EPreviousPage, EJumpTo, ESelectPage,
-    EAbout,
-  };
+    enum TAction {
+	ELeftMouse,
+	EOtherMouse,
+	EOpen,
+	EQuit,
+	EShowPresentation,
+	EFullScreen,
+	EBlackout,
+	EZoomIn,
+	EZoomOut,
+	ESetTime,
+	EToggleTimeCounting,
+	ETimeCountdown,
+	EResetTime,
+	ENextView,
+	EPreviousView,
+	EFirstView,
+	ELastView,
+	ENextPage,
+	EPreviousPage,
+	EJumpTo,
+	ESelectPage,
+	EAbout,
+    };
 
 public:
-  void nextView(int delta);
-  void nextPage(int delta);
-  void firstView();
-  void lastView();
+    void nextView(int delta);
+    void nextPage(int delta);
+    void firstView();
+    void lastView();
 
-  void fitBox(const ipe::Rect &box, ipe::PdfViewBase *view);
-  bool load(const char* fn);
-  void jumpToPage(String page);
+    void fitBox(const ipe::Rect & box, ipe::PdfViewBase * view);
+    bool load(const char * fn);
+    void jumpToPage(String page);
 
-  // use -1 for current and -2 for next
-  ipe::Rect mediaBox(int pdfpno) const;
+    // use -1 for current and -2 for next
+    ipe::Rect mediaBox(int pdfpno) const;
 
-  const ipe::PdfDict *findLink(const ipe::Vector &pos) const;
-  void interpretAction(const ipe::PdfDict *action);
-  void gotoDestination(const ipe::PdfObj *dest);
+    const ipe::PdfDict * findLink(const ipe::Vector & pos) const;
+    void interpretAction(const ipe::PdfDict * action);
+    void gotoDestination(const ipe::PdfObj * dest);
 
 protected:
-  void collectAnnotations();
-  void collectDestinations();
-  void collectDestinations(const ipe::PdfDict *d);
-  void makePageLabels();
-  void collectPageLabels(const ipe::PdfDict *d);
-  void setViewPage(ipe::PdfViewBase *view, int pdfpno);
-  String pageLabel(int pdfno);
-  String currentLabel();
-  virtual void showType3Warning(const char *s) = 0;
-  virtual void browseLaunch(bool launch, String dest) = 0;
+    void collectAnnotations();
+    void collectDestinations();
+    void collectDestinations(const ipe::PdfDict * d);
+    void makePageLabels();
+    void collectPageLabels(const ipe::PdfDict * d);
+    void setViewPage(ipe::PdfViewBase * view, int pdfpno);
+    String pageLabel(int pdfno);
+    String currentLabel();
+    virtual void showType3Warning(const char * s) = 0;
+    virtual void browseLaunch(bool launch, String dest) = 0;
 
 public:
-  String iFileName;
+    String iFileName;
 
 protected:
-  std::unique_ptr<ipe::PdfFile> iPdf;
-  std::unique_ptr<ipe::PdfFileResources> iResources;
-  std::unique_ptr<ipe::Fonts> iFonts;
+    std::unique_ptr<ipe::PdfFile> iPdf;
+    std::unique_ptr<ipe::PdfFileResources> iResources;
+    std::unique_ptr<ipe::Fonts> iFonts;
 
-  int iPdfPageNo;
-  std::vector<String> iAnnotations;
-  std::vector<std::pair<String,int>> iPageLabels;
-  std::vector<std::vector<SLink>> iLinks;
-  std::vector<std::pair<String, int>> iDestinations;
-  bool iType3WarningShown;
+    int iPdfPageNo;
+    std::vector<String> iAnnotations;
+    std::vector<std::pair<String, int>> iPageLabels;
+    std::vector<std::vector<SLink>> iLinks;
+    std::vector<std::pair<String, int>> iDestinations;
+    bool iType3WarningShown;
 };
 
 // --------------------------------------------------------------------

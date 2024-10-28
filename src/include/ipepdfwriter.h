@@ -33,9 +33,9 @@
 #define IPEPDFWRITER_H
 
 #include "ipebase.h"
-#include "ipepage.h"
 #include "ipedoc.h"
 #include "ipeimage.h"
+#include "ipepage.h"
 
 #include <list>
 #include <map>
@@ -45,49 +45,48 @@
 
 namespace ipe {
 
-  class PdfResources;
-  class PdfDict;
+class PdfResources;
+class PdfDict;
 
-  class PdfPainter : public Painter {
-  public:
-    PdfPainter(const Cascade *style, Stream &stream);
-    virtual ~PdfPainter() { }
+class PdfPainter : public Painter {
+public:
+    PdfPainter(const Cascade * style, Stream & stream);
+    virtual ~PdfPainter() {}
 
-    static void drawColor(Stream &stream, Color color,
-			  const char *gray, const char *rgb);
+    static void drawColor(Stream & stream, Color color, const char * gray,
+			  const char * rgb);
 
-  protected:
+protected:
     virtual void doPush();
     virtual void doPop();
     virtual void doNewPath();
-    virtual void doMoveTo(const Vector &v);
-    virtual void doLineTo(const Vector &v);
-    virtual void doCurveTo(const Vector &v1, const Vector &v2,
-			   const Vector &v3);
+    virtual void doMoveTo(const Vector & v);
+    virtual void doLineTo(const Vector & v);
+    virtual void doCurveTo(const Vector & v1, const Vector & v2, const Vector & v3);
     virtual void doClosePath();
     virtual void doDrawPath(TPathMode mode);
     virtual void doDrawBitmap(Bitmap bitmap);
-    virtual void doDrawText(const Text *text);
+    virtual void doDrawText(const Text * text);
     virtual void doAddClipPath();
     virtual void doDrawSymbol(Attribute symbol);
 
-  protected:
+protected:
     void drawAttributes();
     void drawOpacity(bool withStroke);
 
-  protected:
-    Stream &iStream;
+protected:
+    Stream & iStream;
     // iActiveState records the attribute settings that have been
     // recorded in the PDF output, to avoid repeating them
     // over and over again.
     std::list<State> iActiveState;
-  };
+};
 
-  // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-  class PdfWriter {
-  public:
-    PdfWriter(TellStream &stream, const Document *doc, const PdfResources *resources,
+class PdfWriter {
+public:
+    PdfWriter(TellStream & stream, const Document * doc, const PdfResources * resources,
 	      uint32_t flags, int fromPage, int toPage, int compression);
     ~PdfWriter();
 
@@ -98,26 +97,26 @@ namespace ipe {
     void createXmlStream(String xmldata, bool preCompressed);
     void createTrailer();
 
-  private:
+private:
     int startObject(int objnum = -1);
     int pageObjectNumber(int page);
-    void createStream(const char *data, int size, bool preCompressed);
+    void createStream(const char * data, int size, bool preCompressed);
     void writeString(String text);
     void embedBitmap(Bitmap bitmap);
-    void paintView(Stream &stream, int pno, int view);
-    void embedBitmaps(const BitmapFinder &bm);
-    void createResources(const BitmapFinder &bm);
+    void paintView(Stream & stream, int pno, int view);
+    void embedBitmaps(const BitmapFinder & bm);
+    void createResources(const BitmapFinder & bm);
     void embedResources();
     void embedResource(String kind);
-    void embedIpeXForm(const PdfDict *d);
-    void embedXFormResource(const PdfDict *d);
+    void embedIpeXForm(const PdfDict * d);
+    void embedXFormResource(const PdfDict * d);
     void embedLatexResource(int num, String kind);
     bool hasResource(String kind) const noexcept;
 
-  private:
-    TellStream &iStream;
-    const Document *iDoc;
-    const PdfResources *iResources;
+private:
+    TellStream & iStream;
+    const Document * iDoc;
+    const PdfResources * iResources;
     //! SaveFlag's
     uint32_t iSaveFlags;
     //! Obj id of XML stream.
@@ -148,17 +147,17 @@ namespace ipe {
     //! Object numbers of symbols, indexed by attribute name
     std::map<int, int> iSymbols;
     struct PON {
-      int page;
-      int view;
-      int objNum;
+	int page;
+	int view;
+	int objNum;
     };
     //! List of pages, expressed as Pdf object numbers.
     std::vector<PON> iPageObjectNumbers;
     //! List of file locations, in object number order (starting with 0).
     std::map<int, long> iXref;
-  };
+};
 
-} // namespace
+} // namespace ipe
 
 // --------------------------------------------------------------------
 #endif
