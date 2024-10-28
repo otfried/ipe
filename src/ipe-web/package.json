@@ -6,8 +6,7 @@
   "scripts": {
     "serve": "vite",
     "host": "vite --host",
-    "build": "bash mkgitstamp.sh && biome format && biome check && tsc --noEmit && vite build",
-    "check-type": "tsc --noEmit",
+    "build": "bash mkgitstamp.sh && npm run check && vite build",
     "check": "biome format && biome check && tsc --noEmit",
     "preview": "vite preview",
     "format": "biome format --write",

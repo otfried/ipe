@@ -143,6 +143,24 @@ extern "C" void canvasUpdateSize()
 }
 
 EMSCRIPTEN_KEEPALIVE
+extern "C" EM_VAL canvasZoomPan()
+{
+  val result = val::array();
+  Vector pan = canvas()->pan();
+  result.call<void>("push", pan.x);
+  result.call<void>("push", pan.y);
+  result.call<void>("push", canvas()->zoom());
+  return result.release_ownership();
+}
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" void canvasSetZoomPan(double px, double py, double zoom)
+{
+  canvas()->setZoom(zoom);
+  canvas()->setPan(Vector(px, py));
+}
+
+EMSCRIPTEN_KEEPALIVE
 extern "C" void canvasMouseButtonEvent(EM_VAL ev, int button, bool press)
 {
   canvas()->mouseButtonEvent(val::take_ownership(ev), button, press);

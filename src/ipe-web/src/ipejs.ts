@@ -37,6 +37,8 @@ export declare class Ipe {
 	_canvasWheelEvent(event: Handle): void;
 	_canvasKeyPressEvent(event: Handle): boolean;
 	_canvasSetAdditionalModifiers(modifiers: number): void;
+	_canvasZoomPan(): Handle;
+	_canvasSetZoomPan(x: number, y: number, zoom: number): void;
 
 	_initLib(environment: Handle): void;
 	_createTarball(texfile: StringHandle): Handle;

@@ -81,7 +81,7 @@ export class IpeUi {
 		window.ipeui = this;
 		this.modal = new Modal(ipe, (result) => this.resume(result));
 		this.version = this.ipe.Emval.toValue(this.ipe._ipeVersion());
-		this.touch = new TouchDragZoom(this.topCanvas);
+		this.touch = new TouchDragZoom(this.ipe, this.topCanvas);
 
 		this._calculateCanvasSize();
 		this.ipe._initLib(
