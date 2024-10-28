@@ -898,8 +898,9 @@ function EDITTOOL:mouseButton(button, modifiers, press)
     return
   end
   if button == 0x81 then
-    -- previous click must have created a move action, discard
+    -- previous click(s) must have created move action(s), discard
     table.remove(self.undo)
+    if config.toolkit == "htmljs" then table.remove(self.undo) end
     button = 2
   end
   if button == 2 then

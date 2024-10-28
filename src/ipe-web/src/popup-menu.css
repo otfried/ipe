@@ -36,9 +36,6 @@ div#popup-submenu-pane {
 	padding: 4px 10px 1px 10px;
 	cursor: default;
 }
-.popup-menu-item.checked::before {
-	content: "✅ ";
-}
 .main-menu-item {
 	display: flex;
 	flex-direction: row;
@@ -46,13 +43,16 @@ div#popup-submenu-pane {
 	justify-content: space-between;
 	column-gap:20px;
 }
-.main-menu-item:hover {
+.main-menu-item:hover, .popup-menu-item:hover, 
+.popup-menu-submenu:hover, .popup-submenu-item:hover {
 	background-color: #ebebeb;
 }
 .main-menu-label {
 	cursor: default;
 }
-.main-menu-label.checked::before {
+.popup-menu-item.checked::before,
+.main-menu-label.checked::before,
+.popup-submenu-item.checked::before {
 	content: "✅ ";
 }
 .main-menu-shortcut {
@@ -68,9 +68,6 @@ div#popup-submenu-pane {
 	display: flex;
 	flex-direction: row;
 	justify-content: space-between;
-}
-.popup-menu-submenu:hover {
-	background-color: #ebebeb;
 }
 .popup-menu-arrow:after {
 	margin-left: 10px;
@@ -95,10 +92,4 @@ div#popup-submenu-pane {
 .popup-submenu-item {
 	padding: 4px 10px 1px 16px;
 	cursor: default;
-}
-.popup-submenu-item:hover {
-	background-color: #ebebeb;
-}
-.popup-submenu-item.checked::before {
-	content: "✅ ";
 }

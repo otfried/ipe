@@ -204,10 +204,19 @@ function LINESTOOL:mouseButton(button, modifiers, press)
   self.v[#self.v] = v
   if button == 0x81 then
     -- double click
-    -- the first click already added a vertex, do not use second one
-    if #self.v == 2 then return end
-    table.remove(self.v)
-    table.remove(self.t)
+    if config.toolkit == "htmljs" then
+      -- the browser first sends two single clicks, then the double click
+      if #self.v <= 3 then return end
+      table.remove(self.v)
+      table.remove(self.v)
+      table.remove(self.t)
+      table.remove(self.t)
+    else
+      -- the first click already added a vertex, do not use second one
+      if #self.v == 2 then return end
+      table.remove(self.v)
+      table.remove(self.t)
+    end
     button = 2
   end
   if modifiers.control and button == 1 then button = 2 end
@@ -452,9 +461,16 @@ function SPLINEGONTOOL:mouseButton(button, modifiers, press)
   self.v[#self.v] = v
   if button == 0x81 then
     -- double click
-    -- the first click already added a vertex, do not use second one
-    if #self.v == 2 then return end
-    table.remove(self.v)
+    if config.toolkit == "htmljs" then
+      if #self.v <= 3 then return end
+      -- the browser first sends two single clicks, then the double click
+      table.remove(self.v)
+      table.remove(self.v)
+    else
+      -- the first click already added a vertex, do not use second one
+      if #self.v == 2 then return end
+      table.remove(self.v)
+    end
     button = 2
   end
   if modifiers.control and button == 1 then button = 2 end

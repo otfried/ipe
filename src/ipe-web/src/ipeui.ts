@@ -132,6 +132,11 @@ export class IpeUi {
 			label: "Press the Shift key",
 			shortcut: null,
 		};
+		this.actions.context_menu = {
+			name: "context_menu",
+			label: "Show context menu",
+			shortcut: null,
+		};
 		this.setCheckMark("coordinates|points");
 		this.setCheckMark("scaling|1");
 		this._setupCanvas();
@@ -157,6 +162,8 @@ export class IpeUi {
 			this.ipe._canvasSetAdditionalModifiers(
 				this.actionState.shift_key ? 0x100 : 0,
 			);
+		} else if (action === "context_menu") {
+			this.setActionState("context_menu", !this.actionState.context_menu);
 		} else {
 			if (action in this.actionState) {
 				this.setActionState(action, !this.actionState[action]);
@@ -202,7 +209,7 @@ export class IpeUi {
 		for (const action in this.actions) {
 			const el = document.getElementById(action);
 			if (el == null) continue;
-			this._setButtonIcon(el, action);
+			if (action !== "context_menu") this._setButtonIcon(el, action);
 			el.onclick = () => this.action(action);
 			const a = this.actions[action];
 			el.title = a.shortcut == null ? a.label : `${a.label} [${a.shortcut}]`;
@@ -266,9 +273,14 @@ export class IpeUi {
 				event.preventDefault();
 				return;
 			}
+			let buttons = event.buttons;
+			if (buttons === 1 && this.actionState.context_menu) {
+				buttons = 2;
+				this.setActionState("context_menu", false);
+			}
 			this.ipe._canvasMouseButtonEvent(
 				this.ipe.Emval.toHandle(event),
-				event.buttons,
+				buttons,
 				true,
 			);
 		});
@@ -310,8 +322,14 @@ export class IpeUi {
 
 	private _setupPathView() {
 		const pv = get("pathView");
-		pv.addEventListener("mousedown", (event) => {
-			if (event.button === 0) this._pathViewButton(event);
+		pv.addEventListener("pointerdown", (event) => {
+			event.preventDefault();
+			if (event.buttons === 1) {
+				if (this.actionState.context_menu) {
+					this.setActionState("context_menu", false);
+					this.ipe._showPathStylePopup(event.clientX, event.clientY);
+				} else this._pathViewButton(event);
+			}
 		});
 		pv.addEventListener("contextmenu", (event) => {
 			event.preventDefault();
@@ -348,7 +366,10 @@ export class IpeUi {
 	}
 
 	private _handleKeyEvent(event: KeyboardEvent) {
-		if (this.popupMenu.keyPressEvent(event)) return;
+		if (this.popupMenu.keyPressEvent(event)) {
+			this.resume(null);
+			return;
+		}
 		if (this.modal.keyPressEvent(event)) return;
 		event.preventDefault();
 		if (["Control", "Shift", "Alt", "Meta"].includes(event.key)) return;
@@ -876,10 +897,19 @@ export class IpeUi {
 			});
 			span.addEventListener("click", (event) => {
 				event.preventDefault();
-				this.ipe._layerAction(
-					this.ipe.stringToNewUTF8("active"),
-					this.ipe.stringToNewUTF8(layer.name),
-				);
+				if (this.actionState.context_menu) {
+					this.setActionState("context_menu", false);
+					this.ipe._showLayerBoxPopup(
+						this.ipe.stringToNewUTF8(layer.name),
+						event.clientX,
+						event.clientY,
+					);
+				} else {
+					this.ipe._layerAction(
+						this.ipe.stringToNewUTF8("active"),
+						this.ipe.stringToNewUTF8(layer.name),
+					);
+				}
 			});
 			cb.addEventListener("change", (_event) => {
 				this.ipe._layerAction(
