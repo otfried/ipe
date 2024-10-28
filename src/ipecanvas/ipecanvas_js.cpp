@@ -150,6 +150,7 @@ void JsPainter::doDrawPath(TPathMode mode) {
 
 // --------------------------------------------------------------------
 
+// clang-format off
 EM_JS(void, addIpeCanvasJS, (), {
     function ipeBlitSurface(ctx, buffer1, w, h) {
 	const buffer2 =
@@ -160,6 +161,7 @@ EM_JS(void, addIpeCanvasJS, (), {
 
     Module['ipeBlitSurface'] = ipeBlitSurface;
 });
+// clang-format on
 
 //! Construct a new canvas.
 Canvas::Canvas(val bottomCanvas, val topCanvas) {

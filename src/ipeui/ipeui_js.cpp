@@ -444,6 +444,7 @@ static const struct luaL_Reg ipeui_functions[] = {
 
 // --------------------------------------------------------------------
 
+// clang-format off
 EM_JS(void, addJSClasses, (), {
     class IpeTimer {
 	constructor() {
@@ -454,7 +455,7 @@ EM_JS(void, addJSClasses, (), {
 	start() {
 	    this.active = true;
 	    this.stopped = false;
-	    const trigger = () = > {
+	    const trigger = () => {
 		if (!this.stopped) {
 		    Module['_triggerIpeTimer'](this.timerId);
 		    if (!this.singleShot) setTimeout(trigger, this.interval);
@@ -464,8 +465,9 @@ EM_JS(void, addJSClasses, (), {
 	}
     }
 
-    Module['createIpeTimer'] = () = > new IpeTimer();
+    Module['createIpeTimer'] = () => new IpeTimer();
 });
+// clang-format on
 
 // --------------------------------------------------------------------
 
