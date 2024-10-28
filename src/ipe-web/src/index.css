@@ -12,6 +12,7 @@ div#world {
 	height: 100vh;
 	display: flex;
 	flex-direction: column;
+	background-color: white;
 }
 
 div.toolbars {

@@ -164,6 +164,12 @@ export class IpeUi {
 			);
 		} else if (action === "context_menu") {
 			this.setActionState("context_menu", !this.actionState.context_menu);
+		} else if (action === "fullscreen") {
+			if (!document.fullscreenElement) {
+				document.body.requestFullscreen();
+			} else if (document.exitFullscreen) {
+				document.exitFullscreen();
+			}
 		} else {
 			if (action in this.actionState) {
 				this.setActionState(action, !this.actionState[action]);
@@ -545,10 +551,7 @@ export class IpeUi {
 		} else {
 			const menu = id >= 0 ? this.mainMenu[id] : this.currentSubMenu!;
 			// exclude these for the moment
-			if (
-				["new_window", "keyboard", "fullscreen", "cloud_latex"].includes(name)
-			)
-				return;
+			if (["new_window", "keyboard", "cloud_latex"].includes(name)) return;
 			if (window.ipc === undefined && name === "close") {
 				menu.submenu!.pop(); // remove separator
 				return;
