@@ -50,6 +50,8 @@ export class PopupMenu {
 	private _isOpen = false;
 	private _inSubmenu = false;
 	private _pinnedSubmenu = false;
+	private _currentSubmenuAnchor: HTMLDivElement | null = null;
+	private _touchBased = false;
 
 	constructor() {
 		const pane = document.getElementById("popup-menu-pane") as HTMLDivElement;
@@ -69,6 +71,7 @@ export class PopupMenu {
 		this.subpane.addEventListener("pointerleave", () => {
 			this._inSubmenu = false;
 		});
+		if (navigator.maxTouchPoints > 1) this._touchBased = true;
 	}
 
 	keyPressEvent(event: KeyboardEvent): boolean {
@@ -106,6 +109,7 @@ export class PopupMenu {
 		this._submenu = null;
 		this._inSubmenu = false;
 		this._pinnedSubmenu = false;
+		this._currentSubmenuAnchor = null;
 		this.subpane.style.display = "none";
 	}
 
@@ -127,13 +131,21 @@ export class PopupMenu {
 		arrow.classList.add("popup-menu-arrow");
 		item.appendChild(span);
 		item.appendChild(arrow);
-		item.addEventListener("pointerenter", () => {
-			if (!this._pinnedSubmenu) enter();
-		});
-		item.addEventListener("pointerleave", () => this._leaveSubmenuAnchor());
+		if (!this._touchBased) {
+			item.addEventListener("pointerenter", () => {
+				if (!this._pinnedSubmenu && item !== this._currentSubmenuAnchor) {
+					this._currentSubmenuAnchor = item;
+					enter();
+				}
+			});
+			item.addEventListener("pointerleave", () => this._leaveSubmenuAnchor());
+		}
 		item.addEventListener("click", () => {
 			this._pinnedSubmenu = true;
-			enter();
+			if (item !== this._currentSubmenuAnchor) {
+				this._currentSubmenuAnchor = item;
+				enter();
+			}
 		});
 	}
 
@@ -143,8 +155,9 @@ export class PopupMenu {
 		const m = this._submenu;
 		setTimeout(() => {
 			// if the submenu is still showing and we are not in it, close it
-			if (!this._inSubmenu && this._submenu === m) this._closeSubmenu();
-		}, 320);
+			if (!this._inSubmenu && !this._pinnedSubmenu && this._submenu === m)
+				this._closeSubmenu();
+		}, 300);
 	}
 
 	private _show(

@@ -259,7 +259,6 @@ export class IpeUi {
 
 	private _setupCanvas() {
 		this.topCanvas.addEventListener("pointerup", (event) => {
-			console.log("up", event.pointerType, event);
 			if (event.pointerType === "touch") {
 				event.preventDefault();
 				return;
@@ -271,7 +270,6 @@ export class IpeUi {
 			);
 		});
 		this.topCanvas.addEventListener("pointerdown", (event) => {
-			console.log("down", event.pointerType, event.buttons, event.tiltY, event);
 			// ignore event on right mouse button, as it generates contextmenu
 			if (event.pointerType === "touch" || event.buttons === 2) {
 				event.preventDefault();

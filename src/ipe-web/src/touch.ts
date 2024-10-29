@@ -45,7 +45,6 @@ export class TouchDragZoom {
 	}
 
 	private _onTouchStart(ev: TouchEvent): void {
-		console.log("TouchStart: ", ev.targetTouches.length, ev);
 		ev.preventDefault();
 		if (ev.targetTouches.length === 2) {
 			this.fingers = [
@@ -111,7 +110,6 @@ export class TouchDragZoom {
 	}
 
 	private _onTouchEnd(ev: TouchEvent): void {
-		console.log("TouchEnd: ", ev.targetTouches.length, ev);
 		if (ev.targetTouches.length === 0 && this.inGesture) this.inGesture = false;
 	}
 }
