@@ -142,7 +142,7 @@ extern "C" EM_VAL canvasZoomPan() {
 
 EMSCRIPTEN_KEEPALIVE
 extern "C" void canvasSetZoomPan(double px, double py, double zoom) {
-    canvas()->setZoom(zoom);
+    theAppUi->setZoom(zoom);
     canvas()->setPan(Vector(px, py));
 }
 
