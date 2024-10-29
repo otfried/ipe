@@ -70,6 +70,8 @@ from Xpdf (www.foolabs.com/xpdf).  Ipe contains the Lua 5.4
 interpreter (www.lua.org), and relies on Pdflatex for rendering text,
 either locally on your computer or in a cloud service.
 
+This project is tested with [BrowserStack](https://www.browserstack.com/).
+
 
 ### Reporting bugs
 
