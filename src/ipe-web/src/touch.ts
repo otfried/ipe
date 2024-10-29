@@ -112,7 +112,6 @@ export class TouchDragZoom {
 
 	private _onTouchEnd(ev: TouchEvent): void {
 		console.log("TouchEnd: ", ev.targetTouches.length, ev);
-		ev.preventDefault();
 		if (ev.targetTouches.length === 0 && this.inGesture) this.inGesture = false;
 	}
 }
