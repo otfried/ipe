@@ -9,7 +9,8 @@
 			},
 			"style": {
 				"noNonNullAssertion": "off",
-				"noParameterAssign": "off"
+				"noParameterAssign": "off",
+				"noUselessElse": "off"
 			}
 		}
 	}

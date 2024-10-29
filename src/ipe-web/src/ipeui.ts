@@ -104,12 +104,8 @@ export class IpeUi {
 
 		window.onclick = (event) => {
 			if (event.target === this.modal.pane) this.modal.close(CANCEL);
-			if (
-				event.target === this.popupMenu.pane ||
-				event.target === this.popupMenu.subpane
-			) {
-				this.popupMenu.close();
-				this.resume(null);
+			if (event.target === this.popupMenu.pane) {
+				if (this.popupMenu.closeOne()) this.resume(null);
 			}
 		};
 	}

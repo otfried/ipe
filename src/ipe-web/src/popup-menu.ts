@@ -49,6 +49,7 @@ export class PopupMenu {
 	private _submenu: HTMLDivElement | null = null;
 	private _isOpen = false;
 	private _inSubmenu = false;
+	private _pinnedSubmenu = false;
 
 	constructor() {
 		const pane = document.getElementById("popup-menu-pane") as HTMLDivElement;
@@ -63,7 +64,9 @@ export class PopupMenu {
 		this.subpane.addEventListener("pointerenter", () => {
 			this._inSubmenu = true;
 		});
-		this.subpane.addEventListener("pointerout", () => {
+		// this must be 'pointerleave', not 'pointerout', because it should not
+		// trigger when moving into a submenu item
+		this.subpane.addEventListener("pointerleave", () => {
 			this._inSubmenu = false;
 		});
 	}
@@ -76,6 +79,17 @@ export class PopupMenu {
 			}
 		}
 		return false;
+	}
+
+	// click outside the menu
+	closeOne(): boolean {
+		if (this._pinnedSubmenu) {
+			this._closeSubmenu();
+			return false;
+		} else {
+			this.close();
+			return true;
+		}
 	}
 
 	public close(): void {
@@ -91,6 +105,7 @@ export class PopupMenu {
 		this._submenu?.remove();
 		this._submenu = null;
 		this._inSubmenu = false;
+		this._pinnedSubmenu = false;
 		this.subpane.style.display = "none";
 	}
 
@@ -112,12 +127,18 @@ export class PopupMenu {
 		arrow.classList.add("popup-menu-arrow");
 		item.appendChild(span);
 		item.appendChild(arrow);
-		item.addEventListener("pointerenter", enter);
+		item.addEventListener("pointerenter", () => {
+			if (!this._pinnedSubmenu) enter();
+		});
 		item.addEventListener("pointerleave", () => this._leaveSubmenuAnchor());
+		item.addEventListener("click", () => {
+			this._pinnedSubmenu = true;
+			enter();
+		});
 	}
 
 	private _leaveSubmenuAnchor(): void {
-		if (this._inSubmenu) return;
+		if (this._inSubmenu || this._pinnedSubmenu) return;
 		// remember the currently showing submenu
 		const m = this._submenu;
 		setTimeout(() => {
