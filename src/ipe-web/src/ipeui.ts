@@ -83,7 +83,13 @@ export class IpeUi {
 		window.ipeui = this;
 		this.modal = new Modal(ipe, (result) => this.resume(result));
 		this.version = this.ipe.Emval.toValue(this.ipe._ipeVersion());
-		this.touch = new TouchDragZoom(this.ipe, this.topCanvas);
+		this.touch = new TouchDragZoom(this.ipe, this.topCanvas, () => {
+			if (this.actionState.context_menu) {
+				this.setActionState("context_menu", false);
+				return true;
+			}
+			return false;
+		});
 		this.platform = window.ipc ? "electron" : "web";
 
 		this._calculateCanvasSize();
@@ -154,6 +160,8 @@ export class IpeUi {
 			this._aboutIpe();
 		} else if (action === "preferences") {
 			this._explainPreferences();
+		} else if (action === "tablet_hints") {
+			this._tabletHints();
 		} else if (action === "manage_files") {
 			this.modal.fileManager();
 		} else if (action === "shift_key") {
@@ -163,6 +171,9 @@ export class IpeUi {
 			);
 		} else if (action === "context_menu") {
 			this.setActionState("context_menu", !this.actionState.context_menu);
+		} else if (action === "finger_draw") {
+			this.setActionState("finger_draw", !this.actionState.finger_draw);
+			this.touch.fingerDraw = this.actionState.finger_draw;
 		} else if (action === "fullscreen") {
 			this._toggleFullscreen();
 		} else {
@@ -326,17 +337,8 @@ export class IpeUi {
 	}
 
 	private _toggleFullscreen() {
-		if (document.fullscreenElement !== undefined) {
-			if (!document.fullscreenElement) document.body.requestFullscreen();
-			else document.exitFullscreen();
-		} else {
-			//@ts-ignorets-ignore
-			if (!document.webkitFullscreenElement)
-				//@ts-ignore
-				document.body.webkitRequestFullscreen();
-			//@ts-ignore
-			else document.webkitExitFullscreen();
-		}
+		if (!document.fullscreenElement) document.body.requestFullscreen();
+		else document.exitFullscreen();
 	}
 
 	private _setupPathView() {
@@ -463,6 +465,21 @@ export class IpeUi {
 				"and upload it as an ipelet.</p><p>More details are in the " +
 				'<a target="_blank" href="https://otfried.github.io/ipe/80_advanced.html#customizing-ipe">' +
 				"Manual</a>.</p>",
+		);
+	}
+
+	private _tabletHints() {
+		this.modal.showBanner(
+			"Tips for tablet users",
+			"<ul><li>Ipe is designed to be used with a pen.  Finger touches on the canvas are ignored, except " +
+				"for two-finger gestures for dragging and zooming. You can enable drawing with a finger in the Help menu.</li>" +
+				"<li>To complete a polygon or to open a context menu, you need the 'right' mouse button, which a pen doesn't have." +
+				"There are three ways to perform a right mouse click:<ol>" +
+				"<li>Some pens, like the Samsung S-pen, have a button on the pen to make it emit right mouse clicks.</li>" +
+				"<li>You can press the tool button labeled with a mouse (🖱). The next pen press will then be a right mouse click.</li>" +
+				"<li>When you tilt the pen away from you (tilted at least 20 degrees towards the far side of the tablet), " +
+				"then it emits right mouse clicks.</li></ol></li>" +
+				"</ul>",
 		);
 	}
 

@@ -388,6 +388,10 @@ void AppUiBase::buildMenus() {
 #endif
 
     addItem(EHelpMenu, "Ipe &manual", "manual");
+#ifdef IPEUI_JS
+    addItem(EHelpMenu, "Draw with finger", "@*finger_draw");
+    addItem(EHelpMenu, "Hints for tablet users", "tablet_hints");
+#endif
     addItem(EHelpMenu, "Preferences", "preferences");
     addItem(EHelpMenu, "Onscreen keyboard", "@keyboard");
     addItem(EHelpMenu, "Show &configuration", "show_configuration");
