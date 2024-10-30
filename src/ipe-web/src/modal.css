@@ -121,7 +121,7 @@ div#contents.modal-pageselector {
 	column-gap: 20px;
 	row-gap: 20px;
 	max-height: 85vh;
-	overflow: scroll;
+	overflow: auto;
 	padding: 10px;
 }
 

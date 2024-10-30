@@ -73,6 +73,7 @@ export class IpeUi {
 	filename: string | null;
 	saveCallback: ((fn: string) => void) | null = null;
 	readonly touch: TouchDragZoom;
+	platform: string;
 
 	constructor(ipe: Ipe) {
 		this.ipe = ipe;
@@ -82,11 +83,12 @@ export class IpeUi {
 		this.modal = new Modal(ipe, (result) => this.resume(result));
 		this.version = this.ipe.Emval.toValue(this.ipe._ipeVersion());
 		this.touch = new TouchDragZoom(this.ipe, this.topCanvas);
+		this.platform = window.ipc ? "electron" : "web";
 
 		this._calculateCanvasSize();
-		this.ipe._initLib(
-			this.ipe.Emval.toHandle(["HOME=/home/ipe", "IPEJSLATEX=1", "IPEDEBUG=1"]),
-		);
+		const ipeenv = ["HOME=/home/ipe", "IPEJSLATEX=1", "IPEDEBUG=1"];
+		if (this.platform === "electron") ipeenv.push("IPEPRELOADER=1");
+		this.ipe._initLib(this.ipe.Emval.toHandle(ipeenv));
 		this.popupMenu = new PopupMenu();
 		this.filename = null;
 
@@ -115,7 +117,7 @@ export class IpeUi {
 			width,
 			height,
 			window.devicePixelRatio,
-			this.ipe.stringToNewUTF8("web"),
+			this.ipe.stringToNewUTF8(this.platform),
 		);
 		// these actions are not on the menu, need to create them first
 		this.actions.stop = {
@@ -437,8 +439,10 @@ export class IpeUi {
 			"For the price of a cup of coffee per month you can make a meaningful contribution " +
 			"to the continuing development of Ipe.</p>";
 		const build = `<div class="buildInfo">This Ipe is ${buildInfo}</div>`;
+		const edition =
+			this.platform === "electron" ? "Electron Edition" : "Web Edition";
 		this.modal.showBanner(
-			`Ipe ${this.version.version} Web Edition`,
+			`Ipe ${this.version.version} ${edition}`,
 			`${yearLine}${body}${build}`,
 		);
 	}
@@ -488,7 +492,7 @@ export class IpeUi {
 	}
 
 	private _setActionStateMark(action: string, checked: boolean) {
-		if (window.ipc) {
+		if (window.ipc?.setMenuCheckmark) {
 			window.ipc?.setMenuCheckmark(action, checked);
 		} else {
 			for (const rootItem of this.mainMenu) {
@@ -523,7 +527,7 @@ export class IpeUi {
 	}
 
 	setupMenu() {
-		if (window.ipc != null) {
+		if (window.ipc?.menu) {
 			window.ipc.menu(this.mainMenu);
 		} else {
 			for (const m of this.mainMenu) {
@@ -616,14 +620,14 @@ export class IpeUi {
 				item.submenu = submenu;
 			}
 		}
-		if (window.ipc != null) {
+		if (window.ipc?.menu) {
 			// TODO: call setup menu only once, at next event loop iteration
 			this.setupMenu();
 		}
 	}
 
 	async showPopupMenu(x: number, y: number, items: PopupItemOptions[]) {
-		if (window.ipc != null) this.resume(await window.ipc.popupMenu(items));
+		if (window.ipc?.popupMenu) this.resume(await window.ipc.popupMenu(items));
 		else this.popupMenu.openPopup(x, y, items, (result) => this.resume(result));
 	}
 
@@ -712,7 +716,7 @@ export class IpeUi {
 	}
 
 	async messageBox(options: MessageBoxOptions) {
-		if (window.ipc != null) {
+		if (window.ipc?.messageBox != null) {
 			// TODO: add option to use inline messagebox
 			this.resume(await window.ipc.messageBox(options));
 		} else {

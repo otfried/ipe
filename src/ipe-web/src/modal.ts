@@ -45,8 +45,8 @@ export interface FileDialogOptions {
 	type: "open" | "save";
 	caption: string;
 	filters: string[];
-	dir: string;
-	path: string;
+	dir: string | null;
+	path: string | null;
 	selected: number; // the selected filter
 }
 

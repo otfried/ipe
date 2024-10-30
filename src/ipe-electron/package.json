@@ -1,0 +1,46 @@
+{
+  "name": "ipe-electron",
+  "productName": "ipe-electron",
+  "version": "7.3.1",
+  "author": {
+    "name": "Otfried Cheong",
+    "email": "ipe@otfried.org"
+  },
+  "description": "Electron edition of Ipe",
+  "license": "GPL-3.0-only",
+  "main": "./dist/main/index.js",
+  "scripts": {
+    "serve": "electron-vite dev --outDir=dist",
+    "preview": "electron-vite preview --outDir=dist",
+    "build": "electron-vite build --outDir=dist",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "format": "biome format ./src --write",
+    "check": "biome check ./src",
+    "fix": "biome check ./src --apply"
+  },
+  "devDependencies": {
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@biomejs/biome": "1.7.3",
+    "@electron-forge/cli": "^7.5.0",
+    "@electron-forge/maker-deb": "^7.5.0",
+    "@electron-forge/maker-rpm": "^7.5.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.5.0",
+    "@electron-forge/plugin-fuses": "^7.5.0",
+    "@electron-forge/plugin-vite": "^7.5.0",
+    "@electron/fuses": "^1.8.0",
+    "@types/node": "^22.7.7",
+    "@types/sortablejs": "^1.15.8",
+    "electron": "^32.1.2",
+    "electron-vite": "^2.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.2",
+    "vite": "^5.4.8"
+  },
+  "dependencies": {
+    "@electron-toolkit/utils": "^3.0.0",
+    "@melloware/coloris": "^0.24.0",
+    "sortablejs": "^1.15.3"
+  }
+}

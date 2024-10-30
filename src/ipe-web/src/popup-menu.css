@@ -30,7 +30,7 @@ div#popup-submenu-pane {
 	row-gap: 3px;
 	min-height: 0;
 	max-height: 90vh;
-	overflow: scroll;
+	overflow: auto;
 }
 .popup-menu-item {
 	padding: 4px 10px 1px 10px;
@@ -87,7 +87,7 @@ div#popup-submenu-pane {
 	flex-direction: column;
 	row-gap: 3px;
 	pointer-events: all;
-	overflow: scroll;
+	overflow: auto;
 }
 .popup-submenu-item {
 	padding: 4px 10px 1px 16px;

@@ -167,7 +167,7 @@ div#layerbox {
 	padding: 2px;
 	border: 1px solid black;
 	flex-grow: 1;
-	overflow: scroll;
+	overflow: auto;
 	min-height: 0;
 }
 div.layer {
