@@ -973,6 +973,8 @@ export class IpeUi {
 			const p = get(s);
 			p.style.pointerEvents = enabled ? "auto" : "none";
 		};
+		enablePanel("toolbarEdit");
+		enablePanel("toolbarMode");
 		enablePanel("propertiesPanel");
 		enablePanel("layersPanel");
 		enablePanel("bookmarksPanel");
