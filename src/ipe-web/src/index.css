@@ -90,6 +90,7 @@ button.toolbutton {
 	justify-content: center;
 	align-items: center;
 	background-color: ivory;
+	user-select: none;
 }
 button.toolbutton > svg {
 	flex-shrink: 0;
@@ -102,6 +103,15 @@ button.toolbutton:hover {
 }
 button.toolbutton:disabled {
 	border: 1px solid lightgray;
+}
+button.draw-toolbutton {
+	pointer-events: all;
+}
+select {
+	/* try to make the iPad behave more sanely */
+	user-select: none;
+	border: 1px solid gray;
+	border-radius: 2px;
 }
 
 /* Property panel */
@@ -133,7 +143,12 @@ span#modeIndicator > svg {
 	flex-shrink: 0;
 }
 button.absButton {
+	border: 0.5px gray outset;
 	padding: 0;
+	user-select: none;
+}
+button.absButton:active {
+	border-style: inset;
 }
 canvas#pathView {
 	width: 170px;

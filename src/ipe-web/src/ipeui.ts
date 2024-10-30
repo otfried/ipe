@@ -161,11 +161,7 @@ export class IpeUi {
 		} else if (action === "context_menu") {
 			this.setActionState("context_menu", !this.actionState.context_menu);
 		} else if (action === "fullscreen") {
-			if (!document.fullscreenElement) {
-				document.body.requestFullscreen();
-			} else if (document.exitFullscreen) {
-				document.exitFullscreen();
-			}
+			this._toggleFullscreen();
 		} else {
 			if (action in this.actionState) {
 				this.setActionState(action, !this.actionState[action]);
@@ -324,6 +320,20 @@ export class IpeUi {
 				this.ipe._canvasUpdate();
 			}, 250);
 		});
+	}
+
+	private _toggleFullscreen() {
+		if (document.fullscreenElement !== undefined) {
+			if (!document.fullscreenElement) document.body.requestFullscreen();
+			else document.exitFullscreen();
+		} else {
+			//@ts-ignorets-ignore
+			if (!document.webkitFullscreenElement)
+				//@ts-ignore
+				document.body.webkitRequestFullscreen();
+			//@ts-ignore
+			else document.webkitExitFullscreen();
+		}
 	}
 
 	private _setupPathView() {
