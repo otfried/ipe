@@ -191,5 +191,15 @@
     <div id="popup-menu-pane"></div>
     <div id="popup-submenu-pane"></div>
     <script type="module" src="/src/main.ts"></script>
+    <script type="text/javascript">
+		  if ('serviceWorker' in navigator) {
+		    navigator.serviceWorker.register('/service-worker.js')
+			.then((reg) => {
+			  console.log("Service worker registered.");
+			}).catch((err) => {
+			  console.log("Error registering service worker:", err)
+			});
+		  }
+		</script>
   </body>
 </html>

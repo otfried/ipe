@@ -265,7 +265,10 @@ function MODEL:getColorJS(msg, r, g, b, caption)
   d:add("color", "input", {color_picker=true}, 2, 1)
   d:addButton("ok", "Ok", "accept")
   d:addButton("cancel", "Cancel", "reject")
-  d:set("color", string.format("#%02x%02x%02x", r * 255, g * 255, b * 255))
+  d:set("color", string.format("#%02x%02x%02x",
+			       math.floor(r * 255),
+			       math.floor(g * 255),
+			       math.floor(b * 255)))
   if d:execute() then
     local s = d:get("color")
     if #s == 7 and s:sub(1,1) == "#" then
