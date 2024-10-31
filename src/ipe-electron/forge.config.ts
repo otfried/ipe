@@ -27,6 +27,20 @@ const config: ForgeConfig = {
       },
     }, ['linux']),
   ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'otfried',
+          name: 'ipe',
+        },
+        prerelease: true,
+        tagPrefix: "v",
+        draft: true,
+      }
+    }
+  ],
   plugins: [
     // Fuses are used to enable/disable various Electron functionality
     // at package time, before code signing the application
