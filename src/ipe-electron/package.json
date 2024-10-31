@@ -10,9 +10,9 @@
   "license": "GPL-3.0-only",
   "main": "./dist/main/index.js",
   "scripts": {
-    "serve": "electron-vite dev --outDir=dist",
-    "preview": "electron-vite preview --outDir=dist",
-    "build": "electron-vite build --outDir=dist",
+    "serve": "bash mkapp.bash && electron-vite dev --outDir=dist",
+    "preview": "bash mkapp.bash && electron-vite preview --outDir=dist",
+    "build": "bash mkapp.bash && electron-vite build --outDir=dist",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",

@@ -132,10 +132,17 @@ void AppUiBase::buildMenus() {
     addItem(EFileMenu, "New", "new");
     addItem(EFileMenu, "Open", "open");
     addItem(EFileMenu, "Save", "save");
+#ifdef IPEUI_JS
+    addItem(EFileMenu, "Download", "download");
+#endif
     addItem(EFileMenu, "Save as", "save_as");
     addItem(EFileMenu);
+#ifdef IPEUI_JS
+    addItem(EFileMenu, "Manage files", "manage_files");
+#else
     startSubMenu(EFileMenu, "Recent files", ESubmenuRecentFiles);
     iRecentFileMenu = endSubMenu();
+#endif
     addItem(EFileMenu);
     addItem(EFileMenu, "Export as PNG", "export_png");
     addItem(EFileMenu, "Export as EPS", "export_eps");

@@ -566,15 +566,13 @@ export class IpeUi {
 			const menu = id >= 0 ? this.mainMenu[id] : this.currentSubMenu!;
 			// exclude these for the moment
 			if (["new_window", "keyboard", "cloud_latex"].includes(name)) return;
-			if (window.ipc === undefined && name === "close") {
+			if ((this.platform === "web" && name === "close") ||
+				(this.platform === "electron" && name === "manage_files")) {
 				menu.submenu!.pop(); // remove separator
 				return;
 			}
-			if (name === "submenu-recentfiles") {
-				name = "manage_files";
-				label = "Manage files";
-				type = "normal";
-			}
+			if (this.platform === "electron" && name === "download")
+				return;
 			menu.submenu!.push({
 				label,
 				id: name,
@@ -585,18 +583,6 @@ export class IpeUi {
 			if (type === "submenu")
 				this.currentSubMenu = menu.submenu![menu.submenu!.length - 1];
 			else this.actions[name] = { name, label, shortcut };
-			if (name === "save") {
-				menu.submenu!.push({
-					id: "download",
-					label: "Download",
-					type: "normal",
-				});
-				this.actions.download = {
-					name: "download",
-					label: "Download",
-					shortcut: null,
-				};
-			}
 		}
 	}
 
