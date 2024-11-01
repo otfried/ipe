@@ -49,6 +49,7 @@ export class IpeUi {
 	readonly bottomCanvas = get("bottomCanvas") as HTMLCanvasElement;
 	readonly topCanvas = get("topCanvas") as HTMLCanvasElement;
 	readonly preloadCache: { [fname: string]: string } = {};
+	readonly fileExistsCache: { [fname: string]: boolean } = {};
 	readonly actions: { [name: string]: Action };
 	readonly actionState: { [action: string]: boolean } = {
 		toggle_notes: false,
@@ -566,13 +567,14 @@ export class IpeUi {
 			const menu = id >= 0 ? this.mainMenu[id] : this.currentSubMenu!;
 			// exclude these for the moment
 			if (["new_window", "keyboard", "cloud_latex"].includes(name)) return;
-			if ((this.platform === "web" && name === "close") ||
-				(this.platform === "electron" && name === "manage_files")) {
+			if (
+				(this.platform === "web" && name === "close") ||
+				(this.platform === "electron" && name === "manage_files")
+			) {
 				menu.submenu!.pop(); // remove separator
 				return;
 			}
-			if (this.platform === "electron" && name === "download")
-				return;
+			if (this.platform === "electron" && name === "download") return;
 			menu.submenu!.push({
 				label,
 				id: name,
