@@ -313,14 +313,8 @@ void AppUi::action(String name) { luaAction(name); }
 WINID AppUi::windowId() { return this; }
 
 void AppUi::closeWindow() {
-    lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-    lua_getfield(L, -1, "okay_close");
-    if (lua_toboolean(L, -1)) {
-	val window = val::global("window");
-	window.call<void>("close");
-    } else
-	// give Lua code a chance to consider the case and close again
-	wrapCall("closeEvent", 0);
+    val window = val::global("window");
+    window.call<void>("close");
 }
 
 void AppUi::setWindowCaption(bool mod, const char * caption, const char * fn) {

@@ -715,7 +715,11 @@ function MODEL:action_run_latex()
 end
 
 function MODEL:action_close()
-  self.ui:close()
+  if config.platform == "electron" then
+    self:closeEvent()
+  else
+    self.ui:close()
+  end
 end
 
 function MODEL:action_auto_latex()
