@@ -266,8 +266,17 @@ export class PopupMenu {
 		for (const m of items) {
 			const item = document.createElement("div");
 			if (["normal", "checkbox", "radio"].includes(m.type)) {
-				item.innerText = m.label!;
-				item.classList.add("popup-submenu-item");
+				const label = document.createElement("span");
+				label.innerText = m.label!;
+				label.classList.add("main-menu-label");
+				item.appendChild(label);
+				item.classList.add("main-submenu-item");
+				if (m.accelerator) {
+					const s = document.createElement("span");
+					s.innerText = m.accelerator;
+					s.classList.add("main-menu-shortcut");
+					item.appendChild(s);
+				}
 				item.addEventListener("click", () => {
 					this.close();
 					cb(m.id!);

@@ -412,7 +412,11 @@ export class IpeUi {
 	private _findActionFromShortcut(key: string): string | null {
 		for (const rootItem of this.mainMenu) {
 			for (const item of rootItem.submenu!) {
-				if (item.accelerator === key) return item.id!;
+				if (item.type === "submenu") {
+					for (const subitem of item.submenu!) {
+						if (subitem.accelerator === key) return subitem.id!;
+					}
+				} else if (item.accelerator === key) return item.id!;
 			}
 		}
 		return null;

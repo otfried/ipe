@@ -43,8 +43,11 @@ div#popup-submenu-pane {
 	justify-content: space-between;
 	column-gap:20px;
 }
-.main-menu-item:hover, .popup-menu-item:hover, 
-.popup-menu-submenu:hover, .popup-submenu-item:hover {
+.main-menu-item:hover,
+.main-submenu-item:hover,
+.popup-menu-item:hover,
+.popup-menu-submenu:hover,
+.popup-submenu-item:hover {
 	background-color: #ebebeb;
 }
 .main-menu-label {
@@ -92,4 +95,11 @@ div#popup-submenu-pane {
 .popup-submenu-item {
 	padding: 4px 10px 1px 16px;
 	cursor: default;
+}
+.main-submenu-item {
+	display: flex;
+	flex-direction: row;
+	padding: 4px 10px 1px 16px;
+	justify-content: space-between;
+	column-gap:20px;
 }

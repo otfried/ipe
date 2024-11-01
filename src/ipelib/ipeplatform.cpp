@@ -389,7 +389,7 @@ String Platform::latexDirectory() {
 bool Platform::fileExists(String fname) {
 #ifdef WIN32
     return (_waccess(fname.w().data(), F_OK) == 0);
-#elseif defined(IPEWASM)
+#elif defined(IPEWASM)
     if (!usePreloader() || fname.hasPrefix("/tmp/") || fname.hasPrefix("/opt/ipe"))
 	return (::access(fname.z(), F_OK) == 0);
     emscripten::val fileExistsCache =
