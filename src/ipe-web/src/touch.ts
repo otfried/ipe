@@ -34,13 +34,10 @@ export class TouchDragZoom {
 	initialZoom = 1;
 	initialPan: Vector = [0, 0];
 	inGesture = false;
-	fingerDraw = false;
-	nextIsRightClick: () => boolean;
 
-	constructor(ipe: Ipe, target: HTMLElement, nextIsRightClick: () => boolean) {
+	constructor(ipe: Ipe, target: HTMLElement) {
 		this.ipe = ipe;
 		this.target = target;
-		this.nextIsRightClick = nextIsRightClick;
 		target.addEventListener("touchstart", (ev) => this._onTouchStart(ev));
 		target.addEventListener("touchmove", (ev) => this._onTouchMove(ev));
 		target.addEventListener("touchend", (ev) => this._onTouchEnd(ev));
@@ -57,20 +54,11 @@ export class TouchDragZoom {
 			const panZoom = this.ipe.Emval.toValue(this.ipe._canvasZoomPan());
 			this.initialPan = [panZoom[0], panZoom[1]];
 			this.initialZoom = panZoom[2];
-		} else if (ev.targetTouches.length === 1 && this.fingerDraw) {
-			const buttons = this.nextIsRightClick() ? 2 : 1;
-			this.ipe._canvasMouseButtonEvent(
-				this.ipe.Emval.toHandle(ev),
-				buttons,
-				true,
-			);
 		}
 	}
 
 	private _onTouchMove(ev: TouchEvent): void {
 		ev.preventDefault();
-		if (ev.targetTouches.length === 1 && this.fingerDraw)
-			this.ipe._canvasMouseMoveEvent(this.ipe.Emval.toHandle(ev));
 		if (ev.targetTouches.length !== 2) return;
 		// Check if the two target touches are the same ones that started the 2-touch
 		const f0 = new Finger(ev.targetTouches[0]);
@@ -122,12 +110,6 @@ export class TouchDragZoom {
 	}
 
 	private _onTouchEnd(ev: TouchEvent): void {
-		if (ev.targetTouches.length === 0) {
-			if (this.inGesture) {
-				this.inGesture = false;
-			} else if (this.fingerDraw) {
-				this.ipe._canvasMouseButtonEvent(this.ipe.Emval.toHandle(ev), 1, false);
-			}
-		}
+		if (ev.targetTouches.length === 0 && this.inGesture) this.inGesture = false;
 	}
 }

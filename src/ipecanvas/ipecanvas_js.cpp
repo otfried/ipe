@@ -45,7 +45,7 @@ namespace ipe {
 
 class JsPainter : public Painter {
 public:
-    JsPainter(const Cascade * sheet, emscripten::val context, double dpr);
+    JsPainter(const Cascade * sheet, val context, double dpr);
     virtual ~JsPainter();
 
     void setPen(int r, int g, int b);
@@ -65,13 +65,13 @@ protected:
     virtual void doDrawPath(TPathMode mode);
 
 private:
-    emscripten::val iCtx;
+    val iCtx;
     double iDpr;
 };
 
 } // namespace ipe
 
-JsPainter::JsPainter(const Cascade * sheet, emscripten::val context, double dpr)
+JsPainter::JsPainter(const Cascade * sheet, val context, double dpr)
     : Painter(sheet)
     , iCtx{context}
     , iDpr{dpr} {
@@ -216,7 +216,7 @@ static int convertModifiers(val ev) {
     return mod;
 }
 
-void Canvas::mouseButtonEvent(emscripten::val ev, int button, bool press) {
+void Canvas::mouseButtonEvent(val ev, int button, bool press) {
     iGlobalPos = Vector(ev["clientX"].as<double>(), ev["clientY"].as<double>());
     computeFifi(ev["offsetX"].as<double>(), ev["offsetY"].as<double>());
     int mod = convertModifiers(ev) | iAdditionalModifiers;
@@ -228,14 +228,14 @@ void Canvas::mouseButtonEvent(emscripten::val ev, int button, bool press) {
 	iObserver->canvasObserverMouseAction(button | mod);
 }
 
-void Canvas::mouseMoveEvent(emscripten::val ev) {
+void Canvas::mouseMoveEvent(val ev) {
     computeFifi(ev["offsetX"].as<double>(), ev["offsetY"].as<double>());
     // ipeDebug("mouseMove %g, %g", iUnsnappedMousePos.x, iUnsnappedMousePos.y);
     if (iTool) iTool->mouseMove();
     if (iObserver) iObserver->canvasObserverPositionChanged();
 }
 
-void Canvas::wheelEvent(emscripten::val ev) {
+void Canvas::wheelEvent(val ev) {
     Vector p{ev["deltaX"].as<double>(), ev["deltaY"].as<double>()};
     int mod = convertModifiers(ev);
     // ipeDebug("wheel %g, %g %d", p.x, p.y, mod);
@@ -249,7 +249,7 @@ void Canvas::wheelEvent(emscripten::val ev) {
     }
 }
 
-bool Canvas::keyPressEvent(emscripten::val ev) {
+bool Canvas::keyPressEvent(val ev) {
     if (iTool) {
 	int mod = convertModifiers(ev);
 	String key{ev["key"].as<std::string>()};

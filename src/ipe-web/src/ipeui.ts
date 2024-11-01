@@ -83,13 +83,7 @@ export class IpeUi {
 		window.ipeui = this;
 		this.modal = new Modal(ipe, (result) => this.resume(result));
 		this.version = this.ipe.Emval.toValue(this.ipe._ipeVersion());
-		this.touch = new TouchDragZoom(this.ipe, this.topCanvas, () => {
-			if (this.actionState.context_menu) {
-				this.setActionState("context_menu", false);
-				return true;
-			}
-			return false;
-		});
+		this.touch = new TouchDragZoom(this.ipe, this.topCanvas);
 		this.platform = window.ipc ? "electron" : "web";
 
 		this._calculateCanvasSize();
@@ -173,7 +167,6 @@ export class IpeUi {
 			this.setActionState("context_menu", !this.actionState.context_menu);
 		} else if (action === "finger_draw") {
 			this.setActionState("finger_draw", !this.actionState.finger_draw);
-			this.touch.fingerDraw = this.actionState.finger_draw;
 		} else if (action === "fullscreen") {
 			this._toggleFullscreen();
 		} else {
@@ -269,7 +262,7 @@ export class IpeUi {
 
 	private _setupCanvas() {
 		this.topCanvas.addEventListener("pointerup", (event) => {
-			if (event.pointerType === "touch") {
+			if (event.pointerType === "touch" && !this.actionState.finger_draw) {
 				event.preventDefault();
 				return;
 			}
@@ -281,7 +274,10 @@ export class IpeUi {
 		});
 		this.topCanvas.addEventListener("pointerdown", (event) => {
 			// ignore event on right mouse button, as it generates contextmenu
-			if (event.pointerType === "touch" || event.buttons === 2) {
+			if (
+				(event.pointerType === "touch" && !this.actionState.finger_draw) ||
+				event.buttons === 2
+			) {
 				event.preventDefault();
 				return;
 			}
@@ -300,7 +296,6 @@ export class IpeUi {
 			);
 		});
 		this.topCanvas.addEventListener("dblclick", (event) => {
-			console.log("dblclick", event);
 			this.ipe._canvasMouseButtonEvent(
 				this.ipe.Emval.toHandle(event),
 				0x81,
@@ -308,7 +303,7 @@ export class IpeUi {
 			);
 		});
 		this.topCanvas.addEventListener("pointermove", (event) => {
-			if (event.pointerType === "touch") {
+			if (event.pointerType === "touch" && !this.actionState.finger_draw) {
 				event.preventDefault();
 				return;
 			}
