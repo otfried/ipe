@@ -2593,6 +2593,7 @@ function MODEL:action_update_style_sheets()
   if dir == "" then dir = "." end
   local sheets = self.doc:sheets():clone()
   local qlog = ""
+  self:preloadFileExists()
   for index=1,sheets:count() do
     local sheet = sheets:sheet(index)
     local name = sheet:name()
@@ -2605,6 +2606,7 @@ function MODEL:action_update_style_sheets()
       local s = findStyle(name .. ".isy", dir)
       if s then
 	qlog = qlog .. "     updating from '" .. s .."'\n"
+	self:preloadFile(s)
 	local nsheet = ipe.Sheet(s)
 	if not nsheet then
 	  qlog = qlog .. "    ! failed to load '" .. s .. "'!\n"
@@ -2817,6 +2819,7 @@ function MODEL:action_add_style_sheets()
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   if not d:execute() then return end
+  self:preloadFileExists()
   local final = self.doc:sheets():clone()
   if d:get("nobasic") then
     for i = 1,final:count() do
@@ -2832,6 +2835,7 @@ function MODEL:action_add_style_sheets()
       messageBox(self.ui:win(), "warning", "No style sheet found for '" .. name .. "'")
       return
     end
+    self:preloadFile(s)
     local nsheet = ipe.Sheet(s)
     if not nsheet then
       messageBox(self.ui:win(), "warning", "Failed to load style sheet '" .. s .. "'")

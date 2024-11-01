@@ -13,7 +13,11 @@ instantiateIpe({
 	printErr: console.log.bind(console),
 }).then(async (ipe) => {
 	console.log("Ipe wasm code loaded");
-	const ipeui = new IpeUi(ipe);
+	const ipeui = new IpeUi(ipe, [
+		"HOME=/home/ipe",
+		"IPEJSLATEX=1",
+		"IPEDEBUG=1",
+	]);
 
 	ipe.FS.mkdir("/home/ipe", 0o777);
 	ipe.FS.mkdir("/tmp/pages", 0o777);

@@ -49,7 +49,7 @@ export class IpeUi {
 	readonly bottomCanvas = get("bottomCanvas") as HTMLCanvasElement;
 	readonly topCanvas = get("topCanvas") as HTMLCanvasElement;
 	readonly preloadCache: { [fname: string]: string } = {};
-	readonly fileExistsCache: { [fname: string]: boolean } = {};
+	fileExistsCache: { [fname: string]: boolean } = {};
 	readonly actions: { [name: string]: Action };
 	readonly actionState: { [action: string]: boolean } = {
 		toggle_notes: false,
@@ -76,7 +76,7 @@ export class IpeUi {
 	readonly touch: TouchDragZoom;
 	platform: string;
 
-	constructor(ipe: Ipe) {
+	constructor(ipe: Ipe, ipeenv: string[]) {
 		this.ipe = ipe;
 		this.mainMenu = [];
 		this.actions = {};
@@ -87,8 +87,7 @@ export class IpeUi {
 		this.platform = window.ipc ? "electron" : "web";
 
 		this._calculateCanvasSize();
-		const ipeenv = ["HOME=/home/ipe", "IPEJSLATEX=1", "IPEDEBUG=1"];
-		if (this.platform === "electron") ipeenv.push("IPEPRELOADER=1");
+		console.log("Environment = ", ipeenv);
 		this.ipe._initLib(this.ipe.Emval.toHandle(ipeenv));
 		this.popupMenu = new PopupMenu();
 		this.filename = null;
@@ -644,7 +643,22 @@ export class IpeUi {
 		const data = await window.ipc.loadFile(fname);
 		this.ipe.FS.writeFile(tmpname, data);
 		this.preloadCache[fname] = tmpname;
-		console.log("Preload cache: ", this.preloadCache);
+		console.log("Preload cache: ", Object.keys(this.preloadCache).join(", "));
+		this.resume(null);
+	}
+
+	async preloadFileExists() {
+		if (window.ipc == null)
+			throw Error(
+				"preloadFileExists called in environment without file system",
+			);
+		const fnames = await window.ipc.watchFolders();
+		this.fileExistsCache = {};
+		for (const fname of fnames) this.fileExistsCache[fname] = true;
+		console.log(
+			"File-exists cache: ",
+			Object.keys(this.fileExistsCache).join(", "),
+		);
 		this.resume(null);
 	}
 

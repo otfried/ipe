@@ -210,6 +210,13 @@ function MODEL:persistFile(fname)
   end
 end
 
+function MODEL:preloadFileExists()
+  if config.platform == "electron" then
+    self.ui.js("preloadFileExists")
+    coroutine.yield()
+  end
+end
+
 function MODEL:clipboard(allowBitmap)
   if config.toolkit == "htmljs" then
     self.ui:getClipboardAsync(allowBitmap)

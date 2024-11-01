@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld("ipc", {
 
 	runlatex: (engine: string, texfile: string) =>
 		ipcRenderer.invoke("runlatex", engine, texfile),
+	watchFolders: () => ipcRenderer.invoke("watchFolders"),
 	loadFile: (fname: string) => ipcRenderer.invoke("loadFile", fname),
 	saveFile: (fname: string, data: string) =>
 		ipcRenderer.invoke("saveFile", fname, data),

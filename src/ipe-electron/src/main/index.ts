@@ -11,8 +11,9 @@ import {
 	screen,
 } from "electron";
 import { fileDialog } from "./dialogs";
+import appIcon from "./icon_64x64.png?asset";
 import { runLatex } from "./latex";
-import appIcon from './icon_64x64.png?asset';
+import { IpePathConfig } from "./pathconfig";
 
 // For Windows only:
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -101,12 +102,20 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+	const config = new IpePathConfig();
+
 	ipcMain.handle("setup", () => {
 		return {
 			screen: screen.getPrimaryDisplay().workAreaSize,
 			argv: process.argv,
+			home: config.home,
+			ipelets: config.ipeletsData,
+			customization: config.customization,
+			customizationData: config.customizationData,
+			styles: config.styles,
 		};
 	});
+
 	/*
 	ipcMain.handle("menu", (event, template) => setupMenu(template));
 	ipcMain.handle("setMenuCheckmark", (event, action, checked) =>
@@ -133,8 +142,9 @@ app.whenReady().then(() => {
 	);
 
 	ipcMain.handle("runlatex", (event, engine, texfile) =>
-		runLatex(engine, texfile),
+		runLatex(config, engine, texfile),
 	);
+	ipcMain.handle("watchFolders", (event) => config.watchFolders());
 	ipcMain.handle("loadFile", (event, fname: string) => fs.readFileSync(fname));
 	ipcMain.handle("saveFile", (event, fname: string, data: string) =>
 		fs.writeFileSync(fname, data),
