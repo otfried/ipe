@@ -113,6 +113,79 @@ inline bool usePreloader() { return getenv("IPEPRELOADER") != nullptr; }
 inline bool useJSLatex() { return getenv("IPEJSLATEX") != nullptr; }
 #endif
 
+// --------------------------------------------------------------------
+
+static String folders[int(Folder::NumFolders)];
+
+String Platform::folder(Folder ft, const char * fname) {
+    String result = folders[int(ft)];
+    if (fname) {
+	result += IPESEP;
+	result += fname;
+    }
+    return result;
+}
+
+// Lua, Styles, UserStyles, Ipelets, UserIpelets,
+// Scripts, UserScripts,
+// Config, Latex, Icons, Doc, State,
+static void setupFolders() {
+#ifndef IPEBUNDLE
+    folders[int(Folder::Lua)] = IPELUADIR;
+    folders[int(Folder::Icons)] = IPEICONDIR;
+    folders[int(Folder::Ipelets)] = IPELETDIR;
+    folders[int(Folder::Styles)] = IPESTYLEDIR;
+    folders[int(Folder::Scripts)] = IPESCRIPTDIR;
+    folders[int(Folder::Doc)] = IPEDOCDIR;
+#else
+#ifdef IPEWASM
+    String exe{"/opt/ipe"};
+#else
+#ifdef WIN32
+    wchar_t exename[OFS_MAXPATHNAME];
+    GetModuleFileNameW(nullptr, exename, OFS_MAXPATHNAME);
+    String exe(exename);
+#elif defined(__APPLE__)
+    char path[PATH_MAX], rpath[PATH_MAX];
+    uint32_t size = sizeof(path);
+    String exe;
+    if (_NSGetExecutablePath(path, &size) == 0 && realpath(path, rpath) != nullptr)
+	exe = String(rpath);
+    else
+	ipeDebug("ipeDir: buffer too small; need size %u", size);
+#endif
+    int i = exe.rfind(IPESEP);
+    if (i >= 0) {
+	exe = exe.left(i); // strip filename
+	i = exe.rfind(IPESEP);
+	if (i >= 0) {
+	    exe = exe.left(i); // strip bin directory name
+	}
+    }
+#endif
+#ifdef __APPLE__
+    folders[int(Folder::Lua)] = exe + "/Resources/lua";
+    folders[int(Folder::Icons)] = exe + "/Resources/icons";
+    folders[int(Folder::Ipelets)] = exe + "/Resources/ipelets";
+    folders[int(Folder::Styles)] = exe + "/Resources/styles";
+    folders[int(Folder::Scripts)] = exe + "/Resources/scripts";
+    folders[int(Folder::Doc)] = exe + "/SharedSupport/doc";
+#else
+    exe += IPESEP;
+    folders[int(Folder::Lua)] = exe + "lua";
+    folders[int(Folder::Icons)] = exe + "icons";
+    folders[int(Folder::Ipelets)] = exe + "ipelets";
+    folders[int(Folder::Styles)] = exe + "styles";
+    folders[int(Folder::Scripts)] = exe + "scripts";
+    folders[int(Folder::Doc)] = exe + "doc";
+#endif
+#endif
+    // Env variables to examine
+    // IPEDOCDIR, IPELATEXDIR, IPEICONDIR
+}
+
+// --------------------------------------------------------------------
+
 #ifndef WIN32
 String Platform::dotIpe() {
     const char * home = getenv("HOME");
@@ -185,6 +258,7 @@ static void shutdownIpelib() {
 void Platform::initLib(int version) {
     if (initialized) return;
     initialized = true;
+    setupFolders();
     readIpeConf();
     showDebug = getenv("IPEDEBUG") != nullptr;
     if (showDebug) fprintf(stderr, "Debug messages enabled\n");

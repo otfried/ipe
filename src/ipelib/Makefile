@@ -23,6 +23,16 @@ LIBS += $(JPEG_LIBS) $(ZLIB_LIBS) $(PNG_LIBS) $(SPIRO_LIBS)
 DOXYGEN ?= doxygen
 DOXDIR  = $(BUILDDIR)/doxygen
 
+ifndef IPEBUNDLE
+# hardcoded folders for a classic Linux installation
+CPPFLAGS += -DIPELETDIR=\"$(IPELETDIR)\"
+CPPFLAGS += -DIPELUADIR=\"$(IPELUADIR)\"
+CPPFLAGS += -DIPEICONDIR=\"$(IPEICONDIR)\"
+CPPFLAGS += -DIPEDOCDIR=\"$(IPEDOCDIR)\"
+CPPFLAGS += -DIPESTYLEDIR=\"$(IPESTYLEDIR)\"
+CPPFLAGS += -DIPESCRIPTDIR=\"$(IPESCRIPTDIR)\"
+endif
+
 ifdef WIN32
 LIBS += -lole32 -luuid
 endif

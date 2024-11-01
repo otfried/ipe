@@ -363,10 +363,27 @@ private:
 
 // --------------------------------------------------------------------
 
+enum class Folder {
+    Lua,
+    Styles,
+    UserStyles,
+    Ipelets,
+    UserIpelets,
+    Scripts,
+    UserScripts,
+    Config,
+    Latex,
+    Icons,
+    Doc,
+    State,
+    NumFolders,
+};
+
 class Platform {
 public:
     using DebugHandler = void (*)(const char *);
 
+    static String folder(Folder ft, const char * fname = nullptr);
 #ifdef IPEBUNDLE
     static String ipeDir(const char * suffix, const char * fname = nullptr);
 #endif
