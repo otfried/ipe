@@ -51,34 +51,16 @@ static void setup_globals(lua_State * L, int width, int height, double devicePix
     const char * luapath = getenv("IPELUAPATH");
     if (luapath)
 	lua_pushstring(L, luapath);
-    else {
-#ifdef IPEBUNDLE
-	push_string(L, Platform::ipeDir("lua", "?.lua"));
-#else
-	lua_pushliteral(L, IPELUADIR "/?.lua");
-#endif
-    }
+    else
+	push_string(L, Platform::folder(FolderLua, "?.lua"));
     lua_setfield(L, -2, "path");
 
     lua_newtable(L); // config table
-#ifdef __EMSCRIPTEN__
-    lua_pushliteral(L, "web");
-#else
     lua_pushliteral(L, "unix");
-#endif
     lua_setfield(L, -2, "platform");
     lua_pushliteral(L, "qt");
     lua_setfield(L, -2, "toolkit");
 
-#ifdef IPEBUNDLE
-    setup_config(L, "system_styles", nullptr, "styles");
-    setup_config(L, "system_ipelets", nullptr, "ipelets");
-    setup_config(L, "docdir", "IPEDOCDIR", "doc");
-#else
-    setup_config(L, "system_styles", nullptr, IPESTYLEDIR);
-    setup_config(L, "system_ipelets", nullptr, IPELETDIR);
-    setup_config(L, "docdir", "IPEDOCDIR", IPEDOCDIR);
-#endif
     lua_pushfstring(L, "%s / %s", QT_VERSION_STR, qVersion());
     lua_setfield(L, -2, "qt_version");
 

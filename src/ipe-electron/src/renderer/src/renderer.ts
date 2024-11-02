@@ -35,6 +35,7 @@ instantiateIpe({
 		"IPEJSLATEX=1",
 		"IPEDEBUG=1",
 		"IPEPRELOADER=1",
+		"IPELATEXDIR=/tmp/latexrun",
 		`HOME=${setup.home}`,
 	];
 	const ipeui = new IpeUi(ipe, env);

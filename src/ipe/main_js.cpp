@@ -59,13 +59,8 @@ static void setup_globals(lua_State * L, int width, int height, double devicePix
     const char * luapath = getenv("IPELUAPATH");
     if (luapath)
 	lua_pushstring(L, luapath);
-    else {
-#ifdef IPEBUNDLE
-	push_string(L, Platform::ipeDir("lua", "?.lua"));
-#else
-	lua_pushliteral(L, IPELUADIR "/?.lua");
-#endif
-    }
+    else
+	push_string(L, Platform::folder(FolderLua, "?.lua"));
     lua_setfield(L, -2, "path");
 
     lua_newtable(L); // config table
@@ -73,16 +68,6 @@ static void setup_globals(lua_State * L, int width, int height, double devicePix
     lua_setfield(L, -2, "platform");
     lua_pushliteral(L, "htmljs");
     lua_setfield(L, -2, "toolkit");
-
-#ifdef IPEBUNDLE
-    setup_config(L, "system_styles", nullptr, "styles");
-    setup_config(L, "system_ipelets", nullptr, "ipelets");
-    setup_config(L, "docdir", "IPEDOCDIR", "doc");
-#else
-    setup_config(L, "system_styles", nullptr, IPESTYLEDIR);
-    setup_config(L, "system_ipelets", nullptr, IPELETDIR);
-    setup_config(L, "docdir", "IPEDOCDIR", IPEDOCDIR);
-#endif
 
     setup_common_config(L);
 

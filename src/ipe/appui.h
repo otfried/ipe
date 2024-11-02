@@ -43,8 +43,9 @@ typedef GtkWidget * WINID;
 typedef GtkMenu * MENUHANDLE;
 #endif
 #ifdef IPEUI_WIN32
-#include <commctrl.h>
 #include <windows.h>
+// must be before the next
+#include <commctrl.h>
 typedef HWND WINID;
 typedef HMENU MENUHANDLE;
 #endif
@@ -73,7 +74,6 @@ constexpr int COPYRIGHT_YEAR = 2024;
 class AppUiBase;
 extern WINID check_winid(lua_State * L, int i);
 extern void push_winid(lua_State * L, WINID win);
-extern String ipeIconDirectory();
 extern Buffer ipeIcon(String action, int size);
 extern AppUiBase * createAppUi(lua_State * L0, int model);
 

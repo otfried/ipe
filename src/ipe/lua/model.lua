@@ -563,7 +563,7 @@ end
 ----------------------------------------------------------------------
 
 function MODEL:showSource()
-  local fname = config.latexdir .. "ipetemp.tex"
+  local fname = ipe.folder("latex", "ipetemp.tex")
   self:waitDialog(string.format(prefs.external_editor, fname),
 		  "Waiting for external editor")
 end
@@ -605,7 +605,7 @@ function MODEL:runLatex()
     self:latexErrorBox(log)
     return false
   elseif result == "runlatex" then
-    local urlFile = config.latexdir .. prefs.fsep .. "url1.txt"
+    local urlFile = ipe.folder("latex", "url1.txt")
     if ipe.fileExists(urlFile) then
       self:warning("Ipe did not succeed to run Latex to process your text objects.",
 		   "Ipe tried to use Latex in the cloud.\n\n"
@@ -805,7 +805,7 @@ function MODEL:updateRecentFiles(fname)
     while #self.recent_files > prefs.num_recent_files do
       table.remove(self.recent_files)
     end
-    local w = config.latexdir .. "recent_files.lua"
+    local w = ipe.folder("latex", "recent_files.lua")
     local fd = ipe.openFile(w, "w")
     if fd then
       fd:write("recent_files = {\n")

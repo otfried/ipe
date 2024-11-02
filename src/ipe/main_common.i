@@ -14,23 +14,6 @@ extern int luaopen_appui(lua_State *L);
 
 // --------------------------------------------------------------------
 
-String ipeIconDirectory()
-{
-  static String iconDir;
-  if (iconDir.empty()) {
-    const char *p = getenv("IPEICONDIR");
-#ifdef IPEBUNDLE
-    String s(p ? p : Platform::ipeDir("icons"));
-#else
-    String s(p ? p : IPEICONDIR);
-#endif    
-    if (s.right(1) != "/")
-      s += IPESEP;
-    iconDir = s;
-  }
-  return iconDir;
-}
-
 static int traceback (lua_State *L)
 {
   if (!lua_isstring(L, 1))  /* 'message' not a string? */
@@ -52,18 +35,6 @@ static int traceback (lua_State *L)
   return 1;
 }
 
-static void setup_config(lua_State *L, const char *var, 
-			 const char *env, const char *conf)
-{
-  const char *p = env ? getenv(env) : nullptr;
-#ifdef IPEBUNDLE
-  push_string(L, p ? p : Platform::ipeDir(conf));
-#else
-  lua_pushstring(L, p ? p : conf);
-#endif
-  lua_setfield(L, -2, var);
-}
-
 static void setup_common_config(lua_State *L)
 {
   push_string(L, Fonts::freetypeVersion());
@@ -77,12 +48,8 @@ static void setup_common_config(lua_State *L)
   push_string(L, Platform::gslVersion());
   lua_setfield(L, -2, "gsl_version");
 
-  push_string(L, Platform::latexDirectory());
-  lua_setfield(L, -2, "latexdir");
   push_string(L, Platform::latexPath());
   lua_setfield(L, -2, "latexpath");
-  push_string(L, ipeIconDirectory());
-  lua_setfield(L, -2, "icons");
 
   lua_pushfstring(L, "Ipe %d.%d.%d", 
 		  IPELIB_VERSION / 10000,

@@ -14,12 +14,6 @@ ifdef IPEWASM
 LDFLAGS += --pre-js $(NODEJSPRE) -lembind -lnoderawfs.js -lnodefs.js
 endif
 
-ifndef IPEBUNDLE
-CPPFLAGS += -DIPELETDIR=\"$(IPELETDIR)\"
-CPPFLAGS += -DIPESTYLEDIR=\"$(IPESTYLEDIR)\"
-CPPFLAGS += -DIPESCRIPTDIR=\"$(IPESCRIPTDIR)\"
-endif
-
 all: $(TARGET)
 
 sources	= ipescript.cpp

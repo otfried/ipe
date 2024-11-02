@@ -15,6 +15,9 @@ instantiateIpe({
 	console.log("Ipe wasm code loaded");
 	const ipeui = new IpeUi(ipe, [
 		"HOME=/home/ipe",
+		"IPELATEXDIR=/tmp/latexrun",
+		"IPELETPATH=/home/ipe/ipelets:_",
+		"IPESTYLES=/home/ipe/styles:_",
 		"IPEJSLATEX=1",
 		"IPEDEBUG=1",
 	]);

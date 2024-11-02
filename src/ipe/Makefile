@@ -29,14 +29,6 @@ WASM_LIBS = $(BUILDDIR)/lib/libipeui.so $(BUILDDIR)/lib/libipecanvas.so \
 	lua/model.lua lua/actions.lua lua/main.lua
 endif
 
-ifndef IPEBUNDLE
-CPPFLAGS += -DIPELETDIR=\"$(IPELETDIR)\"
-CPPFLAGS += -DIPELUADIR=\"$(IPELUADIR)\"
-CPPFLAGS += -DIPEICONDIR=\"$(IPEICONDIR)\"
-CPPFLAGS += -DIPEDOCDIR=\"$(IPEDOCDIR)\"
-CPPFLAGS += -DIPESTYLEDIR=\"$(IPESTYLEDIR)\"
-endif
-
 all: $(TARGET)
 
 sources	= tools.cpp appui.cpp uilua.cpp 

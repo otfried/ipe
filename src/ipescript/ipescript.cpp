@@ -65,15 +65,6 @@ static int traceback(lua_State * L) {
     return 1;
 }
 
-static void setup_config(lua_State * L, const char * var, const char * conf) {
-#ifdef IPEBUNDLE
-    push_string(L, Platform::ipeDir(conf));
-#else
-    lua_pushstring(L, conf);
-#endif
-    lua_setfield(L, -2, var);
-}
-
 // --------------------------------------------------------------------
 
 static lua_State * setup_lua() {
@@ -94,12 +85,7 @@ static void setup_globals(lua_State * L) {
 	    int j = i;
 	    while (i < scripts.size() && scripts[i] != IPEPATHSEP) i += 1;
 	    String d = scripts.substr(j, i - j);
-	    if (d == "_")
-#ifdef IPEBUNDLE
-		d = Platform::ipeDir("scripts", nullptr);
-#else
-		d = IPESCRIPTDIR;
-#endif
+	    if (d == "_") d = Platform::folder(FolderScripts);
 	    d += "/?.lua";
 	    if (!s.empty()) s += ';';
 	    s += d;
@@ -109,22 +95,8 @@ static void setup_globals(lua_State * L) {
 	lua_pushstring(L, s.z());
     } else {
 	String s = "./?.lua;";
-#ifndef WIN32
-	const char * home = getenv("HOME");
-	if (home) {
-	    s += home;
-	    s += "/.ipe/scripts/?.lua;";
-#ifdef __APPLE__
-	    s += home;
-	    s += "/Library/Ipe/Scripts/?.lua;";
-#endif
-	}
-#endif
-#ifdef IPEBUNDLE
-	s += Platform::ipeDir("scripts", "?.lua");
-#else
-	s += IPESCRIPTDIR "/?.lua";
-#endif
+	s += Platform::folder(FolderUserScripts, "?.lua;");
+	s += Platform::folder(FolderScripts, "?.lua");
 	ipeDebug("package.path = %s", s.z());
 	lua_pushstring(L, s.z());
     }
@@ -139,14 +111,6 @@ static void setup_globals(lua_State * L) {
     lua_pushliteral(L, "unix");
 #endif
     lua_setfield(L, -2, "platform");
-
-#ifdef IPEBUNDLE
-    setup_config(L, "system_styles", "styles");
-#else
-    setup_config(L, "system_styles", IPESTYLEDIR);
-#endif
-    push_string(L, Platform::latexDirectory());
-    lua_setfield(L, -2, "latexdir");
 
     lua_pushfstring(L, "Ipe %d.%d.%d", IPELIB_VERSION / 10000,
 		    (IPELIB_VERSION / 100) % 100, IPELIB_VERSION % 100);

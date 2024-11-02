@@ -769,7 +769,7 @@ void AppUiBase::setAttributes(const AllAttributes & all, Cascade * sheet) {
 
 int AppUiBase::ipeIcon(String action) {
     if (!ipeIcons) {
-	String fname = ipeIconDirectory() + "icons.ipe";
+	String fname = Platform::folder(FolderIcons, "icons.ipe");
 	if (!Platform::fileExists(fname)) return -1;
 	ipeIconsDark.reset(Document::loadWithErrorReport(fname.z()));
 	ipeIcons.reset(new Document(*ipeIconsDark));

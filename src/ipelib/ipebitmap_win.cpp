@@ -29,9 +29,10 @@
 #include "ipebitmap.h"
 #include "ipeutils.h"
 
-#include <gdiplus.h>
-#include <shlwapi.h>
 #include <windows.h>
+#include <windowsx.h>
+// must be before this
+#include <gdiplus.h>
 
 using namespace ipe;
 

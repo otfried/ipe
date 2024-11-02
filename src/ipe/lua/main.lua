@@ -331,11 +331,11 @@ local function show_configuration()
   s = s .. "\nStyles for new documents: " .. table.concat(prefs.styles, ", ")
   s = s .. "\nAutosave file: " .. prefs.autosave_filename
   s = s .. "\nSave-as directory: " .. prefs.save_as_directory
-  s = s .. "\nDocumentation: " .. config.docdir
+  s = s .. "\nDocumentation: " .. ipe.folder("doc")
   s = s .. "\nIpelets: " .. table.concat(config.ipeletDirs, ", ")
   s = s .. "\nLatex program path: " .. config.latexpath
-  s = s .. "\nLatex directory: " .. config.latexdir
-  s = s .. "\nIcons: " .. config.icons
+  s = s .. "\nLatex directory: " .. ipe.folder("latex")
+  s = s .. "\nIcons: " .. ipe.folder("icons")
   s = s .. "\nExternal editor: " .. (prefs.external_editor or "none")
   s = s .. "\n"
   io.stdout:write(s)
@@ -374,48 +374,28 @@ local ipeletpath = os.getenv("IPELETPATH")
 if ipeletpath then
   config.ipeletDirs = {}
   for w in string.gmatch(ipeletpath, prefs.fname_pattern) do
-    if w == "_" then w = config.system_ipelets end
+    if w == "_" then w = ipe.folder("ipelets") end
     if w:sub(1,4) == "ipe:" then
       w = config.ipedrive .. w:sub(5)
     end
     config.ipeletDirs[#config.ipeletDirs + 1] = w
   end
 else
-  config.ipeletDirs = { config.system_ipelets }
-  if config.platform == "win" then
-    local userdir = os.getenv("USERPROFILE")
-    if userdir then
-      config.ipeletDirs[#config.ipeletDirs + 1] = userdir .. "\\Ipelets"
-    end
-  elseif config.platform == "web" then
-    config.ipeletDirs[#config.ipeletDirs + 1] = home .. "/ipelets"
-  else
-    if config.platform == "apple" then
-      config.ipeletDirs[#config.ipeletDirs + 1] = home.."/Library/Ipe/Ipelets"
-    end
-  end
+  config.ipeletDirs = { ipe.folder("user-ipelets"), ipe.folder("ipelets") }
 end
 
 local ipestyles = os.getenv("IPESTYLES")
 if ipestyles then
   config.styleDirs = {}
   for w in string.gmatch(ipestyles, prefs.fname_pattern) do
-    if w == "_" then w = config.system_styles end
+    if w == "_" then w = ipe.folder("styles") end
     if w:sub(1,4) == "ipe:" then
       w = config.ipedrive .. w:sub(5)
     end
     config.styleDirs[#config.styleDirs + 1] = w
   end
 else
-  config.styleDirs = { config.system_styles }
-  if config.platform == "web" then
-    table.insert(config.styleDirs, 1, home .. "/styles")
-  elseif config.platform ~= "win" then
-    table.insert(config.styleDirs, 1, home .. "/.ipe/styles")
-    if config.platform == "apple" then
-      table.insert(config.styleDirs, 2, home .. "/Library/Ipe/Styles")
-    end
-  end
+  config.styleDirs = { ipe.folder("user-styles"), ipe.folder("styles") }
 end
 
 --------------------------------------------------------------------
@@ -469,7 +449,7 @@ load_ipelets()
 recent_files = {}
 
 function load_recent_files()
-  local w = config.latexdir .. "recent_files.lua"
+  local w = ipe.folder("latex", "recent_files.lua")
   if ipe.fileExists(w) then
     local r = {}
     local fd = ipe.openFile(w, "r")

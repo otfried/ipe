@@ -100,7 +100,7 @@ AppUi::~AppUi() {
 }
 
 void AppUi::createIcon(String name) {
-    String svgdir = Platform::latexDirectory() + "/icons/";
+    String svgdir = Platform::folder(FolderLatex, "icons/");
     String svgname = svgdir + name + ".svg";
     int pno = ipeIcon(name);
     if (pno >= 0) {

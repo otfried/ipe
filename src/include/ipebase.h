@@ -363,52 +363,39 @@ private:
 
 // --------------------------------------------------------------------
 
-enum class Folder {
-    Lua,
-    Styles,
-    UserStyles,
-    Ipelets,
-    UserIpelets,
-    Scripts,
-    UserScripts,
-    Config,
-    Latex,
-    Icons,
-    Doc,
-    State,
-    NumFolders,
+enum IpeFolder {
+    FolderLua = 0,
+    FolderIcons,
+    FolderDoc,
+    FolderStyles,
+    FolderIpelets,
+    FolderScripts,
+    FolderUserStyles,
+    FolderUserIpelets,
+    FolderUserScripts,
+    FolderConfig,
+    FolderLatex,
+    FOLDER_NUM,
 };
 
 class Platform {
 public:
     using DebugHandler = void (*)(const char *);
 
-    static String folder(Folder ft, const char * fname = nullptr);
-#ifdef IPEBUNDLE
-    static String ipeDir(const char * suffix, const char * fname = nullptr);
-#endif
-#ifdef WIN32
+    static String folder(IpeFolder ft, const char * fname = nullptr);
     static FILE * fopen(const char * fname, const char * mode);
     static int mkdir(const char * dname);
-#elif defined(IPEWASM)
-    static FILE * fopen(const char * fname, const char * mode);
-#else
-    inline static FILE * fopen(const char * fname, const char * mode) {
-	return ::fopen(fname, mode);
-    }
-#endif
     static String ipeDrive();
     static int libVersion();
     static void initLib(int version);
     static void setDebug(bool debug);
     static String currentDirectory();
-    static String latexDirectory();
     static String latexPath();
     static bool fileExists(String fname);
     static bool listDirectory(String path, std::vector<String> & files);
     static String realPath(String fname);
     static String readFile(String fname);
-    static String howToRunLatex(String dir, LatexType engine, String docname) noexcept;
+    static String howToRunLatex(LatexType engine, String docname) noexcept;
     static int system(String cmd);
     static String createTarball(String tex);
     static double toDouble(String s);
@@ -416,7 +403,6 @@ public:
     static String spiroVersion();
     static String gslVersion();
     static std::pair<int, std::vector<const char *>> setupNodeJs();
-    static String dotIpe();
 };
 
 // --------------------------------------------------------------------

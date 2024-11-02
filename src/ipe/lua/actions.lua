@@ -919,7 +919,7 @@ end
 
 -- this function is called without arguments on OSX from ipeAlwaysAction
 function action_manual()
-  local url = config.docdir .. "/manual.html"
+  local url = ipe.folder("doc", "manual.html")
   if ipe.fileExists(url) then
     url = "file:///" ..  url
   else
@@ -962,11 +962,11 @@ function action_show_configuration(win, dpi)
     table.concat(prefs.styles, ", ")
   s = s .. "\n * Autosave file: " .. prefs.autosave_filename
   s = s .. "\n * Save-as directory: " .. prefs.save_as_directory
-  s = s .. "\n * Documentation: " .. config.docdir
+  s = s .. "\n * Documentation: " .. ipe.folder("doc")
   s = s .. "\n * Ipelets:\n   - " .. table.concat(config.ipeletDirs, "\n   - ")
   s = s .. "\n * Latex program path: " .. config.latexpath
-  s = s .. "\n * Latex directory: " .. config.latexdir
-  s = s .. "\n * Icons: " .. config.icons
+  s = s .. "\n * Latex directory: " .. ipe.folder("latex")
+  s = s .. "\n * Icons: " .. ipe.folder("icons")
   s = s .. "\n * Screen geometry: " .. config.screen_geometry[1] .. " x " .. config.screen_geometry[2]
   if config.platform == "win" then
     s = s .. "\n * Monitor resolution: " .. dpi .. " dpi"
@@ -1072,7 +1072,7 @@ end
 
 function MODEL:action_cloud_latex()
   local d = ipeui.Dialog(win, "Ipe: Latex in the cloud")
-  local urlFile = config.latexdir .. "url1.txt"
+  local urlFile = ipe.folder("latex", "url1.txt")
   if ipe.fileExists(urlFile) then
     local f = ipe.openFile(urlFile, "r")
     local url = f:read("a")

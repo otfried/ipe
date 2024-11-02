@@ -107,7 +107,7 @@ end
 -- edited with an external editor.  If set to nil, the Lua function
 -- os.tmpname() will be used to create a unique name.
 if config.platform == "win" then
-  prefs.editable_textfile = config.latexdir .. "/temp.txt"
+  prefs.editable_textfile = ipe.folder("latex", "temp.txt")
 else
   prefs.editable_textfile = nil
 end

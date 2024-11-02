@@ -35,9 +35,6 @@
 
 #include "ipelua.h"
 
-#include <commctrl.h>
-#include <windows.h>
-
 using namespace ipe;
 
 extern HBITMAP createBitmap(uint32_t * p, int w, int h);

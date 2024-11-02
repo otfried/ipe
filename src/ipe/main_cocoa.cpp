@@ -48,7 +48,7 @@ static void setup_globals(lua_State * L) {
     if (luapath)
 	lua_pushstring(L, luapath);
     else
-	push_string(L, Platform::ipeDir("lua", "?.lua"));
+	push_string(L, Platform::folder(FolderLua, "?.lua"));
     lua_setfield(L, -2, "path");
 
     lua_newtable(L); // config table
@@ -56,10 +56,6 @@ static void setup_globals(lua_State * L) {
     lua_setfield(L, -2, "platform");
     lua_pushliteral(L, "cocoa");
     lua_setfield(L, -2, "toolkit");
-
-    setup_config(L, "system_styles", nullptr, "styles");
-    setup_config(L, "system_ipelets", nullptr, "ipelets");
-    setup_config(L, "docdir", "IPEDOCDIR", "doc");
 
     setup_common_config(L);
 

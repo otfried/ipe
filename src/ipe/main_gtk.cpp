@@ -49,7 +49,7 @@ static void setup_globals(lua_State * L) {
     if (luapath)
 	lua_pushstring(L, luapath);
     else
-	lua_pushliteral(L, IPELUADIR "/?.lua");
+	push_string(L, Platform::folder(FolderLua, "?.lua"));
     lua_setfield(L, -2, "path");
 
     lua_newtable(L); // config table
@@ -58,16 +58,8 @@ static void setup_globals(lua_State * L) {
     lua_pushliteral(L, "gtk");
     lua_setfield(L, -2, "toolkit");
 
-    setup_config(L, "system_styles", nullptr, IPESTYLEDIR);
-    setup_config(L, "system_ipelets", nullptr, IPELETDIR);
-    setup_config(L, "docdir", "IPEDOCDIR", IPEDOCDIR);
-
-    push_string(L, Platform::latexDirectory());
-    lua_setfield(L, -2, "latexdir");
     push_string(L, Platform::latexPath());
     lua_setfield(L, -2, "latexpath");
-    push_string(L, ipeIconDirectory());
-    lua_setfield(L, -2, "icons");
 
     lua_pushfstring(L, "Ipe %d.%d.%d", IPELIB_VERSION / 10000,
 		    (IPELIB_VERSION / 100) % 100, IPELIB_VERSION % 100);

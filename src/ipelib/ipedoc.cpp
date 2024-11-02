@@ -552,9 +552,13 @@ int Document::prepareLatexRun(Latex ** pConverter) {
 	return ErrNoText;
 
     // First we need a directory
-    String latexDir = Platform::latexDirectory();
-    if (latexDir.empty()) return ErrNoDir;
-
+    String latexDir = Platform::folder(FolderLatex);
+    if (!Platform::fileExists(latexDir) && Platform::mkdir(latexDir.z()) != 0) {
+	ipeDebug("Latex directory '%s' does not exist and cannot be created!\n",
+		 latexDir.z());
+	return ErrNoDir;
+    }
+    latexDir += IPESEP;
     String texFile = latexDir + "ipetemp.tex";
     String pdfFile = latexDir + "ipetemp.pdf";
     String logFile = latexDir + "ipetemp.log";
@@ -576,9 +580,8 @@ int Document::prepareLatexRun(Latex ** pConverter) {
 
 int Document::completeLatexRun(String & texLog, Latex * converter) {
     texLog = "";
-    String latexDir = Platform::latexDirectory();
-    String pdfFile = latexDir + "ipetemp.pdf";
-    String logFile = latexDir + "ipetemp.log";
+    String pdfFile = Platform::folder(FolderLatex, "ipetemp.pdf");
+    String logFile = Platform::folder(FolderLatex, "ipetemp.log");
 
     // Check log file for Pdflatex version and errors
     texLog = Platform::readFile(logFile);
@@ -611,8 +614,7 @@ int Document::runLatex(String docname, String & texLog) {
     Latex * converter = nullptr;
     int err = prepareLatexRun(&converter);
     if (err) return err;
-    String cmd = Platform::howToRunLatex(Platform::latexDirectory(),
-					 iProperties.iTexEngine, docname);
+    String cmd = Platform::howToRunLatex(iProperties.iTexEngine, docname);
     if (cmd.empty() || Platform::system(cmd)) return ErrRunLatex;
     return completeLatexRun(texLog, converter);
 }

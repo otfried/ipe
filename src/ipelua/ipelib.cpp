@@ -348,8 +348,7 @@ static int document_howToRunLatex(lua_State * L) {
     Document ** d = check_document(L, 1);
     String docname;
     if (!lua_isnoneornil(L, 2)) docname = luaL_checklstring(L, 2, nullptr);
-    String cmd = Platform::howToRunLatex(Platform::latexDirectory(),
-					 (*d)->properties().iTexEngine, docname);
+    String cmd = Platform::howToRunLatex((*d)->properties().iTexEngine, docname);
     if (cmd.empty())
 	lua_pushnil(L);
     else
@@ -706,6 +705,19 @@ static int image_constructor(lua_State * L) {
     return 1;
 }
 
+static const char * const folder_names[] = {
+    "lua",         "icons",        "doc",          "styles", "ipelets", "scripts",
+    "user-styles", "user-ipelets", "user-scripts", "config", "latex",
+};
+
+static int get_folder(lua_State * L) {
+    IpeFolder ft = IpeFolder(luaL_checkoption(L, 1, nullptr, folder_names));
+    const char * name = nullptr;
+    if (lua_isstring(L, 2)) name = lua_tostring(L, 2);
+    push_string(L, Platform::folder(ft, name));
+    return 1;
+}
+
 // --------------------------------------------------------------------
 
 static const struct luaL_Reg ipelib_functions[] = {
@@ -741,6 +753,7 @@ static const struct luaL_Reg ipelib_functions[] = {
     {"openFile", ipe_openFile},
     {"readImage", ipe_readImage},
     {"Image", image_constructor},
+    {"folder", get_folder},
     {nullptr, nullptr}};
 
 extern "C" int luaopen_ipe(lua_State * L) {

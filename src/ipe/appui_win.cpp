@@ -1405,7 +1405,7 @@ static int clipboardPNG(lua_State * L, UINT pngFormat) {
     GlobalUnlock(hGlobal);
     CloseClipboard();
 
-    String temp = Platform::latexDirectory() + "clip.png";
+    String temp = Platform::folder(FolderLatex, "clip.png");
     FILE * f = Platform::fopen(temp.z(), "wb");
     fwrite(data.data(), 1, data.size(), f);
     fclose(f);

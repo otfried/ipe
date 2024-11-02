@@ -31,12 +31,9 @@
 #include "ipebase.h"
 #include "ipelua.h"
 
-#include <shlobj.h>
-#include <windows.h>
-
 #include "appui_win.h"
 
-#include <commctrl.h>
+#include <shlobj.h>
 
 using namespace ipe;
 using namespace ipelua;
@@ -62,7 +59,7 @@ static void setup_globals(lua_State * L) {
     if (luapath)
 	lua_pushstring(L, luapath);
     else
-	push_string(L, Platform::ipeDir("lua", "?.lua"));
+	push_string(L, Platform::folder(FolderLua, "?.lua"));
     lua_setfield(L, -2, "path");
 
     lua_newtable(L); // config table
@@ -71,9 +68,6 @@ static void setup_globals(lua_State * L) {
     lua_pushliteral(L, "win");
     lua_setfield(L, -2, "toolkit");
 
-    setup_config(L, "system_styles", nullptr, "styles");
-    setup_config(L, "system_ipelets", nullptr, "ipelets");
-    setup_config(L, "docdir", "IPEDOCDIR", "doc");
     setup_win_config(L, "desktop", CSIDL_DESKTOP);
     setup_win_config(L, "documents", CSIDL_PERSONAL);
 
