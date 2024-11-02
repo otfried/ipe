@@ -1058,17 +1058,24 @@ local function collect_edges(p, box, view)
     if obj:type() == "path" and (view == nil or p:visible(view, i)) then
       local shape = obj:shape()
       local m = obj:matrix()
-      if #shape == 1 and shape[1].type == "curve"
-	and shape[1].closed == false then
-	local curve = shape[1]
-	local head = curve[1][1]
-	local seg = curve[#curve]
-	local tail = seg[#seg]
-	if box:contains(m * head) then
-	  edges[#edges + 1] = { obj=obj, head=true, objno=i }
-	elseif box:contains(m * tail) then
-	  edges[#edges + 1] = { obj=obj, head=false, objno=i }
-	end
+
+      for shape_idx = 1,#shape do 
+        if shape[shape_idx].type == "curve" then
+          local seg_idx = nil
+          local cp_idx = nil
+          local curve = shape[shape_idx]
+          for j = 1,#curve do
+            if box:contains(m * curve[j][1]) then
+              edges[#edges + 1] = { obj=obj, objno=i, shape_idx=shape_idx, seg_idx=j, cp_idx=1}
+            end
+          end
+
+          local lastSegment = curve[#curve]
+          local lastPointIdx = #curve[#curve]
+          if box:contains(m * lastSegment[lastPointIdx]) then
+            edges[#edges + 1] = { obj=obj, objno=i, shape_idx=shape_idx, seg_idx=#curve, cp_idx=lastPointIdx}
+          end
+        end
       end
     end
   end
@@ -1110,6 +1117,10 @@ function GRAPHTOOL:new(model, moveInvisibleEdges)
   if not findClosestVertex(model) then return end
   local p = model:page()
   self.prim = p:primarySelection()
+  local obj = model:page()[self.prim]
+  if not (obj:type() == "group" or obj:type() == "reference" or obj:type() == "text") then
+    return
+  end
   local view = model.vno
   if moveInvisibleEdges then view = nil end
   local tool = {}
@@ -1131,22 +1142,12 @@ function GRAPHTOOL:new(model, moveInvisibleEdges)
   return tool
 end
 
-local function moveEndpoint(obj, head, translation)
+local function moveEndpoint(obj, shape_idx, seg_idx, cp_idx, t)
   local shape = obj:shape()
   transformShape(obj:matrix(), shape)
-  local curve = shape[1]
-  if head then
-    curve[1][1] = curve[1][1] + translation
-    if curve[1].type == "arc" then
-      recomputeArcMatrix(curve[1], 1)
-    end
-  else
-    local seg = curve[#curve]
-    seg[#seg] = seg[#seg] + translation
-    if seg.type == "arc" then
-      recomputeArcMatrix(seg, #seg)
-    end
-  end
+    
+  moveCP(shape, shape_idx, seg_idx, cp_idx, shape[shape_idx][seg_idx][cp_idx] + t)
+
   return shape
 end
 
@@ -1155,7 +1156,7 @@ function GRAPHTOOL:compute()
   self.shape = { boxshape(self.box:bottomLeft() + self.t,
 			  self.box:topRight() + self.t) }
   for i = 1,#self.edges do
-    self.shape[i+1] = moveEndpoint(self.edges[i].obj, self.edges[i].head, self.t)[1]
+    self.shape[i+1] = moveEndpoint(self.edges[i].obj, self.edges[i].shape_idx, self.edges[i].seg_idx, self.edges[i].cp_idx, self.t)[self.edges[i].shape_idx]
   end
 end
 
@@ -1169,7 +1170,7 @@ local function apply_node_mode(t, doc)
   local p = doc[t.pno]
   p:transform(t.primary, ipe.Translation(t.translation))
   for _,e in ipairs(t.edges) do
-    p[e.objno]:setShape(moveEndpoint(p[e.objno], e.head, t.translation))
+    p[e.objno]:setShape(moveEndpoint(p[e.objno], e.shape_idx, e.seg_idx, e.cp_idx, t.translation))
     p[e.objno]:setMatrix(ipe.Matrix())
     p:invalidateBBox(e.objno)
   end
