@@ -175,7 +175,7 @@ shortcut and the maximum zoom:
 
 The ipelet needs to be placed with the extension ``.lua`` somewhere
 on the ipelet path (check *Show configuration* again).  On Unix,
-the directory :file:`~/.ipe/ipelets` will do nicely.  On Windows,
+the directory :file:`~/.local/share/ipe/ipelets` will do nicely.  On Windows,
 you will have to set the environment variable IPELETPATH, see the
 next section.
 
@@ -213,16 +213,16 @@ IPESTYLES
   standard stylesheet :file:`basic.isy`. You can write ``_`` (a single
   underscore) for the system-wide stylesheet directory.  If this
   variable is not set, the default consists of the system-wide
-  stylesheet directory, plus :file:`~/.ipe/styles` on Unix, plus
-  :file:`~/Library/Ipe/Styles` on OS X.
+  stylesheet directory, plus :file:`~/.local/share/ipe/styles` on
+  Linux and :file:`~/Library/Ipe/Styles` on MacOS.
 
 IPELETPATH
   a list of directories, separated by semicolons on Windows and colons
   otherwise, containing ipelets. You can write ``_`` (a single
   underscore) for the system-wide ipelet directory. If this variable
   is not set, the default consists of the system-wide ipelet
-  directory, plus :file:`~/.ipe/ipelets` on Unix, plus
-  :file:`~/Library/Ipe/Ipelets` on OS X.
+  directory, plus :file:`~/.local/share/ipe/ipelets` on Unix or
+  :file:`~/Library/Ipe/Ipelets` on MacOS.
 
 IPEICONDIR
   directory containing icons for the Ipe user interface.
@@ -241,8 +241,9 @@ IPESCRIPTS
   otherwise, where *ipescript* looks for scripts. You can write ``_``
   (a single underscore) for the system-wide script directory.  If this
   variable is not set, the default consists of the current directory
-  and the system-wide script directory, plus :file:`~/.ipe/scripts` on
-  Unix, plus :file:`~/Library/Ipe/Scripts` on OS X.
+  and the system-wide script directory, plus
+  :file:`~/.local/share/ipe/scripts` on Linux or
+  :file:`~/Library/Ipe/Scripts` on OS X.
 
 On Windows, you can use the special drive "letter" ``ipe:`` inside
 environment variables.  Ipe translates it into the drive letter for
@@ -256,8 +257,10 @@ ipe.conf
 Ipe allows you to set environment variables by writing the definitions
 in a file *ipe.conf*.  On Windows, the file has to be in the top
 level of the Ipe directory (the same place that contains the
-*readme.txt* and *gpl.txt* files), on Linux and OSX it is
-simply *.ipe/ipe.conf* in your home directory.  Each line of the
+*readme.txt* and *gpl.txt* files), on Linux it is
+*~/.config/ipe/ipe.conf*, on MacOS it is 
+*~/Library/Ipe/ipe.conf*.
+Each line of the
 file contains a setting for one environment variable, for instance
 like this:
 

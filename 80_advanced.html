@@ -173,7 +173,7 @@ shortcut and the maximum zoom:</p>
 </div>
 <p>The ipelet needs to be placed with the extension <code class="docutils literal notranslate"><span class="pre">.lua</span></code> somewhere
 on the ipelet path (check <em>Show configuration</em> again).  On Unix,
-the directory <code class="file docutils literal notranslate"><span class="pre">~/.ipe/ipelets</span></code> will do nicely.  On Windows,
+the directory <code class="file docutils literal notranslate"><span class="pre">~/.local/share/ipe/ipelets</span></code> will do nicely.  On Windows,
 you will have to set the environment variable IPELETPATH, see the
 next section.</p>
 </div>
@@ -203,15 +203,15 @@ otherwise, where Ipe looks for stylesheets, for instance for the
 standard stylesheet <code class="file docutils literal notranslate"><span class="pre">basic.isy</span></code>. You can write <code class="docutils literal notranslate"><span class="pre">_</span></code> (a single
 underscore) for the system-wide stylesheet directory.  If this
 variable is not set, the default consists of the system-wide
-stylesheet directory, plus <code class="file docutils literal notranslate"><span class="pre">~/.ipe/styles</span></code> on Unix, plus
-<code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/Styles</span></code> on OS X.</p>
+stylesheet directory, plus <code class="file docutils literal notranslate"><span class="pre">~/.local/share/ipe/styles</span></code> on
+Linux and <code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/Styles</span></code> on MacOS.</p>
 </dd>
 <dt>IPELETPATH</dt><dd><p>a list of directories, separated by semicolons on Windows and colons
 otherwise, containing ipelets. You can write <code class="docutils literal notranslate"><span class="pre">_</span></code> (a single
 underscore) for the system-wide ipelet directory. If this variable
 is not set, the default consists of the system-wide ipelet
-directory, plus <code class="file docutils literal notranslate"><span class="pre">~/.ipe/ipelets</span></code> on Unix, plus
-<code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/Ipelets</span></code> on OS X.</p>
+directory, plus <code class="file docutils literal notranslate"><span class="pre">~/.local/share/ipe/ipelets</span></code> on Unix or
+<code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/Ipelets</span></code> on MacOS.</p>
 </dd>
 <dt>IPEICONDIR</dt><dd><p>directory containing icons for the Ipe user interface.</p>
 </dd>
@@ -227,8 +227,9 @@ variable:</p>
 otherwise, where <em>ipescript</em> looks for scripts. You can write <code class="docutils literal notranslate"><span class="pre">_</span></code>
 (a single underscore) for the system-wide script directory.  If this
 variable is not set, the default consists of the current directory
-and the system-wide script directory, plus <code class="file docutils literal notranslate"><span class="pre">~/.ipe/scripts</span></code> on
-Unix, plus <code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/Scripts</span></code> on OS X.</p>
+and the system-wide script directory, plus
+<code class="file docutils literal notranslate"><span class="pre">~/.local/share/ipe/scripts</span></code> on Linux or
+<code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/Scripts</span></code> on OS X.</p>
 </dd>
 </dl>
 <p>On Windows, you can use the special drive “letter” <code class="docutils literal notranslate"><span class="pre">ipe:</span></code> inside
@@ -239,8 +240,10 @@ the drive containing your Ipe executables.</p>
 <p>Ipe allows you to set environment variables by writing the definitions
 in a file <em>ipe.conf</em>.  On Windows, the file has to be in the top
 level of the Ipe directory (the same place that contains the
-<em>readme.txt</em> and <em>gpl.txt</em> files), on Linux and OSX it is
-simply <em>.ipe/ipe.conf</em> in your home directory.  Each line of the
+<em>readme.txt</em> and <em>gpl.txt</em> files), on Linux it is
+<em>~/.config/ipe/ipe.conf</em>, on MacOS it is
+<em>~/Library/Ipe/ipe.conf</em>.
+Each line of the
 file contains a setting for one environment variable, for instance
 like this:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">IPEDEBUG</span><span class="o">=</span><span class="mi">1</span>
