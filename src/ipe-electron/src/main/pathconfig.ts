@@ -18,10 +18,9 @@ export class IpePathConfig {
 		const dataHome = env.XDG_DATA_HOME ?? `${this.home}/.local/share`;
 		const configHome = env.XDG_CONFIG_HOME ?? `${this.home}/.config`;
 		const cacheHome = env.XDG_CACHE_HOME ?? `${this.home}/.cache`;
-		const stateHome = env.XDG_STATE_HOME ?? `${this.home}/.local/state`;
-		this.latexdir = env.IPELATEXDIR ?? `${cacheHome}/ipe/latexrun`;
+		this.latexdir = env.IPELATEXDIR ?? `${cacheHome}/ipe`;
 		this.customization = `${configHome}/ipe/customization.lua`;
-		this.recentFiles = `${stateHome}/ipe/recent_files.lua`;
+		this.recentFiles = `${cacheHome}/ipe/recent_files.lua`;
 
 		if (env.IPELETPATH) {
 			this.ipelets = env.IPELETPATH.split(":").map((s) =>

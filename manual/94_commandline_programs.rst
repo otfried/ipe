@@ -115,8 +115,10 @@ Ipescript: running Ipe scripts
 
 Ipescript runs an Ipe script written in the Lua language with bindings
 for the Ipe objects, such as the script *update-master*.  Ipescript
-automatically finds the script in Ipe's script directories.  On Unix,
-you can place your own scripts in :file:`~/.ipe/scripts`.
+automatically finds the script in Ipe's script directories.
+On Linux,
+you can place your own scripts in :file:`~/.local/share/ipe/scripts`,
+on MacOS use :file:`~/Library/Ipe/Scripts`.
 
 The Ipe distribution contains the following scripts:
 

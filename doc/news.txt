@@ -2,7 +2,11 @@
 
 Ipe 7.3.1
 
- * Ipe Web Edition.
+ * Ipe Web Edition and Ipe Electron Edition.
+
+ * Implement the XDG Base Directory Specification on Linux, so your
+   local files are no longer in `~/.ipe`.  Check "Show configuration"
+   in the Help menu if you are unsure where they should go (#513).
  
  * After 15 years, finally fix the memory leak in Freetype/Cairo font
    allocation.
@@ -24,6 +28,8 @@ Ipe 7.3.1
  * Fix graph node moving tool leaving edges in a weird state (bug #512).
 
  * Fix crash when editing XML of an image object (bug #532).
+
+ * Improvements to graph node moving tool (!555).  Thanks!
 
 ----------------------------------------------------------------------
 
