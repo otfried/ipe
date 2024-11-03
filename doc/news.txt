@@ -29,8 +29,12 @@ Ipe 7.3.1
 
  * Fix crash when editing XML of an image object (bug #532).
 
- * Improvements to graph node moving tool (!555).  Thanks Alexander
-   Firbas!
+ * Improvements to graph node moving tool (!555), picking and applying
+   of the mark shape property (!558), selecting reference objects
+   (!559).  Thanks Alexander Firbas!
+
+ * The midpoint of an arc is now also a control point you can snap to
+   (!557).  Thanks Alexander Firbas!
 
 ----------------------------------------------------------------------
 
