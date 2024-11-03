@@ -159,23 +159,25 @@ Ipe’s behavior can be changed without recompilation.</p>
 files.)</p>
 <p>If you have installed Ipe for your personal use only (for instance
 under Windows), you can simply modify the original Lua file.  In all
-other cases, you need to provide a small Lua ipelet that will change
+other cases, you need to provide a small Lua file that will change
 the setting you wish to change.</p>
-<p>A small example is the following ipelet that changes a keyboard
+<p>A small example is the following customization that changes a keyboard
 shortcut and the maximum zoom:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">----------------------------------------------------------------------</span>
-<span class="o">--</span> <span class="n">My</span> <span class="n">customization</span> <span class="n">ipelet</span><span class="p">:</span> <span class="n">customize</span><span class="o">.</span><span class="n">lua</span>
+<span class="o">--</span> <span class="n">My</span> <span class="n">Ipe</span> <span class="n">customizations</span><span class="p">:</span> <span class="n">customization</span><span class="o">.</span><span class="n">lua</span>
 <span class="o">----------------------------------------------------------------------</span>
 <span class="n">prefs</span><span class="o">.</span><span class="n">max_zoom</span> <span class="o">=</span> <span class="mi">100</span>
 <span class="n">shortcuts</span><span class="o">.</span><span class="n">insert_text_box</span> <span class="o">=</span> <span class="s2">&quot;I&quot;</span>
 <span class="n">shortcuts</span><span class="o">.</span><span class="n">mode_splines</span> <span class="o">=</span> <span class="s2">&quot;Alt+Ctrl+I&quot;</span>
 </pre></div>
 </div>
-<p>The ipelet needs to be placed with the extension <code class="docutils literal notranslate"><span class="pre">.lua</span></code> somewhere
-on the ipelet path (check <em>Show configuration</em> again).  On Unix,
-the directory <code class="file docutils literal notranslate"><span class="pre">~/.local/share/ipe/ipelets</span></code> will do nicely.  On Windows,
-you will have to set the environment variable IPELETPATH, see the
-next section.</p>
+<p>Place this file <code class="file docutils literal notranslate"><span class="pre">customization.lua</span></code> in Ipe’s configuration
+folder (you’ll find the exact location listed on the ipelet path
+(check <em>Show configuration</em> again).</p>
+<p>On Linux, it is typically <code class="file docutils literal notranslate"><span class="pre">~/.config/ipe/customization.lua</span></code>, on
+MacOS, it is <code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/customization.lua</span></code>, on Windows, the
+file has to be in the top level of the Ipe directory (the same place
+that contains the <em>readme.txt</em> and <em>gpl.txt</em> files).</p>
 </div>
 <div class="section" id="environment-variables">
 <span id="environment"></span><h2>Environment variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h2>
