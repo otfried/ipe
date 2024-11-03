@@ -6,6 +6,10 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+      - name: Download dependencies
+        run: |
+          Invoke-WebRequest https://github.com/otfried/emscripten-ipe/releases/download/2024.11.03/emscripten.tar.gz -OutFile emscripten.tar.gz
+          tar xzf emscripten.tar.gz
       - name: Setup emsdk
         uses: mymindstorm/setup-emsdk@v14
         with:
@@ -13,16 +17,10 @@ jobs:
           actions-cache-folder: 'emsdk-cache'
       - name: Verify emsdk
         run: emcc -v
-      - name: Download dependencies
-        run: |
-          wget https://github.com/otfried/emscripten-ipe/releases/download/2024.11.03/emscripten.tar.gz
-          tar xzf emscripten.tar.gz
       - name: Compile
         run: |
-          export IPEDEPS=`pwd`/emscripten
-          export IPEWASM=1
           cd src
-          make -j ipe
+          make -j ipe IPEDEPS=$pwd/../emscripten IPEWASM=1
       - name: Build electron
         run: |
           cd src/ipe-electron
