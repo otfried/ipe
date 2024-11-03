@@ -230,10 +230,12 @@ void CurveSegment::snapVtx(const Vector & mouse, const Matrix & m, Vector & pos,
 	break;
     case EArc:
 	// snap to center and endpoints
-	if (ctl)
+	if (ctl) {
 	    // center
 	    snapVertex(mouse, (m * matrix()).translation(), pos, bound);
-	else
+	    // midpoint
+	    snapVertex(mouse, m * arc().midpoint(), pos, bound);
+	} else
 	    snapVertex(mouse, m * cp(1), pos, bound);
 	break;
     case ESpline:

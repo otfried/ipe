@@ -844,6 +844,27 @@ Rect Bezier::bbox() const {
     return Rect(box.bottomLeft() - Vector(0.5, 0.5), box.topRight() + Vector(0.5, 0.5));
 }
 
+Vector Arc::midpoint() const {
+    // Normalize iBeta with respect to iAlpha to handle cases where iAlpha > iBeta
+    Angle betaNorm = iBeta;
+    betaNorm.normalize(iAlpha);
+    double delta = betaNorm - iAlpha;
+
+    if (sq(delta - IpeTwoPi) < 1e-20) {
+	// Full ellipse
+	Angle midAngle(iAlpha + IpePi);
+	return iM * Vector(midAngle);
+    }
+
+    if (sq(delta) < 1e-20) {
+	// Zero-length arc, return the starting point
+	return iM * Vector(iAlpha);
+    }
+
+    Angle midAngle(iAlpha + delta / 2);
+    return iM * Vector(midAngle);
+}
+
 //! Find (approximately) nearest point on Bezier spline.
 /*! Find point on spline nearest to \a v, but only if
   it is closer than \a bound.
