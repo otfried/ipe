@@ -591,6 +591,7 @@ function MODEL:pick_properties_reference(obj)
   a.fill = obj:get("fill")
   a.pen = obj:get("pen")
   a.symbolsize = obj:get("symbolsize")
+  a.markshape = obj:get("markshape")
 end
 
 ----------------------------------------------------------------------
@@ -672,6 +673,7 @@ function apply_properties_reference(obj, a)
   obj:set("fill", a.fill)
   obj:set("pen", a.pen)
   obj:set("symbolsize", a.symbolsize)
+  obj:set("markshape", a.markshape)
 end
 
 ----------------------------------------------------------------------
