@@ -80,6 +80,13 @@ app:
 	$(call dll_symlinks,ipe)
 	$(call dll_symlinks,ipecairo)
 	$(call dll_symlinks,ipecanvas)
+
+dependencies:
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/lib/libpng16.16.dylib $(APPLIBS)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/lib/libpixman-1.0.dylib $(APPLIBS)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/lib/libfreetype.6.dylib $(APPLIBS)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/lib/libcairo.2.dylib $(APPLIBS)
+
 endif
 
 # --------------------------------------------------------------------

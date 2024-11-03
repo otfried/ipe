@@ -10,6 +10,11 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+      - name: Install dmgbuild
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip3 install dmgbuild
       - name: Download dependencies
         run: |
           wget https://github.com/otfried/osx-ipe/releases/download/2024.02.25/osxlibs-arm.tar.gz
@@ -20,32 +25,23 @@ jobs:
           cd src
           make -j
           make app
-      - name: Add dependencies
+          make dependencies
+      - name: Sign
         run: |
-          FW1=build/Ipe.app/Contents/Frameworks
-          FW2=build/IpePresenter.app/Contents/Frameworks
-          HEADERS=build/Ipe.app/Contents/Headers
-          install -m 0755 osxlibs/lib/libpng16.16.dylib $FW1
-          install -m 0755 osxlibs/lib/libpng16.16.dylib $FW2
-          install -m 0755 osxlibs/lib/libpixman-1.0.dylib $FW1
-          install -m 0755 osxlibs/lib/libpixman-1.0.dylib $FW2
-          install -m 0755 osxlibs/lib/libfreetype.6.dylib $FW1
-          install -m 0755 osxlibs/lib/libfreetype.6.dylib $FW2
-          install -m 0755 osxlibs/lib/libcairo.2.dylib $FW1
-          install -m 0755 osxlibs/lib/libcairo.2.dylib $FW2
-          install -m 0755 osxlibs/lib/liblua54.dylib $FW1
-          mkdir -p $HEADERS
-          install -m 0644 src/include/*.h $HEADERS
           codesign --force --deep -s - build/Ipe.app
           codesign --force --deep -s - build/IpePresenter.app
-      - name: Create archive
+      - name: Build dmgs
         run: |
-          cd build
-          tar czvf ../ipe-mac-arm.tar.gz Ipe.app IpePresenter.app
+          VERSION=`grep -E -o "^IPEVERS.*$" src/config.mak | grep -E -o "[0-9.]+"`
+          echo "Ipe version is $VERSION"
+          source venv/bin/activate
+          dmgbuild -s src/ipe/dmg.py "Ipe $VERSION" ipe-$VERSION-mac-arm.dmg
+          dmgbuild -s src/ipe/dmg.py -D app=build/IpePresenter.app \
+            "IpePresenter $VERSION" ipepresenter-$VERSION-mac-arm.dmg
       - name: Upload result
         uses: actions/upload-artifact@v4
         with:
           name: ipe-mac-arm
-          path: ipe-mac-arm.tar.gz
+          path: ipe*.dmg
           retention-days: 2
       - run: 'echo "Status ${{ job.status }}"'

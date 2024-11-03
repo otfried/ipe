@@ -83,6 +83,10 @@ ifdef IPEQVORONOI
 endif
 	$(MAKE) --directory=ipepresenter app
 
+dependencies: app
+	$(MAKE) --directory=ipe dependencies
+	$(MAKE) --directory=ipepresenter dependencies
+
 manual:
 	sphinx-build -M html ../manual ../build
 

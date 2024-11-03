@@ -101,12 +101,21 @@ app:
 	$(INSTALL_FILES) $(BUILDDIR)/ipe.icns $(RESOURCEDIR)
 	$(INSTALL_FILES) ../../artwork/icons.ipe $(RESOURCEDIR)/icons
 
+dependencies:
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/lib/libpng16.16.dylib $(buildlib)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/lib/libpixman-1.0.dylib $(buildlib)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/lib/libfreetype.6.dylib $(buildlib)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/lib/libcairo.2.dylib $(buildlib)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/lib/liblua54.dylib $(buildlib)
+	mkdir -p $(BUNDLEDIR)/Headers
+	$(INSTALL_FILES) ../include/*.h $(BUNDLEDIR)/Headers
+
 endif
 
 install: $(TARGET)
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEBINDIR) 
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEMANDIR) 
-#	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEDOCDIR) 
+
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPELUADIR) 
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPESTYLEDIR) 
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPESCRIPTDIR) 
@@ -119,5 +128,6 @@ install: $(TARGET)
 	$(INSTALL_FILES) ../../artwork/icons.ipe $(INSTALL_ROOT)$(IPEICONDIR)
 	$(INSTALL_FILES) ../../artwork/ipe_logo.ipe $(INSTALL_ROOT)$(IPEICONDIR)
 	$(INSTALL_FILES) ../../artwork/ipe.iconset/icon_128x128.png $(INSTALL_ROOT)$(IPEICONDIR)
+
 
 # --------------------------------------------------------------------

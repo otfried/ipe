@@ -25,22 +25,9 @@ jobs:
           cd src
           make -j
           make app
-      - name: Add dependencies
+          make dependencies
+      - name: Sign
         run: |
-          FW1=build/Ipe.app/Contents/Frameworks
-          FW2=build/IpePresenter.app/Contents/Frameworks
-          HEADERS=build/Ipe.app/Contents/Headers
-          install -m 0755 osxlibs/lib/libpng16.16.dylib $FW1
-          install -m 0755 osxlibs/lib/libpng16.16.dylib $FW2
-          install -m 0755 osxlibs/lib/libpixman-1.0.dylib $FW1
-          install -m 0755 osxlibs/lib/libpixman-1.0.dylib $FW2
-          install -m 0755 osxlibs/lib/libfreetype.6.dylib $FW1
-          install -m 0755 osxlibs/lib/libfreetype.6.dylib $FW2
-          install -m 0755 osxlibs/lib/libcairo.2.dylib $FW1
-          install -m 0755 osxlibs/lib/libcairo.2.dylib $FW2
-          install -m 0755 osxlibs/lib/liblua54.dylib $FW1
-          mkdir -p $HEADERS
-          install -m 0644 src/include/*.h $HEADERS
           codesign --force --deep -s - build/Ipe.app
           codesign --force --deep -s - build/IpePresenter.app
       - name: Build dmgs
