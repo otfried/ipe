@@ -1,0 +1,37 @@
+name: Build Ipe Electron edition
+on: workflow_dispatch
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+          actions-cache-folder: 'emsdk-cache'
+      - name: Verify emsdk
+        run: emcc -v
+      - name: Download dependencies
+        run: |
+          wget https://github.com/otfried/emscripten-ipe/releases/download/2024.11.03/emscripten.tar.gz
+          tar xzf emscripten.tar.gz
+      - name: Compile
+        run: |
+          export IPEDEPS=`pwd`/emscripten
+          export IPEWASM=1
+          cd src
+          make -j ipe
+      - name: Build electron
+        run: |
+          cd src/ipe-electron
+          npm install
+          npm run build
+          npm run make
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          path: src/ipe-electron/out/make/*/x64/*
+          retention-days: 2
+      - run: 'echo "Status ${{ job.status }}"'
