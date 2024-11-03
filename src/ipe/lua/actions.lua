@@ -1012,12 +1012,8 @@ function MODEL:action_preferences()
   local s = "Ipe preferences are changed by creating a Lua source file.\n\n"
   s = s .. "You can find the available options in 'prefs.lua', 'shortcuts.lua', and 'mouse.lua'"
   s = s .. " (all on the path '" .. package.path .. "').\n\n"
-  s = s .. "Normally, you would not modify those files directly.\n\nInstead, create a new file '"
-  if config.platform == "win" then
-    s = s .. config.ipeletDirs[#config.ipeletDirs] .. "\\" .. "customization.lua"
-  else
-    s = s .. "~/.ipe/ipelets/customization.lua"
-  end
+  s = s .. "Don't modify those files directly.\n\nInstead, create a new file '"
+  s = s .. ipe.folder("config", "customization.lua")
   s = s .. "', place your changes in this file, and restart Ipe.\n\n"
   s = s .. "For further details, please read the manual."
   d:add("text", "text", { read_only=true }, 1, 1)

@@ -75,6 +75,7 @@ export class IpeUi {
 	saveCallback: ((fn: string) => void) | null = null;
 	readonly touch: TouchDragZoom;
 	platform: string;
+	customizationFileName = "";
 
 	constructor(ipe: Ipe, ipeenv: string[]) {
 		this.ipe = ipe;
@@ -449,21 +450,25 @@ export class IpeUi {
 	}
 
 	private _explainPreferences() {
-		this.modal.showBanner(
-			"Ipe preferences",
+		const front =
 			"<p>Ipe preferences are changed by creating a Lua source file.</p>" +
-				"<p>You can find the available options in " +
-				'<a target="_blank" href="https://github.com/otfried/ipe/tree/master/src/ipe/lua/prefs.lua">' +
-				"'prefs.lua'</a>, " +
-				'<a target="_blank" href="https://github.com/otfried/ipe/tree/master/src/ipe/lua/shortcuts.lua">' +
-				"'shortcuts.lua'</a>, and " +
-				'<a target="_blank" href="https://github.com/otfried/ipe/tree/master/src/ipe/lua/mouse.lua">' +
-				"'mouse.lua'</a>.</p>" +
-				"<p>Create a new file 'customization.lua', place your changes in this file, " +
-				"and upload it as an ipelet.</p><p>More details are in the " +
-				'<a target="_blank" href="https://otfried.github.io/ipe/80_advanced.html#customizing-ipe">' +
-				"Manual</a>.</p>",
-		);
+			"<p>You can find the available options in " +
+			'<a target="_blank" href="https://github.com/otfried/ipe/tree/master/src/ipe/lua/prefs.lua">' +
+			"'prefs.lua'</a>, " +
+			'<a target="_blank" href="https://github.com/otfried/ipe/tree/master/src/ipe/lua/shortcuts.lua">' +
+			"'shortcuts.lua'</a>, and " +
+			'<a target="_blank" href="https://github.com/otfried/ipe/tree/master/src/ipe/lua/mouse.lua">' +
+			"'mouse.lua'</a>.</p>";
+		const upload =
+			this.platform === "electron"
+				? `<p>Create or edit the file '${this.customizationFileName}' and place your changes in this file.</p>`
+				: "<p>Create a new file 'customization.lua', place your changes in this file, " +
+					"and upload it in <em>Manage files</em> (in the File menu).</p>";
+		const back =
+			"<p>More details are in the " +
+			'<a target="_blank" href="https://otfried.github.io/ipe/80_advanced.html#customizing-ipe">' +
+			"Manual</a>.</p>";
+		this.modal.showBanner("Ipe preferences", `${front}${upload}${back}`);
 	}
 
 	private _tabletHints() {

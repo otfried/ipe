@@ -381,7 +381,9 @@ if ipeletpath then
     config.ipeletDirs[#config.ipeletDirs + 1] = w
   end
 else
-  config.ipeletDirs = { ipe.folder("user-ipelets"), ipe.folder("ipelets") }
+  config.ipeletDirs = { ipe.folder("config", "customization.lua"),
+			ipe.folder("user-ipelets"),
+			ipe.folder("ipelets") }
 end
 
 local ipestyles = os.getenv("IPESTYLES")
@@ -409,34 +411,42 @@ function load_ipelets()
   end
 end
 
+function load_ipelet(dir, fname)
+  ft = {}
+  ft.name = fname:sub(1,-5)
+  ft.path = dir .. prefs.fsep .. fname
+  ft.dllname = dir .. prefs.fsep .. ft.name
+  ft._G = _G
+  ft.ipe = ipe
+  ft.ipeui = ipeui
+  ft.math = math
+  ft.string = string
+  ft.table = table
+  ft.assert = assert
+  ft.shortcuts = shortcuts
+  ft.prefs = prefs
+  ft.config = config
+  ft.mouse = mouse
+  ft.ipairs = ipairs
+  ft.pairs = pairs
+  ft.print = print
+  ft.tonumber = tonumber
+  ft.tostring = tostring
+  ipelets[#ipelets + 1] = ft
+end
+
 -- look for ipelets
 ipelets = {}
 for _,w in ipairs(config.ipeletDirs) do
   if ipe.fileExists(w) then
-    local files = ipe.directory(w)
-    for i, f in ipairs(files) do
-      if f:sub(-4) == ".lua" then
-	ft = {}
-	ft.name = f:sub(1,-5)
-	ft.path = w .. prefs.fsep .. f
-	ft.dllname = w .. prefs.fsep .. ft.name
-	ft._G = _G
-	ft.ipe = ipe
-	ft.ipeui = ipeui
-	ft.math = math
-	ft.string = string
-	ft.table = table
-	ft.assert = assert
-	ft.shortcuts = shortcuts
-	ft.prefs = prefs
-	ft.config = config
-	ft.mouse = mouse
-	ft.ipairs = ipairs
-	ft.pairs = pairs
-	ft.print = print
-	ft.tonumber = tonumber
-	ft.tostring = tostring
-	ipelets[#ipelets + 1] = ft
+    if w:sub(-4) == ".lua" then
+      load_ipelet(w:match(prefs.dir_pattern), w:match(prefs.basename_pattern))
+    else
+      local files = ipe.directory(w)
+      for i, f in ipairs(files) do
+	if f:sub(-4) == ".lua" then
+	  load_ipelet(w, f)
+	end
       end
     end
   end

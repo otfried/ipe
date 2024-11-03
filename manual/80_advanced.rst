@@ -158,26 +158,30 @@ files.)
 
 If you have installed Ipe for your personal use only (for instance
 under Windows), you can simply modify the original Lua file.  In all
-other cases, you need to provide a small Lua ipelet that will change
+other cases, you need to provide a small Lua file that will change
 the setting you wish to change.
 
-A small example is the following ipelet that changes a keyboard
+A small example is the following customization that changes a keyboard
 shortcut and the maximum zoom:
 
 .. code-block::
 
    ----------------------------------------------------------------------
-   -- My customization ipelet: customize.lua
+   -- My Ipe customizations: customization.lua
    ----------------------------------------------------------------------
    prefs.max_zoom = 100
    shortcuts.insert_text_box = "I"
    shortcuts.mode_splines = "Alt+Ctrl+I"
 
-The ipelet needs to be placed with the extension ``.lua`` somewhere
-on the ipelet path (check *Show configuration* again).  On Unix,
-the directory :file:`~/.local/share/ipe/ipelets` will do nicely.  On Windows,
-you will have to set the environment variable IPELETPATH, see the
-next section.
+Place this file :file:`customization.lua` in Ipe's configuration
+folder (you'll find the exact location listed on the ipelet path
+(check *Show configuration* again).
+
+On Linux, it is typically :file:`~/.config/ipe/customization.lua`, on
+MacOS, it is :file:`~/Library/Ipe/customization.lua`, on Windows, the
+file has to be in the top level of the Ipe directory (the same place
+that contains the *readme.txt* and *gpl.txt* files).
+
 
 .. _environment:
 

@@ -24,14 +24,11 @@ instantiateIpe({
 	for (const ipelet in setup.ipelets)
 		ipe.FS.writeFile(`/opt/ipe/user-ipelets/${ipelet}`, setup.ipelets[ipelet]);
 	if (setup.customizationData != null)
-		ipe.FS.writeFile(
-			"/opt/ipe/user-ipelets/customization.lua",
-			setup.customizationData,
-		);
+		ipe.FS.writeFile("/opt/ipe/customization.lua", setup.customizationData);
 
 	const env = [
 		`IPESTYLES=${setup.styles.join(":")}`,
-		"IPELETPATH=/opt/ipe/user-ipelets:/opt/ipe/ipelets",
+		"IPELETPATH=/opt/ipe/customization.lua:/opt/ipe/user-ipelets:/opt/ipe/ipelets",
 		"IPEJSLATEX=1",
 		"IPEDEBUG=1",
 		"IPEPRELOADER=1",
@@ -39,6 +36,7 @@ instantiateIpe({
 		`HOME=${setup.home}`,
 	];
 	const ipeui = new IpeUi(ipe, env);
+	ipeui.customizationFileName = setup.customization as string;
 	console.log("Starting Ipe");
 	ipeui.startIpe(setup.screen.width, setup.screen.height);
 	console.log("Ipe is running!");
