@@ -332,6 +332,7 @@ public:
     Rect bbox() const;
     inline Vector beginp() const;
     inline Vector endp() const;
+    Vector midpoint() const;
 
     void intersect(const Line & l, std::vector<Vector> & result) const;
     void intersect(const Segment & s, std::vector<Vector> & result) const;
