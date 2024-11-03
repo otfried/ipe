@@ -10,6 +10,11 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+      - name: Install dmgbuild
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip3 install dmgbuild
       - name: Download dependencies
         run: |
           wget https://github.com/otfried/osx-ipe/releases/download/2024.02.25/osxlibs-intel.tar.gz
@@ -38,14 +43,18 @@ jobs:
           install -m 0644 src/include/*.h $HEADERS
           codesign --force --deep -s - build/Ipe.app
           codesign --force --deep -s - build/IpePresenter.app
-      - name: Create archive
+      - name: Build dmgs
         run: |
-          cd build
-          tar czvf ../ipe-mac-intel.tar.gz Ipe.app IpePresenter.app
+          VERSION=`grep -E -o "^IPEVERS.*$" src/config.mak | grep -E -o "[0-9.]+"`
+          echo "Ipe version is $VERSION"
+          source venv/bin/activate
+          dmgbuild -s src/ipe/dmg.py "Ipe $VERSION" ipe-$VERSION-mac-intel.dmg
+          dmgbuild -s src/ipe/dmg.py -D app=build/IpePresenter.app \
+            "IpePresenter $VERSION" ipepresenter-$VERSION-mac-intel.dmg
       - name: Upload result
         uses: actions/upload-artifact@v4
         with:
           name: ipe-mac-intel
-          path: ipe-mac-intel.tar.gz
+          path: ipe*.dmg
           retention-days: 2
       - run: 'echo "Status ${{ job.status }}"'
