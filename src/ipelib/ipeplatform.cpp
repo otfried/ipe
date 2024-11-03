@@ -655,7 +655,7 @@ FILE * Platform::fopen(const char * fname, const char * mode) {
     return _wfopen(String(fname).w().data(), String(mode).w().data());
 }
 
-int Platform::mkdir(const char * dname) { return _wmkdir(String(dname).w().data()); }
+int Platform::mkdir(String path) { return _wmkdir(path.w().data()); }
 
 //! Return a wide string including a terminating zero character.
 std::wstring String::w() const noexcept {
@@ -681,7 +681,7 @@ String::String(const wchar_t * wbuf) {
 }
 #else
 
-int Platform::mkdir(const char * dname) { return ::mkdir(dname, 0700); }
+int Platform::mkdir(String path) { return ::mkdir(path.z(), 0700); }
 
 #ifdef IPEWASM
 FILE * Platform::fopen(const char * fname, const char * mode) {
@@ -709,6 +709,26 @@ FILE * Platform::fopen(const char * fname, const char * mode) {
 #endif
 
 #endif
+
+int Platform::mkdirTree(String path) {
+    int i = 0;
+    for (;;) {
+	++i;
+	while (i < path.size() && path[i] != IPESEP)
+	    ++i;
+	if (i == path.size()) {
+	    if (Platform::fileExists(path))
+		return 0;
+	    else
+		return Platform::mkdir(path);
+	}
+	String parent = path.left(i);
+	if (!Platform::fileExists(parent)) {
+	    int result = Platform::mkdir(parent);
+	    if (result != 0) return result;
+	}
+    }
+}
 
 // package Latex source as a tarball to send to online Latex conversion
 String Platform::createTarball(String tex) {

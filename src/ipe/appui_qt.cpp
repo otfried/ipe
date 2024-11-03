@@ -76,7 +76,7 @@ QIcon AppUi::prefsIcon(String name) {
     }
 
     String svgdir = Platform::folder(FolderLatex, "icons/");
-    if (!Platform::fileExists(svgdir) && mkdir(svgdir.z(), 0700) != 0) return QIcon();
+    if (Platform::mkdirTree(svgdir) != 0) return QIcon();
 
     if (name == "ipe") {
 	String png = svgdir + "icon_128x128.png";

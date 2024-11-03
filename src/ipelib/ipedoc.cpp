@@ -553,7 +553,7 @@ int Document::prepareLatexRun(Latex ** pConverter) {
 
     // First we need a directory
     String latexDir = Platform::folder(FolderLatex);
-    if (!Platform::fileExists(latexDir) && Platform::mkdir(latexDir.z()) != 0) {
+    if (Platform::mkdirTree(latexDir) != 0) {
 	ipeDebug("Latex directory '%s' does not exist and cannot be created!\n",
 		 latexDir.z());
 	return ErrNoDir;

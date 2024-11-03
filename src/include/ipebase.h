@@ -384,7 +384,8 @@ public:
 
     static String folder(IpeFolder ft, const char * fname = nullptr);
     static FILE * fopen(const char * fname, const char * mode);
-    static int mkdir(const char * dname);
+    static int mkdir(String path);
+    static int mkdirTree(String path);
     static String ipeDrive();
     static int libVersion();
     static void initLib(int version);
