@@ -116,6 +116,11 @@ SelectTool::SelectTool(CanvasBase * canvas, Page * page, int view, double select
 	    if ((d = iPage->distance(i, v, bound)) < bound) {
 		SObj obj;
 		obj.index = i;
+		if (iPage->object(i)->type() == Object::Type::EReference
+		    && d < bound / 2) {
+		    // If cursor is close enough, prefer reference objects
+		    d -= bound;
+		}
 		obj.distance = d;
 		iObjs.push_back(obj);
 	    }
