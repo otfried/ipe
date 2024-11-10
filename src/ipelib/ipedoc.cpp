@@ -297,6 +297,14 @@ bool Document::save(TellStream & stream, FileFormat format, uint32_t flags) cons
 bool Document::save(const char * fname, FileFormat format, uint32_t flags) const {
     std::FILE * fd = Platform::fopen(fname, "wb");
     if (!fd) return false;
+
+    String new_base = Platform::parentDirectory(Platform::realPath(fname));
+    BitmapFinder bmf;
+    findBitmaps(bmf);
+    for (auto & bm : bmf.iBitmaps) {
+	if (bm.isExternal()) bm.changeExternalPathRelativeBase(new_base);
+    }
+
     FileStream stream(fd);
     bool result = save(stream, format, flags);
     std::fclose(fd);

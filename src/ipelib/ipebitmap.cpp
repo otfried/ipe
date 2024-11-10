@@ -30,6 +30,8 @@
 
 #include "ipebitmap.h"
 #include "ipeutils.h"
+
+#include <filesystem>
 #include <zlib.h>
 
 using namespace ipe;
@@ -745,6 +747,13 @@ Bitmap Bitmap::readExternal(String pathAttr, const XmlAttributes & attr,
 	eret.iImp->iFlags = Bitmap::EExternal;
 	return eret;
     }
+}
+
+void Bitmap::changeExternalPathRelativeBase(String new_base) {
+    new_base = Platform::realPath(new_base);
+    String old_path = Platform::realPath(externalPath());
+    setExternalPath(
+	std::filesystem::proximate(old_path.s(), new_base.s()).generic_string());
 }
 
 // --------------------------------------------------------------------

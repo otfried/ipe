@@ -76,6 +76,9 @@ public:
     inline bool hasAlpha() const;
     inline int colorKey() const;
 
+    inline void setExternalPath(String path);
+    void changeExternalPathRelativeBase(String new_base);
+
     Buffer pixelData();
 
     inline int objNum() const;
@@ -151,6 +154,13 @@ inline bool Bitmap::isExternal() const { return (iImp->iFlags & EExternal) != 0;
 
 //! The path to the external bitmap file
 inline String Bitmap::externalPath() const { return iImp->iPath; }
+
+//! Set the path to the external bitmap file
+inline void Bitmap::setExternalPath(String path) {
+    assert(isExternal());
+    assert(!path.empty());
+    iImp->iPath = path;
+}
 
 //! Does the bitmap have transparency?
 /*! Bitmaps with color key will return false here. */
