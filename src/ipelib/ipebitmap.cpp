@@ -697,30 +697,34 @@ Bitmap Bitmap::readPNG(const char * fname, Vector & dotsPerInch, const char *& e
 
 // --------------------------------------------------------------------
 
-Bitmap Bitmap::readExternal(String path, const XmlAttributes & attr,
+Bitmap Bitmap::readExternal(String pathAttr, const XmlAttributes & attr,
 			    const char *& errmsg) {
     Bitmap ret;
     ret.init(attr);
-    ret.iImp->iPath = Lex(path).nextToken();
+    ret.iImp->iPath = Lex(pathAttr).nextToken();
+    String path(Platform::realPath(ret.iImp->iPath));
     Vector dotsPerInch;
 
-    errmsg = readPNGData(ret.iImp->iPath.z(), ret.iImp->iWidth, ret.iImp->iHeight,
-			 ret.iImp->iFlags, ret.iImp->iData, dotsPerInch);
-    if (errmsg) {
-	FILE * file = Platform::fopen(ret.iImp->iPath.z(), "rb");
+    errmsg = nullptr;
+    const char * errjpg = nullptr;
+    const char * errpng = readPNGData(path.z(), ret.iImp->iWidth, ret.iImp->iHeight,
+				      ret.iImp->iFlags, ret.iImp->iData, dotsPerInch);
+    if (errpng) {
+	FILE * file = Platform::fopen(path.z(), "rb");
 	if (!file) {
 	    errmsg = "Error opening file";
 	} else {
-	    errmsg = readJpegInfo(file, ret.iImp->iWidth, ret.iImp->iHeight, dotsPerInch,
+	    errjpg = readJpegInfo(file, ret.iImp->iWidth, ret.iImp->iHeight, dotsPerInch,
 				  ret.iImp->iFlags);
 	    fclose(file);
-	    if (!errmsg) {
-		String a = Platform::readFile(ret.iImp->iPath);
+	    if (errjpg) {
+		errmsg = "Could not parse image file as PNG or JPEG";
+	    } else {
+		String a = Platform::readFile(path);
 		ret.iImp->iData = Buffer(a.data(), a.size());
 	    }
 	}
     }
-    ret.iImp->iFlags |= Bitmap::EExternal;
 
     if (!errmsg) {
 	assert(ret.iImp->iWidth > 0 && ret.iImp->iHeight > 0);
@@ -728,10 +732,18 @@ Bitmap Bitmap::readExternal(String path, const XmlAttributes & attr,
 	ret.unpack(Buffer());
 	ret.computeChecksum();
 	ret.analyze();
+	ret.iImp->iFlags |= Bitmap::EExternal;
 	return ret;
     } else {
-	ipeDebug("Could not load linked image at '%s%': %s", ret.iImp->iPath.z(), errmsg);
-	return Bitmap();
+	ipeDebug(
+	    "Could not load linked image at '%s' in '%s', resolved to '%s':\n%s\n%s\n%s",
+	    pathAttr.z(), Platform::currentDirectory().z(), path.z(), errmsg, errpng,
+	    errjpg);
+	Bitmap eret;
+	eret.init(attr);
+	eret.iImp->iPath = ret.iImp->iPath;
+	eret.iImp->iFlags = Bitmap::EExternal;
+	return eret;
     }
 }
 

@@ -63,6 +63,7 @@ public:
     void saveAsXml(Stream & stream, int id, int pdfObjNum = -1) const;
 
     inline bool isNull() const;
+    inline bool isLoaded() const;
     bool equal(Bitmap rhs) const;
 
     inline int width() const;
@@ -127,6 +128,11 @@ private:
 
 //! Is this a null bitmap?
 inline bool Bitmap::isNull() const { return (iImp == nullptr); }
+
+//! Could the pixel data for this bitmap be loaded?
+inline bool Bitmap::isLoaded() const {
+    return !isNull() && (iImp->iData.size() > 0 || iImp->iPixelData.size() > 0);
+}
 
 //! Return width of pixel array.
 inline int Bitmap::width() const { return iImp->iWidth; }

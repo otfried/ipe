@@ -610,6 +610,7 @@ void PdfWriter::embedBitmap(Bitmap bitmap) {
 
 void PdfWriter::embedBitmaps(const BitmapFinder & bm) {
     for (BmIter it = bm.iBitmaps.begin(); it != bm.iBitmaps.end(); ++it) {
+	if (!it->isLoaded()) continue;
 	BmIter it1 = std::find(iBitmaps.begin(), iBitmaps.end(), *it);
 	if (it1 == iBitmaps.end()) {
 	    // look again, more carefully

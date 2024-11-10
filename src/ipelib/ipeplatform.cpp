@@ -406,8 +406,9 @@ String Platform::currentDirectory() {
     wchar_t * buffer = _wgetcwd(nullptr, 0);
     return String(buffer);
 #else
-    char buffer[1024];
-    if (getcwd(buffer, 1024) != buffer) return String();
+    char buffer[PATH_MAX];
+    buffer[0] = 0;
+    if (getcwd(buffer, PATH_MAX) != buffer) return String();
     return String(buffer);
 #endif
 }
@@ -456,6 +457,7 @@ String Platform::realPath(String fname) {
     return String(wresult);
 #else
     char rpath[PATH_MAX];
+    rpath[0] = 0;
     if (realpath(fname.z(), rpath)) return String(rpath);
     if (errno != ENOENT || fname.left(1) == "/") return fname; // not much we can do
     if (realpath(".", rpath) == nullptr) return fname;         // nothing we can do
