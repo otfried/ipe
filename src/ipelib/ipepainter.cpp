@@ -233,7 +233,35 @@ void Painter::drawPath(TPathMode mode) {
 */
 void Painter::drawBitmap(Bitmap bitmap) {
     assert(!iInPath);
-    doDrawBitmap(bitmap);
+    assert(!bitmap.isNull());
+    if (!bitmap.isLoaded()) {
+	push();
+	// setState(State()); // reset state
+	setOpacity(Attribute(Fixed(1000)));
+	setStrokeOpacity(Attribute(Fixed(1000)));
+	setFill(Attribute(Color(1000, 1000, 1000)));
+	setStroke(Attribute(Color(1000, 0, 0)));
+	setLineJoin(EMiterJoin);
+	setTiling(Attribute::normal(ETiling));
+	setGradient(Attribute::normal(EGradient));
+
+	setPen(Attribute(Fixed(2)));
+	newPath();
+	rect(Rect{Vector{0, 0}, Vector{1, 1}});
+	drawPath(EStrokedAndFilled);
+
+	setPen(Attribute(Fixed(1)));
+	newPath();
+	moveTo(Vector{0, 0});
+	lineTo(Vector{1, 1});
+	moveTo(Vector{1, 0});
+	lineTo(Vector{0, 1});
+	drawPath(EStrokedOnly);
+
+	pop();
+    } else {
+	doDrawBitmap(bitmap);
+    }
 }
 
 //! Render a text object.
