@@ -217,6 +217,7 @@ Document * Document::load(const char * fname, int & reason) {
     reason = EFileOpenError;
     std::FILE * fd = Platform::fopen(fname, "rb");
     if (!fd) return nullptr;
+    Platform::changeDirectory(Platform::parentDirectory(fname));
     FileSource source(fd);
     FileFormat format = fileFormat(source);
     std::rewind(fd);

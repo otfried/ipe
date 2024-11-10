@@ -30,6 +30,7 @@
 
 #include "ipeattributes.h"
 #include "ipebase.h"
+#include <filesystem>
 
 #ifdef WIN32
 #define NTDDI_VERSION 0x06000000
@@ -400,17 +401,18 @@ void ipeDebugBuffer(Buffer data, int maxsize) {
 // --------------------------------------------------------------------
 
 //! Returns current working directory.
-/*! Returns empty string if something fails. */
 String Platform::currentDirectory() {
-#ifdef WIN32
-    wchar_t * buffer = _wgetcwd(nullptr, 0);
-    return String(buffer);
-#else
-    char buffer[PATH_MAX];
-    buffer[0] = 0;
-    if (getcwd(buffer, PATH_MAX) != buffer) return String();
-    return String(buffer);
-#endif
+    return std::filesystem::current_path().generic_string();
+}
+
+//! Changes the current working directory.
+void Platform::changeDirectory(String dir) {
+    if (!dir.empty()) std::filesystem::current_path(dir.z());
+}
+
+//! Get the directory containg the given file.
+String Platform::parentDirectory(String file) {
+    return std::filesystem::path(file.z()).parent_path().generic_string();
 }
 
 //! Returns drive on which Ipe executable exists.
