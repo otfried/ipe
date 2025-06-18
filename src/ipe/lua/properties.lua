@@ -589,7 +589,6 @@ function MODEL:pick_properties_reference(obj)
   local a = self.attributes
   a.stroke = obj:get("stroke")
   a.fill = obj:get("fill")
-  a.pen = obj:get("pen")
   a.symbolsize = obj:get("symbolsize")
   a.markshape = obj:get("markshape")
 end
