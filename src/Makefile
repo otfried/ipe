@@ -90,14 +90,14 @@ dependencies: app
 manual:
 	sphinx-build -M html ../manual ../build
 
-epub:
-	sphinx-build -M epub ../manual ../build
+documentation:
+	$(MAKE) --directory=ipelib documentation
 
 book:
 	sphinx-build -M latexpdf ../manual ../build
 
-documentation:
-	$(MAKE) --directory=ipelib documentation
+epub:
+	sphinx-build -M epub ../manual ../build
 
 format:
 	clang-format -i */*.h */*.cpp
