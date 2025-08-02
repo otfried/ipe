@@ -64,8 +64,6 @@
 using namespace ipe;
 using namespace ipelua;
 
-#define WM_DPICHANGED 0x02E0
-
 // --------------------------------------------------------------------
 
 const int TBICONSIZE = 24;
