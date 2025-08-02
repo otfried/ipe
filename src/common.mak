@@ -100,7 +100,7 @@ else
   error("Unknown IPEUI selected")
 endif
 
-CXXFLAGS += -Wall -std=c++20
+CXXFLAGS += -Wall -std=c++23
 
 ifdef IPESTRICT
   CXXFLAGS += -Wsign-compare -Wzero-as-null-pointer-constant -Werror -DIPESTRICT -D_GLIBCXX_ASSERTIONS
