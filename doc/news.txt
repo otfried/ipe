@@ -36,6 +36,8 @@ Ipe 7.3.1
  * The midpoint of an arc is now also a control point you can snap to
    (!557).  Thanks Alexander Firbas!
 
+ * Fix crash when setting custom attribute to empty string (#569).
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.30 (2024-06-01: mini-release, source only)

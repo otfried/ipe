@@ -2918,6 +2918,7 @@ function MODEL:saction_custom()
   local obj = p[prim]
   local custom = self:getString("Enter custom value", nil, obj:getCustom())
   if not custom then return end
+  if custom:match("^%s*$") then custom = "undefined" end
   local t = { label="set custom",
 	      pno=self.pno,
 	      vno=self.vno,
@@ -2943,7 +2944,7 @@ function MODEL:saction_set_link_action()
   assert(obj:type() == "group")
   local link_action = self:getString("Enter link action", nil, obj:text())
   if not link_action then return end
-  if link_action:match("^%s*$)") then link_action = "" end
+  if link_action:match("^%s*$") then link_action = "" end
   local t = { label="set link action",
 	      pno=self.pno,
 	      vno=self.vno,
