@@ -714,8 +714,7 @@ int Platform::mkdirTree(String path) {
     int i = 0;
     for (;;) {
 	++i;
-	while (i < path.size() && path[i] != IPESEP)
-	    ++i;
+	while (i < path.size() && path[i] != IPESEP) ++i;
 	if (i == path.size()) {
 	    if (Platform::fileExists(path))
 		return 0;

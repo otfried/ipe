@@ -237,8 +237,7 @@ void Text::saveAsXml(Stream & stream, String layer) const {
     }
     if (iXForm || isMinipage()) stream << " width=\"" << iWidth << "\"";
     if (iXForm)
-	stream << " height=\"" << iHeight << "\""
-	       << " depth=\"" << iDepth << "\"";
+	stream << " height=\"" << iHeight << "\"" << " depth=\"" << iDepth << "\"";
     saveAlignment(stream, iHorizontalAlignment, iVerticalAlignment);
     if (iSize != Attribute::NORMAL()) stream << " size=\"" << iSize.string() << "\"";
     if (iStyle != Attribute::NORMAL()) stream << " style=\"" << iStyle.string() << "\"";

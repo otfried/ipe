@@ -256,8 +256,8 @@ int Latex::createLatexSource(Stream & stream, String preamble) {
 
 	if (fsAttr.isNumber()) {
 	    Fixed fs = fsAttr.number();
-	    source << "\\fontsize{" << fs << "}"
-		   << "{" << fs.mult(6, 5) << "bp}\\selectfont\n";
+	    source << "\\fontsize{" << fs << "}" << "{" << fs.mult(6, 5)
+		   << "bp}\\selectfont\n";
 	} else
 	    source << fsAttr.string() << "\n";
 	Color col = iCascade->find(EColor, text->stroke()).color();
@@ -297,15 +297,14 @@ int Latex::createLatexSource(Stream & stream, String preamble) {
 	int curnum = i + 1;
 	if (iXetex) {
 	    stream << "\\special{ pdf:bxobj @ipeform" << curnum << "\n"
-		   << "width \\the\\wd0 \\space "
-		   << "height \\the\\ht0 \\space "
+		   << "width \\the\\wd0 \\space " << "height \\the\\ht0 \\space "
 		   << "depth \\the\\dp0}%\n"
 		   << "\\usebox0%\n"
 		   << "\\special{pdf:exobj}%\n"
-		   << "\\special{pdf:obj @ipeinfo" << curnum << " <<"
-		   << " /IpeId " << curnum << " /IpeStretch " << it.iStretch.toDouble()
-		   << " /IpeDepth \\the\\count0"
-		   << " /IpeXForm @ipeform" << curnum << " >>}\n"
+		   << "\\special{pdf:obj @ipeinfo" << curnum << " <<" << " /IpeId "
+		   << curnum << " /IpeStretch " << it.iStretch.toDouble()
+		   << " /IpeDepth \\the\\count0" << " /IpeXForm @ipeform" << curnum
+		   << " >>}\n"
 		   << "\\special{pdf:close @ipeinfo" << curnum << "}\n"
 		   << "\\special{pdf:put @ipeforms @ipeinfo" << curnum << "}\n"
 		   << "\\put(0,0){\\special{pdf:uxobj @ipeform" << curnum << "}}\n";

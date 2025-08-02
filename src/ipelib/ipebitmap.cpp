@@ -282,9 +282,7 @@ Bitmap & Bitmap::operator=(const Bitmap & rhs) {
 //! Save bitmap in XML stream.
 void Bitmap::saveAsXml(Stream & stream, int id, int pdfObjNum) const {
     assert(iImp);
-    stream << "<bitmap"
-	   << " id=\"" << id << "\""
-	   << " width=\"" << width() << "\""
+    stream << "<bitmap" << " id=\"" << id << "\"" << " width=\"" << width() << "\""
 	   << " height=\"" << height() << "\""
 	   << " BitsPerComponent=\"8\""; // no longer used but required by earlier Ipe
 					 // versions

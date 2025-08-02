@@ -457,8 +457,8 @@ void StyleSheet::saveAsXml(Stream & stream, bool saveBitmaps) const {
     }
     if (iPageNumberStyle.iDefined) {
 	stream << "<pagenumberstyle pos=\"" << iPageNumberStyle.iPos << "\""
-	       << " color=\"" << iPageNumberStyle.iColor.string() << "\""
-	       << " size=\"" << iPageNumberStyle.iSize.string() << "\"";
+	       << " color=\"" << iPageNumberStyle.iColor.string() << "\"" << " size=\""
+	       << iPageNumberStyle.iSize.string() << "\"";
 	Text::saveAlignment(stream, iPageNumberStyle.iHorizontalAlignment,
 			    iPageNumberStyle.iVerticalAlignment);
 	stream << ">" << iPageNumberStyle.iText << "</pagenumberstyle>\n";
@@ -503,9 +503,8 @@ void StyleSheet::saveAsXml(Stream & stream, bool saveBitmaps) const {
 
     for (TilingMap::const_iterator it = iTilings.begin(); it != iTilings.end(); ++it) {
 	const Tiling & t = it->second;
-	stream << "<tiling name=\"" << rep->toString(it->first) << "\""
-	       << " angle=\"" << t.iAngle.degrees() << "\""
-	       << " step=\"" << t.iStep << "\""
+	stream << "<tiling name=\"" << rep->toString(it->first) << "\"" << " angle=\""
+	       << t.iAngle.degrees() << "\"" << " step=\"" << t.iStep << "\""
 	       << " width=\"" << t.iWidth << "\"/>\n";
     }
 

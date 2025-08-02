@@ -309,7 +309,8 @@ PdfWriter::PdfWriter(TellStream & stream, const Document * doc,
 	    iStream << " /Function << /FunctionType 2 /Domain [ 0 1 ] /N 1\n"
 		    << "     /C0 [";
 	    g->iStops[0].color.saveRGB(iStream);
-	    iStream << "]\n" << "     /C1 [";
+	    iStream << "]\n"
+		    << "     /C1 [";
 	    g->iStops[1].color.saveRGB(iStream);
 	    iStream << "] >>\n";
 	} else {
@@ -982,7 +983,8 @@ void PdfWriter::createTrailer() {
     const Document::SProperties & props = iDoc->properties();
     // create /Pages
     startObject(2);
-    iStream << "<<\n" << "/Type /Pages\n";
+    iStream << "<<\n"
+	    << "/Type /Pages\n";
     iStream << "/Count " << int(iPageObjectNumbers.size()) << "\n";
     iStream << "/Kids [ ";
     for (auto pon : iPageObjectNumbers) iStream << pon.objNum << " 0 R ";
