@@ -199,7 +199,7 @@ it should contain either a path object or a group of path objects.
 Ipe resizes these path objects so that they fit nicely around the
 bounding box of the group object being decorated.  For this to work
 correctly, the decoration object must be drawn such that it decorates
-the rectangle with corners at $(100, 100)$ and $(300, 200)$. 
+the rectangle with corners at :math:`(100, 100)` and :math:`(300, 200)`. 
 
 To make a decoration symbol, follow these steps:
 

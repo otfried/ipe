@@ -392,7 +392,7 @@ Each operator follows its arguments.  The operators are
 
 ``c`` (cubic B-spline) (:math:`n` point arguments): 
   add a uniform cubic B-spline with :math:`n+1` control points (the current
-  position plus the $n$ arguments).  If :math:`n = 3`, this is equivalent to
+  position plus the :math:`n` arguments).  If :math:`n = 3`, this is equivalent to
   a single cubic |bezier| spline, if :math:`n = 2` it is equivalent to a
   single quadratic |bezier| spline.
 
