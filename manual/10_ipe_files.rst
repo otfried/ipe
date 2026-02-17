@@ -23,12 +23,14 @@ programs.
 
 There are a few interesting uses for Ipe documents:
 
+
 Figures for Latex documents
 ---------------------------
 
 Ipe was originally written to make it easy to make figures for Latex
 documents.  If you are not familiar with including figures in Latex,
 you can find details in the :doc:`92_using_ipe_figures` section.
+
 
 Presentations
 -------------
@@ -42,6 +44,7 @@ However, Ipe now comes with a presentation tool IpePresenter to make
 presentations more comfortable.  The :doc:`70_presentations` section
 explains Ipe features meant for making presentations.
 
+
 SVG files
 ---------
 
@@ -50,6 +53,7 @@ pages.  Ipe does not save in SVG format directly, but the tool
 :program:`iperender` allows you to convert an Ipe document to SVG format.  This
 conversion is one-way, although the auxiliary tool :program:`svgtoipe` also
 allows you to convert SVG figures to Ipe format.
+
 
 Bitmaps
 -------
