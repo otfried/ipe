@@ -172,8 +172,8 @@ set.
 
 You can hide the current axis system by pressing :kbd:`Ctrl+F1`. This
 also turns off angular snapping, but preserves origin and orientation of
-the axes.  To reset the orientation (such that the $x$-axis is
-horizontal, use :kbd:`Ctrl+F2`).
+the axes.  To reset the orientation (such that the :math:`x`-axis is
+horizontal), use :kbd:`Ctrl+F2`.
 
 You can set origin and base direction at the same time by pressing
 :kbd:`F3` when the mouse is very near (or snapped to) an edge of a
