@@ -391,6 +391,8 @@ public:
     static void initLib(int version);
     static void setDebug(bool debug);
     static String currentDirectory();
+    static void changeDirectory(String dir);
+    static String parentDirectory(String dir);
     static String latexPath();
     static bool fileExists(String fname);
     static bool listDirectory(String path, std::vector<String> & files);

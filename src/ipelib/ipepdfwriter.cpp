@@ -563,7 +563,7 @@ void PdfWriter::createStream(const char * data, int size, bool preCompressed) {
 
 void PdfWriter::embedBitmap(Bitmap bitmap) {
     int smaskNum = -1;
-    auto embed = bitmap.embed();
+    auto embed = bitmap.getEmbedData();
     if (bitmap.hasAlpha() && embed.second.size() > 0) {
 	smaskNum = startObject();
 	iStream << "<<\n";
@@ -611,6 +611,7 @@ void PdfWriter::embedBitmap(Bitmap bitmap) {
 
 void PdfWriter::embedBitmaps(const BitmapFinder & bm) {
     for (BmIter it = bm.iBitmaps.begin(); it != bm.iBitmaps.end(); ++it) {
+	if (!it->isLoaded()) continue;
 	BmIter it1 = std::find(iBitmaps.begin(), iBitmaps.end(), *it);
 	if (it1 == iBitmaps.end()) {
 	    // look again, more carefully

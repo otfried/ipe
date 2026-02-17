@@ -158,9 +158,12 @@ int ImlParser::parseDocument(Document & doc) {
 bool ImlParser::parseBitmap() {
     XmlAttributes att;
     if (!parseAttributes(att)) return false;
-    String objNumStr;
-    if (att.slash() && att.has("pdfObject", objNumStr)) {
-	Lex lex(objNumStr);
+    String objRefStr;
+    if (att.has("path", objRefStr)) {
+	const char * errmsg = nullptr;
+	iBitmaps.push_back(Bitmap::readExternal(objRefStr, att, errmsg));
+    } else if (att.has("pdfObject", objRefStr)) {
+	Lex lex(objRefStr);
 	Buffer data = pdfStream(lex.getInt());
 	Buffer alpha;
 	lex.skipWhitespace();
@@ -169,7 +172,7 @@ bool ImlParser::parseBitmap() {
 	iBitmaps.push_back(bitmap);
     } else {
 	String bits;
-	if (!parsePCDATA("bitmap", bits)) return false;
+	if (att.slash() || !parsePCDATA("bitmap", bits)) return false;
 	Bitmap bitmap(att, bits);
 	iBitmaps.push_back(bitmap);
     }
