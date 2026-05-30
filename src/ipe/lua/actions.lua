@@ -2659,6 +2659,236 @@ local function sheets_add(d, dd)
   dd.modified = true
 end
 
+local visual_style_categories = {
+  { label="Colors", kind="color", color=true, default="#000000",
+    help="Color values use the color picker or three numbers between 0 and 1." },
+  { label="Pen widths", kind="pen", default="1",
+    help="Pen widths are numbers in Ipe points." },
+  { label="Dash styles", kind="dashstyle", default="[4] 0",
+    help="Dash styles use Ipe syntax, for example [4 2] 0." },
+  { label="Text sizes", kind="textsize", default="\\large",
+    help="Text sizes are numbers or LaTeX size commands such as \\large." },
+  { label="Symbol sizes", kind="symbolsize", default="3",
+    help="Symbol sizes are numbers in Ipe points." },
+  { label="Arrow sizes", kind="arrowsize", default="7",
+    help="Arrow sizes are numbers in Ipe points." },
+  { label="Opacity", kind="opacity", default="1",
+    help="Opacity values are numbers between 0 and 1." },
+  { label="Grid sizes", kind="gridsize", default="8",
+    help="Grid sizes are numbers in Ipe points." },
+  { label="Angle sizes", kind="anglesize", default="45",
+    help="Angle sizes are numbers in degrees." },
+}
+
+local function visual_category_labels()
+  local r = {}
+  for i,c in ipairs(visual_style_categories) do r[i] = c.label end
+  return r
+end
+
+local function visual_entry_names(entries)
+  local r = {}
+  for i,e in ipairs(entries) do r[i] = e.name end
+  return r
+end
+
+local function visual_unique_name(entries, base)
+  local used = {}
+  for _,e in ipairs(entries) do used[e.name] = true end
+  if not used[base] then return base end
+  local n = 2
+  while used[base .. " " .. n] do n = n + 1 end
+  return base .. " " .. n
+end
+
+local function visual_rgb_to_hex(value)
+  local rgb = {}
+  for s in value:gmatch("[^%s]+") do rgb[#rgb + 1] = tonumber(s) end
+  if #rgb == 1 then rgb[2], rgb[3] = rgb[1], rgb[1] end
+  if #rgb ~= 3 or not rgb[1] or not rgb[2] or not rgb[3] then return value end
+  for i = 1,3 do
+    rgb[i] = math.max(0, math.min(255, math.floor(255 * rgb[i] + 0.5)))
+  end
+  return string.format("#%02x%02x%02x", rgb[1], rgb[2], rgb[3])
+end
+
+local function visual_hex_to_rgb(value)
+  if #value == 7 and value:sub(1, 1) == "#" then
+    local r = tonumber(value:sub(2, 3), 16)
+    local g = tonumber(value:sub(4, 5), 16)
+    local b = tonumber(value:sub(6, 7), 16)
+    if r and g and b then
+      return string.format("%.6g %.6g %.6g", r / 255, g / 255, b / 255)
+    end
+  end
+  return value
+end
+
+local function visual_load_sheet(sheet)
+  local data = {}
+  for ci,c in ipairs(visual_style_categories) do
+    data[ci] = {}
+    for _,name in ipairs(sheet:allNames(c.kind)) do
+      data[ci][#data[ci] + 1] = { name=name, value=sheet:find(c.kind, name) }
+    end
+  end
+  return data
+end
+
+local function visual_set_fields(d, st)
+  local c = visual_style_categories[st.cat]
+  local entries = st.data[st.cat]
+  local names = visual_entry_names(entries)
+  st.updating = true
+  d:set("items", names)
+  if #entries == 0 then
+    st.current = nil
+    d:set("name", "")
+    d:set("value", "")
+    d:set("color", c.default or "#000000")
+  else
+    st.current = math.max(1, math.min(st.current or 1, #entries))
+    d:set("items", st.current)
+    d:set("name", entries[st.current].name)
+    if c.color then
+      d:set("value", entries[st.current].value)
+      d:set("color", visual_rgb_to_hex(entries[st.current].value))
+    else
+      d:set("value", entries[st.current].value)
+      d:set("color", "")
+    end
+  end
+  d:set("value_label", c.color and "Color" or "Value")
+  d:set("help", c.help)
+  d:setEnabled("value", not c.color)
+  d:setEnabled("color", c.color)
+  st.updating = false
+end
+
+local function visual_apply_current(d, dd, st)
+  local c = visual_style_categories[st.cat]
+  local entries = st.data[st.cat]
+  local name = d:get("name")
+  if name == "" and not st.current and #entries == 0 then return true end
+  if name == "" then
+    dd.model:warning("Cannot update stylesheet", "The symbolic name cannot be empty")
+    return false
+  end
+  local value = c.color and visual_hex_to_rgb(d:get("color")) or d:get("value")
+  if value == "" then
+    dd.model:warning("Cannot update stylesheet", "The value cannot be empty")
+    return false
+  end
+  local current = st.current or (#entries + 1)
+  for i = #entries,1,-1 do
+    if entries[i].name == name and i ~= current then
+      table.remove(entries, i)
+      if i < current then current = current - 1 end
+    end
+  end
+  entries[current] = { name=name, value=value }
+  st.current = current
+  st.updating = true
+  d:set("items", visual_entry_names(entries))
+  d:set("items", st.current)
+  st.updating = false
+  return true
+end
+
+local function visual_apply_to_sheet(d, dd, st, sheet)
+  if not visual_apply_current(d, dd, st) then return nil end
+  local nsheet = sheet:clone()
+  for ci,c in ipairs(visual_style_categories) do
+    for _,name in ipairs(nsheet:allNames(c.kind)) do
+      nsheet:remove(c.kind, name)
+    end
+    for _,entry in ipairs(st.data[ci]) do
+      local ok, msg = pcall(function ()
+        nsheet:setAttribute(c.kind, entry.name, entry.value)
+      end)
+      if not ok then
+        dd.model:warning("Cannot update stylesheet",
+                         string.format("%s '%s': %s", c.label, entry.name, msg))
+        return nil
+      end
+    end
+  end
+  local parsed, msg = ipe.Sheet(nil, nsheet:xml(true))
+  if not parsed then
+    dd.model:warning("Cannot update stylesheet", msg)
+    return nil
+  end
+  return nsheet
+end
+
+local function sheets_visual_edit(d0, dd)
+  local i = d0:get("list")
+  if not i or dd.list[i]:isStandard() then return end
+
+  local cats = visual_category_labels()
+  local st = { cat=1, current=1, data=visual_load_sheet(dd.list[i]) }
+  cats.action = function (d)
+    if st.updating then return end
+    if not visual_apply_current(d, dd, st) then return end
+    st.cat = d:get("category")
+    st.current = 1
+    visual_set_fields(d, st)
+  end
+  local first_names = visual_entry_names(st.data[1])
+  first_names.action = function (d)
+    if st.updating then return end
+    st.current = d:get("items")
+    visual_set_fields(d, st)
+  end
+
+  local d = ipeui.Dialog(dd.model.ui:win(), "Visual stylesheet editor")
+  d:add("category_label", "label", { label="Category" }, 1, 1)
+  d:add("category", "combo", cats, 1, 2, 1, 3)
+  d:add("items", "list", first_names, 2, 1, 7, 2)
+  d:add("name_label", "label", { label="Name" }, 2, 3)
+  d:add("name", "input", { select_all=true }, 2, 4)
+  d:add("value_label", "label", { label="Value" }, 3, 3)
+  d:add("value", "input", {}, 3, 4)
+  d:add("color", "input", { color_picker=true }, 4, 4)
+  d:add("help", "label", { label="" }, 5, 3, 1, 2)
+  d:add("apply", "button", { label="Apply",
+    action=function (d) visual_apply_current(d, dd, st) end }, 6, 3)
+  d:add("add", "button", { label="Add",
+    action=function (d)
+      local c = visual_style_categories[st.cat]
+      local entries = st.data[st.cat]
+      entries[#entries + 1] = {
+        name=visual_unique_name(entries, "new"),
+        value=c.color and visual_hex_to_rgb(c.default) or c.default,
+      }
+      st.current = #entries
+      visual_set_fields(d, st)
+    end }, 6, 4)
+  d:add("delete", "button", { label="Delete",
+    action=function (d)
+      local entries = st.data[st.cat]
+      if st.current and entries[st.current] then
+        table.remove(entries, st.current)
+        st.current = math.min(st.current, #entries)
+        visual_set_fields(d, st)
+      end
+    end }, 7, 3)
+  d:addButton("ok", "&Ok", "accept")
+  d:addButton("cancel", "&Cancel", "reject")
+  d:setStretch("row", 2, 1)
+  d:setStretch("column", 2, 1)
+  d:setStretch("column", 4, 2)
+  visual_set_fields(d, st)
+
+  if not d:execute({ 640, 420 }) then return end
+  local nsheet = visual_apply_to_sheet(d, dd, st, dd.list[i])
+  if not nsheet then return end
+  dd.list[i] = nsheet
+  d0:set("list", sheets_namelist(dd.list))
+  d0:set("list", i)
+  dd.modified = true
+end
+
 local function sheets_edit(d, dd)
   if not prefs.external_editor then
     dd.model:warning("Cannot edit stylesheet",
@@ -2784,6 +3014,8 @@ function MODEL:action_style_sheets()
   d:add("save", "button",
 	{ label="&Save", action=function (d) sheets_save(d, dd) end }, 7, 4)
   end
+  d:add("visual", "button",
+	{ label="Visual Edit", action=function (d) sheets_visual_edit(d, dd) end }, 8, 4)
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("column", 2, 1)
