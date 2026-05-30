@@ -29,6 +29,11 @@
 */
 
 #include "ipeui_common.h"
+
+#include <algorithm>
+#include <cmath>
+#include <sstream>
+
 using String = std::string;
 
 // --------------------------------------------------------------------
@@ -64,6 +69,186 @@ PDialog::~PDialog() {
     //
 }
 
+static double previewNumber(const std::string & value, double fallback) {
+    std::istringstream stream(value);
+    double v;
+    if (stream >> v) return v;
+    return fallback;
+}
+
+static double previewNamedSize(const std::string & value, double fallback) {
+    if (value == "\\tiny") return 8.0;
+    if (value == "\\scriptsize") return 9.0;
+    if (value == "\\footnotesize") return 10.0;
+    if (value == "\\small") return 12.0;
+    if (value == "\\normalsize") return 14.0;
+    if (value == "\\large") return 18.0;
+    if (value == "\\Large") return 22.0;
+    if (value == "\\LARGE") return 26.0;
+    if (value == "\\huge") return 30.0;
+    if (value == "\\Huge") return 36.0;
+    return previewNumber(value, fallback);
+}
+
+static void previewColor(const std::string & value, double & r, double & g, double & b) {
+    if (value.size() == 7 && value[0] == '#') {
+        unsigned int rr = 0, gg = 0, bb = 0;
+        sscanf(value.c_str() + 1, "%2x%2x%2x", &rr, &gg, &bb);
+        r = rr / 255.0;
+        g = gg / 255.0;
+        b = bb / 255.0;
+        return;
+    }
+    std::istringstream stream(value);
+    r = g = b = 0.0;
+    if (stream >> r) {
+        if (!(stream >> g)) g = r;
+        if (!(stream >> b)) b = r;
+    }
+    r = std::clamp(r, 0.0, 1.0);
+    g = std::clamp(g, 0.0, 1.0);
+    b = std::clamp(b, 0.0, 1.0);
+}
+
+static std::vector<double> previewDashPattern(const std::string & value) {
+    std::vector<double> dashes;
+    size_t left = value.find('[');
+    size_t right = value.find(']', left + 1);
+    if (left == std::string::npos || right == std::string::npos) return dashes;
+    std::istringstream stream(value.substr(left + 1, right - left - 1));
+    double v;
+    while (stream >> v) dashes.push_back(std::max(0.5, v));
+    return dashes;
+}
+
+static void drawImagePreview(cairo_t * cr, int width, int height, const std::string & spec) {
+    size_t sep = spec.find('|');
+    std::string kind = sep == std::string::npos ? spec : spec.substr(0, sep);
+    std::string value = sep == std::string::npos ? std::string() : spec.substr(sep + 1);
+
+    cairo_set_source_rgb(cr, 1.0, 1.0, 0.86);
+    cairo_rectangle(cr, 0.5, 0.5, width - 1.0, height - 1.0);
+    cairo_fill_preserve(cr);
+    cairo_set_source_rgb(cr, 0.62, 0.62, 0.50);
+    cairo_set_line_width(cr, 1.0);
+    cairo_stroke(cr);
+
+    double left = 18.0, top = 16.0, right = width - 18.0, bottom = height - 16.0;
+    double cx = 0.5 * (left + right);
+    double cy = 0.5 * (top + bottom);
+    cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+    cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
+
+    if (kind == "color") {
+        double r, g, b;
+        previewColor(value, r, g, b);
+        cairo_set_source_rgb(cr, r, g, b);
+        cairo_rectangle(cr, left + 8.0, top + 8.0, right - left - 16.0, bottom - top - 36.0);
+        cairo_fill_preserve(cr);
+        cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+        cairo_stroke(cr);
+        cairo_select_font_face(cr, "sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+        cairo_set_font_size(cr, 12.0);
+        cairo_text_extents_t ext;
+        cairo_text_extents(cr, value.c_str(), &ext);
+        cairo_move_to(cr, cx - ext.width / 2.0 - ext.x_bearing, bottom - 5.0);
+        cairo_show_text(cr, value.c_str());
+    } else if (kind == "pen" || kind == "dashstyle") {
+        cairo_set_source_rgb(cr, 0.08, 0.16, 0.63);
+        cairo_set_line_width(cr, kind == "pen" ? std::clamp(previewNumber(value, 1.0), 0.5, 24.0) : 4.0);
+        std::vector<double> dashes = previewDashPattern(value);
+        if (kind == "dashstyle" && !dashes.empty()) cairo_set_dash(cr, dashes.data(), dashes.size(), 0.0);
+        cairo_move_to(cr, left, cy);
+        cairo_line_to(cr, right, cy);
+        cairo_stroke(cr);
+        cairo_set_dash(cr, nullptr, 0, 0.0);
+    } else if (kind == "textsize") {
+        double size = std::clamp(previewNamedSize(value, 18.0), 8.0, 48.0);
+        cairo_select_font_face(cr, "sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+        cairo_set_font_size(cr, size);
+        cairo_set_source_rgb(cr, 0.12, 0.12, 0.12);
+        cairo_text_extents_t ext;
+        cairo_text_extents(cr, "Sample", &ext);
+        cairo_move_to(cr, cx - ext.width / 2.0 - ext.x_bearing, cy - ext.height / 2.0 - ext.y_bearing);
+        cairo_show_text(cr, "Sample");
+    } else if (kind == "symbolsize") {
+        double s = std::clamp(previewNumber(value, 3.0) * 3.0, 6.0, 42.0);
+        double xs[] = {left + (right - left) * 0.25, cx, left + (right - left) * 0.75};
+        cairo_set_line_width(cr, 2.0);
+        cairo_set_source_rgb(cr, 0.90, 0.31, 0.27);
+        for (double x : xs) {
+            cairo_arc(cr, x, cy, s / 2.0, 0.0, 2.0 * 3.14159265358979323846);
+            cairo_fill_preserve(cr);
+            cairo_set_source_rgb(cr, 0.08, 0.16, 0.63);
+            cairo_stroke(cr);
+            cairo_set_source_rgb(cr, 0.90, 0.31, 0.27);
+        }
+    } else if (kind == "arrowsize") {
+        double s = std::clamp(previewNumber(value, 7.0) * 2.0, 8.0, 50.0);
+        cairo_set_source_rgb(cr, 0.08, 0.16, 0.63);
+        cairo_set_line_width(cr, 4.0);
+        cairo_move_to(cr, left, cy);
+        cairo_line_to(cr, right - s, cy);
+        cairo_stroke(cr);
+        cairo_move_to(cr, right, cy);
+        cairo_line_to(cr, right - s, cy - 0.45 * s);
+        cairo_line_to(cr, right - s, cy + 0.45 * s);
+        cairo_close_path(cr);
+        cairo_fill(cr);
+    } else if (kind == "opacity") {
+        double op = std::clamp(previewNumber(value, 1.0), 0.0, 1.0);
+        cairo_set_source_rgb(cr, 0.31, 0.47, 0.90);
+        cairo_rectangle(cr, left + 12.0, top + 10.0, (right - left) * 0.45, bottom - top - 20.0);
+        cairo_fill(cr);
+        cairo_set_source_rgba(cr, 0.90, 0.27, 0.20, op);
+        cairo_rectangle(cr, cx - 12.0, top + 10.0, (right - left) * 0.45, bottom - top - 20.0);
+        cairo_fill(cr);
+    } else if (kind == "gridsize") {
+        double step = std::clamp(previewNumber(value, 8.0) / 2.0, 6.0, 24.0);
+        cairo_set_source_rgb(cr, 0.67, 0.67, 0.67);
+        cairo_set_line_width(cr, 1.0);
+        for (double x = left; x <= right; x += step) {
+            cairo_move_to(cr, x, top);
+            cairo_line_to(cr, x, bottom);
+        }
+        for (double y = top; y <= bottom; y += step) {
+            cairo_move_to(cr, left, y);
+            cairo_line_to(cr, right, y);
+        }
+        cairo_stroke(cr);
+        cairo_set_source_rgb(cr, 0.08, 0.16, 0.63);
+        cairo_set_line_width(cr, 3.0);
+        cairo_move_to(cr, left, bottom);
+        cairo_line_to(cr, right, top);
+        cairo_stroke(cr);
+    } else if (kind == "anglesize") {
+        double radians = previewNumber(value, 45.0) * 3.14159265358979323846 / 180.0;
+        double ox = left + 0.25 * (right - left);
+        double oy = bottom - 12.0;
+        double len = std::min((right - left) * 0.65, (bottom - top) * 0.9);
+        cairo_set_source_rgb(cr, 0.27, 0.27, 0.27);
+        cairo_set_line_width(cr, 2.0);
+        cairo_move_to(cr, ox, oy);
+        cairo_line_to(cr, right, oy);
+        cairo_stroke(cr);
+        cairo_set_source_rgb(cr, 0.08, 0.16, 0.63);
+        cairo_set_line_width(cr, 4.0);
+        cairo_move_to(cr, ox, oy);
+        cairo_line_to(cr, ox + len * std::cos(radians), oy - len * std::sin(radians));
+        cairo_stroke(cr);
+    }
+}
+
+static gboolean imageExpose(GtkWidget * widget, GdkEventExpose *, gpointer) {
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    const char * spec = (const char *)g_object_get_data(G_OBJECT(widget), "ipe-dialog-image-spec");
+    cairo_t * cr = gdk_cairo_create(gtk_widget_get_window(widget));
+    drawImagePreview(cr, allocation.width, allocation.height, spec ? spec : "");
+    cairo_destroy(cr);
+    return FALSE;
+}
+
 void PDialog::acceptDialog(lua_State * L) {
     int accept = lua_toboolean(L, 2);
     (void)accept; // TODO
@@ -90,6 +275,11 @@ void PDialog::setMapped(lua_State * L, int idx) {
 				 m.text.c_str(), -1);
 	break;
     case EInput: gtk_entry_set_text(GTK_ENTRY(w), m.text.c_str()); break;
+    case EImage:
+        g_object_set_data_full(G_OBJECT(w), "ipe-dialog-image-spec",
+                               g_strdup(m.text.c_str()), g_free);
+        gtk_widget_queue_draw(w);
+        break;
     case EList:
 	if (lua_istable(L, 3)) {
 	    GtkTreeModel * mod = gtk_tree_view_get_model(GTK_TREE_VIEW(w));
@@ -271,6 +461,15 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		w = gtk_entry_new();
 		gtk_entry_set_activates_default(GTK_ENTRY(w), TRUE);
 		xOptions |= GTK_FILL;
+		break;
+	    case EImage:
+		w = gtk_drawing_area_new();
+		gtk_widget_set_size_request(w, m.minWidth, m.minHeight);
+		g_object_set_data_full(G_OBJECT(w), "ipe-dialog-image-spec",
+				       g_strdup(m.text.c_str()), g_free);
+		g_signal_connect(w, "expose-event", G_CALLBACK(imageExpose), nullptr);
+		xOptions |= GTK_FILL;
+		yOptions |= GTK_FILL;
 		break;
 	    case ETextEdit:
 		w = gtk_text_view_new();

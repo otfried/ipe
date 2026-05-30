@@ -35,6 +35,11 @@
 
 #include "ipeuilayout_cocoa.h"
 
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <sstream>
+
 #define COLORICONSIZE 12
 
 inline const char * N2C(NSString * aStr) { return aStr.UTF8String; }
@@ -218,6 +223,239 @@ private:
 
 // --------------------------------------------------------------------
 
+static double previewNumber(const std::string & value, double fallback) {
+    std::istringstream stream(value);
+    double v;
+    if (stream >> v) return v;
+    return fallback;
+}
+
+static double previewNamedSize(const std::string & value, double fallback) {
+    if (value == "\\tiny") return 8.0;
+    if (value == "\\scriptsize") return 9.0;
+    if (value == "\\footnotesize") return 10.0;
+    if (value == "\\small") return 12.0;
+    if (value == "\\normalsize") return 14.0;
+    if (value == "\\large") return 18.0;
+    if (value == "\\Large") return 22.0;
+    if (value == "\\LARGE") return 26.0;
+    if (value == "\\huge") return 30.0;
+    if (value == "\\Huge") return 36.0;
+    return previewNumber(value, fallback);
+}
+
+static NSColor * previewColor(const std::string & value, double alpha = 1.0) {
+    if (value.size() == 7 && value[0] == '#') {
+	unsigned int r = 0, g = 0, b = 0;
+	sscanf(value.c_str() + 1, "%2x%2x%2x", &r, &g, &b);
+	return [NSColor colorWithCalibratedRed:r / 255.0
+					   green:g / 255.0
+					    blue:b / 255.0
+					   alpha:alpha];
+    }
+    std::istringstream stream(value);
+    double r = 0.0, g = 0.0, b = 0.0;
+    if (stream >> r) {
+	if (!(stream >> g)) g = r;
+	if (!(stream >> b)) b = r;
+    }
+    return [NSColor colorWithCalibratedRed:std::clamp(r, 0.0, 1.0)
+				     green:std::clamp(g, 0.0, 1.0)
+				      blue:std::clamp(b, 0.0, 1.0)
+				     alpha:alpha];
+}
+
+static std::vector<CGFloat> previewDashPattern(const std::string & value) {
+    std::vector<CGFloat> dashes;
+    size_t left = value.find('[');
+    size_t right = value.find(']', left + 1);
+    if (left == std::string::npos || right == std::string::npos) return dashes;
+    std::istringstream stream(value.substr(left + 1, right - left - 1));
+    double v;
+    while (stream >> v) dashes.push_back(std::max(0.5, v));
+    return dashes;
+}
+
+@interface IpeDialogImage : NSView
+
+- (instancetype)initWithWidth:(int)width height:(int)height spec:(const std::string &)spec;
+- (void)setSpec:(const std::string &)spec;
+
+@end
+
+@implementation IpeDialogImage {
+    std::string iSpec;
+    int iWidth;
+    int iHeight;
+}
+
+- (instancetype)initWithWidth:(int)width height:(int)height spec:(const std::string &)spec {
+    self = [super initWithFrame:NSMakeRect(0., 0., width, height)];
+    if (self) {
+	iWidth = width;
+	iHeight = height;
+	iSpec = spec;
+    }
+    return self;
+}
+
+- (BOOL)isFlipped { return YES; }
+
+- (NSSize)intrinsicContentSize { return NSMakeSize(iWidth, iHeight); }
+
+- (void)setSpec:(const std::string &)spec {
+    iSpec = spec;
+    [self setNeedsDisplay:YES];
+}
+
+- (void)drawRect:(NSRect)dirtyRect {
+    (void)dirtyRect;
+    NSRect bounds = [self bounds];
+    [[NSColor colorWithCalibratedRed:1.0 green:1.0 blue:0.86 alpha:1.0] setFill];
+    NSRectFill(bounds);
+    [[NSColor colorWithCalibratedRed:0.62 green:0.62 blue:0.50 alpha:1.0] setStroke];
+    NSFrameRect(bounds);
+
+    size_t sep = iSpec.find('|');
+    std::string kind = sep == std::string::npos ? iSpec : iSpec.substr(0, sep);
+    std::string value = sep == std::string::npos ? std::string() : iSpec.substr(sep + 1);
+    NSRect body = NSInsetRect(bounds, 18., 16.);
+
+    if (kind == "color") {
+	NSRect swatch = NSInsetRect(body, 8., 8.);
+	swatch.size.height -= 28.;
+	[previewColor(value) setFill];
+	NSRectFill(swatch);
+	[[NSColor blackColor] setStroke];
+	NSFrameRect(swatch);
+	NSDictionary * attrs = @{NSFontAttributeName : [NSFont systemFontOfSize:12.]};
+	[S2N(value) drawInRect:NSMakeRect(body.origin.x, NSMaxY(body) - 20.,
+					 body.size.width, 18.)
+		      withAttributes:attrs];
+    } else if (kind == "pen" || kind == "dashstyle") {
+	NSBezierPath * path = [NSBezierPath bezierPath];
+	[path moveToPoint:NSMakePoint(NSMinX(body), NSMidY(body))];
+	[path lineToPoint:NSMakePoint(NSMaxX(body), NSMidY(body))];
+	[path setLineWidth:(kind == "pen")
+				 ? std::clamp(previewNumber(value, 1.0), 0.5, 24.0)
+				 : 4.0];
+	if (kind == "dashstyle") {
+	    std::vector<CGFloat> dashes = previewDashPattern(value);
+	    if (!dashes.empty())
+		[path setLineDash:dashes.data() count:(NSInteger)dashes.size() phase:0.0];
+	}
+	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
+	[path stroke];
+    } else if (kind == "textsize") {
+	double size = std::clamp(previewNamedSize(value, 18.0), 8.0, 48.0);
+	NSDictionary * attrs = @{
+	    NSFontAttributeName : [NSFont systemFontOfSize:size],
+	    NSForegroundColorAttributeName : [NSColor textColor]
+	};
+	[@"Sample" drawInRect:body withAttributes:attrs];
+    } else if (kind == "symbolsize") {
+	double s = std::clamp(previewNumber(value, 3.0) * 3.0, 6.0, 42.0);
+	NSArray * centers = @[
+	    [NSValue valueWithPoint:NSMakePoint(NSMinX(body) + body.size.width * 0.25,
+						 NSMidY(body))],
+	    [NSValue valueWithPoint:NSMakePoint(NSMidX(body), NSMidY(body))],
+	    [NSValue valueWithPoint:NSMakePoint(NSMinX(body) + body.size.width * 0.75,
+						 NSMidY(body))]
+	];
+	[[NSColor colorWithCalibratedRed:0.90 green:0.31 blue:0.27 alpha:1.0] setFill];
+	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
+	NSPoint c = [(NSValue *)[centers objectAtIndex:0] pointValue];
+	[[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(c.x - s / 2., c.y - s / 2., s, s)] fill];
+	[[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(c.x - s / 2., c.y - s / 2., s, s)] stroke];
+	c = [(NSValue *)[centers objectAtIndex:1] pointValue];
+	[[NSBezierPath bezierPathWithRect:NSMakeRect(c.x - s / 2., c.y - s / 2., s, s)] fill];
+	[[NSBezierPath bezierPathWithRect:NSMakeRect(c.x - s / 2., c.y - s / 2., s, s)] stroke];
+	c = [(NSValue *)[centers objectAtIndex:2] pointValue];
+	NSBezierPath * diamond = [NSBezierPath bezierPath];
+	[diamond moveToPoint:NSMakePoint(c.x, c.y - s / 2.)];
+	[diamond lineToPoint:NSMakePoint(c.x + s / 2., c.y)];
+	[diamond lineToPoint:NSMakePoint(c.x, c.y + s / 2.)];
+	[diamond lineToPoint:NSMakePoint(c.x - s / 2., c.y)];
+	[diamond closePath];
+	[diamond fill];
+	[diamond stroke];
+    } else if (kind == "arrowsize") {
+	double s = std::clamp(previewNumber(value, 7.0) * 2.0, 8.0, 50.0);
+	NSPoint a = NSMakePoint(NSMinX(body), NSMidY(body));
+	NSPoint b = NSMakePoint(NSMaxX(body) - s, NSMidY(body));
+	NSBezierPath * line = [NSBezierPath bezierPath];
+	[line moveToPoint:a];
+	[line lineToPoint:b];
+	[line setLineWidth:4.0];
+	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
+	[line stroke];
+	NSBezierPath * arrow = [NSBezierPath bezierPath];
+	[arrow moveToPoint:NSMakePoint(b.x + s, b.y)];
+	[arrow lineToPoint:NSMakePoint(b.x, b.y - 0.45 * s)];
+	[arrow lineToPoint:NSMakePoint(b.x, b.y + 0.45 * s)];
+	[arrow closePath];
+	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setFill];
+	[arrow fill];
+    } else if (kind == "opacity") {
+	double op = std::clamp(previewNumber(value, 1.0), 0.0, 1.0);
+	NSRect left = NSMakeRect(NSMinX(body) + 12., NSMinY(body) + 10.,
+				 body.size.width * 0.45, body.size.height - 20.);
+	NSRect right = NSMakeRect(NSMidX(body) - 12., NSMinY(body) + 10.,
+				  body.size.width * 0.45, body.size.height - 20.);
+	[[NSColor colorWithCalibratedRed:0.31 green:0.47 blue:0.90 alpha:1.0] setFill];
+	NSRectFill(left);
+	[[NSColor colorWithCalibratedRed:0.90 green:0.27 blue:0.20 alpha:op] setFill];
+	NSRectFillUsingOperation(right, NSCompositingOperationSourceOver);
+	[[NSColor blackColor] setStroke];
+	NSFrameRect(left);
+	NSFrameRect(right);
+    } else if (kind == "gridsize") {
+	double n = std::clamp(previewNumber(value, 8.0), 2.0, 64.0);
+	double step = std::clamp(n / 2.0, 6.0, 24.0);
+	[[NSColor colorWithCalibratedWhite:0.65 alpha:1.0] setStroke];
+	for (double x = NSMinX(body); x <= NSMaxX(body); x += step) {
+	    NSBezierPath * p = [NSBezierPath bezierPath];
+	    [p moveToPoint:NSMakePoint(x, NSMinY(body))];
+	    [p lineToPoint:NSMakePoint(x, NSMaxY(body))];
+	    [p stroke];
+	}
+	for (double y = NSMinY(body); y <= NSMaxY(body); y += step) {
+	    NSBezierPath * p = [NSBezierPath bezierPath];
+	    [p moveToPoint:NSMakePoint(NSMinX(body), y)];
+	    [p lineToPoint:NSMakePoint(NSMaxX(body), y)];
+	    [p stroke];
+	}
+	NSBezierPath * diag = [NSBezierPath bezierPath];
+	[diag moveToPoint:NSMakePoint(NSMinX(body), NSMaxY(body))];
+	[diag lineToPoint:NSMakePoint(NSMaxX(body), NSMinY(body))];
+	[diag setLineWidth:3.0];
+	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
+	[diag stroke];
+    } else if (kind == "anglesize") {
+	double degrees = previewNumber(value, 45.0);
+	double radians = degrees * 3.14159265358979323846 / 180.0;
+	NSPoint o = NSMakePoint(NSMinX(body) + 0.25 * body.size.width, NSMaxY(body) - 12.);
+	double len = std::min(body.size.width * 0.65, body.size.height * 0.9);
+	NSPoint p = NSMakePoint(o.x + len * std::cos(radians), o.y - len * std::sin(radians));
+	NSBezierPath * base = [NSBezierPath bezierPath];
+	[base moveToPoint:o];
+	[base lineToPoint:NSMakePoint(NSMaxX(body), o.y)];
+	[base setLineWidth:2.0];
+	[[NSColor darkGrayColor] setStroke];
+	[base stroke];
+	NSBezierPath * ray = [NSBezierPath bezierPath];
+	[ray moveToPoint:o];
+	[ray lineToPoint:p];
+	[ray setLineWidth:4.0];
+	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
+	[ray stroke];
+    }
+}
+
+@end
+
+// --------------------------------------------------------------------
+
 PDialog::PDialog(lua_State * L0, WINID parent, const char * caption,
 		 const char * language)
     : Dialog(L0, parent, caption, language) {
@@ -257,6 +495,7 @@ void PDialog::setMapped(lua_State * L, int idx) {
     case ELabel:
     case EInput: [((NSTextField *)ctrl) setStringValue:S2N(m.text)]; break;
     case ETextEdit: setTextView((NSTextView *)ctrl, m.text); break;
+    case EImage: [(IpeDialogImage *)ctrl setSpec:m.text]; break;
     case ECheckBox: [((NSButton *)ctrl) setState:m.value]; break;
     case EList:
 	// listbox gets items directly from items array
@@ -289,7 +528,8 @@ void PDialog::retrieveValues() {
 }
 
 void PDialog::enableItem(int idx, bool value) {
-    if (iElements[idx].type != ETextEdit) [((NSControl *)iViews[idx]) setEnabled:value];
+    if (iElements[idx].type != ETextEdit && iElements[idx].type != EImage)
+	[((NSControl *)iViews[idx]) setEnabled:value];
 }
 
 void PDialog::fillComboBox(NSPopUpButton * cb, int idx) {
@@ -386,6 +626,10 @@ void PDialog::layoutControls() {
 	layout(w, cols[m.col], "l=l");
 	layout(w, cols[m.col + m.colspan - 1], "r=r");
 	if (m.type == EInput || m.type == ETextEdit) layout(w, nil, "w>0", 100);
+	if (m.type == EImage) {
+	    layout(w, nil, "w>0", m.minWidth);
+	    layout(w, nil, "h>0", m.minHeight);
+	}
 	// does it have stretch?
 	BOOL rowStretch = NO;
 	for (int r = m.row; r < m.row + m.rowspan; ++r)
@@ -479,6 +723,11 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		[t setStringValue:S2N(m.text)];
 		if (m.flags & ESelectAll) [t selectText:content];
 		ctrl = t;
+	    } break;
+	    case EImage: {
+		view = [[IpeDialogImage alloc] initWithWidth:m.minWidth
+						      height:m.minHeight
+							spec:m.text];
 	    } break;
 	    case ETextEdit: {
 		scroll = [[NSScrollView alloc] initWithFrame:NSZeroRect];

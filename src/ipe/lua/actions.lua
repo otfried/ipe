@@ -2724,6 +2724,14 @@ local function visual_hex_to_rgb(value)
   return value
 end
 
+local function visual_preview_spec(c, value)
+  return c.kind .. "|" .. (value or "")
+end
+
+local function visual_set_preview(d, c, value)
+  d:set("preview", visual_preview_spec(c, value))
+end
+
 local function visual_load_sheet(sheet)
   local data = {}
   for ci,c in ipairs(visual_style_categories) do
@@ -2746,6 +2754,7 @@ local function visual_set_fields(d, st)
     d:set("name", "")
     d:set("value", "")
     d:set("color", c.default or "#000000")
+    visual_set_preview(d, c, c.color and visual_hex_to_rgb(c.default or "#000000") or c.default)
   else
     st.current = math.max(1, math.min(st.current or 1, #entries))
     d:set("items", st.current)
@@ -2757,6 +2766,7 @@ local function visual_set_fields(d, st)
       d:set("value", entries[st.current].value)
       d:set("color", "")
     end
+    visual_set_preview(d, c, entries[st.current].value)
   end
   d:set("value_label", c.color and "Color" or "Value")
   d:set("help", c.help)
@@ -2791,6 +2801,7 @@ local function visual_apply_current(d, dd, st)
   st.updating = true
   d:set("items", visual_entry_names(entries))
   d:set("items", st.current)
+  visual_set_preview(d, c, value)
   st.updating = false
   return true
 end
@@ -2851,8 +2862,10 @@ local function sheets_visual_edit(d0, dd)
   d:add("value", "input", {}, 3, 4)
   d:add("color", "input", { color_picker=true }, 4, 4)
   d:add("help", "label", { label="" }, 5, 3, 1, 2)
-  d:add("apply", "button", { label="Apply",
-    action=function (d) visual_apply_current(d, dd, st) end }, 6, 3)
+  d:add("preview_label", "label", { label="Preview" }, 6, 3)
+  d:add("preview", "image", { width=300, height=130 }, 7, 3, 2, 2)
+  d:add("apply", "button", { label="Apply / Preview",
+    action=function (d) visual_apply_current(d, dd, st) end }, 9, 3)
   d:add("add", "button", { label="Add",
     action=function (d)
       local c = visual_style_categories[st.cat]
@@ -2863,7 +2876,7 @@ local function sheets_visual_edit(d0, dd)
       }
       st.current = #entries
       visual_set_fields(d, st)
-    end }, 6, 4)
+    end }, 9, 4)
   d:add("delete", "button", { label="Delete",
     action=function (d)
       local entries = st.data[st.cat]
@@ -2872,7 +2885,7 @@ local function sheets_visual_edit(d0, dd)
         st.current = math.min(st.current, #entries)
         visual_set_fields(d, st)
       end
-    end }, 7, 3)
+    end }, 10, 3)
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("row", 2, 1)
@@ -2880,7 +2893,7 @@ local function sheets_visual_edit(d0, dd)
   d:setStretch("column", 4, 2)
   visual_set_fields(d, st)
 
-  if not d:execute({ 640, 420 }) then return end
+  if not d:execute({ 680, 520 }) then return end
   local nsheet = visual_apply_to_sheet(d, dd, st, dd.list[i])
   if not nsheet then return end
   dd.list[i] = nsheet

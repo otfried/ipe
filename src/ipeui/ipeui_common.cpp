@@ -117,8 +117,9 @@ int Dialog::addButton(lua_State * L) {
 }
 
 int Dialog::add(lua_State * L) {
-    static const char * const typenames[] = {"button", "text",     "list",  "label",
-					     "combo",  "checkbox", "input", nullptr};
+    static const char * const typenames[] = {"button", "text",     "list",
+					     "label",  "combo",    "checkbox",
+					     "input",  "image",    nullptr};
 
     SElement m;
     m.name = checkstring(L, 2);
@@ -144,6 +145,7 @@ int Dialog::add(lua_State * L) {
     case ECombo: addCombo(L, m); break;
     case ECheckBox: addCheckbox(L, m); break;
     case EInput: addInput(L, m); break;
+    case EImage: addImage(L, m); break;
     default: break;
     }
     iElements.push_back(m);
@@ -221,6 +223,18 @@ void Dialog::addInput(lua_State * L, SElement & m) {
     lua_getfield(L, 4, "color_picker");
     if (lua_toboolean(L, -1)) m.flags |= EColorPicker;
     lua_pop(L, 3);
+}
+
+void Dialog::addImage(lua_State * L, SElement & m) {
+    m.minWidth = 180;
+    m.minHeight = 80;
+    lua_getfield(L, 4, "value");
+    if (lua_isstring(L, -1)) m.text = tostring(L, -1);
+    lua_getfield(L, 4, "width");
+    if (lua_isnumber(L, -1)) m.minWidth = luaL_checkinteger(L, -1);
+    lua_getfield(L, 4, "height");
+    if (lua_isnumber(L, -1)) m.minHeight = luaL_checkinteger(L, -1);
+    lua_pop(L, 3); // height, width, value
 }
 
 void Dialog::addTextEdit(lua_State * L, SElement & m) {
@@ -313,7 +327,8 @@ void Dialog::setUnmapped(lua_State * L, int idx) {
     switch (m.type) {
     case ELabel:
     case ETextEdit:
-    case EInput: m.text = checkstring(L, 3); break;
+    case EInput:
+    case EImage: m.text = checkstring(L, 3); break;
     case EList:
     case ECombo:
 	if (lua_isnumber(L, 3)) {
