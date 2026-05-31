@@ -58,7 +58,6 @@
 #include <QTimer>
 #include <iostream>
 #include <algorithm>
-#include <cmath>
 #include <sstream>
 
 #ifdef IPE_SPELLCHECK
@@ -150,29 +149,6 @@ static double previewNumber(const QString & value, double fallback) {
     return fallback;
 }
 
-static QColor previewColor(const QString & value) {
-    if (value.startsWith(QLatin1Char('#'))) return QColor(value);
-    std::istringstream stream(value.toStdString());
-    double r = 0.0, g = 0.0, b = 0.0;
-    if (stream >> r) {
-	if (!(stream >> g)) g = r;
-	if (!(stream >> b)) b = r;
-    }
-    return QColor::fromRgbF(std::clamp(r, 0.0, 1.0), std::clamp(g, 0.0, 1.0),
-			    std::clamp(b, 0.0, 1.0));
-}
-
-static QVector<qreal> previewDashPattern(const QString & value) {
-    QVector<qreal> dashes;
-    int left = value.indexOf(QLatin1Char('['));
-    int right = value.indexOf(QLatin1Char(']'), left + 1);
-    if (left < 0 || right < 0) return dashes;
-    std::istringstream stream(value.mid(left + 1, right - left - 1).toStdString());
-    double v;
-    while (stream >> v) dashes.push_back(std::max(0.1, v / 4.0));
-    return dashes;
-}
-
 class DialogImage : public QWidget {
 public:
     DialogImage(int width, int height, QWidget * parent = nullptr)
@@ -219,87 +195,14 @@ void DialogImage::paintEvent(QPaintEvent *) {
                                   body.center().y() - scaled.height() / 2.0),
                           scaled);
             painter.drawImage(target, image);
+            return;
         }
-    } else if (kind == QLatin1String("color")) {
-	QColor c = previewColor(value);
-	painter.fillRect(body.adjusted(8, 8, -8, -28), c);
-	painter.setPen(Qt::black);
-	painter.drawRect(body.adjusted(8, 8, -8, -28));
-	painter.drawText(body.adjusted(8, body.height() - 18, -8, 0),
-			 Qt::AlignCenter, value);
-    } else if (kind == QLatin1String("pen") || kind == QLatin1String("dashstyle")) {
-	QPen pen(QColor(20, 40, 160),
-		 std::max(0.1, previewNumber(value, 1.0) * zoom), Qt::SolidLine,
-		 Qt::RoundCap, Qt::RoundJoin);
-	if (kind == QLatin1String("dashstyle")) {
-	    pen.setWidthF(std::max(0.1, 4.0 * zoom));
-	    QVector<qreal> dashes = previewDashPattern(value);
-	    if (!dashes.isEmpty()) pen.setDashPattern(dashes);
-	}
-	painter.setPen(pen);
-	double y = body.center().y();
-	painter.drawLine(QPointF(body.left(), y), QPointF(body.right(), y));
-    } else if (kind == QLatin1String("textsize")) {
-	QFont font = painter.font();
-	font.setPointSizeF(std::max(1.0, 9.0 * zoom));
-	painter.setFont(font);
-	painter.setPen(QColor(30, 30, 30));
-	painter.drawText(body, Qt::AlignCenter, QStringLiteral("Sample"));
-    } else if (kind == QLatin1String("symbolsize")) {
-	double s = std::max(1.0, previewNumber(value, 3.0) * 3.0 * zoom);
-	painter.setPen(QPen(QColor(20, 40, 160), 2));
-	painter.setBrush(QColor(230, 80, 70));
-	QPointF c1(body.left() + body.width() * 0.25, body.center().y());
-	QPointF c2(body.center().x(), body.center().y());
-	QPointF c3(body.left() + body.width() * 0.75, body.center().y());
-	painter.drawEllipse(c1, s / 2, s / 2);
-	painter.drawRect(QRectF(c2.x() - s / 2, c2.y() - s / 2, s, s));
-	QPolygonF diamond;
-	diamond << QPointF(c3.x(), c3.y() - s / 2) << QPointF(c3.x() + s / 2, c3.y())
-		<< QPointF(c3.x(), c3.y() + s / 2) << QPointF(c3.x() - s / 2, c3.y());
-	painter.drawPolygon(diamond);
-    } else if (kind == QLatin1String("arrowsize")) {
-	double s = std::max(1.0, previewNumber(value, 7.0) * 2.0 * zoom);
-	QPointF a(body.left(), body.center().y());
-	QPointF b(body.right() - s, body.center().y());
-	painter.setPen(QPen(QColor(20, 40, 160), std::max(0.1, 4.0 * zoom),
-				  Qt::SolidLine, Qt::RoundCap));
-	painter.drawLine(a, b);
-	QPolygonF arrow;
-	arrow << QPointF(b.x() + s, b.y()) << QPointF(b.x(), b.y() - 0.45 * s)
-	      << QPointF(b.x(), b.y() + 0.45 * s);
-	painter.setBrush(QColor(20, 40, 160));
-	painter.drawPolygon(arrow);
-    } else if (kind == QLatin1String("opacity")) {
-	double op = std::clamp(previewNumber(value, 1.0), 0.0, 1.0);
-	QRectF left(body.left() + 12, body.top() + 10, body.width() * 0.45, body.height() - 20);
-	QRectF right(body.center().x() - 12, body.top() + 10, body.width() * 0.45,
-		     body.height() - 20);
-	painter.fillRect(left, QColor(80, 120, 230));
-	painter.fillRect(right, QColor(230, 70, 50, int(255 * op + 0.5)));
-	painter.setPen(Qt::black);
-	painter.drawRect(left);
-	painter.drawRect(right);
-    } else if (kind == QLatin1String("gridsize")) {
-	double step = std::max(1.0, previewNumber(value, 8.0) * zoom);
-	painter.setPen(QPen(QColor(170, 170, 170), 1));
-	for (double x = body.left(); x <= body.right(); x += step)
-	    painter.drawLine(QPointF(x, body.top()), QPointF(x, body.bottom()));
-	for (double y = body.top(); y <= body.bottom(); y += step)
-	    painter.drawLine(QPointF(body.left(), y), QPointF(body.right(), y));
-	painter.setPen(QPen(QColor(20, 40, 160), 3));
-	painter.drawLine(body.bottomLeft(), body.topRight());
-    } else if (kind == QLatin1String("anglesize")) {
-	double degrees = previewNumber(value, 45.0);
-	double radians = degrees * 3.14159265358979323846 / 180.0;
-	QPointF o(body.left() + 0.25 * body.width(), body.bottom() - 12);
-	double len = std::min(body.width() * 0.65, body.height() * 0.9);
-	QPointF p(o.x() + len * std::cos(radians), o.y() - len * std::sin(radians));
-	painter.setPen(QPen(QColor(70, 70, 70), 2));
-	painter.drawLine(o, QPointF(body.right(), o.y()));
-	painter.setPen(QPen(QColor(20, 40, 160), 4, Qt::SolidLine, Qt::RoundCap));
-	painter.drawLine(o, p);
     }
+    painter.setPen(QColor(60, 60, 60));
+    painter.drawText(body, Qt::AlignCenter,
+                     (kind == QLatin1String("imagefile") || value.isEmpty())
+                         ? QStringLiteral("Preview unavailable")
+                         : value);
 }
 
 void LatexHighlighter::applyFormat(const QString & text, QRegularExpression & exp,

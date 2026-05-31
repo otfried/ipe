@@ -36,7 +36,6 @@
 #include "ipeuilayout_cocoa.h"
 
 #include <algorithm>
-#include <cmath>
 #include <cstdio>
 #include <sstream>
 
@@ -230,38 +229,6 @@ static double previewNumber(const std::string & value, double fallback) {
     return fallback;
 }
 
-static NSColor * previewColor(const std::string & value, double alpha = 1.0) {
-    if (value.size() == 7 && value[0] == '#') {
-	unsigned int r = 0, g = 0, b = 0;
-	sscanf(value.c_str() + 1, "%2x%2x%2x", &r, &g, &b);
-	return [NSColor colorWithCalibratedRed:r / 255.0
-					   green:g / 255.0
-					    blue:b / 255.0
-					   alpha:alpha];
-    }
-    std::istringstream stream(value);
-    double r = 0.0, g = 0.0, b = 0.0;
-    if (stream >> r) {
-	if (!(stream >> g)) g = r;
-	if (!(stream >> b)) b = r;
-    }
-    return [NSColor colorWithCalibratedRed:std::clamp(r, 0.0, 1.0)
-				     green:std::clamp(g, 0.0, 1.0)
-				      blue:std::clamp(b, 0.0, 1.0)
-				     alpha:alpha];
-}
-
-static std::vector<CGFloat> previewDashPattern(const std::string & value) {
-    std::vector<CGFloat> dashes;
-    size_t left = value.find('[');
-    size_t right = value.find(']', left + 1);
-    if (left == std::string::npos || right == std::string::npos) return dashes;
-    std::istringstream stream(value.substr(left + 1, right - left - 1));
-    double v;
-    while (stream >> v) dashes.push_back(std::max(0.5, v));
-    return dashes;
-}
-
 @interface IpeDialogImage : NSView
 
 - (instancetype)initWithWidth:(int)width height:(int)height spec:(const std::string &)spec;
@@ -328,136 +295,15 @@ static std::vector<CGFloat> previewDashPattern(const std::string & value) {
                                        scaled.width, scaled.height);
             [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
             [image drawInRect:target];
+            return;
         }
-    } else if (kind == "color") {
-	NSRect swatch = NSInsetRect(body, 8., 8.);
-	swatch.size.height -= 28.;
-	[previewColor(value) setFill];
-	NSRectFill(swatch);
-	[[NSColor blackColor] setStroke];
-	NSFrameRect(swatch);
-	NSDictionary * attrs = @{NSFontAttributeName : [NSFont systemFontOfSize:12.]};
-	[S2N(value) drawInRect:NSMakeRect(body.origin.x, NSMaxY(body) - 20.,
-					 body.size.width, 18.)
-		      withAttributes:attrs];
-    } else if (kind == "pen" || kind == "dashstyle") {
-	NSBezierPath * path = [NSBezierPath bezierPath];
-	[path moveToPoint:NSMakePoint(NSMinX(body), NSMidY(body))];
-	[path lineToPoint:NSMakePoint(NSMaxX(body), NSMidY(body))];
-	[path setLineWidth:(kind == "pen")
-				 ? std::max(0.1, previewNumber(value, 1.0) * zoom)
-				 : std::max(0.1, 4.0 * zoom)];
-	if (kind == "dashstyle") {
-	    std::vector<CGFloat> dashes = previewDashPattern(value);
-	    for (CGFloat & dash : dashes) dash *= zoom;
-	    if (!dashes.empty())
-		[path setLineDash:dashes.data() count:(NSInteger)dashes.size() phase:0.0];
-	}
-	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
-	[path stroke];
-    } else if (kind == "textsize") {
-	double size = std::max(1.0, 9.0 * zoom);
-	NSDictionary * attrs = @{
-	    NSFontAttributeName : [NSFont systemFontOfSize:size],
-	    NSForegroundColorAttributeName : [NSColor textColor]
-	};
-	[@"Sample" drawInRect:body withAttributes:attrs];
-    } else if (kind == "symbolsize") {
-	double s = std::max(1.0, previewNumber(value, 3.0) * 3.0 * zoom);
-	NSArray * centers = @[
-	    [NSValue valueWithPoint:NSMakePoint(NSMinX(body) + body.size.width * 0.25,
-						 NSMidY(body))],
-	    [NSValue valueWithPoint:NSMakePoint(NSMidX(body), NSMidY(body))],
-	    [NSValue valueWithPoint:NSMakePoint(NSMinX(body) + body.size.width * 0.75,
-						 NSMidY(body))]
-	];
-	[[NSColor colorWithCalibratedRed:0.90 green:0.31 blue:0.27 alpha:1.0] setFill];
-	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
-	NSPoint c = [(NSValue *)[centers objectAtIndex:0] pointValue];
-	[[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(c.x - s / 2., c.y - s / 2., s, s)] fill];
-	[[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(c.x - s / 2., c.y - s / 2., s, s)] stroke];
-	c = [(NSValue *)[centers objectAtIndex:1] pointValue];
-	[[NSBezierPath bezierPathWithRect:NSMakeRect(c.x - s / 2., c.y - s / 2., s, s)] fill];
-	[[NSBezierPath bezierPathWithRect:NSMakeRect(c.x - s / 2., c.y - s / 2., s, s)] stroke];
-	c = [(NSValue *)[centers objectAtIndex:2] pointValue];
-	NSBezierPath * diamond = [NSBezierPath bezierPath];
-	[diamond moveToPoint:NSMakePoint(c.x, c.y - s / 2.)];
-	[diamond lineToPoint:NSMakePoint(c.x + s / 2., c.y)];
-	[diamond lineToPoint:NSMakePoint(c.x, c.y + s / 2.)];
-	[diamond lineToPoint:NSMakePoint(c.x - s / 2., c.y)];
-	[diamond closePath];
-	[diamond fill];
-	[diamond stroke];
-    } else if (kind == "arrowsize") {
-	double s = std::max(1.0, previewNumber(value, 7.0) * 2.0 * zoom);
-	NSPoint a = NSMakePoint(NSMinX(body), NSMidY(body));
-	NSPoint b = NSMakePoint(NSMaxX(body) - s, NSMidY(body));
-	NSBezierPath * line = [NSBezierPath bezierPath];
-	[line moveToPoint:a];
-	[line lineToPoint:b];
-	[line setLineWidth:4.0];
-	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
-	[line stroke];
-	NSBezierPath * arrow = [NSBezierPath bezierPath];
-	[arrow moveToPoint:NSMakePoint(b.x + s, b.y)];
-	[arrow lineToPoint:NSMakePoint(b.x, b.y - 0.45 * s)];
-	[arrow lineToPoint:NSMakePoint(b.x, b.y + 0.45 * s)];
-	[arrow closePath];
-	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setFill];
-	[arrow fill];
-    } else if (kind == "opacity") {
-	double op = std::clamp(previewNumber(value, 1.0), 0.0, 1.0);
-	NSRect left = NSMakeRect(NSMinX(body) + 12., NSMinY(body) + 10.,
-				 body.size.width * 0.45, body.size.height - 20.);
-	NSRect right = NSMakeRect(NSMidX(body) - 12., NSMinY(body) + 10.,
-				  body.size.width * 0.45, body.size.height - 20.);
-	[[NSColor colorWithCalibratedRed:0.31 green:0.47 blue:0.90 alpha:1.0] setFill];
-	NSRectFill(left);
-	[[NSColor colorWithCalibratedRed:0.90 green:0.27 blue:0.20 alpha:op] setFill];
-	NSRectFillUsingOperation(right, NSCompositingOperationSourceOver);
-	[[NSColor blackColor] setStroke];
-	NSFrameRect(left);
-	NSFrameRect(right);
-    } else if (kind == "gridsize") {
-	double step = std::max(1.0, previewNumber(value, 8.0) * zoom);
-	[[NSColor colorWithCalibratedWhite:0.65 alpha:1.0] setStroke];
-	for (double x = NSMinX(body); x <= NSMaxX(body); x += step) {
-	    NSBezierPath * p = [NSBezierPath bezierPath];
-	    [p moveToPoint:NSMakePoint(x, NSMinY(body))];
-	    [p lineToPoint:NSMakePoint(x, NSMaxY(body))];
-	    [p stroke];
-	}
-	for (double y = NSMinY(body); y <= NSMaxY(body); y += step) {
-	    NSBezierPath * p = [NSBezierPath bezierPath];
-	    [p moveToPoint:NSMakePoint(NSMinX(body), y)];
-	    [p lineToPoint:NSMakePoint(NSMaxX(body), y)];
-	    [p stroke];
-	}
-	NSBezierPath * diag = [NSBezierPath bezierPath];
-	[diag moveToPoint:NSMakePoint(NSMinX(body), NSMaxY(body))];
-	[diag lineToPoint:NSMakePoint(NSMaxX(body), NSMinY(body))];
-	[diag setLineWidth:3.0];
-	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
-	[diag stroke];
-    } else if (kind == "anglesize") {
-	double degrees = previewNumber(value, 45.0);
-	double radians = degrees * 3.14159265358979323846 / 180.0;
-	NSPoint o = NSMakePoint(NSMinX(body) + 0.25 * body.size.width, NSMaxY(body) - 12.);
-	double len = std::min(body.size.width * 0.65, body.size.height * 0.9);
-	NSPoint p = NSMakePoint(o.x + len * std::cos(radians), o.y - len * std::sin(radians));
-	NSBezierPath * base = [NSBezierPath bezierPath];
-	[base moveToPoint:o];
-	[base lineToPoint:NSMakePoint(NSMaxX(body), o.y)];
-	[base setLineWidth:2.0];
-	[[NSColor darkGrayColor] setStroke];
-	[base stroke];
-	NSBezierPath * ray = [NSBezierPath bezierPath];
-	[ray moveToPoint:o];
-	[ray lineToPoint:p];
-	[ray setLineWidth:4.0];
-	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
-	[ray stroke];
     }
+    NSDictionary * attrs = @{
+	NSFontAttributeName : [NSFont systemFontOfSize:12.],
+	NSForegroundColorAttributeName : [NSColor secondaryLabelColor]
+    };
+    NSString * message = (kind == "imagefile" || value.empty()) ? @"Preview unavailable" : S2N(value);
+    [message drawInRect:body withAttributes:attrs];
 }
 
 @end

@@ -33,10 +33,6 @@
 
 #include <windowsx.h>
 
-#include <algorithm>
-#include <cmath>
-#include <sstream>
-
 // --------------------------------------------------------------------
 
 #define IDBASE 9000
@@ -80,37 +76,6 @@ static std::string wideToUtf8(const wchar_t * wbuf) {
     return std::string(multi.data());
 }
 
-static double previewNumber(const std::string & value, double fallback) {
-    std::istringstream stream(value);
-    double v;
-    if (stream >> v) return v;
-    return fallback;
-}
-
-static COLORREF previewColor(const std::string & value) {
-    if (value.size() == 7 && value[0] == '#') {
-        unsigned int r = 0, g = 0, b = 0;
-        sscanf(value.c_str() + 1, "%2x%2x%2x", &r, &g, &b);
-        return RGB(r, g, b);
-    }
-    std::istringstream stream(value);
-    double r = 0.0, g = 0.0, b = 0.0;
-    if (stream >> r) {
-        if (!(stream >> g)) g = r;
-        if (!(stream >> b)) b = r;
-    }
-    return RGB(int(255.0 * std::clamp(r, 0.0, 1.0) + 0.5),
-               int(255.0 * std::clamp(g, 0.0, 1.0) + 0.5),
-               int(255.0 * std::clamp(b, 0.0, 1.0) + 0.5));
-}
-
-static COLORREF blendColor(COLORREF a, COLORREF b, double t) {
-    t = std::clamp(t, 0.0, 1.0);
-    return RGB(int(GetRValue(a) * (1.0 - t) + GetRValue(b) * t + 0.5),
-               int(GetGValue(a) * (1.0 - t) + GetGValue(b) * t + 0.5),
-               int(GetBValue(a) * (1.0 - t) + GetBValue(b) * t + 0.5));
-}
-
 static void fillRect(HDC dc, const RECT & r, COLORREF color) {
     HBRUSH b = CreateSolidBrush(color);
     FillRect(dc, &r, b);
@@ -119,14 +84,10 @@ static void fillRect(HDC dc, const RECT & r, COLORREF color) {
 
 static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
     size_t sep = spec.find('|');
-    size_t sep2 = sep == std::string::npos ? std::string::npos : spec.find('|', sep + 1);
     std::string kind = sep == std::string::npos ? spec : spec.substr(0, sep);
     std::string value = sep == std::string::npos
 				    ? std::string()
-				    : spec.substr(sep + 1, sep2 - sep - 1);
-    double zoom = sep2 == std::string::npos
-		      ? 1.0
-		      : std::clamp(previewNumber(spec.substr(sep2 + 1), 1.0), 0.1, 100.0);
+				    : spec.substr(sep + 1, spec.find('|', sep + 1) - sep - 1);
 
     fillRect(dc, rc, RGB(255, 255, 220));
     HBRUSH frame = CreateSolidBrush(RGB(160, 160, 130));
@@ -135,120 +96,10 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
 
     RECT body = rc;
     InflateRect(&body, -18, -16);
-    int cx = (body.left + body.right) / 2;
-    int cy = (body.top + body.bottom) / 2;
-    COLORREF blue = RGB(20, 40, 160);
-    COLORREF red = RGB(230, 80, 70);
-    if (kind == "imagefile") {
-        SetBkMode(dc, TRANSPARENT);
-        DrawTextA(dc, "Rendered text preview unavailable", -1, &body,
-                  DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    } else if (kind == "color") {
-        RECT swatch = body;
-        InflateRect(&swatch, -8, -8);
-        swatch.bottom -= 28;
-        fillRect(dc, swatch, previewColor(value));
-        FrameRect(dc, &swatch, (HBRUSH)GetStockObject(BLACK_BRUSH));
-        SetBkMode(dc, TRANSPARENT);
-        DrawTextA(dc, value.c_str(), -1, &body, DT_CENTER | DT_BOTTOM | DT_SINGLELINE);
-    } else if (kind == "pen" || kind == "dashstyle") {
-        int width = std::max(1, int((kind == "pen" ? previewNumber(value, 1.0) : 4.0) * zoom + 0.5));
-        HPEN pen = CreatePen(kind == "dashstyle" ? PS_DASH : PS_SOLID, width, blue);
-        HGDIOBJ oldPen = SelectObject(dc, pen);
-        MoveToEx(dc, body.left, cy, nullptr);
-        LineTo(dc, body.right, cy);
-        SelectObject(dc, oldPen);
-        DeleteObject(pen);
-    } else if (kind == "textsize") {
-        int size = std::max(1, int(9.0 * zoom + 0.5));
-        HFONT font = CreateFontA(-size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                 DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-        HGDIOBJ oldFont = SelectObject(dc, font);
-        SetBkMode(dc, TRANSPARENT);
-        DrawTextA(dc, "Sample", -1, &body, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-        SelectObject(dc, oldFont);
-        DeleteObject(font);
-    } else if (kind == "symbolsize") {
-        int s = std::max(1, int(previewNumber(value, 3.0) * 3.0 * zoom + 0.5));
-        HPEN pen = CreatePen(PS_SOLID, 2, blue);
-        HBRUSH brush = CreateSolidBrush(red);
-        HGDIOBJ oldPen = SelectObject(dc, pen);
-        HGDIOBJ oldBrush = SelectObject(dc, brush);
-        int xs[] = {body.left + (body.right - body.left) / 4, cx,
-                    body.left + 3 * (body.right - body.left) / 4};
-        Ellipse(dc, xs[0] - s / 2, cy - s / 2, xs[0] + s / 2, cy + s / 2);
-        Rectangle(dc, xs[1] - s / 2, cy - s / 2, xs[1] + s / 2, cy + s / 2);
-        POINT diamond[] = {{xs[2], cy - s / 2}, {xs[2] + s / 2, cy},
-                           {xs[2], cy + s / 2}, {xs[2] - s / 2, cy}};
-        Polygon(dc, diamond, 4);
-        SelectObject(dc, oldBrush);
-        SelectObject(dc, oldPen);
-        DeleteObject(brush);
-        DeleteObject(pen);
-    } else if (kind == "arrowsize") {
-        int s = std::max(1, int(previewNumber(value, 7.0) * 2.0 * zoom + 0.5));
-        HPEN pen = CreatePen(PS_SOLID, std::max(1, int(4.0 * zoom + 0.5)), blue);
-        HBRUSH brush = CreateSolidBrush(blue);
-        HGDIOBJ oldPen = SelectObject(dc, pen);
-        HGDIOBJ oldBrush = SelectObject(dc, brush);
-        MoveToEx(dc, body.left, cy, nullptr);
-        LineTo(dc, body.right - s, cy);
-        POINT arrow[] = {{body.right, cy}, {body.right - s, int(cy - 0.45 * s)},
-                         {body.right - s, int(cy + 0.45 * s)}};
-        Polygon(dc, arrow, 3);
-        SelectObject(dc, oldBrush);
-        SelectObject(dc, oldPen);
-        DeleteObject(brush);
-        DeleteObject(pen);
-    } else if (kind == "opacity") {
-        double op = std::clamp(previewNumber(value, 1.0), 0.0, 1.0);
-        RECT left = {body.left + 12, body.top + 10,
-                     body.left + 12 + int((body.right - body.left) * 0.45), body.bottom - 10};
-        RECT right = {cx - 12, body.top + 10,
-                      cx - 12 + int((body.right - body.left) * 0.45), body.bottom - 10};
-        fillRect(dc, left, RGB(80, 120, 230));
-        fillRect(dc, right, blendColor(RGB(255, 255, 220), red, op));
-        FrameRect(dc, &left, (HBRUSH)GetStockObject(BLACK_BRUSH));
-        FrameRect(dc, &right, (HBRUSH)GetStockObject(BLACK_BRUSH));
-    } else if (kind == "gridsize") {
-        int step = std::max(1, int(previewNumber(value, 8.0) * zoom + 0.5));
-        HPEN grid = CreatePen(PS_SOLID, 1, RGB(170, 170, 170));
-        HGDIOBJ oldPen = SelectObject(dc, grid);
-        for (int x = body.left; x <= body.right; x += step) {
-            MoveToEx(dc, x, body.top, nullptr);
-            LineTo(dc, x, body.bottom);
-        }
-        for (int y = body.top; y <= body.bottom; y += step) {
-            MoveToEx(dc, body.left, y, nullptr);
-            LineTo(dc, body.right, y);
-        }
-        SelectObject(dc, oldPen);
-        DeleteObject(grid);
-        HPEN pen = CreatePen(PS_SOLID, 3, blue);
-        oldPen = SelectObject(dc, pen);
-        MoveToEx(dc, body.left, body.bottom, nullptr);
-        LineTo(dc, body.right, body.top);
-        SelectObject(dc, oldPen);
-        DeleteObject(pen);
-    } else if (kind == "anglesize") {
-        double radians = previewNumber(value, 45.0) * 3.14159265358979323846 / 180.0;
-        int ox = body.left + (body.right - body.left) / 4;
-        int oy = body.bottom - 12;
-        double len = std::min((body.right - body.left) * 0.65, (body.bottom - body.top) * 0.9);
-        HPEN base = CreatePen(PS_SOLID, 2, RGB(70, 70, 70));
-        HGDIOBJ oldPen = SelectObject(dc, base);
-        MoveToEx(dc, ox, oy, nullptr);
-        LineTo(dc, body.right, oy);
-        SelectObject(dc, oldPen);
-        DeleteObject(base);
-        HPEN pen = CreatePen(PS_SOLID, 4, blue);
-        oldPen = SelectObject(dc, pen);
-        MoveToEx(dc, ox, oy, nullptr);
-        LineTo(dc, int(ox + len * std::cos(radians)), int(oy - len * std::sin(radians)));
-        SelectObject(dc, oldPen);
-        DeleteObject(pen);
-    }
+    (void)kind;
+    SetBkMode(dc, TRANSPARENT);
+    DrawTextA(dc, kind == "imagefile" || value.empty() ? "Preview unavailable" : value.c_str(),
+              -1, &body, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 void buildFlags(std::vector<short> & t, DWORD flags) {

@@ -143,24 +143,6 @@ function previewNumber(value: string, fallback: number): number {
 	return Number.isFinite(n) ? n : fallback;
 }
 
-function previewColor(value: string): string {
-	if (value.startsWith("#")) return value;
-	const rgb = value.trim().split(/\s+/).map(Number.parseFloat);
-	if (rgb.length === 1) rgb[1] = rgb[2] = rgb[0];
-	const [r = 0, g = 0, b = 0] = rgb;
-	return `rgb(${Math.max(0, Math.min(255, Math.round(255 * r)))}, ${Math.max(0, Math.min(255, Math.round(255 * g)))}, ${Math.max(0, Math.min(255, Math.round(255 * b)))})`;
-}
-
-function previewDashPattern(value: string): number[] {
-	const m = value.match(/\[([^\]]+)\]/);
-	if (!m) return [];
-	return m[1]
-		.trim()
-		.split(/\s+/)
-		.map(Number.parseFloat)
-		.filter(Number.isFinite);
-}
-
 function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
 	const [kind, value = "", zoomText = "1"] = spec.split("|");
 	const zoom = Math.max(0.1, Math.min(100, previewNumber(zoomText, 1)));
@@ -197,106 +179,22 @@ function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
 			const height = logicalHeight * scale;
 			ctx.drawImage(image, cx - width / 2, cy - height / 2, width, height);
 		});
+		image.addEventListener("error", () => {
+			if (canvas.dataset.previewSpec !== spec) return;
+			ctx.fillStyle = "rgb(90,90,90)";
+			ctx.font = "12px sans-serif";
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.fillText("Preview unavailable", cx, cy);
+		});
 		image.src = value;
-	} else if (kind === "color") {
-		ctx.fillStyle = previewColor(value);
-		ctx.fillRect(left + 8, top + 8, right - left - 16, bottom - top - 36);
-		ctx.strokeStyle = "black";
-		ctx.strokeRect(left + 8, top + 8, right - left - 16, bottom - top - 36);
-		ctx.fillStyle = "black";
-		ctx.font = "12px sans-serif";
-		ctx.textAlign = "center";
-		ctx.fillText(value, cx, bottom - 4);
-	} else if (kind === "pen" || kind === "dashstyle") {
-		ctx.strokeStyle = "rgb(20,40,160)";
-		ctx.lineWidth =
-			kind === "pen"
-				? Math.max(0.1, previewNumber(value, 1) * zoom)
-				: Math.max(0.1, 4 * zoom);
-		if (kind === "dashstyle")
-			ctx.setLineDash(previewDashPattern(value).map((x) => x * zoom));
-		else ctx.setLineDash([]);
-		ctx.beginPath();
-		ctx.moveTo(left, cy);
-		ctx.lineTo(right, cy);
-		ctx.stroke();
-		ctx.setLineDash([]);
-	} else if (kind === "textsize") {
-		ctx.fillStyle = "rgb(30,30,30)";
-		ctx.font = `${Math.max(1, 9 * zoom)}px sans-serif`;
-		ctx.textAlign = "center";
-		ctx.textBaseline = "middle";
-		ctx.fillText("Sample", cx, cy);
-	} else if (kind === "symbolsize") {
-		const s = Math.max(1, previewNumber(value, 3) * 3 * zoom);
-		ctx.fillStyle = "rgb(230,80,70)";
-		ctx.strokeStyle = "rgb(20,40,160)";
-		ctx.lineWidth = 2;
-		for (const x of [
-			left + (right - left) * 0.25,
-			cx,
-			left + (right - left) * 0.75,
-		]) {
-			ctx.beginPath();
-			ctx.arc(x, cy, s / 2, 0, 2 * Math.PI);
-			ctx.fill();
-			ctx.stroke();
-		}
-	} else if (kind === "arrowsize") {
-		const s = Math.max(1, previewNumber(value, 7) * 2 * zoom);
-		ctx.strokeStyle = "rgb(20,40,160)";
-		ctx.fillStyle = "rgb(20,40,160)";
-		ctx.lineWidth = Math.max(0.1, 4 * zoom);
-		ctx.beginPath();
-		ctx.moveTo(left, cy);
-		ctx.lineTo(right - s, cy);
-		ctx.stroke();
-		ctx.beginPath();
-		ctx.moveTo(right, cy);
-		ctx.lineTo(right - s, cy - 0.45 * s);
-		ctx.lineTo(right - s, cy + 0.45 * s);
-		ctx.closePath();
-		ctx.fill();
-	} else if (kind === "opacity") {
-		const op = Math.max(0, Math.min(1, previewNumber(value, 1)));
-		ctx.fillStyle = "rgb(80,120,230)";
-		ctx.fillRect(left + 12, top + 10, (right - left) * 0.45, bottom - top - 20);
-		ctx.fillStyle = `rgba(230,70,50,${op})`;
-		ctx.fillRect(cx - 12, top + 10, (right - left) * 0.45, bottom - top - 20);
-	} else if (kind === "gridsize") {
-		const step = Math.max(1, previewNumber(value, 8) * zoom);
-		ctx.strokeStyle = "rgb(170,170,170)";
-		ctx.lineWidth = 1;
-		for (let x = left; x <= right; x += step) {
-			ctx.beginPath();
-			ctx.moveTo(x, top);
-			ctx.lineTo(x, bottom);
-			ctx.stroke();
-		}
-		for (let y = top; y <= bottom; y += step) {
-			ctx.beginPath();
-			ctx.moveTo(left, y);
-			ctx.lineTo(right, y);
-			ctx.stroke();
-		}
-	} else if (kind === "anglesize") {
-		const radians = (previewNumber(value, 45) * Math.PI) / 180;
-		const ox = left + 0.25 * (right - left);
-		const oy = bottom - 12;
-		const len = Math.min((right - left) * 0.65, (bottom - top) * 0.9);
-		ctx.strokeStyle = "rgb(70,70,70)";
-		ctx.lineWidth = 2;
-		ctx.beginPath();
-		ctx.moveTo(ox, oy);
-		ctx.lineTo(right, oy);
-		ctx.stroke();
-		ctx.strokeStyle = "rgb(20,40,160)";
-		ctx.lineWidth = 4;
-		ctx.beginPath();
-		ctx.moveTo(ox, oy);
-		ctx.lineTo(ox + len * Math.cos(radians), oy - len * Math.sin(radians));
-		ctx.stroke();
+		return;
 	}
+	ctx.fillStyle = "rgb(90,90,90)";
+	ctx.font = "12px sans-serif";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+	ctx.fillText(value || "Preview unavailable", cx, cy);
 }
 
 export function setupElements(

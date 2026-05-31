@@ -2764,42 +2764,121 @@ end
 local visual_preview_width = 300
 local visual_preview_height = 130
 local visual_preview_scale = 4
-local visual_text_preview_serial = 0
+local visual_preview_serial = 0
 
-local function visual_text_preview_spec(dd, value)
+local function visual_number(value, fallback)
+  return tonumber(value) or fallback
+end
+
+local function visual_segment_shape(v1, v2)
+  return { type="curve", closed=false; { type="segment"; v1, v2 } }
+end
+
+local function visual_box_shape(v1, v2)
+  return { type="curve", closed=true;
+    { type="segment"; v1, ipe.Vector(v1.x, v2.y) },
+    { type="segment"; ipe.Vector(v1.x, v2.y), v2 },
+    { type="segment"; v2, ipe.Vector(v2.x, v1.y) } }
+end
+
+local function visual_arc_shape(center, radius, alpha, beta)
+  local arc = ipe.Arc(ipe.Matrix(radius, 0, 0, radius, center.x, center.y),
+                      alpha, beta)
+  return { type="curve", closed=false;
+    { type="arc", arc=arc;
+      center + radius * ipe.Direction(alpha),
+      center + radius * ipe.Direction(beta) } }
+end
+
+local function visual_add_object(page, obj)
+  page:insert(nil, obj, 1, "alpha")
+end
+
+local function visual_add_preview_objects(page, c, preview_name, value)
+  local V = ipe.Vector
+  if c.kind == "color" then
+    visual_add_object(page, ipe.Path({ stroke="black", fill=preview_name,
+                                       pathmode="strokedfilled" },
+                                     { visual_box_shape(V(0, 0), V(130, 65)) }))
+  elseif c.kind == "pen" then
+    visual_add_object(page, ipe.Path({ stroke="black", pen=preview_name },
+                                     { visual_segment_shape(V(0, 0), V(180, 0)) }))
+  elseif c.kind == "dashstyle" then
+    visual_add_object(page, ipe.Path({ stroke="black", pen="fat", dashstyle=preview_name },
+                                     { visual_segment_shape(V(0, 0), V(180, 0)) }))
+  elseif c.kind == "textsize" then
+    visual_add_object(page, ipe.Text({ stroke="black", textsize=preview_name },
+                                     "Sample", V(0, 0)))
+  elseif c.kind == "symbolsize" then
+    visual_add_object(page, ipe.Reference({ stroke="black", fill="red",
+                                            symbolsize=preview_name },
+                                           "mark/disk(sx)", V(0, 0)))
+  elseif c.kind == "arrowsize" then
+    visual_add_object(page, ipe.Path({ stroke="black", pen="fat", farrow=true,
+                                       farrowsize=preview_name,
+                                       farrowshape="arrow/normal(spx)" },
+                                     { visual_segment_shape(V(0, 0), V(170, 0)) }, true))
+  elseif c.kind == "opacity" then
+    visual_add_object(page, ipe.Path({ stroke="black", fill="blue",
+                                       pathmode="strokedfilled" },
+                                     { visual_box_shape(V(0, 0), V(80, 60)) }))
+    visual_add_object(page, ipe.Path({ stroke="black", fill="red", opacity=preview_name,
+                                       pathmode="strokedfilled" },
+                                     { visual_box_shape(V(45, 10), V(125, 70)) }))
+  elseif c.kind == "gridsize" then
+    local step = math.max(1, visual_number(value, 8))
+    for x = 0,160,step do
+      visual_add_object(page, ipe.Path({ stroke="0.7", pen="normal" },
+                                       { visual_segment_shape(V(x, 0), V(x, 80)) }))
+    end
+    for y = 0,80,step do
+      visual_add_object(page, ipe.Path({ stroke="0.7", pen="normal" },
+                                       { visual_segment_shape(V(0, y), V(160, y)) }))
+    end
+    visual_add_object(page, ipe.Path({ stroke="black", pen="fat" },
+                                     { visual_segment_shape(V(0, 0), V(160, 80)) }))
+  elseif c.kind == "anglesize" then
+    local alpha = math.rad(visual_number(value, 45))
+    local origin = V(0, 0)
+    local radius = 42
+    visual_add_object(page, ipe.Path({ stroke="black", pen="normal" },
+                                     { visual_segment_shape(origin, V(150, 0)) }))
+    visual_add_object(page, ipe.Path({ stroke="red", pen="fat" },
+                                     { visual_segment_shape(origin,
+                                         radius * 3 * ipe.Direction(alpha)) }))
+    visual_add_object(page, ipe.Path({ stroke="black", pen="normal" },
+                                     { visual_arc_shape(origin, radius, 0, alpha) }))
+  end
+end
+
+local function visual_preview_spec(dd, c, value)
   local preview_name = "__preview_textsize"
+  if c.kind ~= "textsize" then preview_name = "__preview_" .. c.kind end
   local doc = ipe.Document()
   local sheets = ipe.Sheets()
   local sheet = ipe.Sheet()
   sheet:setName("__preview")
-  local ok = pcall(function () sheet:setAttribute("textsize", preview_name, value) end)
+  local ok = pcall(function () sheet:setAttribute(c.kind, preview_name, value) end)
   if not ok then return nil end
   sheets:insert(1, sheet)
   for i,s in ipairs(dd.list) do sheets:insert(i + 1, s:clone()) end
   doc:replaceSheets(sheets)
   local p = doc[1]
-  local obj = ipe.Text({ stroke="black", textsize=preview_name },
-                       "Sample", ipe.Vector(20, 20))
-  p:insert(nil, obj, 1, "alpha")
-  ok = doc:runLatex(dd.model.file_name)
-  if not ok then return nil end
-  visual_text_preview_serial = visual_text_preview_serial + 1
+  visual_add_preview_objects(p, c, preview_name, value)
+  if c.kind == "textsize" then
+    ok = doc:runLatex(dd.model.file_name)
+    if not ok then return nil end
+  end
+  visual_preview_serial = visual_preview_serial + 1
   local png = ipe.folder("latex", string.format("style-preview-%d.png",
-                                                  visual_text_preview_serial))
+                                                visual_preview_serial))
   dd.model.ui:renderPage(doc, 1, 1, "png", png,
                          dd.model.ui:zoom() * visual_preview_scale, true, false)
   return string.format("imagefile|%s|%g", png, visual_preview_scale)
 end
 
-local function visual_preview_spec(dd, c, value)
-  if c.kind == "textsize" then
-    return visual_text_preview_spec(dd, value) or "textsize|" .. (value or "") .. "|" .. dd.model.ui:zoom()
-  end
-  return c.kind .. "|" .. (value or "") .. "|" .. dd.model.ui:zoom()
-end
-
 local function visual_set_preview(d, dd, c, value)
-  d:set("preview", visual_preview_spec(dd, c, value))
+  d:set("preview", visual_preview_spec(dd, c, value) or "unavailable|Preview unavailable")
 end
 
 local function visual_load_sheet(sheet)
