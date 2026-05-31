@@ -216,7 +216,7 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
         FrameRect(dc, &left, (HBRUSH)GetStockObject(BLACK_BRUSH));
         FrameRect(dc, &right, (HBRUSH)GetStockObject(BLACK_BRUSH));
     } else if (kind == "gridsize") {
-        int step = int(std::clamp(previewNumber(value, 8.0) / 2.0, 6.0, 24.0));
+        int step = int(std::clamp(previewNumber(value, 8.0), 1.0, 64.0));
         HPEN grid = CreatePen(PS_SOLID, 1, RGB(170, 170, 170));
         HGDIOBJ oldPen = SelectObject(dc, grid);
         for (int x = body.left; x <= body.right; x += step) {

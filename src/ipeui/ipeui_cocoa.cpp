@@ -410,8 +410,7 @@ static std::vector<CGFloat> previewDashPattern(const std::string & value) {
 	NSFrameRect(left);
 	NSFrameRect(right);
     } else if (kind == "gridsize") {
-	double n = std::clamp(previewNumber(value, 8.0), 2.0, 64.0);
-	double step = std::clamp(n / 2.0, 6.0, 24.0);
+	double step = std::clamp(previewNumber(value, 8.0), 1.0, 64.0);
 	[[NSColor colorWithCalibratedWhite:0.65 alpha:1.0] setStroke];
 	for (double x = NSMinX(body); x <= NSMaxX(body); x += step) {
 	    NSBezierPath * p = [NSBezierPath bezierPath];

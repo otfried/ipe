@@ -2870,9 +2870,18 @@ local function sheets_visual_edit(d0, dd)
     action=function (d)
       local c = visual_style_categories[st.cat]
       local entries = st.data[st.cat]
+      local name = d:get("name")
+      if st.current and entries[st.current] and name == entries[st.current].name then
+        name = "new"
+      end
+      if name == "" then name = "new" end
+      local value = c.color and visual_hex_to_rgb(d:get("color")) or d:get("value")
+      if value == "" then
+        value = c.color and visual_hex_to_rgb(c.default) or c.default
+      end
       entries[#entries + 1] = {
-        name=visual_unique_name(entries, "new"),
-        value=c.color and visual_hex_to_rgb(c.default) or c.default,
+        name=visual_unique_name(entries, name),
+        value=value,
       }
       st.current = #entries
       visual_set_fields(d, st)

@@ -279,8 +279,7 @@ void DialogImage::paintEvent(QPaintEvent *) {
 	painter.drawRect(left);
 	painter.drawRect(right);
     } else if (kind == QLatin1String("gridsize")) {
-	double n = std::clamp(previewNumber(value, 8.0), 2.0, 64.0);
-	double step = std::clamp(n / 2.0, 6.0, 24.0);
+	double step = std::clamp(previewNumber(value, 8.0), 1.0, 64.0);
 	painter.setPen(QPen(QColor(170, 170, 170), 1));
 	for (double x = body.left(); x <= body.right(); x += step)
 	    painter.drawLine(QPointF(x, body.top()), QPointF(x, body.bottom()));

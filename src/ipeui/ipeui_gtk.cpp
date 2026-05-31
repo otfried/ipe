@@ -204,7 +204,7 @@ static void drawImagePreview(cairo_t * cr, int width, int height, const std::str
         cairo_rectangle(cr, cx - 12.0, top + 10.0, (right - left) * 0.45, bottom - top - 20.0);
         cairo_fill(cr);
     } else if (kind == "gridsize") {
-        double step = std::clamp(previewNumber(value, 8.0) / 2.0, 6.0, 24.0);
+        double step = std::clamp(previewNumber(value, 8.0), 1.0, 64.0);
         cairo_set_source_rgb(cr, 0.67, 0.67, 0.67);
         cairo_set_line_width(cr, 1.0);
         for (double x = left; x <= right; x += step) {

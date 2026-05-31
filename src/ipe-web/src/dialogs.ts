@@ -259,7 +259,7 @@ function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
 		ctx.fillStyle = `rgba(230,70,50,${op})`;
 		ctx.fillRect(cx - 12, top + 10, (right - left) * 0.45, bottom - top - 20);
 	} else if (kind === "gridsize") {
-		const step = Math.max(6, Math.min(24, previewNumber(value, 8) / 2));
+		const step = Math.max(1, Math.min(64, previewNumber(value, 8)));
 		ctx.strokeStyle = "rgb(170,170,170)";
 		ctx.lineWidth = 1;
 		for (let x = left; x <= right; x += step) {
