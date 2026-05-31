@@ -2642,6 +2642,43 @@ local function sheets_namelist(list)
   return r
 end
 
+local function sheets_unique_name(list, base)
+  local used = {}
+  for _,s in ipairs(list) do
+    local name = s:name()
+    if name then used[name] = true end
+  end
+  if not used[base] then return base end
+  local n = 2
+  while used[base .. " " .. n] do n = n + 1 end
+  return base .. " " .. n
+end
+
+local function sheets_new(d, dd)
+  local i = d:get("list")
+  if not i then i = 1 end
+  local name = sheets_unique_name(dd.list, "new")
+  while true do
+    name = dd.model:getString("Name of new stylesheet", "New stylesheet", name)
+    if not name then return end
+    name = name:match("^%s*(.-)%s*$")
+    if name == "" then
+      dd.model:warning("Cannot create stylesheet", "The stylesheet name cannot be empty")
+    elseif name ~= sheets_unique_name(dd.list, name) then
+      dd.model:warning("Cannot create stylesheet",
+                       "A stylesheet with this name already exists")
+    else
+      break
+    end
+  end
+  local sheet = ipe.Sheet()
+  sheet:setName(name)
+  table.insert(dd.list, i, sheet)
+  d:set("list", sheets_namelist(dd.list))
+  d:set("list", i)
+  dd.modified = true
+end
+
 local function sheets_add(d, dd)
   local i = d:get("list")
   if not i then i = 1 end
@@ -3028,16 +3065,18 @@ function MODEL:action_style_sheets()
 	{ label="&Up", action=function (d) sheets_up(d, dd) end }, 3, 4)
   d:add("down", "button",
 	{ label="&Down", action=function (d) sheets_down(d, dd) end }, 4, 4)
+  d:add("new", "button",
+	{ label="&New", action=function (d) sheets_new(d, dd) end }, 5, 4)
   if config.toolkit ~= "htmljs" then
   d:add("add", "button",
-	{ label="&Add", action=function (d) sheets_add(d, dd) end }, 5, 4)
+	{ label="&Add", action=function (d) sheets_add(d, dd) end }, 6, 4)
   d:add("edit", "button",
-	{ label="Edit", action=function (d) sheets_edit(d, dd) end }, 6, 4)
+	{ label="Edit", action=function (d) sheets_edit(d, dd) end }, 7, 4)
   d:add("save", "button",
-	{ label="&Save", action=function (d) sheets_save(d, dd) end }, 7, 4)
+	{ label="&Save", action=function (d) sheets_save(d, dd) end }, 8, 4)
   end
   d:add("visual", "button",
-	{ label="Visual Edit", action=function (d) sheets_visual_edit(d, dd) end }, 8, 4)
+	{ label="Visual Edit", action=function (d) sheets_visual_edit(d, dd) end }, 9, 4)
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("column", 2, 1)
