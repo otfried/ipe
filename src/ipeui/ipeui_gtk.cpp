@@ -76,20 +76,6 @@ static double previewNumber(const std::string & value, double fallback) {
     return fallback;
 }
 
-static double previewNamedSize(const std::string & value, double fallback) {
-    if (value == "\\tiny") return 8.0;
-    if (value == "\\scriptsize") return 9.0;
-    if (value == "\\footnotesize") return 10.0;
-    if (value == "\\small") return 12.0;
-    if (value == "\\normalsize") return 14.0;
-    if (value == "\\large") return 18.0;
-    if (value == "\\Large") return 22.0;
-    if (value == "\\LARGE") return 26.0;
-    if (value == "\\huge") return 30.0;
-    if (value == "\\Huge") return 36.0;
-    return previewNumber(value, fallback);
-}
-
 static void previewColor(const std::string & value, double & r, double & g, double & b) {
     if (value.size() == 7 && value[0] == '#') {
         unsigned int rr = 0, gg = 0, bb = 0;
@@ -145,7 +131,25 @@ static void drawImagePreview(cairo_t * cr, int width, int height, const std::str
     cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
     cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
 
-    if (kind == "color") {
+    if (kind == "imagefile") {
+        cairo_surface_t * image = cairo_image_surface_create_from_png(value.c_str());
+        if (cairo_surface_status(image) == CAIRO_STATUS_SUCCESS) {
+            double iw = cairo_image_surface_get_width(image);
+            double ih = cairo_image_surface_get_height(image);
+            double scale = std::min((right - left) / (iw / zoom),
+                                    (bottom - top) / (ih / zoom));
+            scale = std::min(1.0, scale) / zoom;
+            double x = cx - 0.5 * iw * scale;
+            double y = cy - 0.5 * ih * scale;
+            cairo_save(cr);
+            cairo_translate(cr, x, y);
+            cairo_scale(cr, scale, scale);
+            cairo_set_source_surface(cr, image, 0.0, 0.0);
+            cairo_paint(cr);
+            cairo_restore(cr);
+        }
+        cairo_surface_destroy(image);
+    } else if (kind == "color") {
         double r, g, b;
         previewColor(value, r, g, b);
         cairo_set_source_rgb(cr, r, g, b);
@@ -170,7 +174,7 @@ static void drawImagePreview(cairo_t * cr, int width, int height, const std::str
         cairo_stroke(cr);
         cairo_set_dash(cr, nullptr, 0, 0.0);
     } else if (kind == "textsize") {
-        double size = std::max(1.0, previewNamedSize(value, 18.0) * zoom);
+        double size = std::max(1.0, 9.0 * zoom);
         cairo_select_font_face(cr, "sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
         cairo_set_font_size(cr, size);
         cairo_set_source_rgb(cr, 0.12, 0.12, 0.12);

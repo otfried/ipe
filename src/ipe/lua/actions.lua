@@ -2761,7 +2761,40 @@ local function visual_hex_to_rgb(value)
   return value
 end
 
+local visual_preview_width = 300
+local visual_preview_height = 130
+local visual_preview_scale = 4
+local visual_text_preview_serial = 0
+
+local function visual_text_preview_spec(dd, value)
+  local preview_name = "__preview_textsize"
+  local doc = ipe.Document()
+  local sheets = ipe.Sheets()
+  local sheet = ipe.Sheet()
+  sheet:setName("__preview")
+  local ok = pcall(function () sheet:setAttribute("textsize", preview_name, value) end)
+  if not ok then return nil end
+  sheets:insert(1, sheet)
+  for i,s in ipairs(dd.list) do sheets:insert(i + 1, s:clone()) end
+  doc:replaceSheets(sheets)
+  local p = doc[1]
+  local obj = ipe.Text({ stroke="black", textsize=preview_name },
+                       "Sample", ipe.Vector(20, 20))
+  p:insert(nil, obj, 1, "alpha")
+  ok = doc:runLatex(dd.model.file_name)
+  if not ok then return nil end
+  visual_text_preview_serial = visual_text_preview_serial + 1
+  local png = ipe.folder("latex", string.format("style-preview-%d.png",
+                                                  visual_text_preview_serial))
+  dd.model.ui:renderPage(doc, 1, 1, "png", png,
+                         dd.model.ui:zoom() * visual_preview_scale, true, false)
+  return string.format("imagefile|%s|%g", png, visual_preview_scale)
+end
+
 local function visual_preview_spec(dd, c, value)
+  if c.kind == "textsize" then
+    return visual_text_preview_spec(dd, value) or "textsize|" .. (value or "") .. "|" .. dd.model.ui:zoom()
+  end
   return c.kind .. "|" .. (value or "") .. "|" .. dd.model.ui:zoom()
 end
 
@@ -2900,7 +2933,8 @@ local function sheets_visual_edit(d0, dd)
   d:add("color", "input", { color_picker=true }, 4, 4)
   d:add("help", "label", { label="" }, 5, 3, 1, 2)
   d:add("preview_label", "label", { label="Preview" }, 6, 3)
-  d:add("preview", "image", { width=300, height=130 }, 7, 3, 2, 2)
+  d:add("preview", "image", { width=visual_preview_width,
+                               height=visual_preview_height }, 7, 3, 2, 2)
   d:add("apply", "button", { label="Apply / Preview",
     action=function (d) visual_apply_current(d, dd, st) end }, 9, 3)
   d:add("add", "button", { label="Add",

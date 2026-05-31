@@ -87,20 +87,6 @@ static double previewNumber(const std::string & value, double fallback) {
     return fallback;
 }
 
-static double previewNamedSize(const std::string & value, double fallback) {
-    if (value == "\\tiny") return 8.0;
-    if (value == "\\scriptsize") return 9.0;
-    if (value == "\\footnotesize") return 10.0;
-    if (value == "\\small") return 12.0;
-    if (value == "\\normalsize") return 14.0;
-    if (value == "\\large") return 18.0;
-    if (value == "\\Large") return 22.0;
-    if (value == "\\LARGE") return 26.0;
-    if (value == "\\huge") return 30.0;
-    if (value == "\\Huge") return 36.0;
-    return previewNumber(value, fallback);
-}
-
 static COLORREF previewColor(const std::string & value) {
     if (value.size() == 7 && value[0] == '#') {
         unsigned int r = 0, g = 0, b = 0;
@@ -153,7 +139,11 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
     int cy = (body.top + body.bottom) / 2;
     COLORREF blue = RGB(20, 40, 160);
     COLORREF red = RGB(230, 80, 70);
-    if (kind == "color") {
+    if (kind == "imagefile") {
+        SetBkMode(dc, TRANSPARENT);
+        DrawTextA(dc, "Rendered text preview unavailable", -1, &body,
+                  DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    } else if (kind == "color") {
         RECT swatch = body;
         InflateRect(&swatch, -8, -8);
         swatch.bottom -= 28;
@@ -170,7 +160,7 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
         SelectObject(dc, oldPen);
         DeleteObject(pen);
     } else if (kind == "textsize") {
-        int size = std::max(1, int(previewNamedSize(value, 18.0) * zoom + 0.5));
+        int size = std::max(1, int(9.0 * zoom + 0.5));
         HFONT font = CreateFontA(-size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                  DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");

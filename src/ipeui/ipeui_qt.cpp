@@ -150,20 +150,6 @@ static double previewNumber(const QString & value, double fallback) {
     return fallback;
 }
 
-static double previewNamedSize(const QString & value, double fallback) {
-    if (value == QLatin1String("\\tiny")) return 3.0;
-    if (value == QLatin1String("\\scriptsize")) return 4.0;
-    if (value == QLatin1String("\\footnotesize")) return 5.0;
-    if (value == QLatin1String("\\small")) return 6.0;
-    if (value == QLatin1String("\\normalsize")) return 7.0;
-    if (value == QLatin1String("\\large")) return 9.0;
-    if (value == QLatin1String("\\Large")) return 11.0;
-    if (value == QLatin1String("\\LARGE")) return 13.0;
-    if (value == QLatin1String("\\huge")) return 15.0;
-    if (value == QLatin1String("\\Huge")) return 18.0;
-    return previewNumber(value, fallback);
-}
-
 static QColor previewColor(const QString & value) {
     if (value.startsWith(QLatin1Char('#'))) return QColor(value);
     std::istringstream stream(value.toStdString());
@@ -215,13 +201,26 @@ void DialogImage::paintEvent(QPaintEvent *) {
 
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
     QRectF r = rect().adjusted(0.5, 0.5, -0.5, -0.5);
     painter.fillRect(r, QColor(255, 255, 220));
     painter.setPen(QPen(QColor(160, 160, 130), 1));
     painter.drawRect(r);
 
     QRectF body = r.adjusted(18, 16, -18, -16);
-    if (kind == QLatin1String("color")) {
+    if (kind == QLatin1String("imagefile")) {
+        QImage image(value);
+        if (!image.isNull()) {
+            QSizeF scaled(image.width() / zoom, image.height() / zoom);
+            double fit = std::min(body.width() / scaled.width(),
+                                  body.height() / scaled.height());
+            if (fit < 1.0) scaled *= fit;
+            QRectF target(QPointF(body.center().x() - scaled.width() / 2.0,
+                                  body.center().y() - scaled.height() / 2.0),
+                          scaled);
+            painter.drawImage(target, image);
+        }
+    } else if (kind == QLatin1String("color")) {
 	QColor c = previewColor(value);
 	painter.fillRect(body.adjusted(8, 8, -8, -28), c);
 	painter.setPen(Qt::black);
@@ -242,7 +241,7 @@ void DialogImage::paintEvent(QPaintEvent *) {
 	painter.drawLine(QPointF(body.left(), y), QPointF(body.right(), y));
     } else if (kind == QLatin1String("textsize")) {
 	QFont font = painter.font();
-	font.setPointSizeF(std::max(1.0, previewNamedSize(value, 10.0) * zoom));
+	font.setPointSizeF(std::max(1.0, 9.0 * zoom));
 	painter.setFont(font);
 	painter.setPen(QColor(30, 30, 30));
 	painter.drawText(body, Qt::AlignCenter, QStringLiteral("Sample"));

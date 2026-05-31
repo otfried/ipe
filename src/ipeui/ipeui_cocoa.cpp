@@ -230,20 +230,6 @@ static double previewNumber(const std::string & value, double fallback) {
     return fallback;
 }
 
-static double previewNamedSize(const std::string & value, double fallback) {
-    if (value == "\\tiny") return 8.0;
-    if (value == "\\scriptsize") return 9.0;
-    if (value == "\\footnotesize") return 10.0;
-    if (value == "\\small") return 12.0;
-    if (value == "\\normalsize") return 14.0;
-    if (value == "\\large") return 18.0;
-    if (value == "\\Large") return 22.0;
-    if (value == "\\LARGE") return 26.0;
-    if (value == "\\huge") return 30.0;
-    if (value == "\\Huge") return 36.0;
-    return previewNumber(value, fallback);
-}
-
 static NSColor * previewColor(const std::string & value, double alpha = 1.0) {
     if (value.size() == 7 && value[0] == '#') {
 	unsigned int r = 0, g = 0, b = 0;
@@ -327,7 +313,23 @@ static std::vector<CGFloat> previewDashPattern(const std::string & value) {
 		      : std::clamp(previewNumber(iSpec.substr(sep2 + 1), 1.0), 0.1, 100.0);
     NSRect body = NSInsetRect(bounds, 18., 16.);
 
-    if (kind == "color") {
+    if (kind == "imagefile") {
+        NSImage * image = [[NSImage alloc] initWithContentsOfFile:S2N(value)];
+        if (image) {
+            NSSize size = image.size;
+            size.width /= zoom;
+            size.height /= zoom;
+            double scale = std::min(body.size.width / size.width,
+                                    body.size.height / size.height);
+            scale = std::min(1.0, scale);
+            NSSize scaled = NSMakeSize(size.width * scale, size.height * scale);
+            NSRect target = NSMakeRect(NSMidX(body) - scaled.width / 2.,
+                                       NSMidY(body) - scaled.height / 2.,
+                                       scaled.width, scaled.height);
+            [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
+            [image drawInRect:target];
+        }
+    } else if (kind == "color") {
 	NSRect swatch = NSInsetRect(body, 8., 8.);
 	swatch.size.height -= 28.;
 	[previewColor(value) setFill];
@@ -354,7 +356,7 @@ static std::vector<CGFloat> previewDashPattern(const std::string & value) {
 	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
 	[path stroke];
     } else if (kind == "textsize") {
-	double size = std::max(1.0, previewNamedSize(value, 18.0) * zoom);
+	double size = std::max(1.0, 9.0 * zoom);
 	NSDictionary * attrs = @{
 	    NSFontAttributeName : [NSFont systemFontOfSize:size],
 	    NSForegroundColorAttributeName : [NSColor textColor]

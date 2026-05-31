@@ -151,22 +151,6 @@ function previewColor(value: string): string {
 	return `rgb(${Math.max(0, Math.min(255, Math.round(255 * r)))}, ${Math.max(0, Math.min(255, Math.round(255 * g)))}, ${Math.max(0, Math.min(255, Math.round(255 * b)))})`;
 }
 
-function previewNamedSize(value: string, fallback: number): number {
-	const sizes: Record<string, number> = {
-		"\\tiny": 8,
-		"\\scriptsize": 9,
-		"\\footnotesize": 10,
-		"\\small": 12,
-		"\\normalsize": 14,
-		"\\large": 18,
-		"\\Large": 22,
-		"\\LARGE": 26,
-		"\\huge": 30,
-		"\\Huge": 36,
-	};
-	return sizes[value] ?? previewNumber(value, fallback);
-}
-
 function previewDashPattern(value: string): number[] {
 	const m = value.match(/\[([^\]]+)\]/);
 	if (!m) return [];
@@ -182,6 +166,7 @@ function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
 	const zoom = Math.max(0.1, Math.min(100, previewNumber(zoomText, 1)));
 	const ctx = canvas.getContext("2d");
 	if (ctx == null) return;
+	canvas.dataset.previewSpec = spec;
 	const w = canvas.width;
 	const h = canvas.height;
 	ctx.clearRect(0, 0, w, h);
@@ -197,7 +182,23 @@ function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
 	const cy = (top + bottom) / 2;
 	ctx.lineCap = "round";
 	ctx.lineJoin = "round";
-	if (kind === "color") {
+	if (kind === "imagefile") {
+		const image = new Image();
+		image.addEventListener("load", () => {
+			if (canvas.dataset.previewSpec !== spec) return;
+			const logicalWidth = image.width / zoom;
+			const logicalHeight = image.height / zoom;
+			const scale = Math.min(
+				1,
+				(right - left) / logicalWidth,
+				(bottom - top) / logicalHeight,
+			);
+			const width = logicalWidth * scale;
+			const height = logicalHeight * scale;
+			ctx.drawImage(image, cx - width / 2, cy - height / 2, width, height);
+		});
+		image.src = value;
+	} else if (kind === "color") {
 		ctx.fillStyle = previewColor(value);
 		ctx.fillRect(left + 8, top + 8, right - left - 16, bottom - top - 36);
 		ctx.strokeStyle = "black";
@@ -222,7 +223,7 @@ function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
 		ctx.setLineDash([]);
 	} else if (kind === "textsize") {
 		ctx.fillStyle = "rgb(30,30,30)";
-		ctx.font = `${Math.max(1, previewNamedSize(value, 18) * zoom)}px sans-serif`;
+		ctx.font = `${Math.max(1, 9 * zoom)}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.fillText("Sample", cx, cy);
