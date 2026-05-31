@@ -2724,12 +2724,12 @@ local function visual_hex_to_rgb(value)
   return value
 end
 
-local function visual_preview_spec(c, value)
-  return c.kind .. "|" .. (value or "")
+local function visual_preview_spec(dd, c, value)
+  return c.kind .. "|" .. (value or "") .. "|" .. dd.model.ui:zoom()
 end
 
-local function visual_set_preview(d, c, value)
-  d:set("preview", visual_preview_spec(c, value))
+local function visual_set_preview(d, dd, c, value)
+  d:set("preview", visual_preview_spec(dd, c, value))
 end
 
 local function visual_load_sheet(sheet)
@@ -2743,7 +2743,7 @@ local function visual_load_sheet(sheet)
   return data
 end
 
-local function visual_set_fields(d, st)
+local function visual_set_fields(d, dd, st)
   local c = visual_style_categories[st.cat]
   local entries = st.data[st.cat]
   local names = visual_entry_names(entries)
@@ -2754,7 +2754,7 @@ local function visual_set_fields(d, st)
     d:set("name", "")
     d:set("value", "")
     d:set("color", c.default or "#000000")
-    visual_set_preview(d, c, c.color and visual_hex_to_rgb(c.default or "#000000") or c.default)
+    visual_set_preview(d, dd, c, c.color and visual_hex_to_rgb(c.default or "#000000") or c.default)
   else
     st.current = math.max(1, math.min(st.current or 1, #entries))
     d:set("items", st.current)
@@ -2766,7 +2766,7 @@ local function visual_set_fields(d, st)
       d:set("value", entries[st.current].value)
       d:set("color", "")
     end
-    visual_set_preview(d, c, entries[st.current].value)
+    visual_set_preview(d, dd, c, entries[st.current].value)
   end
   d:set("value_label", c.color and "Color" or "Value")
   d:set("help", c.help)
@@ -2801,7 +2801,7 @@ local function visual_apply_current(d, dd, st)
   st.updating = true
   d:set("items", visual_entry_names(entries))
   d:set("items", st.current)
-  visual_set_preview(d, c, value)
+  visual_set_preview(d, dd, c, value)
   st.updating = false
   return true
 end
@@ -2843,13 +2843,13 @@ local function sheets_visual_edit(d0, dd)
     if not visual_apply_current(d, dd, st) then return end
     st.cat = d:get("category")
     st.current = 1
-    visual_set_fields(d, st)
+    visual_set_fields(d, dd, st)
   end
   local first_names = visual_entry_names(st.data[1])
   first_names.action = function (d)
     if st.updating then return end
     st.current = d:get("items")
-    visual_set_fields(d, st)
+    visual_set_fields(d, dd, st)
   end
 
   local d = ipeui.Dialog(dd.model.ui:win(), "Visual stylesheet editor")
@@ -2884,7 +2884,7 @@ local function sheets_visual_edit(d0, dd)
         value=value,
       }
       st.current = #entries
-      visual_set_fields(d, st)
+      visual_set_fields(d, dd, st)
     end }, 9, 4)
   d:add("delete", "button", { label="Delete",
     action=function (d)
@@ -2892,7 +2892,7 @@ local function sheets_visual_edit(d0, dd)
       if st.current and entries[st.current] then
         table.remove(entries, st.current)
         st.current = math.min(st.current, #entries)
-        visual_set_fields(d, st)
+        visual_set_fields(d, dd, st)
       end
     end }, 10, 3)
   d:addButton("ok", "&Ok", "accept")
@@ -2900,7 +2900,7 @@ local function sheets_visual_edit(d0, dd)
   d:setStretch("row", 2, 1)
   d:setStretch("column", 2, 1)
   d:setStretch("column", 4, 2)
-  visual_set_fields(d, st)
+  visual_set_fields(d, dd, st)
 
   if not d:execute({ 680, 520 }) then return end
   local nsheet = visual_apply_to_sheet(d, dd, st, dd.list[i])

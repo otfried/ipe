@@ -123,8 +123,14 @@ static std::vector<double> previewDashPattern(const std::string & value) {
 
 static void drawImagePreview(cairo_t * cr, int width, int height, const std::string & spec) {
     size_t sep = spec.find('|');
+    size_t sep2 = sep == std::string::npos ? std::string::npos : spec.find('|', sep + 1);
     std::string kind = sep == std::string::npos ? spec : spec.substr(0, sep);
-    std::string value = sep == std::string::npos ? std::string() : spec.substr(sep + 1);
+    std::string value = sep == std::string::npos
+				    ? std::string()
+				    : spec.substr(sep + 1, sep2 - sep - 1);
+    double zoom = sep2 == std::string::npos
+		      ? 1.0
+		      : std::clamp(previewNumber(spec.substr(sep2 + 1), 1.0), 0.1, 100.0);
 
     cairo_set_source_rgb(cr, 1.0, 1.0, 0.86);
     cairo_rectangle(cr, 0.5, 0.5, width - 1.0, height - 1.0);
@@ -155,15 +161,16 @@ static void drawImagePreview(cairo_t * cr, int width, int height, const std::str
         cairo_show_text(cr, value.c_str());
     } else if (kind == "pen" || kind == "dashstyle") {
         cairo_set_source_rgb(cr, 0.08, 0.16, 0.63);
-        cairo_set_line_width(cr, kind == "pen" ? std::clamp(previewNumber(value, 1.0), 0.5, 24.0) : 4.0);
+        cairo_set_line_width(cr, kind == "pen" ? std::max(0.1, previewNumber(value, 1.0) * zoom) : std::max(0.1, 4.0 * zoom));
         std::vector<double> dashes = previewDashPattern(value);
+        for (double & dash : dashes) dash *= zoom;
         if (kind == "dashstyle" && !dashes.empty()) cairo_set_dash(cr, dashes.data(), dashes.size(), 0.0);
         cairo_move_to(cr, left, cy);
         cairo_line_to(cr, right, cy);
         cairo_stroke(cr);
         cairo_set_dash(cr, nullptr, 0, 0.0);
     } else if (kind == "textsize") {
-        double size = std::clamp(previewNamedSize(value, 18.0), 8.0, 48.0);
+        double size = std::max(1.0, previewNamedSize(value, 18.0) * zoom);
         cairo_select_font_face(cr, "sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
         cairo_set_font_size(cr, size);
         cairo_set_source_rgb(cr, 0.12, 0.12, 0.12);
@@ -172,7 +179,7 @@ static void drawImagePreview(cairo_t * cr, int width, int height, const std::str
         cairo_move_to(cr, cx - ext.width / 2.0 - ext.x_bearing, cy - ext.height / 2.0 - ext.y_bearing);
         cairo_show_text(cr, "Sample");
     } else if (kind == "symbolsize") {
-        double s = std::clamp(previewNumber(value, 3.0) * 3.0, 6.0, 42.0);
+        double s = std::max(1.0, previewNumber(value, 3.0) * 3.0 * zoom);
         double xs[] = {left + (right - left) * 0.25, cx, left + (right - left) * 0.75};
         cairo_set_line_width(cr, 2.0);
         cairo_set_source_rgb(cr, 0.90, 0.31, 0.27);
@@ -184,9 +191,9 @@ static void drawImagePreview(cairo_t * cr, int width, int height, const std::str
             cairo_set_source_rgb(cr, 0.90, 0.31, 0.27);
         }
     } else if (kind == "arrowsize") {
-        double s = std::clamp(previewNumber(value, 7.0) * 2.0, 8.0, 50.0);
+        double s = std::max(1.0, previewNumber(value, 7.0) * 2.0 * zoom);
         cairo_set_source_rgb(cr, 0.08, 0.16, 0.63);
-        cairo_set_line_width(cr, 4.0);
+        cairo_set_line_width(cr, std::max(0.1, 4.0 * zoom));
         cairo_move_to(cr, left, cy);
         cairo_line_to(cr, right - s, cy);
         cairo_stroke(cr);
@@ -204,7 +211,7 @@ static void drawImagePreview(cairo_t * cr, int width, int height, const std::str
         cairo_rectangle(cr, cx - 12.0, top + 10.0, (right - left) * 0.45, bottom - top - 20.0);
         cairo_fill(cr);
     } else if (kind == "gridsize") {
-        double step = std::clamp(previewNumber(value, 8.0), 1.0, 64.0);
+        double step = std::max(1.0, previewNumber(value, 8.0) * zoom);
         cairo_set_source_rgb(cr, 0.67, 0.67, 0.67);
         cairo_set_line_width(cr, 1.0);
         for (double x = left; x <= right; x += step) {

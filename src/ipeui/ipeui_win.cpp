@@ -133,8 +133,14 @@ static void fillRect(HDC dc, const RECT & r, COLORREF color) {
 
 static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
     size_t sep = spec.find('|');
+    size_t sep2 = sep == std::string::npos ? std::string::npos : spec.find('|', sep + 1);
     std::string kind = sep == std::string::npos ? spec : spec.substr(0, sep);
-    std::string value = sep == std::string::npos ? std::string() : spec.substr(sep + 1);
+    std::string value = sep == std::string::npos
+				    ? std::string()
+				    : spec.substr(sep + 1, sep2 - sep - 1);
+    double zoom = sep2 == std::string::npos
+		      ? 1.0
+		      : std::clamp(previewNumber(spec.substr(sep2 + 1), 1.0), 0.1, 100.0);
 
     fillRect(dc, rc, RGB(255, 255, 220));
     HBRUSH frame = CreateSolidBrush(RGB(160, 160, 130));
@@ -156,7 +162,7 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
         SetBkMode(dc, TRANSPARENT);
         DrawTextA(dc, value.c_str(), -1, &body, DT_CENTER | DT_BOTTOM | DT_SINGLELINE);
     } else if (kind == "pen" || kind == "dashstyle") {
-        int width = kind == "pen" ? int(std::clamp(previewNumber(value, 1.0), 1.0, 24.0)) : 4;
+        int width = std::max(1, int((kind == "pen" ? previewNumber(value, 1.0) : 4.0) * zoom + 0.5));
         HPEN pen = CreatePen(kind == "dashstyle" ? PS_DASH : PS_SOLID, width, blue);
         HGDIOBJ oldPen = SelectObject(dc, pen);
         MoveToEx(dc, body.left, cy, nullptr);
@@ -164,7 +170,7 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
         SelectObject(dc, oldPen);
         DeleteObject(pen);
     } else if (kind == "textsize") {
-        int size = int(std::clamp(previewNamedSize(value, 18.0), 8.0, 48.0));
+        int size = std::max(1, int(previewNamedSize(value, 18.0) * zoom + 0.5));
         HFONT font = CreateFontA(-size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                  DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
@@ -174,7 +180,7 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
         SelectObject(dc, oldFont);
         DeleteObject(font);
     } else if (kind == "symbolsize") {
-        int s = int(std::clamp(previewNumber(value, 3.0) * 3.0, 6.0, 42.0));
+        int s = std::max(1, int(previewNumber(value, 3.0) * 3.0 * zoom + 0.5));
         HPEN pen = CreatePen(PS_SOLID, 2, blue);
         HBRUSH brush = CreateSolidBrush(red);
         HGDIOBJ oldPen = SelectObject(dc, pen);
@@ -191,8 +197,8 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
         DeleteObject(brush);
         DeleteObject(pen);
     } else if (kind == "arrowsize") {
-        int s = int(std::clamp(previewNumber(value, 7.0) * 2.0, 8.0, 50.0));
-        HPEN pen = CreatePen(PS_SOLID, 4, blue);
+        int s = std::max(1, int(previewNumber(value, 7.0) * 2.0 * zoom + 0.5));
+        HPEN pen = CreatePen(PS_SOLID, std::max(1, int(4.0 * zoom + 0.5)), blue);
         HBRUSH brush = CreateSolidBrush(blue);
         HGDIOBJ oldPen = SelectObject(dc, pen);
         HGDIOBJ oldBrush = SelectObject(dc, brush);
@@ -216,7 +222,7 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
         FrameRect(dc, &left, (HBRUSH)GetStockObject(BLACK_BRUSH));
         FrameRect(dc, &right, (HBRUSH)GetStockObject(BLACK_BRUSH));
     } else if (kind == "gridsize") {
-        int step = int(std::clamp(previewNumber(value, 8.0), 1.0, 64.0));
+        int step = std::max(1, int(previewNumber(value, 8.0) * zoom + 0.5));
         HPEN grid = CreatePen(PS_SOLID, 1, RGB(170, 170, 170));
         HGDIOBJ oldPen = SelectObject(dc, grid);
         for (int x = body.left; x <= body.right; x += step) {

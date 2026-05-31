@@ -178,7 +178,8 @@ function previewDashPattern(value: string): number[] {
 }
 
 function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
-	const [kind, value = ""] = spec.split("|", 2);
+	const [kind, value = "", zoomText = "1"] = spec.split("|");
+	const zoom = Math.max(0.1, Math.min(100, previewNumber(zoomText, 1)));
 	const ctx = canvas.getContext("2d");
 	if (ctx == null) return;
 	const w = canvas.width;
@@ -208,8 +209,11 @@ function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
 	} else if (kind === "pen" || kind === "dashstyle") {
 		ctx.strokeStyle = "rgb(20,40,160)";
 		ctx.lineWidth =
-			kind === "pen" ? Math.max(0.5, Math.min(24, previewNumber(value, 1))) : 4;
-		if (kind === "dashstyle") ctx.setLineDash(previewDashPattern(value));
+			kind === "pen"
+				? Math.max(0.1, previewNumber(value, 1) * zoom)
+				: Math.max(0.1, 4 * zoom);
+		if (kind === "dashstyle")
+			ctx.setLineDash(previewDashPattern(value).map((x) => x * zoom));
 		else ctx.setLineDash([]);
 		ctx.beginPath();
 		ctx.moveTo(left, cy);
@@ -218,12 +222,12 @@ function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
 		ctx.setLineDash([]);
 	} else if (kind === "textsize") {
 		ctx.fillStyle = "rgb(30,30,30)";
-		ctx.font = `${Math.max(8, Math.min(48, previewNamedSize(value, 18)))}px sans-serif`;
+		ctx.font = `${Math.max(1, previewNamedSize(value, 18) * zoom)}px sans-serif`;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
 		ctx.fillText("Sample", cx, cy);
 	} else if (kind === "symbolsize") {
-		const s = Math.max(6, Math.min(42, previewNumber(value, 3) * 3));
+		const s = Math.max(1, previewNumber(value, 3) * 3 * zoom);
 		ctx.fillStyle = "rgb(230,80,70)";
 		ctx.strokeStyle = "rgb(20,40,160)";
 		ctx.lineWidth = 2;
@@ -238,10 +242,10 @@ function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
 			ctx.stroke();
 		}
 	} else if (kind === "arrowsize") {
-		const s = Math.max(8, Math.min(50, previewNumber(value, 7) * 2));
+		const s = Math.max(1, previewNumber(value, 7) * 2 * zoom);
 		ctx.strokeStyle = "rgb(20,40,160)";
 		ctx.fillStyle = "rgb(20,40,160)";
-		ctx.lineWidth = 4;
+		ctx.lineWidth = Math.max(0.1, 4 * zoom);
 		ctx.beginPath();
 		ctx.moveTo(left, cy);
 		ctx.lineTo(right - s, cy);
@@ -259,7 +263,7 @@ function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
 		ctx.fillStyle = `rgba(230,70,50,${op})`;
 		ctx.fillRect(cx - 12, top + 10, (right - left) * 0.45, bottom - top - 20);
 	} else if (kind === "gridsize") {
-		const step = Math.max(1, Math.min(64, previewNumber(value, 8)));
+		const step = Math.max(1, previewNumber(value, 8) * zoom);
 		ctx.strokeStyle = "rgb(170,170,170)";
 		ctx.lineWidth = 1;
 		for (let x = left; x <= right; x += step) {

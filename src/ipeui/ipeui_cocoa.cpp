@@ -317,8 +317,14 @@ static std::vector<CGFloat> previewDashPattern(const std::string & value) {
     NSFrameRect(bounds);
 
     size_t sep = iSpec.find('|');
+    size_t sep2 = sep == std::string::npos ? std::string::npos : iSpec.find('|', sep + 1);
     std::string kind = sep == std::string::npos ? iSpec : iSpec.substr(0, sep);
-    std::string value = sep == std::string::npos ? std::string() : iSpec.substr(sep + 1);
+    std::string value = sep == std::string::npos
+				    ? std::string()
+				    : iSpec.substr(sep + 1, sep2 - sep - 1);
+    double zoom = sep2 == std::string::npos
+		      ? 1.0
+		      : std::clamp(previewNumber(iSpec.substr(sep2 + 1), 1.0), 0.1, 100.0);
     NSRect body = NSInsetRect(bounds, 18., 16.);
 
     if (kind == "color") {
@@ -337,24 +343,25 @@ static std::vector<CGFloat> previewDashPattern(const std::string & value) {
 	[path moveToPoint:NSMakePoint(NSMinX(body), NSMidY(body))];
 	[path lineToPoint:NSMakePoint(NSMaxX(body), NSMidY(body))];
 	[path setLineWidth:(kind == "pen")
-				 ? std::clamp(previewNumber(value, 1.0), 0.5, 24.0)
-				 : 4.0];
+				 ? std::max(0.1, previewNumber(value, 1.0) * zoom)
+				 : std::max(0.1, 4.0 * zoom)];
 	if (kind == "dashstyle") {
 	    std::vector<CGFloat> dashes = previewDashPattern(value);
+	    for (CGFloat & dash : dashes) dash *= zoom;
 	    if (!dashes.empty())
 		[path setLineDash:dashes.data() count:(NSInteger)dashes.size() phase:0.0];
 	}
 	[[NSColor colorWithCalibratedRed:0.08 green:0.16 blue:0.63 alpha:1.0] setStroke];
 	[path stroke];
     } else if (kind == "textsize") {
-	double size = std::clamp(previewNamedSize(value, 18.0), 8.0, 48.0);
+	double size = std::max(1.0, previewNamedSize(value, 18.0) * zoom);
 	NSDictionary * attrs = @{
 	    NSFontAttributeName : [NSFont systemFontOfSize:size],
 	    NSForegroundColorAttributeName : [NSColor textColor]
 	};
 	[@"Sample" drawInRect:body withAttributes:attrs];
     } else if (kind == "symbolsize") {
-	double s = std::clamp(previewNumber(value, 3.0) * 3.0, 6.0, 42.0);
+	double s = std::max(1.0, previewNumber(value, 3.0) * 3.0 * zoom);
 	NSArray * centers = @[
 	    [NSValue valueWithPoint:NSMakePoint(NSMinX(body) + body.size.width * 0.25,
 						 NSMidY(body))],
@@ -380,7 +387,7 @@ static std::vector<CGFloat> previewDashPattern(const std::string & value) {
 	[diamond fill];
 	[diamond stroke];
     } else if (kind == "arrowsize") {
-	double s = std::clamp(previewNumber(value, 7.0) * 2.0, 8.0, 50.0);
+	double s = std::max(1.0, previewNumber(value, 7.0) * 2.0 * zoom);
 	NSPoint a = NSMakePoint(NSMinX(body), NSMidY(body));
 	NSPoint b = NSMakePoint(NSMaxX(body) - s, NSMidY(body));
 	NSBezierPath * line = [NSBezierPath bezierPath];
@@ -410,7 +417,7 @@ static std::vector<CGFloat> previewDashPattern(const std::string & value) {
 	NSFrameRect(left);
 	NSFrameRect(right);
     } else if (kind == "gridsize") {
-	double step = std::clamp(previewNumber(value, 8.0), 1.0, 64.0);
+	double step = std::max(1.0, previewNumber(value, 8.0) * zoom);
 	[[NSColor colorWithCalibratedWhite:0.65 alpha:1.0] setStroke];
 	for (double x = NSMinX(body); x <= NSMaxX(body); x += step) {
 	    NSBezierPath * p = [NSBezierPath bezierPath];
