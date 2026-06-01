@@ -2698,7 +2698,7 @@ end
 
 local visual_style_categories = {
   { label="Colors", kind="color", color=true, default="#000000",
-    help="Color values use the color picker or three numbers between 0 and 1." },
+    help="Color values are #rrggbb or three numbers between 0 and 1." },
   { label="Pen widths", kind="pen", default="1",
     help="Pen widths are numbers in Ipe points." },
   { label="Dash styles", kind="dashstyle", default="[4] 0",
@@ -2750,13 +2750,33 @@ local function visual_rgb_to_hex(value)
 end
 
 local function visual_hex_to_rgb(value)
-  if #value == 7 and value:sub(1, 1) == "#" then
-    local r = tonumber(value:sub(2, 3), 16)
-    local g = tonumber(value:sub(4, 5), 16)
-    local b = tonumber(value:sub(6, 7), 16)
-    if r and g and b then
-      return string.format("%.6g %.6g %.6g", r / 255, g / 255, b / 255)
+  value = value:match("^%s*(.-)%s*$")
+  local function hex_digit(c)
+    local b = string.byte(c)
+    if string.byte("0") <= b and b <= string.byte("9") then
+      return b - string.byte("0")
+    elseif string.byte("a") <= b and b <= string.byte("f") then
+      return b - string.byte("a") + 10
+    elseif string.byte("A") <= b and b <= string.byte("F") then
+      return b - string.byte("A") + 10
     end
+  end
+  local function hex_byte(s)
+    return 16 * hex_digit(s:sub(1, 1)) + hex_digit(s:sub(2, 2))
+  end
+  local hex = value:match("^#(%x%x%x%x%x%x)$")
+  if hex then
+    local r = hex_byte(hex:sub(1, 2))
+    local g = hex_byte(hex:sub(3, 4))
+    local b = hex_byte(hex:sub(5, 6))
+    return string.format("%.6g %.6g %.6g", r / 255, g / 255, b / 255)
+  end
+  local r1, g1, b1 = value:match("^#(%x)(%x)(%x)$")
+  if r1 then
+    local r = hex_byte(r1 .. r1)
+    local g = hex_byte(g1 .. g1)
+    local b = hex_byte(b1 .. b1)
+    return string.format("%.6g %.6g %.6g", r / 255, g / 255, b / 255)
   end
   return value
 end
@@ -2901,26 +2921,22 @@ local function visual_set_fields(d, dd, st)
   if #entries == 0 then
     st.current = nil
     d:set("name", "")
-    d:set("value", "")
-    d:set("color", c.default or "#000000")
+    d:set("value", c.color and (c.default or "#000000") or "")
     visual_set_preview(d, dd, c, c.color and visual_hex_to_rgb(c.default or "#000000") or c.default)
   else
     st.current = math.max(1, math.min(st.current or 1, #entries))
     d:set("items", st.current)
     d:set("name", entries[st.current].name)
     if c.color then
-      d:set("value", entries[st.current].value)
-      d:set("color", visual_rgb_to_hex(entries[st.current].value))
+      d:set("value", visual_rgb_to_hex(entries[st.current].value))
     else
       d:set("value", entries[st.current].value)
-      d:set("color", "")
     end
     visual_set_preview(d, dd, c, entries[st.current].value)
   end
   d:set("value_label", c.color and "Color" or "Value")
   d:set("help", c.help)
-  d:setEnabled("value", not c.color)
-  d:setEnabled("color", c.color)
+  d:setEnabled("value", true)
   st.updating = false
 end
 
@@ -2933,7 +2949,7 @@ local function visual_apply_current(d, dd, st)
     dd.model:warning("Cannot update stylesheet", "The symbolic name cannot be empty")
     return false
   end
-  local value = c.color and visual_hex_to_rgb(d:get("color")) or d:get("value")
+  local value = c.color and visual_hex_to_rgb(d:get("value")) or d:get("value")
   if value == "" then
     dd.model:warning("Cannot update stylesheet", "The value cannot be empty")
     return false
@@ -2950,6 +2966,7 @@ local function visual_apply_current(d, dd, st)
   st.updating = true
   d:set("items", visual_entry_names(entries))
   d:set("items", st.current)
+  if c.color then d:set("value", visual_rgb_to_hex(value)) end
   visual_set_preview(d, dd, c, value)
   st.updating = false
   return true
@@ -3009,7 +3026,6 @@ local function sheets_visual_edit(d0, dd)
   d:add("name", "input", { select_all=true }, 2, 4)
   d:add("value_label", "label", { label="Value" }, 3, 3)
   d:add("value", "input", {}, 3, 4)
-  d:add("color", "input", { color_picker=true }, 4, 4)
   d:add("help", "label", { label="" }, 5, 3, 1, 2)
   d:add("preview_label", "label", { label="Preview" }, 6, 3)
   d:add("preview", "image", { width=visual_preview_width,
@@ -3025,7 +3041,7 @@ local function sheets_visual_edit(d0, dd)
         name = "new"
       end
       if name == "" then name = "new" end
-      local value = c.color and visual_hex_to_rgb(d:get("color")) or d:get("value")
+      local value = c.color and visual_hex_to_rgb(d:get("value")) or d:get("value")
       if value == "" then
         value = c.color and visual_hex_to_rgb(c.default) or c.default
       end
