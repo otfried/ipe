@@ -20,7 +20,7 @@ presentations.
 Ipe comes with a somewhat basic style sheet :file:`presentation.isy`
 for making presentations.  For a more sophisticated presentation style
 sheet, have a look at `Jens' webpage
-<https://www3.tuhh.de/e11/schmidt/#IpeStyle>`_.
+<https://algo.uni-rostock.de/software/#c2508443>`_.
 
 Presentation stylesheets
 ------------------------
