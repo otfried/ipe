@@ -257,7 +257,7 @@ in the preamble:
 On a Unix-system, you can list the fonts on your system supporting
 Arabic by saying ``fc-list :lang=ar`` on the command line.
 
-You can now create text objects in Arabic using the macro \verb+\arb+
+You can now create text objects in Arabic using the macro ``\arb``
 and the environment ``arab``.
 
 The following stylesheet *arabic.isy* makes this more
