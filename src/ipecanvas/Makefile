@@ -27,10 +27,16 @@ qt_sources = ipecanvas_qt.cpp ipeselector_qt.cpp ipepdfview_qt.cpp
 moc_headers = ipecanvas_qt.h ipeselector_qt.h ipepdfview_qt.h
 js_sources = ipecanvas_js.cpp
 
+ifdef IPEWASM
+$(TARGET): $(objects)
+	$(MAKE_LIBDIR)
+	emar rcs $@ $^
+else
 $(TARGET): $(objects)
 	$(MAKE_LIBDIR)
 	$(CXX) $(LDFLAGS) $(DLL_LDFLAGS) $(SONAME) -o $@ $^ $(LIBS)
 	$(MAKE_SYMLINKS)
+endif
 
 clean:
 	@-rm -f $(objects) $(TARGET) $(DEPEND)

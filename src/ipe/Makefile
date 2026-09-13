@@ -21,12 +21,10 @@ TARGET = ../ipe-web/src/ipe.js
 # create js/wasm files suitable for a browser
 LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -sALLOW_MEMORY_GROWTH=1
 LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS,IDBFS,stringToNewUTF8,Emval
+LIBS += $(FREETYPE_LIBS) $(CAIRO_LIBS) $(PNG_LIBS) $(JPEG_LIBS) $(GSL_LIBS) $(SPIRO_LIBS)
 LDFLAGS += -lembind -lidbfs.js --embed-file opt
 MAKE_ASSETS = bash mkipewebassets.sh
-WASM_LIBS = $(BUILDDIR)/lib/libipeui.so $(BUILDDIR)/lib/libipecanvas.so \
-	$(BUILDDIR)/lib/libipelua.so $(BUILDDIR)/lib/libipe.so \
-	$(BUILDDIR)/lib/libipecairo.so \
-	lua/model.lua lua/actions.lua lua/main.lua
+WASM_LIBS = lua/model.lua lua/actions.lua lua/main.lua
 endif
 
 all: $(TARGET)

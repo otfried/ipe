@@ -12,6 +12,7 @@ LIBS += -L$(buildlib) -lipecairo -lipe $(CAIRO_LIBS)
 
 ifdef IPEWASM
 LDFLAGS += --pre-js $(NODEJSPRE) -lembind -lnoderawfs.js -lnodefs.js
+LIBS += $(FREETYPE_LIBS) $(CAIRO_LIBS) $(PNG_LIBS) $(JPEG_LIBS) $(GSL_LIBS) $(SPIRO_LIBS)
 endif
 
 all: $(TARGET)

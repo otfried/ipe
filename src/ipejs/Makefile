@@ -28,9 +28,9 @@ all: $(TARGET)
 
 sources	= ipejs.cpp ipecairojs.cpp
 
-$(TARGET): $(objects) Makefile
-	$(MAKE_BINDIR)
-	$(CXX) $(LDFLAGS) -o $@ $(objects) $(LIBS)
+$(TARGET): $(objects)
+	$(MAKE_LIBDIR)
+	emar rcs $@ $^
 
 clean:
 	@-rm -f $(objects) $(TARGET) $(DEPEND)

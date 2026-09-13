@@ -30,10 +30,16 @@ win_sources = ipeui_win.cpp
 gtk_sources = ipeui_gtk.cpp
 js_sources  = ipeui_js.cpp
 
+ifdef IPEWASM
+$(TARGET): $(objects)
+	$(MAKE_LIBDIR)
+	emar rcs $@ $^
+else
 $(TARGET): $(objects)
 	$(MAKE_LIBDIR)
 	$(CXX) $(LDFLAGS) $(DLL_LDFLAGS) $(SONAME) -o $@ $^ $(LIBS)
 	$(MAKE_SYMLINKS)
+endif
 
 clean:
 	@-rm -f $(objects) $(TARGET) $(DEPEND)

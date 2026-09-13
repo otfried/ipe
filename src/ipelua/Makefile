@@ -27,10 +27,16 @@ sources	= \
 	ipeluapage.cpp \
 	ipeluaipelet.cpp
 
+ifdef IPEWASM
+$(TARGET): $(objects)
+	$(MAKE_LIBDIR)
+	emar rcs $@ $^
+else
 $(TARGET): $(objects)
 	$(MAKE_LIBDIR)
 	$(CXX) $(LDFLAGS) $(DLL_LDFLAGS) $(SONAME) -o $@ $^ $(LIBS)
 	$(MAKE_SYMLINKS)
+endif
 
 clean:
 	@-rm -f $(objects) $(TARGET) $(DEPEND)

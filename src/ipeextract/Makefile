@@ -12,6 +12,7 @@ LIBS += -L$(buildlib) -lipe
 
 ifdef IPEWASM
 LDFLAGS += --pre-js $(NODEJSPRE) -lembind -lnoderawfs.js -lnodefs.js
+LIBS += $(GSL_LIBS) $(SPIRO_LIBS) -lz
 endif
 
 all: $(TARGET)

@@ -231,9 +231,8 @@ ifdef IPEWASM
   # -------------------- emscripten --------------------
   BUILDDIR       = $(IPESRCDIR)/../emscripten
   IPEDEPS	 ?= /sw/emscripten
-  # this is a bit weird, as wasm doesn't really have shared libraries
-  DLL_LDFLAGS	 += -shared
-  dll_target     = $(buildlib)/lib$1.so
+  # Emscripten doesn't use shared libraries, so we create a static archive instead
+  dll_target     = $(buildlib)/lib$1.a
   exe_target	 = $(BUILDDIR)/bin/$1.js
   CXX            = em++
   CC             = emcc
@@ -241,11 +240,11 @@ ifdef IPEWASM
   CPPFLAGS	 += -DIPEWASM
   IPEBUNDLE      = 1
   ZLIB_CFLAGS    = --use-port=zlib
-  ZLIB_LIBS      = -lz
+  ZLIB_LIBS      = --use-port=zlib
   PNG_CFLAGS     := -I$(IPEDEPS)/include/libpng16
   PNG_LIBS       := -L$(IPEDEPS)/lib -lpng16 -lz
   JPEG_CFLAGS    := --use-port=libjpeg
-  JPEG_LIBS      := -ljpeg
+  JPEG_LIBS      := --use-port=libjpeg
   SPIRO_CFLAGS   := -I$(IPEDEPS)/include/spiro
   SPIRO_LIBS     := -L$(IPEDEPS)/lib -lspiro
   GSL_CFLAGS     := -I$(IPEDEPS)/include
@@ -298,7 +297,7 @@ MAKE_DEPEND = \
 	mkdir -p $(OBJDIR); \
 	echo "" > $@; \
 	for f in $(all_sources); do \
-	$(CXX) -std=c++17 -MM -MT $(OBJDIR)/$${f%%.cpp}.o $(CPPFLAGS) $$f >> $@; done
+	$(CXX) -std=c++23 -MM -MT $(OBJDIR)/$${f%%.cpp}.o $(CPPFLAGS) $$f >> $@; done
 
 # The rules
 

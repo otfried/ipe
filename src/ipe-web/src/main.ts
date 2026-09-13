@@ -11,7 +11,7 @@ declare global {
 
 instantiateIpe({
 	printErr: console.log.bind(console),
-}).then(async (ipe) => {
+}).then(async (ipe: any) => {
 	console.log("Ipe wasm code loaded");
 	const ipeui = new IpeUi(ipe, [
 		"HOME=/home/ipe",

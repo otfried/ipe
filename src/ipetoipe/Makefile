@@ -11,7 +11,8 @@ CPPFLAGS += -I../include
 LIBS += -L$(buildlib) -lipe
 
 ifdef IPEWASM
-LDFLAGS += --pre-js $(NODEJSPRE) -lembind -lnoderawfs.js -lnodefs.js
+LDFLAGS += --pre-js $(NODEJSPRE) -lembind -lnoderawfs.js -lnodefs.js --use-port=zlib
+LIBS += $(GSL_LIBS) $(SPIRO_LIBS) 
 endif
 
 all: $(TARGET)
