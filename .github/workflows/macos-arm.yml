@@ -1,5 +1,6 @@
 name: Build Ipe on MacOS with ARM processor
-on: workflow_dispatch
+on:
+  workflow_dispatch:
 jobs:
   Build:
     runs-on: macos-latest
