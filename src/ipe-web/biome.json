@@ -1,6 +1,6 @@
 {
 	"files": {
-		"include": ["src/**/*.ts"]
+		"includes": ["src/**/*.ts"]
 	},
 	"linter": {
 		"rules": {

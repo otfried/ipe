@@ -402,7 +402,7 @@ export class Modal {
 			const pages = [];
 			const marks = items.map((item) => item.marked);
 			for (const child of contents.children) {
-				const oldIdx = Number.parseInt(child.id.substring(7));
+				const oldIdx = Number.parseInt(child.id.substring(7), 10);
 				marks[oldIdx] = child.classList.contains("marked");
 				pages.push(oldIdx + 1);
 			}

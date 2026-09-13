@@ -17,7 +17,7 @@
     "vite": "^8.0.7",
     "@types/emscripten": "^1.41.6",
     "@types/sortablejs": "^1.15.8",
-    "@biomejs/biome": "^1.7.3"
+    "@biomejs/biome": "^2.4.6"
   },
   "author": {
     "name": "Otfried Cheong",

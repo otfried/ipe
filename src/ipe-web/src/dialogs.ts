@@ -97,6 +97,7 @@ export function retrieveValues(options: DialogOptions) {
 			case "combo":
 				values[w.name] = Number.parseInt(
 					(el as HTMLSelectElement).value.substring(5),
+					10,
 				);
 				break;
 			case "list":

@@ -320,7 +320,7 @@ export class IpeUi {
 		});
 
 		// TODO: use window.matchMedia() to watch for changes in dpr
-		let resizeTimeout: number | undefined = undefined;
+		let resizeTimeout: number | undefined;
 		window.addEventListener("resize", () => {
 			clearTimeout(resizeTimeout);
 			resizeTimeout = setTimeout(() => {
