@@ -708,7 +708,7 @@ export class IpeUi {
 				});
 				const host = import.meta.env.DEV
 					? "http://localhost:5000"
-					: `${window.location.protocol}//${window.location.hostname}`;
+					: `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
 				const url = `${host}/data?target=ipetemp.tex&command=${arg}`;
 				const form = new FormData();
 				form.append("file", tarBlob, "latexTarball.tar");
