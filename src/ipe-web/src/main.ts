@@ -1,10 +1,11 @@
-import instantiateIpe from "./ipe.js";
-import { IpeUi } from "./ipeui";
-import "./index.css";
+import instantiateIpe from "./ipe/ipe.js";
+import { IpeUi } from "./ipe/ipeui";
+import "./ipe/index.css";
+import { buildInfo } from "./gitversion";
 
 declare global {
 	interface Window {
-		ipeBridge: any;  // bridge between webview and the host environment
+		ipeBridge: any; // bridge between webview and the host environment
 		ipeui: IpeUi; // used in WASM for calls into JS
 	}
 }
@@ -13,7 +14,7 @@ instantiateIpe({
 	printErr: console.log.bind(console),
 }).then(async (ipe: any) => {
 	console.log("Ipe wasm code loaded");
-	const ipeui = new IpeUi(ipe, [
+	const ipeui = new IpeUi(ipe, buildInfo, "web", [
 		"HOME=/home/ipe",
 		"IPELATEXDIR=/tmp/latexrun",
 		"IPELETPATH=/home/ipe/ipelets:_",

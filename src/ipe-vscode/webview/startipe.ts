@@ -1,4 +1,5 @@
 import "./ipe/index.css";
+import { buildInfo } from "./gitversion";
 
 declare global {
 	interface Window {
@@ -13,12 +14,11 @@ import instantiateIpe from "./ipe/ipe.js";
 import { IpeUi } from "./ipe/ipeui";
 
 class IpeVSCodeBridge {
-
 	constructor(readonly ipe: any) {
-		window.addEventListener('message', event => {
+		window.addEventListener("message", (event) => {
 			const message = event.data;
 			switch (message.command) {
-				case 'load':
+				case "load":
 					console.log("Loading content into Ipe:", message.content);
 					ipe.FS.writeFile("/home/ipe/document.ipe", message.content);
 					window.ipeui?.openFile("/home/ipe/document.ipe");
@@ -33,10 +33,10 @@ class IpeVSCodeBridge {
 
 	async setClipboard(_data: string) {}
 
-	async getClipboard(_allowBitmap: boolean) { return null; }
-
+	async getClipboard(_allowBitmap: boolean) {
+		return null;
+	}
 }
-
 
 instantiateIpe({
 	printErr: console.log.bind(console),
@@ -69,7 +69,7 @@ instantiateIpe({
 		// `HOME=${setup.home}`,
 	];
 	console.log("About to create IpeUi");
-	const ipeui = new IpeUi(ipe, env);
+	const ipeui = new IpeUi(ipe, buildInfo, "vscode", env);
 	ipeui.customizationFileName = "dummy"; // setup.customization as string;
 	console.log("Starting Ipe");
 	ipeui.startIpe(1920, 1024); // setup.screen.width, setup.screen.height);

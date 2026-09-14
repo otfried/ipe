@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 
 export default defineConfig({
@@ -7,5 +8,15 @@ export default defineConfig({
   preload: {
     plugins: [externalizeDepsPlugin()]
   },
-  renderer: {}
+  renderer: {
+    server: {
+      fs: {
+        // Allow serving files from the sibling ipe-web folder
+        allow: [
+          resolve(__dirname, '.'),
+          resolve(__dirname, '../ipe-web')
+        ]
+      }
+    }
+  }
 })

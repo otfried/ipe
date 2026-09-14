@@ -11,14 +11,14 @@ out/
 /src/ipe/opt/
 /src/ipejs/ipejs.js
 
-/src/ipe-web/src/ipe.js
-/src/ipe-web/src/ipe.wasm
 /src/ipe-web/src/gitversion.ts
+/src/ipe-web/src/ipe/ipe.js
+/src/ipe-web/src/ipe/ipe.wasm
 
 /src/ipe-electron/src/renderer/index.html
-/src/ipe-electron/src/renderer/src/ipe/
+/src/ipe-electron/src/renderer/src/gitversion.ts
 /src/ipe-electron/src/main/*.png
 
-/src/vscode/src/root.ts
-/src/vscode/webview/ipe/
+/src/ipe-vscode/src/root.ts
+/src/ipe-vscode/webview/gitversion.ts
 

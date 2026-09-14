@@ -2,6 +2,7 @@ import "./ipe/index.css";
 
 import instantiateIpe from "./ipe/ipe.js";
 import { IpeUi } from "./ipe/ipeui";
+import { buildInfo } from "./gitversion";
 
 declare global {
 	interface Window {
@@ -35,7 +36,7 @@ instantiateIpe({
 		"IPELATEXDIR=/tmp/latexrun",
 		`HOME=${setup.home}`,
 	];
-	const ipeui = new IpeUi(ipe, env);
+	const ipeui = new IpeUi(ipe, buildInfo, "electron", env);
 	ipeui.customizationFileName = setup.customization as string;
 	console.log("Starting Ipe");
 	ipeui.startIpe(setup.screen.width, setup.screen.height);

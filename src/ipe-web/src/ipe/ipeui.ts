@@ -6,7 +6,6 @@ import {
 	retrieveValues,
 	setElement,
 } from "./dialogs";
-import { buildInfo } from "./gitversion";
 import type { Ipe, ResumeResult } from "./ipejs";
 import {
 	type FileDialogOptions,
@@ -43,6 +42,8 @@ function toRgb(rgb: Color): string {
 	return `rgb(${255 * rgb.red}, ${255 * rgb.green}, ${255 * rgb.blue})`;
 }
 
+type IpePlatform = "web" | "electron" | "vscode";
+
 export class IpeUi {
 	readonly ipe: Ipe;
 	modal: Modal;
@@ -74,10 +75,16 @@ export class IpeUi {
 	filename: string | null;
 	saveCallback: ((fn: string) => void) | null = null;
 	readonly touch: TouchDragZoom;
-	platform: string;
 	customizationFileName = "";
+	readonly buildInfo: string;
+	readonly platform: IpePlatform;
 
-	constructor(ipe: Ipe, ipeenv: string[]) {
+	constructor(
+		ipe: Ipe,
+		buildInfo: string,
+		platform: IpePlatform,
+		ipeenv: string[],
+	) {
 		this.ipe = ipe;
 		this.mainMenu = [];
 		this.actions = {};
@@ -85,11 +92,12 @@ export class IpeUi {
 		this.modal = new Modal(ipe, (result) => this.resume(result));
 		this.version = this.ipe.Emval.toValue(this.ipe._ipeVersion());
 		this.touch = new TouchDragZoom(this.ipe, this.topCanvas);
-		this.platform = window.ipeBridge ? "electron" : "web";
+		this.platform = platform;
 
 		this._calculateCanvasSize();
 		console.log("Environment = ", ipeenv);
 		this.ipe._initLib(this.ipe.Emval.toHandle(ipeenv));
+		this.buildInfo = buildInfo;
 		this.popupMenu = new PopupMenu();
 		this.filename = null;
 
@@ -440,9 +448,13 @@ export class IpeUi {
 			'<a target="_blank" href="http://patreon.com/otfried">Ipe patrons</a>. ' +
 			"For the price of a cup of coffee per month you can make a meaningful contribution " +
 			"to the continuing development of Ipe.</p>";
-		const build = `<div class="buildInfo">This Ipe is ${buildInfo}</div>`;
+		const build = `<div class="buildInfo">This Ipe is ${this.buildInfo}</div>`;
 		const edition =
-			this.platform === "electron" ? "Electron Edition" : "Web Edition";
+			this.platform === "electron"
+				? "Electron Edition"
+				: this.platform === "vscode"
+					? "VSCode Extension"
+					: "Web Edition";
 		this.modal.showBanner(
 			`Ipe ${this.version.version} ${edition}`,
 			`${yearLine}${body}${build}`,
@@ -588,8 +600,17 @@ export class IpeUi {
 			// exclude these for the moment
 			if (["new_window", "keyboard", "cloud_latex"].includes(name)) return;
 			if (
+				this.platform === "vscode" &&
+				["open", "save", "new", "download", "save_as"].includes(name)
+			)
+				return;
+			if (this.platform === "vscode" && name === "export_png") {
+				menu.submenu!.pop(); // remove separator
+			}
+			if (
 				(this.platform === "web" && name === "close") ||
-				(this.platform === "electron" && name === "manage_files")
+				(this.platform === "electron" && name === "manage_files") ||
+				(this.platform === "vscode" && ["close", "manage_files"].includes(name))
 			) {
 				menu.submenu!.pop(); // remove separator
 				return;
@@ -635,7 +656,8 @@ export class IpeUi {
 	}
 
 	async showPopupMenu(x: number, y: number, items: PopupItemOptions[]) {
-		if (window.ipeBridge?.popupMenu) this.resume(await window.ipeBridge.popupMenu(items));
+		if (window.ipeBridge?.popupMenu)
+			this.resume(await window.ipeBridge.popupMenu(items));
 		else this.popupMenu.openPopup(x, y, items, (result) => this.resume(result));
 	}
 
