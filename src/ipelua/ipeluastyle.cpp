@@ -219,6 +219,77 @@ static int sheet_remove(lua_State * L) {
     return 0;
 }
 
+static Attribute check_absolute_string_attribute(Kind kind, lua_State * L, int i) {
+    size_t len;
+    const char * data = luaL_checklstring(L, i, &len);
+    String str(data, len);
+    Attribute value;
+    switch (kind) {
+    case EPen:
+    case ESymbolSize:
+    case EArrowSize:
+    case ETextStretch:
+    case EGridSize:
+    case EAngleSize:
+    case EOpacity:
+        value = Attribute::makeScalar(str, Attribute::NORMAL());
+        luaL_argcheck(L, !value.isSymbolic(), i, "value is not absolute");
+        break;
+    case EColor:
+        value = Attribute::makeColor(str, Attribute::NORMAL());
+        luaL_argcheck(L, value.isColor(), i, "value is not an absolute color");
+        break;
+    case EDashStyle:
+        value = Attribute::makeDashStyle(str);
+        luaL_argcheck(L, !value.isSymbolic(), i, "dashstyle is not absolute");
+        break;
+    case ETextSize:
+        value = Attribute::makeTextSize(str);
+        luaL_argcheck(L, !value.isSymbolic(), i, "textsize is not absolute");
+        break;
+    default: luaL_argerror(L, 2, "cannot set string value of this kind"); break;
+    }
+    return value;
+}
+
+static int sheet_allNames(lua_State * L) {
+    StyleSheet * s = check_sheet(L, 1)->sheet;
+    Kind kind = Kind(luaL_checkoption(L, 2, nullptr, kind_names));
+    AttributeSeq seq;
+    s->allNames(kind, seq);
+    lua_createtable(L, seq.size(), 0);
+    for (int i = 0; i < size(seq); ++i) {
+        push_string(L, seq[i].string());
+        lua_rawseti(L, -2, i + 1);
+    }
+    return 1;
+}
+
+static int sheet_find(lua_State * L) {
+    StyleSheet * s = check_sheet(L, 1)->sheet;
+    Kind kind = Kind(luaL_checkoption(L, 2, nullptr, kind_names));
+    if (kind == ESymbol || kind == EGradient || kind == ETiling || kind == EEffect)
+        luaL_argerror(L, 2, "this kind has no simple attribute value");
+    const char * name = luaL_checklstring(L, 3, nullptr);
+    Attribute sym(true, name);
+    if (!s->has(kind, sym)) {
+        lua_pushnil(L);
+        return 1;
+    }
+    push_string(L, s->find(kind, sym).string());
+    return 1;
+}
+
+static int sheet_setAttribute(lua_State * L) {
+    StyleSheet * s = check_sheet(L, 1)->sheet;
+    Kind kind = Kind(luaL_checkoption(L, 2, nullptr, kind_names));
+    const char * name = luaL_checklstring(L, 3, nullptr);
+    Attribute sym(true, name);
+    Attribute value = check_absolute_string_attribute(kind, L, 4);
+    s->add(kind, sym, value);
+    return 0;
+}
+
 static int sheet_isStandard(lua_State * L) {
     SSheet * p = check_sheet(L, 1);
     lua_pushboolean(L, p->sheet->isStandard());
@@ -282,6 +353,9 @@ static const struct luaL_Reg sheet_methods[] = {{"__gc", sheet_destructor},
 						{"add", sheet_add},
 						{"addFrom", sheet_addfrom},
 						{"remove", sheet_remove},
+						{"allNames", sheet_allNames},
+						{"find", sheet_find},
+						{"setAttribute", sheet_setAttribute},
 						{"set", sheet_set},
 						{"isStandard", sheet_isStandard},
 						{"name", sheet_name},

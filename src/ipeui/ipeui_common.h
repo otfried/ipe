@@ -127,7 +127,16 @@ protected:
 	ESpellCheck = 0x200,
 	EColorPicker = 0x400,
     };
-    enum TType { EButton = 0, ETextEdit, EList, ELabel, ECombo, ECheckBox, EInput };
+    enum TType {
+	EButton = 0,
+	ETextEdit,
+	EList,
+	ELabel,
+	ECombo,
+	ECheckBox,
+	EInput,
+	EImage
+    };
 
     struct SElement {
 	std::string name;
@@ -158,6 +167,7 @@ protected:
     void addCombo(lua_State * L, SElement & m);
     void addCheckbox(lua_State * L, SElement & m);
     void addInput(lua_State * L, SElement & m);
+    void addImage(lua_State * L, SElement & m);
 
     void setListItems(lua_State * L, int index, SElement & m);
 

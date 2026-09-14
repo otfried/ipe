@@ -373,7 +373,8 @@ local home = os.getenv("HOME")
 local ipeletpath = os.getenv("IPELETPATH")
 if ipeletpath then
   config.ipeletDirs = {}
-  for w in string.gmatch(ipeletpath, prefs.fname_pattern) do
+  for dir in string.gmatch(ipeletpath, prefs.fname_pattern) do
+    local w = dir
     if w == "_" then w = ipe.folder("ipelets") end
     if w:sub(1,4) == "ipe:" then
       w = config.ipedrive .. w:sub(5)
@@ -389,7 +390,8 @@ end
 local ipestyles = os.getenv("IPESTYLES")
 if ipestyles then
   config.styleDirs = {}
-  for w in string.gmatch(ipestyles, prefs.fname_pattern) do
+  for dir in string.gmatch(ipestyles, prefs.fname_pattern) do
+    local w = dir
     if w == "_" then w = ipe.folder("styles") end
     if w:sub(1,4) == "ipe:" then
       w = config.ipedrive .. w:sub(5)
@@ -512,7 +514,8 @@ if config.toolkit == "cocoa" then first_file = nil end
 if #style_sheets > 0 then prefs.styles = style_sheets end
 
 config.styleList = {}
-for _,w in ipairs(prefs.styles) do
+for _,style in ipairs(prefs.styles) do
+  local w = style
   if w:sub(-4) ~= ".isy" then w = w .. ".isy" end
   if not w:find(prefs.fsep) then w = findStyle(w) end
   config.styleList[#config.styleList + 1] = w

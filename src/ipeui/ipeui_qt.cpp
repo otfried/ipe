@@ -45,6 +45,8 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QMessageBox>
+#include <QPainter>
+#include <QPainterPath>
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QSaveFile>
@@ -55,6 +57,8 @@
 #include <QThread>
 #include <QTimer>
 #include <iostream>
+#include <algorithm>
+#include <sstream>
 
 #ifdef IPE_SPELLCHECK
 #pragma GCC diagnostic push
@@ -134,6 +138,72 @@ protected:
 		     const QTextCharFormat & format);
     virtual void highlightBlock(const QString & text);
 };
+
+// --------------------------------------------------------------------
+
+static double previewNumber(const QString & value, double fallback) {
+    std::string s = value.toStdString();
+    std::istringstream stream(s);
+    double v;
+    if (stream >> v) return v;
+    return fallback;
+}
+
+class DialogImage : public QWidget {
+public:
+    DialogImage(int width, int height, QWidget * parent = nullptr)
+	: QWidget(parent) {
+	setMinimumSize(width, height);
+	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    }
+
+    void setSpec(const std::string & spec) {
+	iSpec = QString::fromUtf8(spec.c_str());
+	update();
+    }
+
+protected:
+    void paintEvent(QPaintEvent *) override;
+
+private:
+    QString iSpec;
+};
+
+void DialogImage::paintEvent(QPaintEvent *) {
+    QString kind = iSpec.section(QLatin1Char('|'), 0, 0);
+    QString value = iSpec.section(QLatin1Char('|'), 1, 1);
+    double zoom = std::clamp(previewNumber(iSpec.section(QLatin1Char('|'), 2, 2), 1.0),
+				     0.1, 100.0);
+
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    QRectF r = rect().adjusted(0.5, 0.5, -0.5, -0.5);
+    painter.fillRect(r, QColor(255, 255, 220));
+    painter.setPen(QPen(QColor(160, 160, 130), 1));
+    painter.drawRect(r);
+
+    QRectF body = r.adjusted(18, 16, -18, -16);
+    if (kind == QLatin1String("imagefile")) {
+        QImage image(value);
+        if (!image.isNull()) {
+            QSizeF scaled(image.width() / zoom, image.height() / zoom);
+            double fit = std::min(body.width() / scaled.width(),
+                                  body.height() / scaled.height());
+            if (fit < 1.0) scaled *= fit;
+            QRectF target(QPointF(body.center().x() - scaled.width() / 2.0,
+                                  body.center().y() - scaled.height() / 2.0),
+                          scaled);
+            painter.drawImage(target, image);
+            return;
+        }
+    }
+    painter.setPen(QColor(60, 60, 60));
+    painter.drawText(body, Qt::AlignCenter,
+                     (kind == QLatin1String("imagefile") || value.isEmpty())
+                         ? QStringLiteral("Preview unavailable")
+                         : value);
+}
 
 void LatexHighlighter::applyFormat(const QString & text, QRegularExpression & exp,
 				   const QTextCharFormat & format) {
@@ -282,6 +352,9 @@ void PDialog::setMapped(lua_State * L, int idx) {
     case EInput:
 	(qobject_cast<QLineEdit *>(w))->setText(QString::fromUtf8(m.text.c_str()));
 	break;
+    case EImage:
+	(qobject_cast<DialogImage *>(w))->setSpec(m.text);
+	break;
     case EList: {
 	QListWidget * l = qobject_cast<QListWidget *>(w);
 	if (!lua_isnumber(L, 3)) {
@@ -375,6 +448,11 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		    t->setPlainText(text);
 		if (m.flags & ESelectAll) t->selectAll();
 		w = t;
+	    } break;
+	    case EImage: {
+		DialogImage * image = new DialogImage(m.minWidth, m.minHeight, qDialog);
+		image->setSpec(m.text);
+		w = image;
 	    } break;
 	    case ECombo: {
 		QComboBox * b = new QComboBox(qDialog);

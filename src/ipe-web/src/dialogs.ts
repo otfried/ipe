@@ -21,6 +21,7 @@ type DialogElement =
 	| "textedit"
 	| "list"
 	| "checkbox"
+	| "image"
 	| "button";
 
 export interface ElementOptions {
@@ -35,6 +36,8 @@ export interface ElementOptions {
 	col: number;
 	rowspan: number;
 	colspan: number;
+	width: number;
+	height: number;
 }
 
 interface ButtonOptions {
@@ -112,6 +115,9 @@ export function setElement(w: ElementOptions): void {
 	const el = document.getElementById(`dialog-element-${w.name}`);
 	if (el == null) return;
 	switch (w.type) {
+		case "image":
+			drawImagePreview(el as HTMLCanvasElement, w.text);
+			break;
 		case "checkbox":
 			(el as HTMLInputElement).checked = w.value !== 0;
 			break;
@@ -131,6 +137,65 @@ export function setElement(w: ElementOptions): void {
 			console.error("Setting element not yet implemented: ", w);
 			break;
 	}
+}
+
+function previewNumber(value: string, fallback: number): number {
+	const n = Number.parseFloat(value);
+	return Number.isFinite(n) ? n : fallback;
+}
+
+function drawImagePreview(canvas: HTMLCanvasElement, spec: string): void {
+	const [kind, value = "", zoomText = "1"] = spec.split("|");
+	const zoom = Math.max(0.1, Math.min(100, previewNumber(zoomText, 1)));
+	const ctx = canvas.getContext("2d");
+	if (ctx == null) return;
+	canvas.dataset.previewSpec = spec;
+	const w = canvas.width;
+	const h = canvas.height;
+	ctx.clearRect(0, 0, w, h);
+	ctx.fillStyle = "rgb(255,255,220)";
+	ctx.fillRect(0, 0, w, h);
+	ctx.strokeStyle = "rgb(160,160,130)";
+	ctx.strokeRect(0.5, 0.5, w - 1, h - 1);
+	const left = 18;
+	const top = 16;
+	const right = w - 18;
+	const bottom = h - 16;
+	const cx = (left + right) / 2;
+	const cy = (top + bottom) / 2;
+	ctx.lineCap = "round";
+	ctx.lineJoin = "round";
+	if (kind === "imagefile") {
+		const image = new Image();
+		image.addEventListener("load", () => {
+			if (canvas.dataset.previewSpec !== spec) return;
+			const logicalWidth = image.width / zoom;
+			const logicalHeight = image.height / zoom;
+			const scale = Math.min(
+				1,
+				(right - left) / logicalWidth,
+				(bottom - top) / logicalHeight,
+			);
+			const width = logicalWidth * scale;
+			const height = logicalHeight * scale;
+			ctx.drawImage(image, cx - width / 2, cy - height / 2, width, height);
+		});
+		image.addEventListener("error", () => {
+			if (canvas.dataset.previewSpec !== spec) return;
+			ctx.fillStyle = "rgb(90,90,90)";
+			ctx.font = "12px sans-serif";
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.fillText("Preview unavailable", cx, cy);
+		});
+		image.src = value;
+		return;
+	}
+	ctx.fillStyle = "rgb(90,90,90)";
+	ctx.font = "12px sans-serif";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+	ctx.fillText(value || "Preview unavailable", cx, cy);
 }
 
 export function setupElements(
@@ -199,6 +264,15 @@ export function setupElements(
 				el = el1;
 				break;
 			}
+			case "image": {
+				const el1 = document.createElement("canvas");
+				el1.id = `dialog-element-${w.name}`;
+				el1.width = w.width;
+				el1.height = w.height;
+				drawImagePreview(el1, w.text);
+				el = el1;
+				break;
+			}
 			case "list": {
 				const el1 = document.createElement("div");
 				el1.id = `dialog-element-${w.name}`;
@@ -234,6 +308,7 @@ export function setupElements(
 			case "input":
 			case "button":
 			case "combo":
+			case "image":
 				el.style.justifySelf = "stretch";
 				el.style.alignSelf = "center";
 				break;
