@@ -11,11 +11,13 @@
 
 IW=../ipe-web
 
-cp $IW/index.html src/renderer
-cp $IW/src/* src/renderer/src
+mkdir -p src/renderer/src/ipe
 
-rm src/renderer/src/main.ts
-rm src/renderer/src/vite-env.d.ts
+cp $IW/index.html src/renderer
+cp $IW/src/* src/renderer/src/ipe
+
+rm src/renderer/src/ipe/main.ts
+rm src/renderer/src/ipe/vite-env.d.ts
 
 sed -e "s!/src/main.ts!./src/renderer.ts!" -i src/renderer/index.html
 
@@ -25,7 +27,7 @@ cp ../../artwork/ipe.iconset/icon_64x64.png src/main
 
 tag=`git log -1 HEAD --format="commit %h and was built %aD."`
 
-cat > src/renderer/src/gitversion.ts <<EOF
+cat > src/renderer/src/ipe/gitversion.ts <<EOF
 export const buildInfo =
 	"$tag";
 EOF

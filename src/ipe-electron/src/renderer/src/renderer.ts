@@ -1,7 +1,7 @@
-import "./index.css";
+import "./ipe/index.css";
 
-import instantiateIpe from "./ipe.js";
-import { IpeUi } from "./ipeui";
+import instantiateIpe from "./ipe/ipe.js";
+import { IpeUi } from "./ipe/ipeui";
 
 declare global {
 	interface Window {
