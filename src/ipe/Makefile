@@ -17,7 +17,7 @@ MAKE_ASSETS =
 WASM_LIBS =
 
 ifdef IPEWASM
-TARGET = ../ipe-web/src/ipe.js
+TARGET = ../ipe-web/src/ipe/ipe.js
 # create js/wasm files suitable for a browser
 LDFLAGS += -sMODULARIZE=1 -sENVIRONMENT=web -sEXPORT_ES6=1 -sALLOW_MEMORY_GROWTH=1
 LDFLAGS += -sEXPORTED_RUNTIME_METHODS=ENV,FS,IDBFS,stringToNewUTF8,Emval

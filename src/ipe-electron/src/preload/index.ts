@@ -3,11 +3,14 @@ type FileDialogOptions = any;
 
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("ipc", {
+contextBridge.exposeInMainWorld("ipeBridge", {
 	setup: () => ipcRenderer.invoke("setup"),
 
+	// register a callback for Ipe actions,
+	// so the mainWindow can send Ipe actions to the renderer
+	// only used in electron
 	onAction: (cb: (action: string) => void) =>
-		ipcRenderer.on("ipeAction", (event, action) => cb(action)),
+		ipcRenderer.on("ipeAction", (_event, action) => cb(action)),
 
 	/*
 	menu: (args: MenuItemConstructorOptions[]) =>

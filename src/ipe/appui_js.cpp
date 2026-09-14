@@ -328,8 +328,11 @@ void AppUi::setSnapIndicator(const char * s) { setInnerText("snapIndicator", s);
 static void blankStatus(void * _arg) { setInnerText("status", ""); }
 
 void AppUi::explain(const char * s, int t) {
-    setInnerText("status", s);
-    if (t) { emscripten_async_call(blankStatus, nullptr, t); }
+    val result = jsUi().call<val>("explain", std::string(s), t);
+    if (result.isFalse()) {
+	setInnerText("status", s);
+	if (t) { emscripten_async_call(blankStatus, nullptr, t); }
+    }
 }
 
 void AppUi::showWindow(int width, int height, int x, int y, const Color & pathViewColor) {

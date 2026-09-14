@@ -8,7 +8,7 @@ div#popup-submenu-pane {
 	height: 100%;
 	z-index: 100;
 	background-color: rgb(0, 0, 0); /* Fallback color */
-	background-color: rgba(0, 0, 0, 0.0); /* transparent */
+	background-color: rgba(0, 0, 0, 0); /* transparent */
 }
 div#popup-submenu-pane {
 	z-index: 200;
@@ -41,7 +41,7 @@ div#popup-submenu-pane {
 	flex-direction: row;
 	padding: 3px 10px 1px 10px;
 	justify-content: space-between;
-	column-gap:20px;
+	column-gap: 20px;
 }
 .main-menu-item:hover,
 .main-submenu-item:hover,
@@ -101,5 +101,5 @@ div#popup-submenu-pane {
 	flex-direction: row;
 	padding: 4px 10px 1px 16px;
 	justify-content: space-between;
-	column-gap:20px;
+	column-gap: 20px;
 }

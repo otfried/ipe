@@ -1,0 +1,104 @@
+{
+	"name": "Ipe",
+	"description": "Ipe as a VSCode extension",
+	"version": "7.3.1-beta1",
+	"publisher": "otfried",
+	"author": {
+		"name": "Otfried Cheong",
+		"email": "ipe@otfried.org"
+	},
+	"icon": "images/ipe.png",
+	"extensionKind": [
+		"ui",
+		"workspace"
+	],
+	"engines": {
+		"vscode": "^1.137.0"
+	},
+	"categories": [
+		"Visualization"
+	],
+	"repository": {
+		"url": "https://github.com/otfried/ipe.git"
+	},
+	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": true
+		}
+	},
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "ipe.keybinding",
+				"title": "Ipe Keybinding"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "ipe.keybinding",
+				"key": "ctrl+e",
+				"mac": "cmd+e",
+				"when": "activeCustomEditorId == ipe || activeCustomEditorId == ipe.pdf",
+				"args": {
+					"key": "Ctrl+E"
+				}
+			},
+			{
+				"command": "ipe.keybinding",
+				"key": "F1",
+				"when": "activeCustomEditorId == ipe || activeCustomEditorId == ipe.pdf",
+				"args": {
+					"key": "F1"
+				}
+			}
+		],
+		"customEditors": [
+			{
+				"viewType": "ipe",
+				"displayName": "Ipe",
+				"selector": [
+					{
+						"filenamePattern": "*.ipe"
+					}
+				],
+				"priority": "default"
+			},
+			{
+				"viewType": "ipe.pdf",
+				"displayName": "Ipe",
+				"selector": [
+					{
+						"filenamePattern": "*.pdf"
+					}
+				],
+				"priority": "option"
+			}
+		]
+	},
+	"scripts": {
+		"package": "vsce package --skip-license",
+		"vscode:prepublish": "pnpm run compile",
+		"compile": "tsc -p ./ && tsc -p webview --noEmit && node esbuild.js --production",
+		"watch": "tsc -w -p ./",
+		"watch:webview": "node esbuild.js --watch",
+		"check": "tsc -p ./ --noEmit && tsc -p webview --noEmit",
+		"format": "biome format --write"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.13.0",
+		"@stylistic/eslint-plugin": "^2.9.0",
+		"@types/node": "^22",
+		"@types/sortablejs": "^1.15.9",
+		"@types/vscode": "^1.137.0",
+		"@types/vscode-webview": "^1.57.0",
+		"esbuild": "^0.28.2",
+		"typescript": "^6.0.2",
+		"@biomejs/biome": "^2.4.6",
+		"@vscode/vsce": "^4.0.0"
+	},
+	"dependencies": {
+		"@melloware/coloris": "^0.25.0",
+		"sortablejs": "^1.15.7"
+	}
+}

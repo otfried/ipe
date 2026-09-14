@@ -436,7 +436,7 @@ bool Platform::fileExists(String fname) {
 #ifdef WIN32
     return (_waccess(fname.w().data(), F_OK) == 0);
 #elif defined(IPEWASM)
-    if (!usePreloader() || fname.hasPrefix("/tmp/") || fname.hasPrefix("/opt/ipe"))
+    if (!usePreloader() || fname.hasPrefix("/tmp") || fname.hasPrefix("/opt/ipe"))
 	return (::access(fname.z(), F_OK) == 0);
     emscripten::val fileExistsCache =
 	emscripten::val::global("window")["ipeui"]["fileExistsCache"];
@@ -685,7 +685,7 @@ int Platform::mkdir(String path) { return ::mkdir(path.z(), 0700); }
 
 #ifdef IPEWASM
 FILE * Platform::fopen(const char * fname, const char * mode) {
-    if (!usePreloader() || !strncmp(fname, "/tmp/", 5) || !strncmp(fname, "/opt/ipe", 8))
+    if (!usePreloader() || !strncmp(fname, "/tmp", 4) || !strncmp(fname, "/opt/ipe", 8))
 	return ::fopen(fname, mode);
     emscripten::val preloadCache =
 	emscripten::val::global("window")["ipeui"]["preloadCache"];

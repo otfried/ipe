@@ -751,12 +751,23 @@ function MODEL:action_open()
   end
 end
 
+function MODEL:action_revert()
+  if self.file_name then
+    self:loadDocument(self.file_name)
+  end
+end
+
 function MODEL:action_save()
   if not self.file_name then
     return self:action_save_as()
   else
     return self:saveDocument()
   end
+end
+
+-- used by ipe-vscode for backups
+function MODEL:action_serialize()
+  return self.doc:save("/home/ipe/serialized.ipe")
 end
 
 function MODEL:action_download()

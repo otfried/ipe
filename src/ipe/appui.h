@@ -67,7 +67,7 @@ typedef int MENUHANDLE;
 
 using namespace ipe;
 
-constexpr int COPYRIGHT_YEAR = 2024;
+constexpr int COPYRIGHT_YEAR = 2026;
 
 #define IPEABSOLUTE "<absolute>"
 

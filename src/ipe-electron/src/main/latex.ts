@@ -23,7 +23,7 @@ function runLatexInner(
 		{
 			cwd: config.latexdir,
 		},
-		(error, stdout, stderr) => {
+		(error, _stdout, _stderr) => {
 			const log = fs.readFileSync(`${config.latexdir}/ipetemp.log`, "utf-8");
 			const pdf = error
 				? null

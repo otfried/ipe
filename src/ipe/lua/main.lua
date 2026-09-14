@@ -509,6 +509,8 @@ end
 -- Cocoa handles opening files itself, using open_file_event
 if config.toolkit == "cocoa" then first_file = nil end
 
+if config.platform == "vscode" then first_file = "/home/ipe/document.ipe" end
+
 if #style_sheets > 0 then prefs.styles = style_sheets end
 
 config.styleList = {}

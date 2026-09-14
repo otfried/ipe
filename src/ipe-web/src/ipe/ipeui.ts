@@ -6,7 +6,6 @@ import {
 	retrieveValues,
 	setElement,
 } from "./dialogs";
-import { buildInfo } from "./gitversion";
 import type { Ipe, ResumeResult } from "./ipejs";
 import {
 	type FileDialogOptions,
@@ -43,6 +42,8 @@ function toRgb(rgb: Color): string {
 	return `rgb(${255 * rgb.red}, ${255 * rgb.green}, ${255 * rgb.blue})`;
 }
 
+type IpePlatform = "web" | "electron" | "vscode";
+
 export class IpeUi {
 	readonly ipe: Ipe;
 	modal: Modal;
@@ -72,12 +73,17 @@ export class IpeUi {
 	];
 	readonly version: { year: number; version: string };
 	filename: string | null;
-	saveCallback: ((fn: string) => void) | null = null;
 	readonly touch: TouchDragZoom;
-	platform: string;
 	customizationFileName = "";
+	readonly buildInfo: string;
+	readonly platform: IpePlatform;
 
-	constructor(ipe: Ipe, ipeenv: string[]) {
+	constructor(
+		ipe: Ipe,
+		buildInfo: string,
+		platform: IpePlatform,
+		ipeenv: string[],
+	) {
 		this.ipe = ipe;
 		this.mainMenu = [];
 		this.actions = {};
@@ -85,11 +91,12 @@ export class IpeUi {
 		this.modal = new Modal(ipe, (result) => this.resume(result));
 		this.version = this.ipe.Emval.toValue(this.ipe._ipeVersion());
 		this.touch = new TouchDragZoom(this.ipe, this.topCanvas);
-		this.platform = window.ipc ? "electron" : "web";
+		this.platform = platform;
 
 		this._calculateCanvasSize();
 		console.log("Environment = ", ipeenv);
 		this.ipe._initLib(this.ipe.Emval.toHandle(ipeenv));
+		this.buildInfo = buildInfo;
 		this.popupMenu = new PopupMenu();
 		this.filename = null;
 
@@ -97,7 +104,9 @@ export class IpeUi {
 			this._handleKeyEvent(event);
 		});
 
-		window.ipc?.onAction((action: string) => this.action(action));
+		// only used in Electron, so mainWindow can send "ipeAction" events to the renderer,
+		// which does not have direct access to the IpeUi.
+		window.ipeBridge?.onAction((action: string) => this.action(action));
 
 		const lb = get("layerbox");
 		Sortable.create(lb, {
@@ -149,7 +158,11 @@ export class IpeUi {
 
 	action(action: string) {
 		if (action === "manual") {
-			window.open("http://otfried.github.io/ipe", "_blank");
+			if (this.platform === "vscode") {
+				window.ipeBridge?.manual("https://otfried.github.io/ipe");
+			} else {
+				window.open("http://otfried.github.io/ipe", "_blank");
+			}
 		} else if (action === "about") {
 			this._aboutIpe();
 		} else if (action === "preferences") {
@@ -190,10 +203,6 @@ export class IpeUi {
 
 	openFile(fn: string): void {
 		this.ipe._openFile(this.ipe.stringToNewUTF8(fn));
-	}
-
-	addSaveCallback(callback: (fn: string) => void): void {
-		this.saveCallback = callback;
 	}
 
 	private _calculateCanvasSize() {
@@ -320,7 +329,7 @@ export class IpeUi {
 		});
 
 		// TODO: use window.matchMedia() to watch for changes in dpr
-		let resizeTimeout: number | undefined;
+		let resizeTimeout: ReturnType<typeof setTimeout> | undefined;
 		window.addEventListener("resize", () => {
 			clearTimeout(resizeTimeout);
 			resizeTimeout = setTimeout(() => {
@@ -440,9 +449,13 @@ export class IpeUi {
 			'<a target="_blank" href="http://patreon.com/otfried">Ipe patrons</a>. ' +
 			"For the price of a cup of coffee per month you can make a meaningful contribution " +
 			"to the continuing development of Ipe.</p>";
-		const build = `<div class="buildInfo">This Ipe is ${buildInfo}</div>`;
+		const build = `<div class="buildInfo">This Ipe is ${this.buildInfo}</div>`;
 		const edition =
-			this.platform === "electron" ? "Electron Edition" : "Web Edition";
+			this.platform === "electron"
+				? "Electron Edition"
+				: this.platform === "vscode"
+					? "VSCode Extension"
+					: "Web Edition";
 		this.modal.showBanner(
 			`Ipe ${this.version.version} ${edition}`,
 			`${yearLine}${body}${build}`,
@@ -460,7 +473,7 @@ export class IpeUi {
 			'<a target="_blank" href="https://github.com/otfried/ipe/tree/master/src/ipe/lua/mouse.lua">' +
 			"'mouse.lua'</a>.</p>";
 		const upload =
-			this.platform === "electron"
+			this.platform !== "web"
 				? `<p>Create or edit the file '${this.customizationFileName}' and place your changes in this file.</p>`
 				: "<p>Create a new file 'customization.lua', place your changes in this file, " +
 					"and upload it in <em>Manage files</em> (in the File menu).</p>";
@@ -513,8 +526,8 @@ export class IpeUi {
 	}
 
 	private _setActionStateMark(action: string, checked: boolean) {
-		if (window.ipc?.setMenuCheckmark) {
-			window.ipc?.setMenuCheckmark(action, checked);
+		if (window.ipeBridge?.setMenuCheckmark) {
+			window.ipeBridge?.setMenuCheckmark(action, checked);
 		} else {
 			for (const rootItem of this.mainMenu) {
 				for (const item of rootItem.submenu as MainMenuItemOptions[]) {
@@ -548,8 +561,8 @@ export class IpeUi {
 	}
 
 	setupMenu() {
-		if (window.ipc?.menu) {
-			window.ipc.menu(this.mainMenu);
+		if (window.ipeBridge?.menu) {
+			window.ipeBridge.menu(this.mainMenu);
 		} else {
 			for (const m of this.mainMenu) {
 				const tag = m.label!.replace("&", "").toLowerCase();
@@ -588,13 +601,37 @@ export class IpeUi {
 			// exclude these for the moment
 			if (["new_window", "keyboard", "cloud_latex"].includes(name)) return;
 			if (
+				this.platform === "vscode" &&
+				[
+					"open",
+					"save",
+					"new",
+					"download",
+					"save_as",
+					"fullscreen",
+					"finger_draw",
+					"tablet_hints",
+					"undo",
+					"redo",
+				].includes(name)
+			)
+				return;
+			if (
+				this.platform === "electron" &&
+				["download", "finger_draw", "tablet_hints"].includes(name)
+			)
+				return;
+			if (this.platform === "vscode" && ["export_png", "cut"].includes(name)) {
+				menu.submenu!.pop(); // remove separator
+			}
+			if (
 				(this.platform === "web" && name === "close") ||
-				(this.platform === "electron" && name === "manage_files")
+				(this.platform === "electron" && name === "manage_files") ||
+				(this.platform === "vscode" && ["close", "manage_files"].includes(name))
 			) {
 				menu.submenu!.pop(); // remove separator
 				return;
 			}
-			if (this.platform === "electron" && name === "download") return;
 			menu.submenu!.push({
 				label,
 				id: name,
@@ -628,24 +665,25 @@ export class IpeUi {
 				item.submenu = submenu;
 			}
 		}
-		if (window.ipc?.menu) {
+		if (window.ipeBridge?.menu) {
 			// TODO: call setup menu only once, at next event loop iteration
 			this.setupMenu();
 		}
 	}
 
 	async showPopupMenu(x: number, y: number, items: PopupItemOptions[]) {
-		if (window.ipc?.popupMenu) this.resume(await window.ipc.popupMenu(items));
+		if (window.ipeBridge?.popupMenu)
+			this.resume(await window.ipeBridge.popupMenu(items));
 		else this.popupMenu.openPopup(x, y, items, (result) => this.resume(result));
 	}
 
 	// ------------------------------------------------------------------------------------
 
 	async preloadFile(fname: string, tmpname: string) {
-		if (window.ipc == null)
+		if (window.ipeBridge == null)
 			throw Error("preloadFile called in environment without file system");
 		console.log("preloading", fname, tmpname);
-		const data = await window.ipc.loadFile(fname);
+		const data = await window.ipeBridge.loadFile(fname);
 		this.ipe.FS.writeFile(tmpname, data);
 		this.preloadCache[fname] = tmpname;
 		console.log("Preload cache: ", Object.keys(this.preloadCache).join(", "));
@@ -653,11 +691,11 @@ export class IpeUi {
 	}
 
 	async preloadFileExists() {
-		if (window.ipc == null)
+		if (window.ipeBridge == null)
 			throw Error(
 				"preloadFileExists called in environment without file system",
 			);
-		const fnames = await window.ipc.watchFolders();
+		const fnames = await window.ipeBridge.watchFolders();
 		this.fileExistsCache = {};
 		for (const fname of fnames) this.fileExistsCache[fname] = true;
 		console.log(
@@ -668,15 +706,13 @@ export class IpeUi {
 	}
 
 	async persistFile(fname: string) {
-		if (window.ipc) {
+		if (window.ipeBridge) {
 			const tmpname = this.preloadCache[fname];
 			if (tmpname == null) throw new Error("Persisting non-existing file.");
 			console.log("persisting", fname, tmpname);
 			const data = this.ipe.FS.readFile(tmpname);
-			await window.ipc.saveFile(fname, data);
+			await window.ipeBridge.saveFile(fname, data);
 			this.resume(true);
-		} else if (this.saveCallback != null) {
-			this.saveCallback(fname);
 		}
 	}
 
@@ -691,10 +727,11 @@ export class IpeUi {
 			const texfile = this.ipe.FS.readFile("/tmp/latexrun/ipetemp.tex", {
 				encoding: "utf8",
 			});
-			// TODO: even in this case user may want to use online latex service
-			if (window.ipc != null) {
+			console.log("Running LaTeX with argument:", arg);
+			if (this.platform !== "web") {
 				// in case we have access to a local latex installation
-				const { log, pdf } = await window.ipc.runlatex(arg, texfile);
+				// TODO: even in this case user may want to use online latex service
+				const { log, pdf } = await window.ipeBridge.runlatex(arg, texfile);
 				this.ipe.FS.writeFile("/tmp/latexrun/ipetemp.log", log);
 				if (pdf != null)
 					this.ipe.FS.writeFile("/tmp/latexrun/ipetemp.pdf", pdf);
@@ -739,12 +776,19 @@ export class IpeUi {
 	}
 
 	async messageBox(options: MessageBoxOptions) {
-		if (window.ipc?.messageBox != null) {
+		if (window.ipeBridge?.messageBox != null) {
 			// TODO: add option to use inline messagebox
-			this.resume(await window.ipc.messageBox(options));
+			this.resume(await window.ipeBridge.messageBox(options));
 		} else {
 			this.modal.messageBox(options);
 		}
+	}
+
+	explain(msg: string, t: number): boolean {
+		if (this.platform === "vscode") {
+			window.ipeBridge?.explain(msg, t);
+			return true;
+		} else return false;
 	}
 
 	async showDialog(options: DialogOptions) {
@@ -766,8 +810,8 @@ export class IpeUi {
 	}
 
 	async fileDialog(options: FileDialogOptions) {
-		if (window.ipc != null) {
-			this.resume(await window.ipc.fileDialog(options));
+		if (this.platform !== "web") {
+			this.resume(await window.ipeBridge.fileDialog(options));
 		} else {
 			this.modal.fileDialog(options);
 		}
@@ -781,16 +825,16 @@ export class IpeUi {
 	// ------------------------------------------------------------------------------------
 
 	async setClipboard(data: string) {
-		if (window.ipc != null) {
-			window.ipc.setClipboard(data);
+		if (window.ipeBridge != null) {
+			window.ipeBridge.setClipboard(data);
 		} else {
 			navigator.clipboard.writeText(data);
 		}
 	}
 
 	async getClipboard(allowBitmap: boolean) {
-		if (window.ipc != null) {
-			this.resume(await window.ipc.getClipboard(allowBitmap));
+		if (window.ipeBridge != null) {
+			this.resume(await window.ipeBridge.getClipboard(allowBitmap));
 		} else {
 			this.resume(await navigator.clipboard.readText());
 		}
@@ -1005,5 +1049,9 @@ export class IpeUi {
 		enablePanel("propertiesPanel");
 		enablePanel("layersPanel");
 		enablePanel("bookmarksPanel");
+	}
+
+	fireChange(label: string): void {
+		window.ipeBridge?.fireChange(label);
 	}
 }

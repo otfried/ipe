@@ -93,7 +93,8 @@ function MODEL:init(fname)
     self.ui:showTool(dock, vis)
   end
 
-  if prefs.autosave_interval then
+  -- on vscode, host is responsible for backup
+  if config.platform ~= "vscode" and prefs.autosave_interval then
     self.timer = ipeui.Timer(self, "autosave")
     self.timer:setInterval(1000 * prefs.autosave_interval) -- millisecs
     self.timer:start()
@@ -202,9 +203,6 @@ function MODEL:persistFile(fname)
   if config.platform == "electron" then
     self.ui.js("persistFile", fname)
     return coroutine.yield()
-  elseif config.platform == "web" then
-    self.ui.js("persistFile", fname)
-    return true
   else
     return true
   end
@@ -588,7 +586,7 @@ function MODEL:runLatex()
   self.ui:type3Font() -- reset flag in canvas
   self.type3_font = false
   local success, errmsg, result, log
-  if prefs.freeze_in_latex then
+  if config.toolkit ~= "htmljs" and prefs.freeze_in_latex then
     success, errmsg, result, log = self.doc:runLatex(self.file_name)
   else
     success, converter, errmsg, result = self.doc:prepareLatexRun()
@@ -764,7 +762,9 @@ function MODEL:saveDocument(fname)
   end
 
   self:markAsUnmodified()
-  self.ui:explain("Saved document '" .. fname .. "'")
+  if config.platfrom ~= "vscode" then
+    self.ui:explain("Saved document '" .. fname .. "'")
+  end
   self.file_name = fname
   self:setCaption()
   self:updateRecentFiles(fname)
@@ -901,6 +901,9 @@ function MODEL:register(t)
     self.ui:setupSymbolicNames(self.doc:sheets())
     self.ui:setAttributes(self.doc:sheets(), self.attributes)
     self:resetGridSize()
+  end
+  if config.platform == "vscode" then
+    self.ui.js("fireChange", t.label)
   end
 end
 
