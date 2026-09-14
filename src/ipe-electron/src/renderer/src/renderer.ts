@@ -6,7 +6,7 @@ import { buildInfo } from "./gitversion";
 
 declare global {
 	interface Window {
-		ipeBridge: any;  // bridge between webview and the host environment
+		ipeBridge: any; // bridge between webview and the host environment
 		ipeui: IpeUi; // used in WASM for calls into JS
 	}
 }

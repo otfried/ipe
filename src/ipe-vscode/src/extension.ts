@@ -131,7 +131,7 @@ class IpePanel {
 					case "alert":
 						vscode.window.showErrorMessage(message.text);
 						return;
-					case "ipeStarted": {
+					case "ipeReady": {
 						vscode.window.showInformationMessage(
 							"Ipe has started successfully!",
 						);
@@ -141,7 +141,7 @@ class IpePanel {
 						);
 						fileContents.then((content) => {
 							this._panel.webview.postMessage({
-								command: "load",
+								command: "startIpe",
 								content: new TextDecoder().decode(content),
 							});
 						});
@@ -198,7 +198,7 @@ class IpePanel {
 		// 'wasm-unsafe-eval' so it can be compiled,
 		// 'unsafe-eval' for emscripten values (interpreting JS from string).
 
-		this._panel.title = "Ipe";
+		this._panel.title = this._document.uri.path.split("/").pop() ?? "Ipe";
 
 		this._panel.webview.html = `<!DOCTYPE html>
 			<html lang="en">

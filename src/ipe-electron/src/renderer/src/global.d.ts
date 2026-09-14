@@ -1,2 +1,2 @@
-// Ambient declarations for css imports 
+// Ambient declarations for css imports
 declare module "*.css";
