@@ -1,0 +1,56 @@
+{
+	"name": "ipe",
+	"description": "Ipe as a VSCode extension",
+	"version": "7.3.1",
+	"author": {
+		"name": "Otfried Cheong",
+		"email": "ipe@otfried.org"
+	},
+	"engines": {
+		"vscode": "^1.100.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onWebviewPanel:ipe"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "ipe.start",
+				"title": "Start Ipe",
+				"category": "Ipe"
+			},
+			{
+				"command": "ipe.doRefactor",
+				"title": "Do some refactoring",
+				"category": "Ipe"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "pnpm run compile",
+		"compile": "tsc -p ./ && tsc -p webview --noEmit && node esbuild.js --production",
+		"watch": "tsc -w -p ./",
+		"watch:webview": "node esbuild.js --watch",
+		"check": "tsc -p ./ --noEmit && tsc -p webview --noEmit",
+		"format": "biome format --write"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.13.0",
+		"@stylistic/eslint-plugin": "^2.9.0",
+		"@types/node": "^22",
+		"@types/sortablejs": "^1.15.9",
+		"@types/vscode": "^1.100.0",
+		"@types/vscode-webview": "^1.57.0",
+		"esbuild": "^0.28.2",
+		"typescript": "^6.0.2",
+		"@biomejs/biome": "^2.4.6"
+	},
+	"dependencies": {
+		"@melloware/coloris": "^0.25.0",
+		"sortablejs": "^1.15.7"
+	}
+}

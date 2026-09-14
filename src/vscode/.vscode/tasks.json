@@ -1,0 +1,46 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "watch",
+			"label": "watch:extension",
+			"problemMatcher": "$tsc-watch",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "never"
+			},
+			"group": "build"
+		},
+		{
+			"type": "npm",
+			"script": "watch:media",
+			"label": "watch:media",
+			"problemMatcher": {
+				"pattern": {
+					"regexp": "^\\[esbuild\\] (.*)$",
+					"message": 1
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "\\[esbuild\\] (rebuilding|starting)",
+					"endsPattern": "\\[esbuild\\] watching"
+				}
+			},
+			"isBackground": true,
+			"presentation": {
+				"reveal": "never"
+			},
+			"group": "build"
+		},
+		{
+			"label": "watch",
+			"dependsOn": ["watch:extension", "watch:media"],
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}
