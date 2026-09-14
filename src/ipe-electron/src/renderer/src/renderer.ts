@@ -5,8 +5,8 @@ import { IpeUi } from "./ipe/ipeui";
 
 declare global {
 	interface Window {
-		ipc: any;
-		ipeui: IpeUi;
+		ipeBridge: any;  // bridge between webview and the host environment
+		ipeui: IpeUi; // used in WASM for calls into JS
 	}
 }
 
@@ -20,7 +20,7 @@ instantiateIpe({
 	ipe.FS.mkdir("/tmp/latexrun", 0o777);
 	ipe.FS.mkdir("/tmp/latexrun/icons", 0o777);
 
-	const setup = await window.ipc.setup();
+	const setup = await window.ipeBridge.setup();
 	for (const ipelet in setup.ipelets)
 		ipe.FS.writeFile(`/opt/ipe/user-ipelets/${ipelet}`, setup.ipelets[ipelet]);
 	if (setup.customizationData != null)

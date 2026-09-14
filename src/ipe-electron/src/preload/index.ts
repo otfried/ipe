@@ -3,7 +3,7 @@ type FileDialogOptions = any;
 
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("ipc", {
+contextBridge.exposeInMainWorld("ipeBridge", {
 	setup: () => ipcRenderer.invoke("setup"),
 
 	onAction: (cb: (action: string) => void) =>

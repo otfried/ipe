@@ -18,3 +18,7 @@ out/
 /src/ipe-electron/src/renderer/index.html
 /src/ipe-electron/src/renderer/src/ipe/
 /src/ipe-electron/src/main/*.png
+
+/src/vscode/src/root.ts
+/src/vscode/webview/ipe/
+

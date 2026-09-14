@@ -85,7 +85,7 @@ export class IpeUi {
 		this.modal = new Modal(ipe, (result) => this.resume(result));
 		this.version = this.ipe.Emval.toValue(this.ipe._ipeVersion());
 		this.touch = new TouchDragZoom(this.ipe, this.topCanvas);
-		this.platform = window.ipc ? "electron" : "web";
+		this.platform = window.ipeBridge ? "electron" : "web";
 
 		this._calculateCanvasSize();
 		console.log("Environment = ", ipeenv);
@@ -97,7 +97,7 @@ export class IpeUi {
 			this._handleKeyEvent(event);
 		});
 
-		window.ipc?.onAction((action: string) => this.action(action));
+		window.ipeBridge?.onAction((action: string) => this.action(action));
 
 		const lb = get("layerbox");
 		Sortable.create(lb, {
@@ -513,8 +513,8 @@ export class IpeUi {
 	}
 
 	private _setActionStateMark(action: string, checked: boolean) {
-		if (window.ipc?.setMenuCheckmark) {
-			window.ipc?.setMenuCheckmark(action, checked);
+		if (window.ipeBridge?.setMenuCheckmark) {
+			window.ipeBridge?.setMenuCheckmark(action, checked);
 		} else {
 			for (const rootItem of this.mainMenu) {
 				for (const item of rootItem.submenu as MainMenuItemOptions[]) {
@@ -548,8 +548,8 @@ export class IpeUi {
 	}
 
 	setupMenu() {
-		if (window.ipc?.menu) {
-			window.ipc.menu(this.mainMenu);
+		if (window.ipeBridge?.menu) {
+			window.ipeBridge.menu(this.mainMenu);
 		} else {
 			for (const m of this.mainMenu) {
 				const tag = m.label!.replace("&", "").toLowerCase();
@@ -628,24 +628,24 @@ export class IpeUi {
 				item.submenu = submenu;
 			}
 		}
-		if (window.ipc?.menu) {
+		if (window.ipeBridge?.menu) {
 			// TODO: call setup menu only once, at next event loop iteration
 			this.setupMenu();
 		}
 	}
 
 	async showPopupMenu(x: number, y: number, items: PopupItemOptions[]) {
-		if (window.ipc?.popupMenu) this.resume(await window.ipc.popupMenu(items));
+		if (window.ipeBridge?.popupMenu) this.resume(await window.ipeBridge.popupMenu(items));
 		else this.popupMenu.openPopup(x, y, items, (result) => this.resume(result));
 	}
 
 	// ------------------------------------------------------------------------------------
 
 	async preloadFile(fname: string, tmpname: string) {
-		if (window.ipc == null)
+		if (window.ipeBridge == null)
 			throw Error("preloadFile called in environment without file system");
 		console.log("preloading", fname, tmpname);
-		const data = await window.ipc.loadFile(fname);
+		const data = await window.ipeBridge.loadFile(fname);
 		this.ipe.FS.writeFile(tmpname, data);
 		this.preloadCache[fname] = tmpname;
 		console.log("Preload cache: ", Object.keys(this.preloadCache).join(", "));
@@ -653,11 +653,11 @@ export class IpeUi {
 	}
 
 	async preloadFileExists() {
-		if (window.ipc == null)
+		if (window.ipeBridge == null)
 			throw Error(
 				"preloadFileExists called in environment without file system",
 			);
-		const fnames = await window.ipc.watchFolders();
+		const fnames = await window.ipeBridge.watchFolders();
 		this.fileExistsCache = {};
 		for (const fname of fnames) this.fileExistsCache[fname] = true;
 		console.log(
@@ -668,12 +668,12 @@ export class IpeUi {
 	}
 
 	async persistFile(fname: string) {
-		if (window.ipc) {
+		if (window.ipeBridge) {
 			const tmpname = this.preloadCache[fname];
 			if (tmpname == null) throw new Error("Persisting non-existing file.");
 			console.log("persisting", fname, tmpname);
 			const data = this.ipe.FS.readFile(tmpname);
-			await window.ipc.saveFile(fname, data);
+			await window.ipeBridge.saveFile(fname, data);
 			this.resume(true);
 		} else if (this.saveCallback != null) {
 			this.saveCallback(fname);
@@ -692,9 +692,9 @@ export class IpeUi {
 				encoding: "utf8",
 			});
 			// TODO: even in this case user may want to use online latex service
-			if (window.ipc != null) {
+			if (window.ipeBridge != null) {
 				// in case we have access to a local latex installation
-				const { log, pdf } = await window.ipc.runlatex(arg, texfile);
+				const { log, pdf } = await window.ipeBridge.runlatex(arg, texfile);
 				this.ipe.FS.writeFile("/tmp/latexrun/ipetemp.log", log);
 				if (pdf != null)
 					this.ipe.FS.writeFile("/tmp/latexrun/ipetemp.pdf", pdf);
@@ -739,9 +739,9 @@ export class IpeUi {
 	}
 
 	async messageBox(options: MessageBoxOptions) {
-		if (window.ipc?.messageBox != null) {
+		if (window.ipeBridge?.messageBox != null) {
 			// TODO: add option to use inline messagebox
-			this.resume(await window.ipc.messageBox(options));
+			this.resume(await window.ipeBridge.messageBox(options));
 		} else {
 			this.modal.messageBox(options);
 		}
@@ -766,8 +766,8 @@ export class IpeUi {
 	}
 
 	async fileDialog(options: FileDialogOptions) {
-		if (window.ipc != null) {
-			this.resume(await window.ipc.fileDialog(options));
+		if (window.ipeBridge != null) {
+			this.resume(await window.ipeBridge.fileDialog(options));
 		} else {
 			this.modal.fileDialog(options);
 		}
@@ -781,16 +781,16 @@ export class IpeUi {
 	// ------------------------------------------------------------------------------------
 
 	async setClipboard(data: string) {
-		if (window.ipc != null) {
-			window.ipc.setClipboard(data);
+		if (window.ipeBridge != null) {
+			window.ipeBridge.setClipboard(data);
 		} else {
 			navigator.clipboard.writeText(data);
 		}
 	}
 
 	async getClipboard(allowBitmap: boolean) {
-		if (window.ipc != null) {
-			this.resume(await window.ipc.getClipboard(allowBitmap));
+		if (window.ipeBridge != null) {
+			this.resume(await window.ipeBridge.getClipboard(allowBitmap));
 		} else {
 			this.resume(await navigator.clipboard.readText());
 		}

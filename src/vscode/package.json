@@ -1,0 +1,74 @@
+{
+	"name": "ipe",
+	"description": "Ipe as a VSCode extension",
+	"version": "7.3.1",
+	"publisher": "otfried",
+	"author": {
+		"name": "Otfried Cheong",
+		"email": "ipe@otfried.org"
+	},
+	"extensionKind": [
+		"ui",
+		"workspace"
+	],
+	"engines": {
+		"vscode": "^1.70.0"
+	},
+	"categories": [
+		"Visualization"
+	],
+	"activationEvents": [
+		"onCustomEditor:ipe"
+	],
+	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": true
+		}
+	},
+	"main": "./out/extension.js",
+	"contributes": {
+		"languages": [
+			{
+				"id": "ipe",
+				"extensions": [
+					".ipe"
+				]
+			}
+		],
+		"customEditors": [
+			{
+				"viewType": "ipe",
+				"displayName": "Ipe",
+				"selector": [
+					{
+						"filenamePattern": "*.ipe"
+					}
+				],
+				"priority": "default"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "pnpm run compile",
+		"compile": "tsc -p ./ && tsc -p webview --noEmit && node esbuild.js --production",
+		"watch": "tsc -w -p ./",
+		"watch:webview": "node esbuild.js --watch",
+		"check": "tsc -p ./ --noEmit && tsc -p webview --noEmit",
+		"format": "biome format --write"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.13.0",
+		"@stylistic/eslint-plugin": "^2.9.0",
+		"@types/node": "^22",
+		"@types/sortablejs": "^1.15.9",
+		"@types/vscode": "^1.100.0",
+		"@types/vscode-webview": "^1.57.0",
+		"esbuild": "^0.28.2",
+		"typescript": "^6.0.2",
+		"@biomejs/biome": "^2.4.6"
+	},
+	"dependencies": {
+		"@melloware/coloris": "^0.25.0",
+		"sortablejs": "^1.15.7"
+	}
+}

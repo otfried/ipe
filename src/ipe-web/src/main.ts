@@ -4,8 +4,8 @@ import "./index.css";
 
 declare global {
 	interface Window {
-		ipc: any;
-		ipeui: IpeUi;
+		ipeBridge: any;  // bridge between webview and the host environment
+		ipeui: IpeUi; // used in WASM for calls into JS
 	}
 }
 

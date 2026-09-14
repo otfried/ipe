@@ -2,11 +2,11 @@ import * as fs from "node:fs";
 import { join } from "node:path";
 import { is } from "@electron-toolkit/utils";
 import {
-	BrowserWindow,
-	Menu,
 	app,
+	BrowserWindow,
 	clipboard,
 	ipcMain,
+	Menu,
 	nativeImage,
 	screen,
 } from "electron";
@@ -136,29 +136,29 @@ app.whenReady().then(() => {
 	// show debug output from browser window also on stdout
 	mainWindow.webContents.addListener(
 		"console-message",
-		(event, level, message, line, sourceId) => {
+		(_event, _level, message, _line, _sourceId) => {
 			console.log(">>> ", message);
 		},
 	);
 
-	ipcMain.handle("runlatex", (event, engine, texfile) =>
+	ipcMain.handle("runlatex", (_event, engine, texfile) =>
 		runLatex(config, engine, texfile),
 	);
-	ipcMain.handle("watchFolders", (event) => config.watchFolders());
-	ipcMain.handle("loadFile", (event, fname: string) => fs.readFileSync(fname));
-	ipcMain.handle("saveFile", (event, fname: string, data: string) =>
+	ipcMain.handle("watchFolders", (_event) => config.watchFolders());
+	ipcMain.handle("loadFile", (_event, fname: string) => fs.readFileSync(fname));
+	ipcMain.handle("saveFile", (_event, fname: string, data: string) =>
 		fs.writeFileSync(fname, data),
 	);
-	ipcMain.handle("setClipboard", (event, data: string) =>
+	ipcMain.handle("setClipboard", (_event, data: string) =>
 		clipboard.writeText(data),
 	);
-	ipcMain.handle("getClipboard", (event, allowBitmap: boolean) => {
+	ipcMain.handle("getClipboard", (_event, _allowBitmap: boolean) => {
 		const formats = clipboard.availableFormats();
 		console.log("Available formats: ", formats);
 		return clipboard.readText();
 	});
 
-	ipcMain.handle("fileDialog", (event, options) =>
+	ipcMain.handle("fileDialog", (_event, options) =>
 		fileDialog(mainWindow, options),
 	);
 });
