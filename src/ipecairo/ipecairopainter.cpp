@@ -325,7 +325,7 @@ static void drawImage(cairo_t * cr, const PdfDict * d, const PdfResourceBase * r
     cairoTransform(cr, tf);
     cairo_set_source_surface(cr, image, 0, 0);
     cairo_pattern_set_filter(cairo_get_source(cr),
-			     filterBest ? CAIRO_FILTER_BEST : CAIRO_FILTER_GOOD);
+			     filterBest ? CAIRO_FILTER_BEST : CAIRO_FILTER_FAST);
     cairo_paint_with_alpha(cr, opacity);
     cairo_restore(cr);
 }
@@ -458,24 +458,33 @@ void CairoPainter::doDrawPath(TPathMode mode) {
 	} else {
 	    // tiling
 
-	    cairo_surface_t * s = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 32, 32);
+	    const int repetitions = iFilterBest ? 1 : 16;
+	    cairo_surface_t * s = cairo_image_surface_create(
+		CAIRO_FORMAT_ARGB32, 32 * repetitions, 32 * repetitions);
 	    uint8_t * data = cairo_image_surface_get_data(s);
-	    memset(data, 0, 4 * 32 * 32);
+	    memset(data, 0, 4 * 32 * 32 * repetitions * repetitions);
 
 	    cairo_t * cc = cairo_create(s);
 	    cairo_set_source_rgba(cc, fillColor.iRed.toDouble(),
 				  fillColor.iGreen.toDouble(), fillColor.iBlue.toDouble(),
 				  opacity().toDouble());
 
-	    cairo_rectangle(cc, 0, 0, 32, 32 * t->iWidth / t->iStep);
+	    for (int i = 0; i < repetitions; i++) {
+		for (int j = 0; j < repetitions; j++) {
+		    cairo_rectangle(cc, 32 * j, 32 * i, 32, 32 * t->iWidth / t->iStep);
+		}
+	    }
+
 	    cairo_fill(cc);
 	    cairo_destroy(cc);
 	    cairo_pattern_t * p = cairo_pattern_create_for_surface(s);
 	    cairo_surface_destroy(s); // pass ownership to pattern
 	    cairo_pattern_set_extend(p, CAIRO_EXTEND_REPEAT);
+	    cairo_pattern_set_filter(p,
+				     iFilterBest ? CAIRO_FILTER_BEST : CAIRO_FILTER_FAST);
 
 	    cairo_matrix_t m;
-	    cairo_matrix_init_scale(&m, 1.0, 32.0 / t->iStep);
+	    cairo_matrix_init_scale(&m, 1.0 / repetitions, 32.0 / t->iStep);
 	    cairo_matrix_rotate(&m, -double(t->iAngle));
 	    cairo_pattern_set_matrix(p, &m);
 
@@ -542,7 +551,7 @@ void CairoPainter::doDrawBitmap(Bitmap bitmap) {
     cairoTransform(iCairo, tf);
     cairo_set_source_surface(iCairo, image, 0, 0);
     cairo_pattern_set_filter(cairo_get_source(iCairo),
-			     iFilterBest ? CAIRO_FILTER_BEST : CAIRO_FILTER_GOOD);
+			     iFilterBest ? CAIRO_FILTER_BEST : CAIRO_FILTER_FAST);
     cairo_paint_with_alpha(iCairo, opacity().toDouble());
     cairo_restore(iCairo);
 }
