@@ -854,6 +854,14 @@ static int object_info(lua_State * L) {
     }
     push_string(L, format);
     lua_setfield(L, -2, "format");
+    lua_pushboolean(L, bm.isExternal());
+    lua_setfield(L, -2, "external");
+    lua_pushboolean(L, bm.isLoaded());
+    lua_setfield(L, -2, "loaded");
+    if (bm.isExternal()) {
+	push_string(L, bm.externalPath());
+	lua_setfield(L, -2, "path");
+    }
     return 1;
 }
 
