@@ -2,6 +2,7 @@ name: Build Ipe
 on:
   push:
     paths:
+      - '.github/workflows/compile.yml'
       - 'src/**'
 jobs:
   BuildQt:
@@ -22,6 +23,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Install build tools
         run: |
+          sudo apt-get update
           sudo apt-get install \
                   qt6-base-dev qt6-base-dev-tools \
                   libfreetype6-dev libcairo2-dev libjpeg8-dev \
@@ -44,6 +46,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Install build tools
         run: |
+          sudo apt-get update
           sudo apt-get install \
                   libgtk2.0-dev \
                   libfreetype6-dev libcairo2-dev libjpeg8-dev \
