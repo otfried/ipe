@@ -6,11 +6,10 @@ export class IpePathConfig {
 	latexdir: string;
 	latexpath: string;
 	customization: string;
-	recentFiles: string;
 	styles: string[];
 	ipelets: string[];
 	customizationData: string | null;
-	ipeletsData: { [fname: string]: string };
+	ipeletsData: { [fname: string]: string }[];
 
 	constructor() {
 		this.home = env.HOME ?? "/home/ipe";
@@ -20,22 +19,17 @@ export class IpePathConfig {
 		const cacheHome = env.XDG_CACHE_HOME ?? `${this.home}/.cache`;
 		this.latexdir = env.IPELATEXDIR ?? `${cacheHome}/ipe`;
 		this.customization = `${configHome}/ipe/customization.lua`;
-		this.recentFiles = `${cacheHome}/ipe/recent_files.lua`;
 
 		if (env.IPELETPATH) {
-			this.ipelets = env.IPELETPATH.split(":").map((s) =>
-				s === "_" ? "/opt/ipe/ipelets" : s,
-			);
+			this.ipelets = env.IPELETPATH.split(":").filter((s) => s !== "_");
 		} else {
-			this.ipelets = [`${dataHome}/ipe/ipelets`, "/opt/ipe/ipelets"];
+			this.ipelets = [`${dataHome}/ipe/ipelets`];
 		}
 
 		if (env.IPESTYLES) {
-			this.styles = env.IPESTYLES.split(":").map((s) =>
-				s === "_" ? "/opt/ipe/styles" : s,
-			);
+			this.styles = env.IPESTYLES.split(":").filter((s) => s !== "_");
 		} else {
-			this.styles = [`${dataHome}/ipe/styles`, "/opt/ipe/styles"];
+			this.styles = [`${dataHome}/ipe/styles`];
 		}
 
 		this.customizationData = null;
@@ -43,31 +37,18 @@ export class IpePathConfig {
 		if (fs.lstatSync(this.customization, { throwIfNoEntry: false }))
 			this.customizationData = fs.readFileSync(this.customization, "utf8");
 
-		this.ipeletsData = {};
+		this.ipeletsData = [];
 		for (const folder of this.ipelets) {
 			if (folder === "/opt/ipe/ipelets") continue;
 			if (fs.lstatSync(folder, { throwIfNoEntry: false })?.isDirectory()) {
 				const files = fs.readdirSync(folder);
+				const ipelets1: { [fname: string]: string } = {};
 				for (const file of files) {
 					if (!file.endsWith(".lua")) continue;
-					const contents = fs.readFileSync(`${folder}/${file}`, "utf8");
-					if (this.ipeletsData[file] == null) this.ipeletsData[file] = contents;
+					ipelets1[file] = fs.readFileSync(`${folder}/${file}`, "utf8");
 				}
+				this.ipeletsData.push(ipelets1);
 			}
 		}
-	}
-
-	watchFolders(): string[] {
-		const result: string[] = [];
-		for (const folder of this.styles) {
-			if (folder === "/opt/ipe/styles") continue;
-			if (fs.lstatSync(folder, { throwIfNoEntry: false })?.isDirectory()) {
-				const files = fs.readdirSync(folder);
-				for (const file of files) {
-					result.push(`${folder}/${file}`);
-				}
-			}
-		}
-		return result;
 	}
 }

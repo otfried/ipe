@@ -51,22 +51,30 @@ class IpeVSCodeBridge {
 			const message = event.data;
 			switch (message.command) {
 				case "startIpe":
-					this.startIpe(message.content, message.setup);
+					this.startIpe(
+						decodeBytes(message.content),
+						message.setup,
+						message.format,
+					);
 					break;
 				case "serialize":
 					this.handleSerialize(message.requestId, message.save, message.format);
 					break;
 				case "latexResult":
-					this.handleLatexResult(message);
+					this.handleLatexResult(decodeBytes(message.pdf), message.log);
 					break;
 				case "getClipboardResult":
-					this.handleGetClipboardResult(message);
+					this.handleGetClipboardResult(message.text);
 					break;
 				case "revert":
-					this.handleRevert(message);
+					this.handleRevert(
+						message.requestId,
+						decodeBytes(message.content),
+						message.format,
+					);
 					break;
 				case "undoRedo":
-					this.handleUndoRedo(message);
+					this.handleUndoRedo(message.requestId, message.what);
 					break;
 			}
 		});
@@ -94,30 +102,42 @@ class IpeVSCodeBridge {
 		});
 	}
 
-	startIpe(content: string, setup: any) {
+	startIpe(content: Uint8Array, setup: any, format: IpeFormat) {
 		console.log("Starting Ipe from startIpe() method");
-		for (const ipelet in setup.ipelets)
-			this.ipe.FS.writeFile(
-				`/opt/ipe/user-ipelets/${ipelet}`,
-				setup.ipelets[ipelet],
-			);
-		if (setup.customizationData != null)
+
+		const ipeletPath = [];
+		if (setup.customizationData != null) {
 			this.ipe.FS.writeFile(
 				"/opt/ipe/customization.lua",
 				setup.customizationData,
 			);
-		if (content !== "")
-			this.ipe.FS.writeFile("/home/ipe/document.ipe", decodeBytes(content));
+			ipeletPath.push("/opt/ipe/customization.lua");
+		}
+		let count = 1;
+		for (const folder of setup.ipelets as { [fname: string]: string }[]) {
+			for (const ipelet in folder) {
+				this.ipe.FS.writeFile(
+					`/opt/ipe/user-ipelets${count}/${ipelet}`,
+					folder[ipelet],
+				);
+			}
+			ipeletPath.push(`/opt/ipe/user-ipelets${count}`);
+			count++;
+		}
 
+		if (content.length !== 0)
+			this.ipe.FS.writeFile(`/home/ipe/document.${format}`, content);
+
+		// Environment on the virtual file system.
+		// Webview remains unaware of the real file system, which is managed by
+		// pathconfig.ts and extension.ts.
 		const env = [
-			`IPESTYLES=${setup.styles.join(":")}`,
-			// IPELETPATH is used on the virtual file system
-			"IPELETPATH=/opt/ipe/customization.lua:/opt/ipe/user-ipelets:/opt/ipe/ipelets",
+			"IPESTYLES=/opt/ipe/styles",
+			`IPELETPATH=${ipeletPath.join(":")}:/opt/ipe/ipelets`,
 			"IPEJSLATEX=1",
 			"IPEDEBUG=1",
-			// IPELATEXDIR is used on the virtual file system
 			"IPELATEXDIR=/tmp/latexrun",
-			`HOME=${setup.home}`,
+			"HOME=/home/ipe",
 		];
 		console.log("About to create IpeUi");
 		const ipeui = new IpeUi(this.ipe, buildInfo, "vscode", env);
@@ -186,38 +206,40 @@ class IpeVSCodeBridge {
 		return null;
 	}
 
-	private handleUndoRedo(message: any) {
-		if (!this.assertIpeUi(message.requestId)) return;
-		const what = message.content.what;
+	private handleUndoRedo(requestId: string, what: "undo" | "redo") {
+		if (!this.assertIpeUi(requestId)) return;
 		window.ipeui.action(what);
 		vscode.postMessage({
 			command: "response",
-			requestId: message.requestId,
+			requestId,
 		});
 	}
 
-	private handleRevert(message: any) {
-		const content = decodeBytes(message.content);
-		this.ipe.FS.writeFile("/home/ipe/document.ipe", content);
+	private handleRevert(
+		requestId: string,
+		content: Uint8Array,
+		format: IpeFormat,
+	) {
+		this.ipe.FS.writeFile(`/home/ipe/document.${format}`, content);
 		window.ipeui.action("revert");
 		vscode.postMessage({
 			command: "response",
-			requestId: message.requestId,
+			requestId: requestId,
 		});
 	}
 
-	private handleLatexResult(message: any) {
+	private handleLatexResult(pdf: Uint8Array, log: string) {
 		if (this._pendingRunLatex) {
 			this._pendingRunLatex({
-				pdf: decodeBytes(message.pdf),
-				log: message.log,
+				pdf,
+				log,
 			});
 			this._pendingRunLatex = null;
 		}
 	}
-	private handleGetClipboardResult(message: any) {
+	private handleGetClipboardResult(text: string) {
 		if (this._pendingGetClipboard) {
-			this._pendingGetClipboard(message.text);
+			this._pendingGetClipboard(text);
 			this._pendingGetClipboard = null;
 		}
 	}

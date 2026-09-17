@@ -81,18 +81,25 @@ class IpeCustomEditorProvider implements vscode.CustomEditorProvider {
 		context: vscode.CustomDocumentOpenContext,
 	): Promise<IpeDocument> {
 		const source = context.backupId ? vscode.Uri.parse(context.backupId) : uri;
+		const format = context.backupId ? "ipe" : this.format;
 		const content = await vscode.workspace.fs.readFile(source);
 		console.log(
 			`Opened document from ${source.fsPath}: ${content.length} bytes`,
 		);
-		return new IpeDocument(uri, content, this.format);
+		return new IpeDocument(uri, content, format);
 	}
 
 	resolveCustomEditor(
 		document: IpeDocument,
 		webviewPanel: vscode.WebviewPanel,
 	): void {
-		webviewPanel.webview.options = getWebviewOptions(this.extensionUri);
+		webviewPanel.webview.options = {
+			enableScripts: true, // Enable javascript in the webview
+			// And restrict the webview to only loading content from our extension's `out/webview` directory.
+			localResourceRoots: [
+				vscode.Uri.joinPath(this.extensionUri, "out", "webview"),
+			],
+		};
 		document.panel = new IpePanel(
 			webviewPanel,
 			this.extensionUri,
@@ -109,24 +116,32 @@ class IpeCustomEditorProvider implements vscode.CustomEditorProvider {
 	}
 
 	async saveCustomDocument(document: IpeDocument): Promise<void> {
-		await this.saveCustomDocumentAs(document, document.uri);
+		await this.saveIpeDocument(document, document.uri, document.format);
 	}
 
 	async saveCustomDocumentAs(
 		document: IpeDocument,
 		destination: vscode.Uri,
 	): Promise<void> {
-		try {
-			const content = await document.panel?.serialize(true, document.format);
-			if (content === undefined) {
-				throw new Error("Ipe editor is unavailable; cannot save the document.");
-			}
-			await vscode.workspace.fs.writeFile(destination, content);
-			document.panel?.explain(`Saved document '${destination.fsPath}'`, 3000);
-		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error);
-			throw new Error(`Failed to save as ${destination.fsPath}: ${message}`);
+		// format might change during Save As
+		const format =
+			destination.fsPath.endsWith(".pdf") || destination.fsPath.endsWith(".PDF")
+				? "pdf"
+				: "ipe";
+		await this.saveIpeDocument(document, destination, format);
+	}
+
+	async saveIpeDocument(
+		document: IpeDocument,
+		destination: vscode.Uri,
+		format: IpeFormat,
+	) {
+		const content = await document.panel?.serialize(true, format);
+		if (content === undefined) {
+			throw new Error("Ipe editor is unavailable; cannot save the document.");
 		}
+		await vscode.workspace.fs.writeFile(destination, content);
+		document.panel?.explain(`Saved document '${destination.fsPath}'`, 3000);
 	}
 
 	async revertCustomDocument(document: IpeDocument): Promise<void> {
@@ -155,16 +170,6 @@ class IpeCustomEditorProvider implements vscode.CustomEditorProvider {
 			delete: () => vscode.workspace.fs.delete(context.destination),
 		};
 	}
-}
-
-function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
-	return {
-		// Enable javascript in the webview
-		enableScripts: true,
-
-		// And restrict the webview to only loading content from our extension's `webview`/`out/webview` directories.
-		localResourceRoots: [vscode.Uri.joinPath(extensionUri, "out", "webview")],
-	};
 }
 
 /**
@@ -308,7 +313,10 @@ class IpePanel {
 
 	public async revert(): Promise<void> {
 		const content = await vscode.workspace.fs.readFile(this._document.uri);
-		await this.sendRequest("revert", encodeBytes(content));
+		await this.sendRequest("revert", {
+			content: encodeBytes(content),
+			format: this._document.format,
+		});
 	}
 
 	public async undoRedo(what: "undo" | "redo"): Promise<void> {
@@ -331,13 +339,12 @@ class IpePanel {
 		this._panel.webview.postMessage({
 			command: "startIpe",
 			content: encodeBytes(this._document.initialContent),
+			format: this._document.format,
 			setup: {
 				screen: { width: 1920, height: 1080 },
-				home: this.paths.home,
 				ipelets: this.paths.ipeletsData,
 				customization: this.paths.customization,
 				customizationData: this.paths.customizationData,
-				styles: this.paths.styles,
 			},
 		});
 	}

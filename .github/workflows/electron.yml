@@ -16,8 +16,8 @@ jobs:
         run: emcc -v
       - name: Download dependencies
         run: |
-          wget https://github.com/otfried/emscripten-ipe/releases/download/2024.11.03/emscripten.tar.gz
-          tar xzf emscripten.tar.gz
+          wget https://github.com/otfried/emscripten-ipe/releases/download/2026.09.17/emscripten-2026.09.17.tar.gz
+          tar xzf emscripten-2026.09.17.tar.gz
       - name: Compile
         run: |
           export IPEDEPS=`pwd`/emscripten
@@ -27,9 +27,9 @@ jobs:
       - name: Build electron
         run: |
           cd src/ipe-electron
-          npm install
-          npm run build
-          npm run make
+          pnpm install
+          pnpm run build
+          pnpm run make
       - name: Upload result
         uses: actions/upload-artifact@v4
         with:

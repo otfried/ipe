@@ -104,9 +104,11 @@ export class IpeUi {
 			this._handleKeyEvent(event);
 		});
 
-		// only used in Electron, so mainWindow can send "ipeAction" events to the renderer,
-		// which does not have direct access to the IpeUi.
-		window.ipeBridge?.onAction((action: string) => this.action(action));
+		if (this.platform === "electron") {
+			// allow mainWindow to send "ipeAction" events to the renderer,
+			// without having direct access to the IpeUi.
+			window.ipeBridge?.onAction((action: string) => this.action(action));
+		}
 
 		const lb = get("layerbox");
 		Sortable.create(lb, {

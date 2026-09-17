@@ -21,6 +21,7 @@ LIBS += -L$(buildlib) -lipe -lipecairo $(CAIRO_LIBS) $(FREETYPE_LIBS)
 LDFLAGS += -sSINGLE_FILE=1 --embed-file test.ipe
 # fur use in ipecanvas.html, also add libipecanvas:
 LIBS += -lipecanvas
+LIBS += $(FREETYPE_LIBS) $(CAIRO_LIBS) $(PNG_LIBS) $(JPEG_LIBS) $(GSL_LIBS) $(SPIRO_LIBS)
 # for use in ipelatex.html, also need file system and faked Latex run output:
 LDFLAGS += -sEXPORTED_RUNTIME_METHODS=FS --embed-file ipetemp.pdf
 
@@ -28,9 +29,9 @@ all: $(TARGET)
 
 sources	= ipejs.cpp ipecairojs.cpp
 
-$(TARGET): $(objects)
-	$(MAKE_LIBDIR)
-	emar rcs $@ $^
+$(TARGET): $(objects) $(NODEJSPRE)
+	$(MAKE_BINDIR)
+	$(CXX) $(LDFLAGS) -o $@ $(objects) $(LIBS)
 
 clean:
 	@-rm -f $(objects) $(TARGET) $(DEPEND)

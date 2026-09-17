@@ -9,7 +9,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Download dependencies
         run: |
-          Invoke-WebRequest https://github.com/otfried/emscripten-ipe/releases/download/2024.11.03/emscripten.tar.gz -OutFile emscripten.tar.gz
+          Invoke-WebRequest https://github.com/otfried/emscripten-ipe/releases/download/2026.09.17/emscripten-2026.09.17.tar.gz -OutFile emscripten.tar.gz
           tar xzf emscripten.tar.gz
       - name: Setup emsdk
         uses: emscripten-core/setup-emsdk@v14
@@ -25,9 +25,9 @@ jobs:
       - name: Build electron
         run: |
           cd src/ipe-electron
-          npm install
-          npm run build
-          npm run make
+          pnpm install
+          pnpm run build
+          pnpm run make
       - name: Upload result
         uses: actions/upload-artifact@v4
         with:
