@@ -765,9 +765,19 @@ function MODEL:action_save()
   end
 end
 
--- used by ipe-vscode for backups
-function MODEL:action_serialize()
-  return self.doc:save("/home/ipe/serialized.ipe")
+-- methods used by ipe-vscode for saving and backups
+function MODEL:action_vscode_serialize()
+  self.doc:save("/home/ipe/serialized.ipe")
+end
+
+function MODEL:action_vscode_save_ipe()
+  self:saveDocument("/home/ipe/document.ipe")
+end
+
+function MODEL:action_vscode_save_pdf()
+  print("Lua: vscode_save_pdf")
+  self:saveDocument("/home/ipe/document.pdf")
+  print("Lua: /vscode_save_pdf")
 end
 
 function MODEL:action_download()

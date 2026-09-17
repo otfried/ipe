@@ -58,7 +58,7 @@ class IpeVSCodeBridge {
 					);
 					break;
 				case "serialize":
-					this.handleSerialize(message.requestId, message.save, message.format);
+					this.handleSerialize(message.requestId, message.data.save, message.data.format);
 					break;
 				case "latexResult":
 					this.handleLatexResult(decodeBytes(message.pdf), message.log);
@@ -69,12 +69,12 @@ class IpeVSCodeBridge {
 				case "revert":
 					this.handleRevert(
 						message.requestId,
-						decodeBytes(message.content),
-						message.format,
+						decodeBytes(message.data.content),
+						message.data.format,
 					);
 					break;
 				case "undoRedo":
-					this.handleUndoRedo(message.requestId, message.what);
+					this.handleUndoRedo(message.requestId, message.data.what);
 					break;
 			}
 		});
@@ -103,9 +103,9 @@ class IpeVSCodeBridge {
 	}
 
 	startIpe(content: Uint8Array, setup: any, format: IpeFormat) {
-		console.log("Starting Ipe from startIpe() method");
+		console.log("Starting Ipe");
 
-		const ipeletPath = [];
+		const ipeletPath: string[] = [];
 		if (setup.customizationData != null) {
 			this.ipe.FS.writeFile(
 				"/opt/ipe/customization.lua",
@@ -115,13 +115,14 @@ class IpeVSCodeBridge {
 		}
 		let count = 1;
 		for (const folder of setup.ipelets as { [fname: string]: string }[]) {
+			this.ipe.FS.mkdir(`/opt/ipe/ipelets${count}`, 0o777);
 			for (const ipelet in folder) {
 				this.ipe.FS.writeFile(
-					`/opt/ipe/user-ipelets${count}/${ipelet}`,
+					`/opt/ipe/ipelets${count}/${ipelet}`,
 					folder[ipelet],
 				);
 			}
-			ipeletPath.push(`/opt/ipe/user-ipelets${count}`);
+			ipeletPath.push(`/opt/ipe/ipelets${count}`);
 			count++;
 		}
 
@@ -139,6 +140,7 @@ class IpeVSCodeBridge {
 			"IPELATEXDIR=/tmp/latexrun",
 			"HOME=/home/ipe",
 		];
+		console.log("Environment for Ipe:", env);
 		console.log("About to create IpeUi");
 		const ipeui = new IpeUi(this.ipe, buildInfo, "vscode", env);
 		ipeui.customizationFileName = setup.customization as string;
@@ -162,14 +164,20 @@ class IpeVSCodeBridge {
 
 	private handleSerialize(requestId: string, save: boolean, format: IpeFormat) {
 		if (!this.assertIpeUi(requestId)) return;
+		console.log("Handling serialize request:", save, format);
 		let content: Uint8Array;
 		if (save) {
-			window.ipeui.action("save");
+			window.ipeui.action(`vscode_save_${format}`);
+			// TODO: for pdf this doesn't work, because vscode_save_pdf returns before 
+			// the file has been saved (while Latex is running, control returns here!)
+			console.log("Saved content to file system: ", `/home/ipe/document.${format}`);
 			content = this.ipe.FS.readFile(`/home/ipe/document.${format}`);
+			console.log("Read content from file system: ", `/home/ipe/document.${format}`);
 		} else {
-			window.ipeui.action("serialize");
+			window.ipeui.action("vscode_serialize");
 			content = this.ipe.FS.readFile("/home/ipe/serialized.ipe");
 		}
+		console.log("Serialized content length:", save, format, content.length);
 		vscode.postMessage({
 			command: "response",
 			requestId,
@@ -180,6 +188,7 @@ class IpeVSCodeBridge {
 	async runlatex(engine: string, texfile: string): Promise<RunLatexResult> {
 		return new Promise<RunLatexResult>((resolve) => {
 			this._pendingRunLatex = resolve;
+			console.log(`Running LaTeX with engine: ${engine}, texfile: ${texfile}`);
 			vscode.postMessage({
 				command: "runLatex",
 				engine,
@@ -259,7 +268,6 @@ instantiateIpe({
 
 	window.ipeBridge = new IpeVSCodeBridge(ipe);
 
-	ipe.FS.mkdir("/opt/ipe/user-ipelets", 0o777);
 	ipe.FS.mkdir("/tmp/pages", 0o777);
 	ipe.FS.mkdir("/tmp/latexrun", 0o777);
 	ipe.FS.mkdir("/tmp/latexrun/icons", 0o777);

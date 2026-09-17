@@ -136,6 +136,7 @@ class IpeCustomEditorProvider implements vscode.CustomEditorProvider {
 		destination: vscode.Uri,
 		format: IpeFormat,
 	) {
+		console.log(`Saving Ipe document to ${destination.fsPath} with format ${format}`);
 		const content = await document.panel?.serialize(true, format);
 		if (content === undefined) {
 			throw new Error("Ipe editor is unavailable; cannot save the document.");
@@ -264,7 +265,7 @@ class IpePanel {
 
 	// two-way communication with backend
 	// when the response arrives, the callback will be invoked
-	private async sendRequest(command: string, content?: any): Promise<any> {
+	private async sendRequest(command: string, data?: any): Promise<any> {
 		// TODO: if there is no reply within a certain time, reject the promise
 		// generate a unique request ID
 		const requestId = crypto.randomUUID();
@@ -274,7 +275,7 @@ class IpePanel {
 				.postMessage({
 					command,
 					requestId,
-					content,
+					data,
 				})
 				.then((delivered) => {
 					if (!delivered) {
@@ -288,7 +289,7 @@ class IpePanel {
 	private handleResponse(message: any) {
 		const requestId = message.requestId;
 		const request = this.pending.get(requestId);
-		if (request && request.resolve) {
+		if (request?.resolve) {
 			request.resolve(message.content);
 			this.pending.delete(requestId);
 		}
@@ -297,7 +298,7 @@ class IpePanel {
 	private handleError(message: any) {
 		const requestId = message.requestId;
 		const request = this.pending.get(requestId);
-		if (request && request.reject) {
+		if (request?.reject) {
 			request.reject(new Error(message.content));
 			this.pending.delete(requestId);
 		}
