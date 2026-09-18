@@ -77,6 +77,7 @@ export class IpeUi {
 	customizationFileName = "";
 	readonly buildInfo: string;
 	readonly platform: IpePlatform;
+	private _actionCompletedCallback: (() => void) | null = null;
 
 	constructor(
 		ipe: Ipe,
@@ -158,6 +159,9 @@ export class IpeUi {
 		this.ipe._resume(this.ipe.Emval.toHandle(result));
 	}
 
+	// when the Lua code yields (e.g. to show a modal dialog
+	// or to run Latex), then this method returns before the action
+	// has finished!  (Use actionSync below to avoid this.)
 	action(action: string) {
 		if (action === "manual") {
 			if (this.platform === "vscode") {
@@ -200,6 +204,20 @@ export class IpeUi {
 				this.setCheckMark(action);
 			}
 			this.ipe._action(this.ipe.stringToNewUTF8(action));
+		}
+	}
+
+	async actionSync(action: string) {
+		return new Promise<void>((resolve) => {
+			this._actionCompletedCallback = resolve;
+			this.ipe._action(this.ipe.stringToNewUTF8(`sync_${action}`));
+		});
+	}
+
+	actionCompleted() {
+		if (this._actionCompletedCallback) {
+			this._actionCompletedCallback();
+			this._actionCompletedCallback = null;
 		}
 	}
 

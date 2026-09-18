@@ -140,7 +140,6 @@ class IpeVSCodeBridge {
 			"IPELATEXDIR=/tmp/latexrun",
 			"HOME=/home/ipe",
 		];
-		console.log("Environment for Ipe:", env);
 		console.log("About to create IpeUi");
 		const ipeui = new IpeUi(this.ipe, buildInfo, "vscode", env);
 		ipeui.customizationFileName = setup.customization as string;
@@ -162,22 +161,16 @@ class IpeVSCodeBridge {
 		return true;
 	}
 
-	private handleSerialize(requestId: string, save: boolean, format: IpeFormat) {
+	private async handleSerialize(requestId: string, save: boolean, format: IpeFormat) {
 		if (!this.assertIpeUi(requestId)) return;
-		console.log("Handling serialize request:", save, format);
 		let content: Uint8Array;
 		if (save) {
-			window.ipeui.action(`vscode_save_${format}`);
-			// TODO: for pdf this doesn't work, because vscode_save_pdf returns before 
-			// the file has been saved (while Latex is running, control returns here!)
-			console.log("Saved content to file system: ", `/home/ipe/document.${format}`);
+			await window.ipeui.actionSync(`vscode_save_${format}`);
 			content = this.ipe.FS.readFile(`/home/ipe/document.${format}`);
-			console.log("Read content from file system: ", `/home/ipe/document.${format}`);
 		} else {
-			window.ipeui.action("vscode_serialize");
+			await window.ipeui.actionSync("vscode_serialize");
 			content = this.ipe.FS.readFile("/home/ipe/serialized.ipe");
 		}
-		console.log("Serialized content length:", save, format, content.length);
 		vscode.postMessage({
 			command: "response",
 			requestId,
@@ -188,7 +181,6 @@ class IpeVSCodeBridge {
 	async runlatex(engine: string, texfile: string): Promise<RunLatexResult> {
 		return new Promise<RunLatexResult>((resolve) => {
 			this._pendingRunLatex = resolve;
-			console.log(`Running LaTeX with engine: ${engine}, texfile: ${texfile}`);
 			vscode.postMessage({
 				command: "runLatex",
 				engine,
@@ -215,22 +207,22 @@ class IpeVSCodeBridge {
 		return null;
 	}
 
-	private handleUndoRedo(requestId: string, what: "undo" | "redo") {
+	private async handleUndoRedo(requestId: string, what: "undo" | "redo") {
 		if (!this.assertIpeUi(requestId)) return;
-		window.ipeui.action(what);
+		await window.ipeui.actionSync(what);
 		vscode.postMessage({
 			command: "response",
 			requestId,
 		});
 	}
 
-	private handleRevert(
+	private async handleRevert(
 		requestId: string,
 		content: Uint8Array,
 		format: IpeFormat,
 	) {
 		this.ipe.FS.writeFile(`/home/ipe/document.${format}`, content);
-		window.ipeui.action("revert");
+		await window.ipeui.actionSync("revert");
 		vscode.postMessage({
 			command: "response",
 			requestId: requestId,

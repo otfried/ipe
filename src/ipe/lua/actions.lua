@@ -35,6 +35,9 @@
 function MODEL:action(a1)
   -- work-around for bug in Qt 5.5, to be replaced with something better:
   local a = a1:gsub("&", "")
+  -- handle synchronous call from Javascript
+  local sync = (a:sub(1,5) == "sync_")
+  if sync then a = a:sub(6) end
   -- print("MODEL:paction(" .. a .. ")")
   if a:sub(1,5) == "mode_" then
     self.mode = a:sub(6)
@@ -83,6 +86,7 @@ function MODEL:action(a1)
     else
       self:warning("Operation '" .. a .. "' is not yet implemented")
     end
+    if sync then self.ui.js("actionCompleted") end
   end
   self:checkType3Font()
 end
