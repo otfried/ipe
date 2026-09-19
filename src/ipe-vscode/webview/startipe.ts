@@ -83,6 +83,9 @@ class IpeVSCodeBridge {
 				case "insertImage":
 					this.handleInsertImage(decodeBytes(message.content), message.format);
 					break;
+				case "export":
+					this.handleExport(message.requestId, message.data.format);
+					break;
 			}
 		});
 	}
@@ -210,15 +213,6 @@ class IpeVSCodeBridge {
 		});
 	}
 
-	async fileDialog(options: any): Promise<string | null> {
-		console.log("fileDialog called");
-		vscode.postMessage({
-			command: "alert",
-			text: "This Ipe function is not yet implemented",
-		});
-		return null;
-	}
-
 	private async handleUndoRedo(requestId: string, what: "undo" | "redo") {
 		if (!this.assertIpeUi(requestId)) return;
 		await window.ipeui.actionSync(what);
@@ -273,6 +267,24 @@ class IpeVSCodeBridge {
 	private async handleInsertImage(content: Uint8Array, format: IpeFormat) {
 		this.ipe.FS.writeFile(`/home/ipe/image.${format}`, content);
 		await window.ipeui.actionSync(`vscode_insert_image_${format}`);
+	}
+
+	exportFile(format: string) {
+		vscode.postMessage({
+			command: "export",
+			format,
+		});
+	}
+
+	private async handleExport(requestId: string, format: IpeFormat) {
+		if (!this.assertIpeUi(requestId)) return;
+		await window.ipeui.actionSync(`vscode_export_${format}`);
+		const content = this.ipe.FS.readFile(`/home/ipe/export.${format}`);
+		vscode.postMessage({
+			command: "response",
+			requestId,
+			content: encodeBytes(content),
+		});
 	}
 }
 

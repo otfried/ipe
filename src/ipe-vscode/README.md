@@ -38,10 +38,9 @@ with your own setup.
 
 ## Not yet implemented
 
-- export as PNG/EPS/SVG
-- Some changes in Ipe do not mark the document dirty, e.g. setting a fill color from the properties
 - List available style sheets in "add style sheets"
 - Need to query host for list of available style sheets, and need to ask for a specific one.
+- Some changes in Ipe do not mark the document dirty, e.g. setting a fill color from the properties
 - auto export
 - Cloud Latex
 - Live Sharing

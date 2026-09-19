@@ -914,6 +914,24 @@ function MODEL:action_export_svg()
   self:export("svg")
 end
 
+function MODEL:action_vscode_export_svg()
+  self.ui:renderPage(self.doc, self.pno, self.vno,
+		     "svg", "/home/ipe/export.svg", self.ui:zoom(),
+		     true, false) -- transparent, nocrop
+end
+
+function MODEL:action_vscode_export_png()
+  self.ui:renderPage(self.doc, self.pno, self.vno,
+		     "png", "/home/ipe/export.png", self.ui:zoom(),
+		     true, false) -- transparent, nocrop
+end
+
+function MODEL:action_vscode_export_eps()
+  self.ui:renderPage(self.doc, self.pno, self.vno,
+		     "eps", "/home/ipe/export.eps", self.ui:zoom(),
+		     true, false) -- transparent, nocrop
+end
+
 function MODEL:action_insert_image()
   if not self.insert_image_dir and self.file_name then
     self.insert_image_dir = self.file_name:match(prefs.dir_pattern)

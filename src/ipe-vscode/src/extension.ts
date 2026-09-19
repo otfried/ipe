@@ -270,6 +270,9 @@ class IpePanel {
 					case "insertImage":
 						this.handleInsertImage();
 						return;
+					case "export":
+						await this.handleExportFile(message.format);
+						return;
 				}
 			},
 			null,
@@ -481,5 +484,17 @@ class IpePanel {
 
 	isIpeRunning(): boolean {
 		return this._ipeRunning;
+	}
+
+	private async handleExportFile(format: string) {
+		const fileUri = await vscode.window.showSaveDialog({
+			filters: {
+				Images: [format],
+			},
+		});
+		if (fileUri) {
+			const data = await this.sendRequest("export", { format });
+			await vscode.workspace.fs.writeFile(fileUri, decodeBytes(data));
+		}
 	}
 }

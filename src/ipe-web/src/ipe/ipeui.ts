@@ -175,7 +175,7 @@ export class IpeUi {
 			this._aboutIpe();
 		} else if (action === "preferences") {
 			this._explainPreferences();
-		} else if (action === "show_configuration" && this.platform) {
+		} else if (action === "show_configuration" && this.platform === "vscode") {
 			this._showConfiguration();
 		} else if (action === "tablet_hints") {
 			this._tabletHints();
@@ -194,6 +194,12 @@ export class IpeUi {
 			this._toggleFullscreen();
 		} else if (action === "insert_image" && this.platform === "vscode") {
 			window.ipeBridge?.insertImage();
+		} else if (
+			["export_eps", "export_png", "export_svg"].includes(action) &&
+			this.platform === "vscode"
+		) {
+			console.log(`Exporting file with action: ${action}`);
+			window.ipeBridge?.exportFile(action.split("_")[1]);
 		} else {
 			if (action in this.actionState) {
 				this.setActionState(action, !this.actionState[action]);
