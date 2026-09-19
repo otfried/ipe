@@ -940,6 +940,28 @@ function MODEL:action_insert_image()
   end
 end
 
+
+function MODEL:insert_image(fname, format)
+  local bitmap, res = ipe.readImage(fname, format)
+  if not bitmap then
+    messageBox(self.ui:win(), "warning", "Could not read image",
+	       res, "ok")
+  else
+    local info = bitmap:info()
+    local r = self:compute_rect(info.width, info.height, res)
+    local obj = ipe.Image(r, bitmap)
+    self:creation("insert image", obj)
+  end
+end
+
+function MODEL:action_vscode_insert_image_png()
+  self:insert_image("/home/ipe/image.png", "png")
+end
+
+function MODEL:action_vscode_insert_image_jpeg()
+  self:insert_image("/home/ipe/image.jpeg", "jpeg")
+end
+
 ----------------------------------------------------------------------
 
 -- this function is called without arguments on OSX from ipeAlwaysAction

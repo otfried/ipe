@@ -51,6 +51,14 @@
 				"args": {
 					"key": "F1"
 				}
+			},
+			{
+				"command": "ipe.keybinding",
+				"key": "Shift+Ctrl+O",
+				"when": "activeCustomEditorId == ipe || activeCustomEditorId == ipe.pdf",
+				"args": {
+					"key": "Shift+Ctrl+O"
+				}
 			}
 		],
 		"customEditors": [

@@ -175,7 +175,7 @@ export class IpeUi {
 			this._aboutIpe();
 		} else if (action === "preferences") {
 			this._explainPreferences();
-		} else if (action === "show_configuration"  && this.platform) {
+		} else if (action === "show_configuration" && this.platform) {
 			this._showConfiguration();
 		} else if (action === "tablet_hints") {
 			this._tabletHints();
@@ -192,6 +192,8 @@ export class IpeUi {
 			this.setActionState("finger_draw", !this.actionState.finger_draw);
 		} else if (action === "fullscreen") {
 			this._toggleFullscreen();
+		} else if (action === "insert_image" && this.platform === "vscode") {
+			window.ipeBridge?.insertImage();
 		} else {
 			if (action in this.actionState) {
 				this.setActionState(action, !this.actionState[action]);
@@ -510,10 +512,7 @@ export class IpeUi {
 
 	private _showConfiguration() {
 		const configuration = `<ul>${this.externalConfiguration}${this.internalConfiguration}</ul>`;
-		this.modal.showBanner(
-			"Ipe Configuration",
-			configuration,
-		);
+		this.modal.showBanner("Ipe Configuration", configuration);
 	}
 
 	private _tabletHints() {

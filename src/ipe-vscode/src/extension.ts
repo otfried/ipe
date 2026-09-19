@@ -44,12 +44,12 @@ function getNonce() {
 }
 
 function escapeHtml(text: string): string {
-    return text
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
+	return text
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;")
+		.replaceAll("'", "&#39;");
 }
 
 function encodeBytes(data: Uint8Array): string {
@@ -145,7 +145,9 @@ class IpeCustomEditorProvider implements vscode.CustomEditorProvider {
 		destination: vscode.Uri,
 		format: IpeFormat,
 	) {
-		console.log(`Saving Ipe document to ${destination.fsPath} with format ${format}`);
+		console.log(
+			`Saving Ipe document to ${destination.fsPath} with format ${format}`,
+		);
 		const content = await document.panel?.serialize(true, format);
 		if (content === undefined) {
 			throw new Error("Ipe editor is unavailable; cannot save the document.");
@@ -264,6 +266,9 @@ class IpePanel {
 					case "change":
 						console.log(`change: ${message.label}`);
 						this._changeCallback(message.label);
+						return;
+					case "insertImage":
+						this.handleInsertImage();
 						return;
 				}
 			},
@@ -448,6 +453,25 @@ class IpePanel {
 			command: "getClipboardResult",
 			text,
 		});
+	}
+
+	private async handleInsertImage() {
+		const fileUri = await vscode.window.showOpenDialog({
+			canSelectMany: false,
+			filters: {
+				Images: ["png", "jpg", "jpeg"],
+			},
+		});
+		if (fileUri?.[0]) {
+			const format =
+				fileUri[0].path.split(".").pop() === "png" ? "png" : "jpeg";
+			const content = await vscode.workspace.fs.readFile(fileUri[0]);
+			this._panel.webview.postMessage({
+				command: "insertImage",
+				format,
+				content: encodeBytes(content),
+			});
+		}
 	}
 
 	explain(msg: string, t: number) {

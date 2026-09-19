@@ -58,7 +58,11 @@ class IpeVSCodeBridge {
 					);
 					break;
 				case "serialize":
-					this.handleSerialize(message.requestId, message.data.save, message.data.format);
+					this.handleSerialize(
+						message.requestId,
+						message.data.save,
+						message.data.format,
+					);
 					break;
 				case "latexResult":
 					this.handleLatexResult(decodeBytes(message.pdf), message.log);
@@ -75,6 +79,9 @@ class IpeVSCodeBridge {
 					break;
 				case "undoRedo":
 					this.handleUndoRedo(message.requestId, message.data.what);
+					break;
+				case "insertImage":
+					this.handleInsertImage(decodeBytes(message.content), message.format);
 					break;
 			}
 		});
@@ -162,7 +169,11 @@ class IpeVSCodeBridge {
 		return true;
 	}
 
-	private async handleSerialize(requestId: string, save: boolean, format: IpeFormat) {
+	private async handleSerialize(
+		requestId: string,
+		save: boolean,
+		format: IpeFormat,
+	) {
 		if (!this.assertIpeUi(requestId)) return;
 		let content: Uint8Array;
 		if (save) {
@@ -251,6 +262,17 @@ class IpeVSCodeBridge {
 			command: "change",
 			label,
 		});
+	}
+
+	insertImage() {
+		vscode.postMessage({
+			command: "insertImage",
+		});
+	}
+
+	private async handleInsertImage(content: Uint8Array, format: IpeFormat) {
+		this.ipe.FS.writeFile(`/home/ipe/image.${format}`, content);
+		await window.ipeui.actionSync(`vscode_insert_image_${format}`);
 	}
 }
 
