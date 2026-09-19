@@ -78,6 +78,8 @@ export class IpeUi {
 	readonly buildInfo: string;
 	readonly platform: IpePlatform;
 	private _actionCompletedCallback: (() => void) | null = null;
+	externalConfiguration = "";
+	private internalConfiguration = "";
 
 	constructor(
 		ipe: Ipe,
@@ -173,6 +175,8 @@ export class IpeUi {
 			this._aboutIpe();
 		} else if (action === "preferences") {
 			this._explainPreferences();
+		} else if (action === "show_configuration"  && this.platform) {
+			this._showConfiguration();
 		} else if (action === "tablet_hints") {
 			this._tabletHints();
 		} else if (action === "manage_files") {
@@ -502,6 +506,14 @@ export class IpeUi {
 			'<a target="_blank" href="https://otfried.github.io/ipe/80_advanced.html#customizing-ipe">' +
 			"Manual</a>.</p>";
 		this.modal.showBanner("Ipe preferences", `${front}${upload}${back}`);
+	}
+
+	private _showConfiguration() {
+		const configuration = `<ul>${this.externalConfiguration}${this.internalConfiguration}</ul>`;
+		this.modal.showBanner(
+			"Ipe Configuration",
+			configuration,
+		);
 	}
 
 	private _tabletHints() {
@@ -1071,7 +1083,13 @@ export class IpeUi {
 		enablePanel("bookmarksPanel");
 	}
 
+	// used on VS Code extension side to notify about changes
 	fireChange(label: string): void {
 		window.ipeBridge?.fireChange(label);
+	}
+
+	// used on VS Code extension side to show the current Ipe configuration
+	setConfiguration(configuration: string): void {
+		this.internalConfiguration = configuration;
 	}
 }

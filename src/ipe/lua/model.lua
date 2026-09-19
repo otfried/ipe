@@ -100,6 +100,12 @@ function MODEL:init(fname)
     self.timer:start()
   end
 
+  if config.platform == "vscode" then
+    configuration = "<li>Styles for new documents: " ..
+      table.concat(prefs.styles, ", ") .. "</li>"
+    self.ui.js("setConfiguration", configuration)
+  end
+
   local err = nil
   if fname then
     if ipe.fileExists(fname) then

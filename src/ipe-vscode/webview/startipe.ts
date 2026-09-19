@@ -143,6 +143,7 @@ class IpeVSCodeBridge {
 		console.log("About to create IpeUi");
 		const ipeui = new IpeUi(this.ipe, buildInfo, "vscode", env);
 		ipeui.customizationFileName = setup.customization as string;
+		ipeui.externalConfiguration = setup.configuration as string;
 		ipeui.startIpe(setup.screen.width, setup.screen.height);
 		console.log("Ipe is running!");
 		vscode.postMessage({ command: "ipeRunning" });

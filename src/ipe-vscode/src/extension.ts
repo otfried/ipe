@@ -43,6 +43,15 @@ function getNonce() {
 	return text;
 }
 
+function escapeHtml(text: string): string {
+    return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
 function encodeBytes(data: Uint8Array): string {
 	return Buffer.from(data).toString("base64");
 }
@@ -337,6 +346,19 @@ class IpePanel {
 	}
 
 	private startIpe() {
+		let configuration = "<li>Style directories:<ul>";
+		for (const dir of this.paths.styles) {
+			configuration += `<li>${escapeHtml(dir)}</li>`;
+		}
+		configuration += "</ul><li>Ipelets:<ul>";
+		for (const dir of this.paths.ipelets) {
+			configuration += `<li>${escapeHtml(dir)}</li>`;
+		}
+		configuration += "</ul><li>Latex program path: ";
+		configuration += escapeHtml(this.paths.latexpath);
+		configuration += "</li><li>Latex directory: ";
+		configuration += escapeHtml(this.paths.latexdir);
+		configuration += "</li>";
 		this._panel.webview.postMessage({
 			command: "startIpe",
 			content: encodeBytes(this._document.initialContent),
@@ -346,6 +368,7 @@ class IpePanel {
 				ipelets: this.paths.ipeletsData,
 				customization: this.paths.customization,
 				customizationData: this.paths.customizationData,
+				configuration: configuration,
 			},
 		});
 	}

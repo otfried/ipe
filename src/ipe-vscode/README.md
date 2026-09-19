@@ -28,8 +28,8 @@ code --install-extension Ipe-7.3.1-beta1.vsix
 
 ## Caveats
 
-VS Code reserves some shortcut keys, such as F1, F5, F11.  Using them
-in Ipe is weird, so you probably want to remap those Ipe actions.
+VS Code reserves some shortcut keys, such as F1, F5, F11.  If some of them
+do not work in Ipe, you will probably want to remap those Ipe actions.
 
 The standard ipelets and style sheets are baked into the extension.
 You cannot change them (a bad idea anyway), but you can override them
@@ -38,12 +38,11 @@ with your own setup.
 
 ## Not yet implemented
 
-- Fully implement document.format - initial, save_as, revert, etc.
-- show configuration needs to show actual paths on host, not virtual ones
 - Some changes in Ipe do not mark the document dirty, e.g. setting a fill color from the properties
 - List available style sheets in "add style sheets"
 - Need to query host for list of available style sheets, and need to ask for a specific one.
 - export as PNG/EPS/SVG
+- import image
 - auto export
 - Cloud Latex
 - Live Sharing
