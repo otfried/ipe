@@ -2,11 +2,13 @@ import type { DialogResult } from "./dialogs";
 import type { PopupMenuResults } from "./popup-menu";
 
 type PageSorterResults = [number[], boolean[]];
+type FindAllStyleSheetsResult = [string[]];
 
 export declare type ResumeResult =
 	| DialogResult
 	| PopupMenuResults
 	| PageSorterResults
+	| FindAllStyleSheetsResult
 	| null
 	| boolean
 	| number

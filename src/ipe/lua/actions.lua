@@ -2875,6 +2875,15 @@ end
 function MODEL:action_add_style_sheets()
   local d = ipeui.Dialog(self.ui:win(), "Ipe: add style sheets")
   d:add("label", "label", { label="Names of sheets to add, separated by spaces" }, 0, 1)
+  local available = findAllStyleSheets()
+  if config.platform == "vscode" then
+    self.ui.js("findAllStyleSheets")
+    local external = coroutine.yield()
+    table.move(external, 1, #external, #available + 1, available)
+  end
+  table.sort(available)
+  d:add("available", "label", { label = "Available stylesheets: " ..
+				  table.concat(available, ", ") }, 0, 1)
   d:add("sheets", "input", {}, 0, 1)
   d:add("nobasic", "checkbox", { label="Remove basic stylesheet" }, 0, 1)
   d:addButton("ok", "&Ok", "accept")

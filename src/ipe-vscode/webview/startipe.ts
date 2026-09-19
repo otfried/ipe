@@ -45,6 +45,7 @@ function decodeBytes(data: string): Uint8Array {
 class IpeVSCodeBridge {
 	_pendingRunLatex: ((result: RunLatexResult) => void) | null = null;
 	_pendingGetClipboard: ((data: string) => void) | null = null;
+	_pendingFindAllStyleSheets: ((result: string[]) => void) | null = null;
 
 	constructor(readonly ipe: any) {
 		window.addEventListener("message", (event) => {
@@ -85,6 +86,9 @@ class IpeVSCodeBridge {
 					break;
 				case "export":
 					this.handleExport(message.requestId, message.data.format);
+					break;
+				case "findAllStyleSheets":
+					this.handleFindAllStyleSheets(message.styleSheets);
 					break;
 			}
 		});
@@ -285,6 +289,22 @@ class IpeVSCodeBridge {
 			requestId,
 			content: encodeBytes(content),
 		});
+	}
+
+	async findAllStyleSheets(): Promise<string[]> {
+		return new Promise<string[]>((resolve) => {
+			this._pendingFindAllStyleSheets = resolve;
+			vscode.postMessage({
+				command: "findAllStyleSheets",
+			});
+		});
+	}
+
+	private handleFindAllStyleSheets(styleSheets: string[]) {
+		if (this._pendingFindAllStyleSheets) {
+			this._pendingFindAllStyleSheets(styleSheets);
+			this._pendingFindAllStyleSheets = null;
+		}
 	}
 }
 

@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as fs from "node:fs";
 
 import { rootDocument } from "./root";
 import { runLatex } from "./latex";
@@ -273,6 +274,9 @@ class IpePanel {
 					case "export":
 						await this.handleExportFile(message.format);
 						return;
+					case "findAllStyleSheets":
+						this.findAllStyleSheets();
+						return;
 				}
 			},
 			null,
@@ -496,5 +500,22 @@ class IpePanel {
 			const data = await this.sendRequest("export", { format });
 			await vscode.workspace.fs.writeFile(fileUri, decodeBytes(data));
 		}
+	}
+
+	private findAllStyleSheets() {
+		const styles: string[] = [];
+		for (const folder of this.paths.styles) {
+			if (fs.lstatSync(folder, { throwIfNoEntry: false })?.isDirectory()) {
+				const files = fs.readdirSync(folder);
+				for (const file of files) {
+					if (file.endsWith(".isy"))
+						styles.push(file.substring(0, file.length - 4));
+				}
+			}
+		}
+		this._panel.webview.postMessage({
+			command: "findAllStyleSheets",
+			styleSheets: styles,
+		});
 	}
 }

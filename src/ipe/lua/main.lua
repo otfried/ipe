@@ -195,6 +195,19 @@ function findStyle(w, dir)
   end
 end
 
+function findAllStyleSheets()
+  local result = {}
+  for _, d in ipairs(config.styleDirs) do
+    local files = ipe.directory(d)
+    for i, f in ipairs(files) do
+      if f:sub(-4) == ".isy" then
+	result[#result+1] = f:sub(1,-5)
+      end
+    end
+  end
+  return result
+end
+
 -- show a message box
 -- type is one of "none" "warning" "information" "question" "critical"
 -- details may be nil

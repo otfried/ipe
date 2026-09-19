@@ -1097,4 +1097,9 @@ export class IpeUi {
 	setConfiguration(configuration: string): void {
 		this.internalConfiguration = configuration;
 	}
+
+	// used on VS Code to retrieve the list of all available style sheets
+	async findAllStyleSheets() {
+		this.resume([await window.ipeBridge?.findAllStyleSheets()]);
+	}
 }
