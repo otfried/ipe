@@ -666,7 +666,7 @@ function MODEL:newDocument()
       sheet = ipe.Sheet(w)
     else
       local s, s1 = self:findStyle(w)
-      sheet = ipe.sheet(s1)
+      sheet = ipe.Sheet(s1)
     end
     if not sheet then
       self:warning("Style sheet '" .. w .. "' could not be read.")
