@@ -4,6 +4,8 @@ on:
     paths:
       - '.github/workflows/compile.yml'
       - 'src/**'
+      - '!src/ipe-vscode/**'
+      - '!src/ipe-web/**'
 jobs:
   BuildQt:
     runs-on: ubuntu-latest

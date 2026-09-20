@@ -1,6 +1,6 @@
 {
 	"files": {
-		"includes": ["src/**/*.ts", "webview/**/*.ts"]
+		"includes": ["src/**/*.ts", "webview/**/*.ts", "package.json"]
 	},
 	"linter": {
 		"rules": {
