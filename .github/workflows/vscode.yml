@@ -1,0 +1,41 @@
+name: Build Ipe VS Code extension
+on:
+  workflow_dispatch:
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Setup emsdk
+        uses: emscripten-core/setup-emsdk@v14
+        with:
+          version: latest
+          actions-cache-folder: 'emsdk-cache'
+      - name: Verify emsdk
+        run: emcc -v
+      - name: Download dependencies
+        run: |
+          wget https://github.com/otfried/emscripten-ipe/releases/download/2026.09.17/emscripten-2026.09.17.tar.gz
+          tar xzf emscripten-2026.09.17.tar.gz
+      - name: Install luac to verify Lua sources
+        run: |
+          sudo apt-get update
+          sudo apt-get install lua5.4
+      - name: Compile
+        run: |
+          export IPEDEPS=`pwd`/emscripten
+          export IPEWASM=1
+          cd src
+          make -j ipe
+      - name: Build VS Code extension
+        run: |
+          cd src/ipe-vscode
+          pnpm install
+          pnpm package
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          path: src/ipe-vscode/Ipe-*.vsix
+          retention-days: 2
+      - run: 'echo "Status ${{ job.status }}"'

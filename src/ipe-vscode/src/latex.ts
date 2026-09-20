@@ -1,7 +1,7 @@
+import { spawn } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { IpePathConfig } from "./pathconfig";
-import { spawn } from "node:child_process";
 
 export interface RunLatexResult {
 	pdf?: Uint8Array;

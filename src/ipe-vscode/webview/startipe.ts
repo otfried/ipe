@@ -3,7 +3,7 @@ import { buildInfo } from "./gitversion";
 
 declare global {
 	interface Window {
-		ipeBridge: any;
+		ipeBridge: IpeVSCodeBridge;
 		ipeui: IpeUi;
 	}
 }
@@ -11,7 +11,10 @@ declare global {
 const vscode = acquireVsCodeApi();
 
 import instantiateIpe from "./ipe/ipe.js";
+import type { ResumeResult } from "./ipe/ipejs";
 import { IpeUi } from "./ipe/ipeui";
+import type { FileDialogOptions, MessageBoxOptions } from "./ipe/modal";
+import type { MainMenuItemOptions, PopupItemOptions } from "./ipe/popup-menu";
 
 type IpeFormat = "ipe" | "pdf";
 
@@ -43,11 +46,24 @@ function decodeBytes(data: string): Uint8Array {
 }
 
 class IpeVSCodeBridge {
+	// the following are for electron use only
+	onAction?: (callback: (action: string) => void) => void;
+	setMenuCheckmark?: (action: string, checked: boolean) => void;
+	menu?: (items: MainMenuItemOptions[]) => void;
+	popupMenu?: (items: PopupItemOptions[]) => Promise<ResumeResult>;
+	loadFile?: (fname: string) => Promise<Uint8Array>;
+	watchFolders?: () => Promise<string[]>;
+	saveFile?: (fname: string, data: Uint8Array) => Promise<void>;
+	messageBox?: (options: MessageBoxOptions) => Promise<ResumeResult>;
+	fileDialog?: (options: FileDialogOptions) => Promise<ResumeResult>;
+
 	private _pendingRunLatex: ((result: RunLatexResult) => void) | null = null;
 	private _pendingGetClipboard: ((data: string) => void) | null = null;
-	private _pendingFindAllStyleSheets: ((result: string[]) => void) | null = null;
-	private _pendingFetchStyleSheet: ((result: [string | null, string | null]) => void) | null =
+	private _pendingFindAllStyleSheets: ((result: string[]) => void) | null =
 		null;
+	private _pendingFetchStyleSheet:
+		| ((result: [string | null, string | null]) => void)
+		| null = null;
 
 	constructor(readonly ipe: any) {
 		window.addEventListener("message", (event) => {
@@ -93,7 +109,10 @@ class IpeVSCodeBridge {
 					this.handleFindAllStyleSheets(message.styleSheets);
 					break;
 				case "fetchStyleSheet":
-					this.handleFetchStyleSheet(message.path, message.content != null ? decodeBytes(message.content) : undefined);
+					this.handleFetchStyleSheet(
+						message.path,
+						message.content != null ? decodeBytes(message.content) : undefined,
+					);
 					break;
 			}
 		});
@@ -213,7 +232,7 @@ class IpeVSCodeBridge {
 		});
 	}
 
-	async getClipboard(): Promise<string> {
+	async getClipboard(_allowBitmap: boolean): Promise<string> {
 		return new Promise<string>((resolve) => {
 			this._pendingGetClipboard = resolve;
 			vscode.postMessage({

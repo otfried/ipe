@@ -1,9 +1,8 @@
-import * as vscode from "vscode";
 import * as fs from "node:fs";
-
-import { rootDocument } from "./root";
+import * as vscode from "vscode";
 import { runLatex } from "./latex";
 import { IpePathConfig } from "./pathconfig";
+import { rootDocument } from "./root";
 
 type IpeFormat = "ipe" | "pdf";
 
@@ -25,12 +24,9 @@ export function activate(context: vscode.ExtensionContext) {
 		);
 	}
 	context.subscriptions.push(
-		vscode.commands.registerCommand(
-			"ipe.keybinding",
-			({ key }: { key: string }) => {
-				/* ignore it */
-			},
-		),
+		vscode.commands.registerCommand("ipe.keybinding", () => {
+			/* ignore it */
+		}),
 	);
 }
 

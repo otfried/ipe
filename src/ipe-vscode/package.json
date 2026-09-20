@@ -85,7 +85,7 @@
 		]
 	},
 	"scripts": {
-		"package": "vsce package --skip-license",
+		"package": "vsce package --skip-license --no-dependencies",
 		"vscode:prepublish": "pnpm run compile",
 		"compile": "bash mkapp.bash && tsc -p ./ && tsc -p webview --noEmit && node esbuild.js --production",
 		"watch": "tsc -w -p ./",

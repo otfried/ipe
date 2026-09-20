@@ -28,7 +28,8 @@ jobs:
                   qt6-base-dev qt6-base-dev-tools \
                   libfreetype6-dev libcairo2-dev libjpeg8-dev \
                   libpng-dev libgsl-dev liblua5.4-dev \
-                  libspiro-dev libqhull-r8.0 libqhull-dev
+                  libspiro-dev libqhull-r8.0 libqhull-dev \
+                  lua5.4
       - name: Compile
         run: |
           cd src
@@ -51,7 +52,8 @@ jobs:
                   libgtk2.0-dev \
                   libfreetype6-dev libcairo2-dev libjpeg8-dev \
                   libpng-dev libgsl-dev liblua5.4-dev \
-                  libspiro-dev libqhull-r8.0 libqhull-dev
+                  libspiro-dev libqhull-r8.0 libqhull-dev \
+                  lua5.4
       - name: Compile
         run: |
           cd src

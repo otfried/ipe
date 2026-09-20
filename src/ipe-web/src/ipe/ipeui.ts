@@ -110,7 +110,7 @@ export class IpeUi {
 		if (this.platform === "electron") {
 			// allow mainWindow to send "ipeAction" events to the renderer,
 			// without having direct access to the IpeUi.
-			window.ipeBridge?.onAction((action: string) => this.action(action));
+			window.ipeBridge?.onAction?.((action: string) => this.action(action));
 		}
 
 		const lb = get("layerbox");
@@ -717,7 +717,7 @@ export class IpeUi {
 	// ------------------------------------------------------------------------------------
 
 	async preloadFile(fname: string, tmpname: string) {
-		if (window.ipeBridge == null)
+		if (window.ipeBridge?.loadFile == null)
 			throw Error("preloadFile called in environment without file system");
 		console.log("preloading", fname, tmpname);
 		const data = await window.ipeBridge.loadFile(fname);
@@ -728,7 +728,7 @@ export class IpeUi {
 	}
 
 	async preloadFileExists() {
-		if (window.ipeBridge == null)
+		if (window.ipeBridge?.watchFolders == null)
 			throw Error(
 				"preloadFileExists called in environment without file system",
 			);
@@ -743,7 +743,7 @@ export class IpeUi {
 	}
 
 	async persistFile(fname: string) {
-		if (window.ipeBridge) {
+		if (window.ipeBridge?.saveFile) {
 			const tmpname = this.preloadCache[fname];
 			if (tmpname == null) throw new Error("Persisting non-existing file.");
 			console.log("persisting", fname, tmpname);
@@ -846,8 +846,9 @@ export class IpeUi {
 		setElement(element);
 	}
 
+	// not used on vscode at all
 	async fileDialog(options: FileDialogOptions) {
-		if (this.platform !== "web") {
+		if (this.platform === "electron" && window.ipeBridge?.fileDialog) {
 			this.resume(await window.ipeBridge.fileDialog(options));
 		} else {
 			this.modal.fileDialog(options);
