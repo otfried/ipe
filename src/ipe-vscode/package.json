@@ -87,10 +87,10 @@
 	"scripts": {
 		"package": "vsce package --skip-license",
 		"vscode:prepublish": "pnpm run compile",
-		"compile": "tsc -p ./ && tsc -p webview --noEmit && node esbuild.js --production",
+		"compile": "bash mkapp.bash && tsc -p ./ && tsc -p webview --noEmit && node esbuild.js --production",
 		"watch": "tsc -w -p ./",
 		"watch:webview": "node esbuild.js --watch",
-		"check": "tsc -p ./ --noEmit && tsc -p webview --noEmit",
+		"check": "bash mkapp.bash && tsc -p ./ --noEmit && tsc -p webview --noEmit",
 		"format": "biome format --write"
 	},
 	"devDependencies": {

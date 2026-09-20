@@ -660,8 +660,14 @@ function MODEL:newDocument()
   self:markAsUnmodified()
 
   self.doc = ipe.Document()
-  for _, w in ipairs(config.styleList) do
-    local sheet = ipe.Sheet(w)
+  for _,w in ipairs(prefs.styles) do
+    local sheet
+    if w:find(prefs.fsep) then
+      sheet = ipe.Sheet(w)
+    else
+      local s, s1 = self:findStyle(w)
+      sheet = ipe.sheet(s1)
+    end
     if not sheet then
       self:warning("Style sheet '" .. w .. "' could not be read.")
     else
@@ -763,7 +769,7 @@ function MODEL:saveDocument(fname)
     return
   end
 
-  if fm == "xml" and #prefs.auto_export > 0 then
+  if fm == "xml" and #prefs.auto_export > 0 and config.platform ~= "vscode" then
     self:auto_export(fname)
   end
 
@@ -1102,3 +1108,42 @@ function MODEL:action_redo()
 end
 
 ----------------------------------------------------------------------
+
+function MODEL:findAllStyleSheets()
+  local result = {}
+  for _, d in ipairs(config.styleDirs) do
+    local files = ipe.directory(d)
+    for i, f in ipairs(files) do
+      if f:sub(-4) == ".isy" then
+	result[#result+1] = f:sub(1,-5)
+      end
+    end
+  end
+  if config.platform == "vscode" then
+    self.ui.js("findAllStyleSheets")
+    local external = coroutine.yield()
+    table.move(external, 1, #external, #result + 1, result)
+  end
+  return result
+end
+
+-- call with name of style sheet (without ".isy")
+-- returns full path and path of a copy in local file system (for vscode)
+function MODEL:findStyle(w, dir)
+  if dir and ipe.fileExists(dir .. prefs.fsep .. w .. ".isy") then
+    local s = dir .. prefs.fsep .. w .. ".isy"
+    return s, s
+  end
+  if config.platform == "vscode" then
+    self.ui.js("fetchStyleSheet", w)
+    local s, s1 = coroutine.yield()
+    if s then return s, s1 end
+  end
+  for _, d in ipairs(config.styleDirs) do
+    local s = d .. prefs.fsep .. w .. ".isy"
+    if ipe.fileExists(s) then return s, s end
+  end
+end
+
+----------------------------------------------------------------------
+

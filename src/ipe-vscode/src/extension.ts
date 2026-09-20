@@ -277,6 +277,9 @@ class IpePanel {
 					case "findAllStyleSheets":
 						this.findAllStyleSheets();
 						return;
+					case "fetchStyleSheet":
+						this.fetchStyleSheet(message.name);
+						return;
 				}
 			},
 			null,
@@ -516,6 +519,24 @@ class IpePanel {
 		this._panel.webview.postMessage({
 			command: "findAllStyleSheets",
 			styleSheets: styles,
+		});
+	}
+
+	private fetchStyleSheet(name: string) {
+		for (const folder of this.paths.styles) {
+			const path = `${folder}/${name}.isy`;
+			if (fs.existsSync(path)) {
+				return this._panel.webview.postMessage({
+					command: "fetchStyleSheet",
+					path,
+					content: encodeBytes(fs.readFileSync(path)),
+				});
+			}
+		}
+		return this._panel.webview.postMessage({
+			command: "fetchStyleSheet",
+			path: null,
+			content: null,
 		});
 	}
 }

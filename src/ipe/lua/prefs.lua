@@ -423,6 +423,9 @@ prefs.ink_spline = false
 -- The exported files cannot be opened by Ipe (they are exported copies).
 -- Export to eps, png, svg use the first view of the first page only.
 
+-- Auto-export is currently not suppored in the VS Code extension,
+-- setting this here has no effect
+
 -- possible formats are "pdf", "eps", "svg", "png"
 -- e.g. prefs.auto_export = { "pdf", "eps" }
 prefs.auto_export = { }

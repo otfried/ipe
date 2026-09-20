@@ -779,9 +779,7 @@ function MODEL:action_vscode_save_ipe()
 end
 
 function MODEL:action_vscode_save_pdf()
-  print("Lua: vscode_save_pdf")
   self:saveDocument("/home/ipe/document.pdf")
-  print("Lua: /vscode_save_pdf")
 end
 
 function MODEL:action_download()
@@ -2664,11 +2662,11 @@ function MODEL:action_update_style_sheets()
       qlog = qlog .. " - standard stylesheet\n"
     else
       qlog = qlog .. " - stylesheet '" .. name .. "'\n"
-      local s = findStyle(name .. ".isy", dir)
+      local s, s1 = self:findStyle(name, dir)
       if s then
 	qlog = qlog .. "     updating from '" .. s .."'\n"
 	self:preloadFile(s)
-	local nsheet = ipe.Sheet(s)
+	local nsheet = ipe.Sheet(s1)
 	if not nsheet then
 	  qlog = qlog .. "    ! failed to load '" .. s .. "'!\n"
 	else
@@ -2875,12 +2873,7 @@ end
 function MODEL:action_add_style_sheets()
   local d = ipeui.Dialog(self.ui:win(), "Ipe: add style sheets")
   d:add("label", "label", { label="Names of sheets to add, separated by spaces" }, 0, 1)
-  local available = findAllStyleSheets()
-  if config.platform == "vscode" then
-    self.ui.js("findAllStyleSheets")
-    local external = coroutine.yield()
-    table.move(external, 1, #external, #available + 1, available)
-  end
+  local available = self:findAllStyleSheets()
   table.sort(available)
   d:add("available", "label", { label = "Available stylesheets: " ..
 				  table.concat(available, ", ") }, 0, 1)
@@ -2900,13 +2893,13 @@ function MODEL:action_add_style_sheets()
     end
   end
   for name in string.gmatch(d:get("sheets"), "%S+") do
-    local s = findStyle(name .. ".isy", nil)
+    local s, s1 = self:findStyle(name, nil)
     if not s then
       messageBox(self.ui:win(), "warning", "No style sheet found for '" .. name .. "'")
       return
     end
     self:preloadFile(s)
-    local nsheet = ipe.Sheet(s)
+    local nsheet = ipe.Sheet(s1)
     if not nsheet then
       messageBox(self.ui:win(), "warning", "Failed to load style sheet '" .. s .. "'")
       return

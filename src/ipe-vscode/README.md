@@ -31,6 +31,9 @@ code --install-extension Ipe-7.3.1-beta1.vsix
 VS Code reserves some shortcut keys, such as F1, F5, F11.  If some of them
 do not work in Ipe, you will probably want to remap those Ipe actions.
 
+If a shortcut works in Ipe but at the same time activates an action in VS Code,
+please report that as a bug.  The key needs to be added to the extension declaration.
+
 The standard ipelets and style sheets are baked into the extension.
 You cannot change them (a bad idea anyway), but you can override them
 with your own setup.
@@ -38,8 +41,11 @@ with your own setup.
 
 ## Not yet implemented
 
-- Need to query host for list of available style sheets, and need to ask for a specific one.
+- Auto-exporting to other formats every time a .ipe file is saved
+- Online Latex compilation
+- Live Sharing (a VS Code feature to collaboratively edit an Ipe document)
+
+
+## Bugs
+
 - Some changes in Ipe do not mark the document dirty, e.g. setting a fill color from the properties
-- auto export
-- Cloud Latex
-- Live Sharing

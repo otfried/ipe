@@ -185,29 +185,6 @@ function recomputeArcMatrix(seg, cpno)
   end
 end
 
-function findStyle(w, dir)
-  if dir and ipe.fileExists(dir .. prefs.fsep .. w) then
-    return dir .. prefs.fsep .. w
-  end
-  for _, d in ipairs(config.styleDirs) do
-    local s = d .. prefs.fsep .. w
-    if ipe.fileExists(s) then return s end
-  end
-end
-
-function findAllStyleSheets()
-  local result = {}
-  for _, d in ipairs(config.styleDirs) do
-    local files = ipe.directory(d)
-    for i, f in ipairs(files) do
-      if f:sub(-4) == ".isy" then
-	result[#result+1] = f:sub(1,-5)
-      end
-    end
-  end
-  return result
-end
-
 -- show a message box
 -- type is one of "none" "warning" "information" "question" "critical"
 -- details may be nil
@@ -531,13 +508,6 @@ if config.platform == "vscode" then
 end
 
 if #style_sheets > 0 then prefs.styles = style_sheets end
-
-config.styleList = {}
-for _,w in ipairs(prefs.styles) do
-  if w:sub(-4) ~= ".isy" then w = w .. ".isy" end
-  if not w:find(prefs.fsep) then w = findStyle(w) end
-  config.styleList[#config.styleList + 1] = w
-end
 
 first_model = MODEL:new(first_file)
 first_model:action_fit_top()

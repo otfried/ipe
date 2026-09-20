@@ -1102,4 +1102,11 @@ export class IpeUi {
 	async findAllStyleSheets() {
 		this.resume([await window.ipeBridge?.findAllStyleSheets()]);
 	}
+
+	// used on VS Code to fetch external style sheets
+	// returns the external name, copies it into the local file system,
+	// and returns the local path as well
+	async fetchStyleSheet(name: string) {
+		this.resume(await window.ipeBridge?.fetchStyleSheet(name));
+	}
 }

@@ -43,9 +43,11 @@ function decodeBytes(data: string): Uint8Array {
 }
 
 class IpeVSCodeBridge {
-	_pendingRunLatex: ((result: RunLatexResult) => void) | null = null;
-	_pendingGetClipboard: ((data: string) => void) | null = null;
-	_pendingFindAllStyleSheets: ((result: string[]) => void) | null = null;
+	private _pendingRunLatex: ((result: RunLatexResult) => void) | null = null;
+	private _pendingGetClipboard: ((data: string) => void) | null = null;
+	private _pendingFindAllStyleSheets: ((result: string[]) => void) | null = null;
+	private _pendingFetchStyleSheet: ((result: [string | null, string | null]) => void) | null =
+		null;
 
 	constructor(readonly ipe: any) {
 		window.addEventListener("message", (event) => {
@@ -89,6 +91,9 @@ class IpeVSCodeBridge {
 					break;
 				case "findAllStyleSheets":
 					this.handleFindAllStyleSheets(message.styleSheets);
+					break;
+				case "fetchStyleSheet":
+					this.handleFetchStyleSheet(message.path, message.content != null ? decodeBytes(message.content) : undefined);
 					break;
 			}
 		});
@@ -304,6 +309,29 @@ class IpeVSCodeBridge {
 		if (this._pendingFindAllStyleSheets) {
 			this._pendingFindAllStyleSheets(styleSheets);
 			this._pendingFindAllStyleSheets = null;
+		}
+	}
+
+	async fetchStyleSheet(name: string): Promise<[string | null, string | null]> {
+		return new Promise<[string | null, string | null]>((resolve) => {
+			this._pendingFetchStyleSheet = resolve;
+			vscode.postMessage({
+				command: "fetchStyleSheet",
+				name,
+			});
+		});
+	}
+
+	private handleFetchStyleSheet(path: string | null, content?: Uint8Array) {
+		if (this._pendingFetchStyleSheet) {
+			if (path != null && content != null) {
+				const localName = "/home/ipe/sheet.isy";
+				this.ipe.FS.writeFile(localName, content);
+				this._pendingFetchStyleSheet([path, localName]);
+			} else {
+				this._pendingFetchStyleSheet([null, null]);
+			}
+			this._pendingFetchStyleSheet = null;
 		}
 	}
 }

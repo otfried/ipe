@@ -64,6 +64,7 @@ nib =
 endif
 
 $(TARGET): $(objects) $(resource) $(nib) Makefile $(WASM_LIBS)
+	luac -p lua/*.lua
 	$(MAKE_BINDIR)
 	$(MAKE_ASSETS)
 	$(CXX) $(LDFLAGS) -o $@ $(objects) $(resource) $(LIBS)

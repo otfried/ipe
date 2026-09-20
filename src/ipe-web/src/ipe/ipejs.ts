@@ -3,12 +3,14 @@ import type { PopupMenuResults } from "./popup-menu";
 
 type PageSorterResults = [number[], boolean[]];
 type FindAllStyleSheetsResult = [string[]];
+type FetchStyleSheetResult = [string | null, string | null];
 
 export declare type ResumeResult =
 	| DialogResult
 	| PopupMenuResults
 	| PageSorterResults
 	| FindAllStyleSheetsResult
+	| FetchStyleSheetResult
 	| null
 	| boolean
 	| number
