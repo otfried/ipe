@@ -25,15 +25,19 @@ jobs:
           npx get-pnpm
       - name: Compile
         run: |
-          export IPEDEPS=`pwd`/emscripten
+          export IPEDEPS="$GITHUB_WORKSPACE/emscripten"
           export IPEWASM=1
           cd src
           make -j ipe
+
+      - name: Install VS Code dependencies
+        working-directory: src/ipe-vscode
+        run: pnpm install --frozen-lockfile --prod=false
+
       - name: Build VS Code extension
-        run: |
-          cd src/ipe-vscode
-          pnpm install
-          pnpm package
+        working-directory: src/ipe-vscode
+        run: pnpm package
+
       - name: Upload result
         uses: actions/upload-artifact@v4
         with:

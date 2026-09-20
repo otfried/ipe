@@ -14,6 +14,10 @@ async function main() {
 		target: "es2022",
 		sourcemap: !production,
 		minify: production,
+		// webview/ipe is a symlink into ../ipe-web/src/ipe; without this, esbuild
+		// resolves node_modules from the real (target) path instead of from
+		// ipe-vscode, so it can't find dependencies like sortablejs.
+		preserveSymlinks: true,
 		define: {
 			"import.meta.env.DEV": JSON.stringify(!production),
 		},
