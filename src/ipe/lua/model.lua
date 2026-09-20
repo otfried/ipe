@@ -899,6 +899,9 @@ function MODEL:registerOnly(t)
   -- flush redo stack
   self.redo = {}
   self:setPage()
+  if config.platform == "vscode" then
+    self.ui.js("fireChange", t.label)
+  end
 end
 
 function MODEL:register(t)

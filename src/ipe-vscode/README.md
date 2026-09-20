@@ -41,11 +41,6 @@ with your own setup.
 
 ## Not yet implemented
 
-- Auto-exporting to other formats every time a .ipe file is saved
+- Auto-exporting to other formats every time an .ipe file is saved
 - Online Latex compilation
 - Live Sharing (a VS Code feature to collaboratively edit an Ipe document)
-
-
-## Bugs
-
-- Some changes in Ipe do not mark the document dirty, e.g. setting a fill color from the properties
