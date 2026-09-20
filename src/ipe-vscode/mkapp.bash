@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# The Ipe VSCode extension reuses all the HTML/CSS, Typescript, and
+# The Ipe VS Code extension reuses all the HTML/CSS, Typescript, and
 # WASM code from the web edition.
 #
 # This script copies the necessary files from ipe-web to vscode.

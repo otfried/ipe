@@ -361,10 +361,12 @@ class IpePanel {
 		for (const dir of this.paths.styles) {
 			configuration += `<li>${escapeHtml(dir)}</li>`;
 		}
+		configuration += `<li>/opt/ipe/styles (built-in style sheets)</li>`;
 		configuration += "</ul><li>Ipelets:<ul>";
 		for (const dir of this.paths.ipelets) {
 			configuration += `<li>${escapeHtml(dir)}</li>`;
 		}
+		configuration += `<li>/opt/ipe/ipelets (built-in ipelets)</li>`;
 		configuration += "</ul><li>Latex program path: ";
 		configuration += escapeHtml(this.paths.latexpath);
 		configuration += "</li><li>Latex directory: ";

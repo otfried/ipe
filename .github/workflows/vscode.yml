@@ -18,10 +18,11 @@ jobs:
         run: |
           wget https://github.com/otfried/emscripten-ipe/releases/download/2026.09.17/emscripten-2026.09.17.tar.gz
           tar xzf emscripten-2026.09.17.tar.gz
-      - name: Install luac to verify Lua sources
+      - name: Install luac and pnpm
         run: |
           sudo apt-get update
           sudo apt-get install lua5.4
+          npx get-pnpm
       - name: Compile
         run: |
           export IPEDEPS=`pwd`/emscripten

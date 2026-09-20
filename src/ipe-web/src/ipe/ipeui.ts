@@ -486,7 +486,7 @@ export class IpeUi {
 			this.platform === "electron"
 				? "Electron Edition"
 				: this.platform === "vscode"
-					? "VSCode Extension"
+					? "VS Code Extension"
 					: "Web Edition";
 		this.modal.showBanner(
 			`Ipe ${this.version.version} ${edition}`,
