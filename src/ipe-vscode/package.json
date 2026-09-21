@@ -46,6 +46,15 @@
 			},
 			{
 				"command": "ipe.keybinding",
+				"key": "ctrl+a",
+				"mac": "cmd+a",
+				"when": "activeCustomEditorId == ipe || activeCustomEditorId == ipe.pdf",
+				"args": {
+					"key": "Ctrl+A"
+				}
+			},
+			{
+				"command": "ipe.keybinding",
 				"key": "F1",
 				"when": "activeCustomEditorId == ipe || activeCustomEditorId == ipe.pdf",
 				"args": {
@@ -54,10 +63,28 @@
 			},
 			{
 				"command": "ipe.keybinding",
+				"key": "F5",
+				"when": "activeCustomEditorId == ipe || activeCustomEditorId == ipe.pdf",
+				"args": {
+					"key": "F5"
+				}
+			},
+			{
+				"command": "ipe.keybinding",
 				"key": "Shift+Ctrl+O",
+				"mac": "Shift+Cmd+O",
 				"when": "activeCustomEditorId == ipe || activeCustomEditorId == ipe.pdf",
 				"args": {
 					"key": "Shift+Ctrl+O"
+				}
+			},
+			{
+				"command": "ipe.keybinding",
+				"key": "Shift+Ctrl+X",
+				"mac": "Shift+Cmd+X",
+				"when": "activeCustomEditorId == ipe || activeCustomEditorId == ipe.pdf",
+				"args": {
+					"key": "Shift+Ctrl+X"
 				}
 			}
 		],
