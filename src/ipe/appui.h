@@ -108,10 +108,11 @@ public:
 	EUiOpacity,
 	EUiGridSize,
 	EUiAngleSize,
+	EUiVariant,
 	EUiView,
 	EUiPage,
 	EUiViewMarked,
-	EUiPageMarked
+	EUiPageMarked,
     };
 
     // tags for submenus

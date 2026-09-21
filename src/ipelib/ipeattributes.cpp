@@ -54,7 +54,7 @@ namespace ipe {
 const char * const kind_names[] = {
     "pen",         "symbolsize", "arrowsize",  "color",    "dashstyle", "textsize",
     "textstretch", "textstyle",  "labelstyle", "gridsize", "anglesize", "opacity",
-    "tiling",      "symbol",     "gradient",   "effect",   nullptr};
+    "tiling",      "symbol",     "gradient",   "effect",   "variant",  nullptr};
 
 const char * const property_names[] = {"pen",
 				       "symbolsize",
@@ -88,6 +88,7 @@ const char * const property_names[] = {"pen",
 				       "minipage",
 				       "width",
 				       "decoration",
+				       "variant",
 				       nullptr};
 } // namespace ipe
 
@@ -500,6 +501,7 @@ AllAttributes::AllAttributes() {
     iTiling = Attribute::NORMAL();
     iGradient = Attribute::NORMAL();
     iMarkShape = Attribute::NORMAL();
+    iVariant = Attribute::UNDEFINED();
 }
 
 // --------------------------------------------------------------------

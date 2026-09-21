@@ -142,6 +142,8 @@ public:
     void setDimmed(bool dimmed);
     void setAutoOrigin(const Vector & v);
 
+    void setVisibleVariant(Attribute variant);
+
     Matrix canvasTfm() const;
 
     void setObserver(CanvasObserver * observer);
@@ -189,6 +191,7 @@ protected:
     int iPageNumber;
     int iView;
     const Cascade * iCascade;
+    Attribute iVisibleVariant;
 
     Style iStyle;
 

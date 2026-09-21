@@ -82,6 +82,7 @@ CanvasBase::CanvasBase() {
     iFifiVisible = false;
     iFifiMode = Snap::ESnapNone;
     iSelectionVisible = true;
+    iVisibleVariant = Attribute::UNDEFINED();
 
     iType3Font = false;
 
@@ -153,6 +154,13 @@ void CanvasBase::setPage(const Page * page, int pno, int view, const Cascade * s
     iPageNumber = pno;
     iView = view;
     iCascade = sheet;
+}
+
+//! Set variant to be displayed
+/*! When set to undefined, only objects without variant are shown */
+void CanvasBase::setVisibleVariant(Attribute variant)
+{
+    iVisibleVariant = variant;
 }
 
 //! Set style of canvas drawing.
@@ -357,12 +365,13 @@ void CanvasBase::drawObjects(cairo_t * cc) {
     if (title) title->draw(painter);
 
     for (int i = 0; i < iPage->count(); ++i) {
-	if (iPage->objectVisible(iView, i)) {
-	    painter.pushMatrix();
-	    painter.transform(layerMatrices[iPage->layerOf(i)]);
-	    iPage->object(i)->draw(painter);
-	    painter.popMatrix();
-	}
+	if (!iPage->objectVisible(iView, i)) continue;
+	auto obj = iPage->object(i);
+	if (!obj->displayInVariant(iVisibleVariant)) continue;
+	painter.pushMatrix();
+	painter.transform(layerMatrices[iPage->layerOf(i)]);
+	obj->draw(painter);
+	painter.popMatrix();
     }
     painter.popMatrix();
     if (painter.type3Font()) iType3Font = true;

@@ -43,7 +43,7 @@ using namespace ipelua;
 const char * const AppUiBase::selectorNames[] = {
     "stroke",    "fill",       "pen",        "dashstyle", "textsize",
     "markshape", "symbolsize", "opacity",    "gridsize",  "anglesize",
-    "view",      "page",       "viewmarked", "pagemarked"};
+    "variant",   "view",      "page",       "viewmarked", "pagemarked"};
 
 AppUiBase::AppUiBase(lua_State * L0, int model) {
     L = L0;
@@ -645,8 +645,12 @@ void AppUiBase::showInCombo(const Cascade * sheet, Kind kind, int sel,
 	addCombo(sel, deflt);
 	iComboContents[sel].push_back(deflt);
     }
+    if (kind == EVariant) {
+	addCombo(sel, "undefined");
+	iComboContents[sel].push_back("undefined");
+    }
     if (kind != EGridSize && kind != EAngleSize && kind != EDashStyle
-	&& kind != EOpacity) {
+	&& kind != EOpacity && kind != EVariant) {
 	addCombo(sel, IPEABSOLUTE);
 	iComboContents[sel].push_back(IPEABSOLUTE);
     }
@@ -684,6 +688,7 @@ void AppUiBase::setupSymbolicNames(const Cascade * sheet) {
     showMarksInCombo(sheet);
     showInCombo(sheet, EGridSize, EUiGridSize, "16pt");
     showInCombo(sheet, EAngleSize, EUiAngleSize, "45 deg");
+    showInCombo(sheet, EVariant, EUiVariant);
 }
 
 void AppUiBase::setGridAngleSize(Attribute abs_grid, Attribute abs_angle) {

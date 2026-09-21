@@ -245,11 +245,13 @@ AppUi::AppUi(lua_State * L0, int model, Qt::WindowFlags f)
     setCentralWidget(canvas);
 
     iSnapTools = addToolBar("Snap");
+    iVariantTools = addToolBar("Variant");
     iEditTools = addToolBar("Edit");
     addToolBarBreak();
     iObjectTools = addToolBar("Objects");
 
     set_toolbar_size(iEditTools, iToolbarScale);
+    set_toolbar_size(iVariantTools, iToolbarScale);
     set_toolbar_size(iSnapTools, iToolbarScale);
     set_toolbar_size(iObjectTools, iToolbarScale);
 
@@ -295,10 +297,13 @@ AppUi::AppUi(lua_State * L0, int model, Qt::WindowFlags f)
 
     iSelector[EUiGridSize] = new QComboBox();
     iSelector[EUiAngleSize] = new QComboBox();
+    iSelector[EUiVariant] = new QComboBox();
     connect(iSelector[EUiGridSize], SIGNAL(activated(int)), comboMap, SLOT(map()));
     connect(iSelector[EUiAngleSize], SIGNAL(activated(int)), comboMap, SLOT(map()));
+    connect(iSelector[EUiVariant], SIGNAL(activated(int)), comboMap, SLOT(map()));
     comboMap->setMapping(iSelector[EUiGridSize], EUiGridSize);
     comboMap->setMapping(iSelector[EUiAngleSize], EUiAngleSize);
+    comboMap->setMapping(iSelector[EUiVariant], EUiVariant);
 
     addSnap("snapvtx");
     addSnap("snapctl");
@@ -310,6 +315,8 @@ AppUi::AppUi(lua_State * L0, int model, Qt::WindowFlags f)
     iSnapTools->addWidget(iSelector[EUiAngleSize]);
     addSnap("snapcustom");
     addSnap("snapauto");
+
+    iVariantTools->addWidget(iSelector[EUiVariant]);
 
     addEdit("copy");
     addEdit("cut");
@@ -432,6 +439,7 @@ AppUi::AppUi(lua_State * L0, int model, Qt::WindowFlags f)
 
     iSelector[EUiGridSize]->setToolTip("Grid size");
     iSelector[EUiAngleSize]->setToolTip("Angle for angular snap");
+    iSelector[EUiVariant]->setToolTip("Variant to display and to use for new text");
 
     connect(comboMap, SIGNAL(mappedInt(int)), this, SLOT(comboSelector(int)));
 
@@ -652,7 +660,15 @@ void AppUi::addComboColors(AttributeSeq & sym, AttributeSeq & abs) {
     }
 }
 
-void AppUi::addCombo(int sel, String s) { iSelector[sel]->addItem(QIpe(s)); }
+void AppUi::addCombo(int sel, String s) {
+    iSelector[sel]->addItem(QIpe(s));
+    if (sel == EUiVariant) {
+	if (iComboContents[EUiVariant].size() <= 1)
+	    iVariantTools->hide();
+	else
+	    iVariantTools->show();
+    }
+}
 
 void AppUi::setComboCurrent(int sel, int idx) { iSelector[sel]->setCurrentIndex(idx); }
 

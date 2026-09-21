@@ -259,6 +259,13 @@ static int appui_setPretty(lua_State * L) {
     return 0;
 }
 
+static int appui_setVariant(lua_State * L) {
+    CanvasBase * canvas = check_canvas(L, 1);
+    Attribute variant = check_property(EPropVariant, L, 2);
+    canvas->setVisibleVariant(variant);
+    return 0;
+}
+
 static int appui_setScreen(lua_State * L) {
     AppUiBase ** ui = check_appui(L, 1);
     static const char * const screen_names[] = {"normal", "maximized", "full", nullptr};
@@ -698,6 +705,7 @@ static const struct luaL_Reg appui_methods[] = {
     {"setCursor", appui_setCursor},
     {"setNumbering", appui_setNumbering},
     {"setPretty", appui_setPretty},
+    {"setVisibleVariant", appui_setVariant},
     {"setScreen", appui_setScreen},
     {"type3Font", appui_type3Font},
     // --------------------------------------------------------------------

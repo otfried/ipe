@@ -234,6 +234,7 @@ Attribute ipelua::check_property(Property prop, lua_State * L, int i) {
     case EPropGradient:
     case EPropDecoration:
     case EPropTiling: // symbolic string only
+    case EPropVariant:
 	return Attribute(true, luaL_checklstring(L, i, nullptr));
     case EPropStrokeColor:
     case EPropFillColor: return check_color_attribute(L, i);

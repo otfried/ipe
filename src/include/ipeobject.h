@@ -89,6 +89,8 @@ public:
     void setCustom(Attribute value);
     Attribute getCustom() const noexcept;
 
+    bool displayInVariant(Attribute visibleVariant) const noexcept;
+
     //! Save the object in XML format.
     virtual void saveAsXml(Stream & stream, String layer) const = 0;
 
@@ -142,6 +144,7 @@ protected:
 protected:
     Matrix iMatrix;
     Attribute iCustom;
+    Attribute iVariant;
     TPinned iPinned : 8;
     TTransformations iTransformations : 8;
 };

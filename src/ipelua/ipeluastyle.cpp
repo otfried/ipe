@@ -155,6 +155,7 @@ static Attribute check_absolute_attribute(Kind kind, lua_State * L, int i) {
     case EEffect:
     case ETiling:
     case EGradient:
+    case EVariant:
     case ESymbol: luaL_argerror(L, i, "cannot set absolute value of this kind"); break;
     }
     return Attribute::NORMAL(); // placate compiler

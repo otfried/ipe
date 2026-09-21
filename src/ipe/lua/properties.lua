@@ -156,13 +156,17 @@ function MODEL:insertBasic(m, obj)
   local layerL = p:layers()
   local pinnedL = { "none", "horizontal", "vertical", "fixed" }
   local transformationsL = { "translations", "rigid", "affine" }
+  local variantL = self.doc:sheets():allNames("variant")
+  table.insert(variantL, 1, "undefined")
   local layer = p:layerOf(p:primarySelection())
   local pinned = obj:get("pinned")
   local transformations = obj:get("transformations")
+  local variant = obj:get("variant")
   m:add("layer", "Layer: " .. layer, layerL, nil, layer)
   m:add("pinned", "Pinned: " .. pinned, pinnedL, nil, pinned)
   m:add("transformations", "Transformations: " .. transformations,
 	transformationsL, nil, transformations)
+  m:add("variant", "Variant: " .. variant, variantL, nil, variant)
 end
 
 function MODEL:insertOpacity(m, obj)

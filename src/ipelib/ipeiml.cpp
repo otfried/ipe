@@ -538,6 +538,12 @@ bool ImlParser::parseStyle(StyleSheet & sheet) {
 	    Attribute dash = Attribute::makeDashStyle(att["value"]);
 	    if (!symbolName(name) || dash.isSymbolic()) return false;
 	    sheet.add(EDashStyle, Attribute(true, name), dash);
+	} else if (tag == "variant") {
+	    if (!parseAttributes(att) || !att.slash()) return false;
+	    String name = att["name"];
+	    Attribute display = Attribute(false, att["value"]);
+	    if (!symbolName(name)) return false;
+	    sheet.add(EVariant, Attribute(true, name), display);
 	} else if (tag == "textsize") {
 	    if (!parseAttributes(att) || !att.slash()) return false;
 	    String name = att["name"];

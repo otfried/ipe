@@ -172,6 +172,7 @@ private:
     QCheckBox * iPageMarked;
 
     QToolBar * iSnapTools;
+    QToolBar * iVariantTools;
     QToolBar * iEditTools;
     QToolBar * iObjectTools;
 

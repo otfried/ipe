@@ -181,6 +181,8 @@ Object::Object(const XmlAttributes & attr) {
     }
     iCustom = Attribute::UNDEFINED();
     if (attr.has("custom", str) && !str.empty()) iCustom = Attribute(false, str);
+    iVariant = Attribute::UNDEFINED();
+    if (attr.has("variant", str)) iVariant = Attribute(true, str);
 }
 
 /*! Create object by taking pinning/transforming from \a attr and
@@ -189,6 +191,7 @@ Object::Object(const AllAttributes & attr) {
     iPinned = attr.iPinned;
     iTransformations = attr.iTransformations;
     iCustom = Attribute::UNDEFINED();
+    iVariant = Attribute::UNDEFINED();
 }
 
 /*! Create object with identity matrix, no pinning, all transformations. */
@@ -196,6 +199,7 @@ Object::Object() {
     iPinned = ENoPin;
     iTransformations = ETransformationsAffine;
     iCustom = Attribute::UNDEFINED();
+    iVariant = Attribute::UNDEFINED();
 }
 
 //! Copy constructor.
@@ -204,6 +208,7 @@ Object::Object(const Object & rhs) {
     iPinned = rhs.iPinned;
     iTransformations = rhs.iTransformations;
     iCustom = rhs.iCustom;
+    iVariant = rhs.iVariant;
 }
 
 //! Pure virtual destructor.
@@ -228,6 +233,8 @@ void Object::saveAttributesAsXml(Stream & stream, String layer) const {
 	stream << " transformations=\"rigid\"";
     if (iCustom != Attribute::UNDEFINED())
 	stream << " custom=\"" << iCustom.string() << "\"";
+    if (iVariant != Attribute::UNDEFINED())
+	stream << " variant=\"" << iVariant.string() << "\"";
 }
 
 //! Return pointer to this object if it is an Group, nullptr otherwise.
@@ -295,6 +302,12 @@ bool Object::setAttribute(Property prop, Attribute value) {
 	    return true;
 	}
 	break;
+    case EPropVariant:
+	if (value != iVariant) {
+	    iVariant = value;
+	    return true;
+	}
+	break;
     default: break;
     }
     return false;
@@ -307,6 +320,7 @@ Attribute Object::getAttribute(Property prop) const noexcept {
     switch (prop) {
     case EPropPinned: return Attribute(pinned());
     case EPropTransformations: return Attribute(iTransformations);
+    case EPropVariant: return iVariant;
     default: return Attribute::UNDEFINED();
     }
 }
@@ -319,6 +333,11 @@ void Object::setCustom(Attribute value) {
 
 //! Return value of the 'custom' attribute
 Attribute Object::getCustom() const noexcept { return iCustom; }
+
+//! Should this object be displayed when 'visibleVariant' is selected
+bool Object::displayInVariant(Attribute visibleVariant) const noexcept {
+    return iVariant.isUndefined() || iVariant == visibleVariant;
+}
 
 // --------------------------------------------------------------------
 

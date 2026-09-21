@@ -38,7 +38,7 @@ function MODEL:action(a1)
   -- handle synchronous call from Javascript
   local sync = (a:sub(1,5) == "sync_")
   if sync then a = a:sub(6) end
-  -- print("MODEL:paction(" .. a .. ")")
+  -- print("MODEL:action(" .. a .. ")")
   if a:sub(1,5) == "mode_" then
     self.mode = a:sub(6)
     self.ui:setInkMode(self.mode == "ink")
@@ -100,6 +100,7 @@ end
 
 -- Attribute selector
 function MODEL:selector(prop, value)
+  print("MODEL:selector(" .. prop .. ", " .. value .. ")")
   if prop == "gridsize" or prop == "anglesize" then
     local abs = self.doc:sheets():find(prop, value)
     self.snap[prop] = abs
@@ -142,13 +143,17 @@ function MODEL:selector(prop, value)
   end
   self.attributes[prop] = value
   self.ui:setAttributes(self.doc:sheets(), self.attributes)
+  if prop == "variant" then
+    self.ui:setVisibleVariant(value)
+    self.ui:update()
+  end
   if self:page():hasSelection() then
     self:setAttribute(prop, value)
     if prop == "textsize" or (prop == "stroke" and has_text(self:page())) then
       self:autoRunLatex()
     end
   end
-  -- self:print_attributes()
+  self:print_attributes()
 end
 
 function MODEL:set_absolute(prop, value)

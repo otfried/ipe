@@ -337,6 +337,7 @@ linecap             -- "normal", "butt", "round", "square"
 fillrule            -- "normal", "wind", "evenodd"
 pinned              -- "none", "horizontal", "vertical", "fixed"
 transformations     -- "translations", "rigid", "affine"
+language            -- two-letter string or empty string (for no language)
 \endverbatim
 
 
@@ -355,6 +356,7 @@ objects.  The property names are
     linejoin, linecap, fillrule, 
     pinned, transformations,
     decoration
+    language
 \endverbatim
 
 It is okay to set a property on objects that do not support them (for
@@ -737,6 +739,8 @@ ui:setNumbering(t)      -- true or false
 ui:setFifiVisible(t)    -- true or false
 ui:setSelectionVisible(t) -- true or false
 ui:setPretty(t)         -- true or false
+
+ui:setVisibleVariant(variant) -- which variant is shown in the canvas
 
 -- setCursor only implemented on Qt.
 -- Windows 8 switches to a dot cursor automatically when using the pen.

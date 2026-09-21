@@ -66,7 +66,8 @@ enum Kind {
     ETiling,
     ESymbol,
     EGradient,
-    EEffect
+    EEffect,
+    EVariant,
 };
 
 /*! \ingroup attr */
@@ -113,6 +114,7 @@ enum Property {
     EPropMinipage,
     EPropWidth,
     EPropDecoration,
+    EPropVariant,
 };
 
 /*! \ingroup attr */
@@ -359,6 +361,9 @@ public:
     //! Is it the symbolic name "normal"?
     inline bool isNormal() const { return (iName == ESymbolic); }
 
+    //! Is it the symbolic name "undefined"?
+    inline bool isUndefined() const { return (iName == ESymbolic + 1); }
+
     //! Return index into Repository.
     inline int index() const { return iName & ENameMask; }
 
@@ -524,6 +529,7 @@ public:
     Attribute iTiling;        //!< Tiling pattern.
     Attribute iGradient;      //!< Gradient pattern.
     Attribute iMarkShape;     //!< Shape of Mark to create.
+    Attribute iVariant;       //!< Variant to display and to use for new text
 };
 
 // --------------------------------------------------------------------
