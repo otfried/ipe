@@ -27,7 +27,7 @@ importers:
         specifier: ^1.15.9
         version: 1.15.9
       '@types/vscode':
-        specifier: ^1.137.0
+        specifier: ^1.130.0
         version: 1.138.0
       '@types/vscode-webview':
         specifier: ^1.57.0
