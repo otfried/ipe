@@ -70,6 +70,7 @@ export class IpeUi {
 		"opacity",
 		"gridsize",
 		"anglesize",
+		"variant",
 	];
 	readonly version: { year: number; version: string };
 	filename: string | null;
@@ -929,6 +930,11 @@ export class IpeUi {
 			const option = document.createElement("option");
 			option.innerText = s;
 			el.appendChild(option);
+		}
+		if (this.selectorNames[sel] === "variant") {
+			const tb = get("toolbarVariant");
+			if (el.childNodes.length > 1) tb.style.display = "flex";
+			else tb.style.display = "none";
 		}
 	}
 
