@@ -54,7 +54,7 @@ namespace ipe {
 const char * const kind_names[] = {
     "pen",         "symbolsize", "arrowsize",  "color",    "dashstyle", "textsize",
     "textstretch", "textstyle",  "labelstyle", "gridsize", "anglesize", "opacity",
-    "tiling",      "symbol",     "gradient",   "effect",   "variant",  nullptr};
+    "tiling",      "symbol",     "gradient",   "effect",   "variant",   nullptr};
 
 const char * const property_names[] = {"pen",
 				       "symbolsize",

@@ -158,10 +158,7 @@ void CanvasBase::setPage(const Page * page, int pno, int view, const Cascade * s
 
 //! Set variant to be displayed
 /*! When set to undefined, only objects without variant are shown */
-void CanvasBase::setVisibleVariant(Attribute variant)
-{
-    iVisibleVariant = variant;
-}
+void CanvasBase::setVisibleVariant(Attribute variant) { iVisibleVariant = variant; }
 
 //! Set style of canvas drawing.
 /*! Includes paper color, pretty text, and grid. */

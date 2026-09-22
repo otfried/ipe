@@ -41,9 +41,9 @@ using namespace ipelua;
 // --------------------------------------------------------------------------------
 
 const char * const AppUiBase::selectorNames[] = {
-    "stroke",    "fill",       "pen",        "dashstyle", "textsize",
-    "markshape", "symbolsize", "opacity",    "gridsize",  "anglesize",
-    "variant",   "view",      "page",       "viewmarked", "pagemarked"};
+    "stroke",    "fill",       "pen",     "dashstyle",  "textsize",
+    "markshape", "symbolsize", "opacity", "gridsize",   "anglesize",
+    "variant",   "view",       "page",    "viewmarked", "pagemarked"};
 
 AppUiBase::AppUiBase(lua_State * L0, int model) {
     L = L0;
@@ -649,8 +649,8 @@ void AppUiBase::showInCombo(const Cascade * sheet, Kind kind, int sel,
 	addCombo(sel, "undefined");
 	iComboContents[sel].push_back("undefined");
     }
-    if (kind != EGridSize && kind != EAngleSize && kind != EDashStyle
-	&& kind != EOpacity && kind != EVariant) {
+    if (kind != EGridSize && kind != EAngleSize && kind != EDashStyle && kind != EOpacity
+	&& kind != EVariant) {
 	addCombo(sel, IPEABSOLUTE);
 	iComboContents[sel].push_back(IPEABSOLUTE);
     }
@@ -747,6 +747,7 @@ void AppUiBase::setAttributes(const AllAttributes & all, Cascade * sheet) {
     setAttribute(EUiSymbolSize, iAll.iSymbolSize);
     setAttribute(EUiDashStyle, iAll.iDashStyle);
     setAttribute(EUiOpacity, iAll.iOpacity);
+    setAttribute(EUiVariant, iAll.iVariant);
 
     String s = stripMark(iAll.iMarkShape);
     for (int i = 0; i < int(iComboContents[EUiMarkShape].size()); ++i) {

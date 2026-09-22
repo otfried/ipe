@@ -600,9 +600,9 @@ doc[i]  -- return page #i, where 1 <= i <= #doc
 -- format == nil: guess from filename
 -- flags is either nil, or a table with keys
 -- "export", "nozip", "lastview", "nocolor"
-doc:save(filename, format, flags)  
-doc:exportPages(filename, flags, fromPage, toPage)
-doc:exportView(filename, format, flags, pageNo, viewNo)
+doc:save(filename, format, flags, variant)  
+doc:exportPages(filename, flags, fromPage, toPage, variant)
+doc:exportView(filename, format, flags, pageNo, viewNo, variant)
 
 -- iterating over pages of document:
 for i, p in doc:pages() do

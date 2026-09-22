@@ -711,10 +711,16 @@ function MODEL:tryLoadDocument(fname)
     self.redo = {}
     self:markAsUnmodified()
 
+    if self.attributes.variant == "undefined" then
+      local variantL = self.doc:sheets():allNames("variant")
+      if #variantL > 1 then self.attributes.variant = variantL[2] end
+    end
+
     self:setPage()
 
     self.ui:setupSymbolicNames(self.doc:sheets())
     self.ui:setAttributes(self.doc:sheets(), self.attributes)
+    self.ui:setVisibleVariant(self.attributes.variant)
     self:resetGridSize()
 
     local syms = self.doc:checkStyle()
@@ -764,7 +770,7 @@ function MODEL:saveDocument(fname)
   props.creator = config.version
   self.doc:setProperties(props)
 
-  if not self.doc:save(fname, fm) or not self:persistFile(fname) then
+  if not self.doc:save(fname, fm, {}, self.attributes.variant) or not self:persistFile(fname) then
     self:warning("File not saved!", "Error saving the document")
     return
   end
@@ -790,7 +796,7 @@ function MODEL:auto_export(fname)
     for _, format  in ipairs(prefs.auto_export) do
       local ename = fname:sub(1,-4) .. format
       if format == "pdf" then
-	if not self.doc:save(ename, "pdf", { export=true } ) then
+	if not self.doc:save(ename, "pdf", { export=true }, self.attributes.variant) then
 	  self:warning("Auto-exporting failed",
 		       "I could not export in PDF format to file '" .. ename .. "'.")
 	end

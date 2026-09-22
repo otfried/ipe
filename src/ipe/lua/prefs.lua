@@ -285,6 +285,7 @@ prefs.initial_attributes = {
   gradient = "normal",
   opacity = "opaque",
   strokeopacity = "opaque",
+  variant = "undefined",
 }
 
 -- Resolution settings

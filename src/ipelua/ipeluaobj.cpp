@@ -234,8 +234,7 @@ Attribute ipelua::check_property(Property prop, lua_State * L, int i) {
     case EPropGradient:
     case EPropDecoration:
     case EPropTiling: // symbolic string only
-    case EPropVariant:
-	return Attribute(true, luaL_checklstring(L, i, nullptr));
+    case EPropVariant: return Attribute(true, luaL_checklstring(L, i, nullptr));
     case EPropStrokeColor:
     case EPropFillColor: return check_color_attribute(L, i);
     case EPropDashStyle:
@@ -297,6 +296,7 @@ void ipelua::check_allattributes(lua_State * L, int i, AllAttributes & all) {
     get_attribute(L, i, EPropStrokeOpacity, "strokeopacity", all.iStrokeOpacity);
     get_attribute(L, i, EPropTiling, "tiling", all.iTiling);
     get_attribute(L, i, EPropGradient, "gradient", all.iGradient);
+    get_attribute(L, i, EPropVariant, "variant", all.iVariant);
 
     int t;
     t = get_option(L, i, "horizontalalignment", horizontal_alignment_names);

@@ -100,7 +100,7 @@ end
 
 -- Attribute selector
 function MODEL:selector(prop, value)
-  print("MODEL:selector(" .. prop .. ", " .. value .. ")")
+  -- print("MODEL:selector(" .. prop .. ", " .. value .. ")")
   if prop == "gridsize" or prop == "anglesize" then
     local abs = self.doc:sheets():find(prop, value)
     self.snap[prop] = abs
@@ -153,7 +153,7 @@ function MODEL:selector(prop, value)
       self:autoRunLatex()
     end
   end
-  self:print_attributes()
+  -- self:print_attributes()
 end
 
 function MODEL:set_absolute(prop, value)

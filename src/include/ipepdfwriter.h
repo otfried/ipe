@@ -87,7 +87,8 @@ protected:
 class PdfWriter {
 public:
     PdfWriter(TellStream & stream, const Document * doc, const PdfResources * resources,
-	      uint32_t flags, int fromPage, int toPage, int compression);
+	      uint32_t flags, int fromPage, int toPage, int compression,
+	      Attribute variant);
     ~PdfWriter();
 
     void createPages();
@@ -134,6 +135,8 @@ private:
     // Export only those pages
     int iFromPage;
     int iToPage;
+    // Variant to write
+    Attribute iVariant;
 
     // Map object number in resources to object number in output.
     std::unordered_map<int, int> iResourceNumber;

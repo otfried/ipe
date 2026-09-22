@@ -37,19 +37,20 @@ using ipe::Document;
 using ipe::FileFormat;
 using ipe::SaveFlag;
 using ipe::String;
+using ipe::Attribute;
 
 static int topdf(Document * doc, String src, String dst, uint32_t flags,
-		 int fromPage = -1, int toPage = -1, int viewNo = -1) {
+		 Attribute variant, int fromPage = -1, int toPage = -1, int viewNo = -1) {
     int res = doc->runLatex(src);
     if (res) return res;
 
     bool result = false;
     if (viewNo >= 0) {
-	result = doc->exportView(dst.z(), FileFormat::Pdf, flags, fromPage, viewNo);
+	result = doc->exportView(dst.z(), FileFormat::Pdf, flags, fromPage, viewNo, variant);
     } else if (toPage >= 0) {
-	result = doc->exportPages(dst.z(), flags, fromPage, toPage);
+	result = doc->exportPages(dst.z(), flags, fromPage, toPage, variant);
     } else {
-	result = doc->save(dst.z(), FileFormat::Pdf, flags);
+	result = doc->save(dst.z(), FileFormat::Pdf, flags, variant);
     }
     if (!result) {
 	fprintf(stderr, "Failed to save or export document!\n");
@@ -99,6 +100,8 @@ int main(int argc, char * argv[]) {
     bool runLatex = false;
     const char * pages = nullptr;
     const char * view = nullptr;
+    Attribute variant = Attribute::UNDEFINED();
+
     int i = 2;
 
     String infile;
@@ -132,6 +135,10 @@ int main(int argc, char * argv[]) {
 	} else if (!strcmp(argv[i], "-keepnotes")) {
 	    flags |= SaveFlag::KeepNotes;
 	    ++i;
+	} else if (!strcmp(argv[i], "-variant")) {
+	    if (i + 1 == argc) usage();
+	    variant = Attribute(true, argv[i + 1]);
+	    i += 2;
 	} else {
 	    // last one or two arguments must be filenames
 	    infile = argv[i];
@@ -224,13 +231,13 @@ int main(int argc, char * argv[]) {
     switch (frm) {
     case FileFormat::Xml:
 	if (runLatex)
-	    return topdf(doc.get(), infile, outfile, flags);
+	    return topdf(doc.get(), infile, outfile, flags, variant);
 	else
-	    doc->save(outfile.z(), FileFormat::Xml, SaveFlag::SaveNormal);
+	    doc->save(outfile.z(), FileFormat::Xml, SaveFlag::SaveNormal, variant);
     default: return 0;
 
     case FileFormat::Pdf:
-	return topdf(doc.get(), infile, outfile, flags, fromPage, toPage, viewNo);
+	return topdf(doc.get(), infile, outfile, flags, variant, fromPage, toPage, viewNo);
     }
 }
 

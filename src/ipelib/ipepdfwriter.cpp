@@ -231,13 +231,14 @@ void PdfPainter::doDrawSymbol(Attribute symbol) {
 //! Create a PDF writer operating on this (open and empty) file.
 PdfWriter::PdfWriter(TellStream & stream, const Document * doc,
 		     const PdfResources * resources, uint32_t flags, int fromPage,
-		     int toPage, int compression)
+		     int toPage, int compression, Attribute variant)
     : iStream(stream)
     , iDoc(doc)
     , iResources(resources)
     , iSaveFlags(flags)
     , iFromPage(fromPage)
-    , iToPage(toPage) {
+    , iToPage(toPage)
+    , iVariant(variant) {
     iCompressLevel = compression;
     iObjNum = 7;        // 0 - 6 are reserved
     iXmlStreamNum = -1; // no XML stream yet
@@ -700,9 +701,11 @@ void PdfWriter::paintView(Stream & stream, int pno, int view) {
 
     for (int i = 0; i < page->count(); ++i) {
 	if (page->objectVisible(view, i)) {
+	    auto obj = page->object(i);
+	    if (!obj->displayInVariant(iVariant)) continue;
 	    painter.pushMatrix();
 	    painter.transform(layerMatrices[page->layerOf(i)]);
-	    page->object(i)->draw(painter);
+	    obj->draw(painter);
 	    painter.popMatrix();
 	}
     }
