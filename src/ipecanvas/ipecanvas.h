@@ -143,6 +143,7 @@ public:
     void setAutoOrigin(const Vector & v);
 
     void setVisibleVariant(Attribute variant);
+    Attribute visibleVariant() const noexcept { return iVisibleVariant; }
 
     Matrix canvasTfm() const;
 
