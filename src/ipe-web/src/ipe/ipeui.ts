@@ -69,8 +69,8 @@ export class IpeUi {
 		"symbolsize",
 		"opacity",
 		"gridsize",
-		"anglesize",
 		"variant",
+		"anglesize",
 	];
 	readonly version: { year: number; version: string };
 	filename: string | null;

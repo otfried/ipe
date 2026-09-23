@@ -101,6 +101,7 @@ private:
     void setCheckMark(String name, String value);
     void makePropertiesTool();
     void makeSnapBar();
+    void makeVariantBar();
     NSImage * createIcon(int pno, int size, bool touchBar);
 
     virtual void addRootMenu(int id, const char * name) override;
@@ -157,6 +158,8 @@ private:
     NSLayoutConstraint * iViewToLayers;
     NSLayoutConstraint * iViewToLeft;
 
+    NSView * iVariantBar;
+    
     NSPanel * iNotesPanel;
     NSTextView * iNotesField;
     NSPanel * iBookmarksPanel;
