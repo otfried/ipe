@@ -42,8 +42,8 @@ using namespace ipelua;
 
 const char * const AppUiBase::selectorNames[] = {
     "stroke",    "fill",       "pen",     "dashstyle",  "textsize",
-    "markshape", "symbolsize", "opacity", "gridsize",   "anglesize",
-    "variant",   "view",       "page",    "viewmarked", "pagemarked"};
+    "markshape", "symbolsize", "opacity", "gridsize",   "variant",
+    "anglesize", "view",       "page",    "viewmarked", "pagemarked"};
 
 AppUiBase::AppUiBase(lua_State * L0, int model) {
     L = L0;

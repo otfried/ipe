@@ -112,8 +112,7 @@ SelectTool::SelectTool(CanvasBase * canvas, Page * page, int view, double select
     // Collect objects close enough
     double d;
     for (int i = iPage->count() - 1; i >= 0; --i) {
-	if (iPage->objectVisible(iView, i)
-	    && !iPage->isLocked(iPage->layerOf(i))
+	if (iPage->objectVisible(iView, i) && !iPage->isLocked(iPage->layerOf(i))
 	    && iPage->object(i)->displayInVariant(iCanvas->visibleVariant())) {
 	    if ((d = iPage->distance(i, v, bound)) < bound) {
 		SObj obj;

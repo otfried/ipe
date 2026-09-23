@@ -207,8 +207,7 @@ static int document_save(lua_State * L) {
 	format = FileFormat(luaL_checkoption(L, 3, nullptr, format_name));
     uint32_t flags = check_flags(L, 4);
     Attribute variant = Attribute::UNDEFINED();
-    if (!lua_isnoneornil(L, 5))
-	variant = check_property(EPropVariant, L, 5);
+    if (!lua_isnoneornil(L, 5)) variant = check_property(EPropVariant, L, 5);
     bool result = (*d)->save(fname.z(), format, flags, variant);
     lua_pushboolean(L, result);
     return 1;
@@ -221,8 +220,7 @@ static int document_exportPages(lua_State * L) {
     int fromPage = check_pageno(L, 4, *d);
     int toPage = check_pageno(L, 5, *d);
     Attribute variant = Attribute::UNDEFINED();
-    if (!lua_isnoneornil(L, 6))
-	variant = check_property(EPropVariant, L, 6);
+    if (!lua_isnoneornil(L, 6)) variant = check_property(EPropVariant, L, 6);
     bool result = (*d)->exportPages(fname.z(), flags, fromPage, toPage, variant);
     lua_pushboolean(L, result);
     return 1;
@@ -240,8 +238,7 @@ static int document_exportView(lua_State * L) {
     int pno = check_pageno(L, 5, *d);
     int vno = check_viewno(L, 6, (*d)->page(pno));
     Attribute variant = Attribute::UNDEFINED();
-    if (!lua_isnoneornil(L, 7))
-	variant = check_property(EPropVariant, L, 7);
+    if (!lua_isnoneornil(L, 7)) variant = check_property(EPropVariant, L, 7);
     bool result = (*d)->exportView(fname.z(), format, flags, pno, vno, variant);
     lua_pushboolean(L, result);
     return 1;

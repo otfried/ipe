@@ -294,7 +294,8 @@ bool Document::save(TellStream & stream, FileFormat format, uint32_t flags,
     return false;
 }
 
-bool Document::save(const char * fname, FileFormat format, uint32_t flags, Attribute variant) const {
+bool Document::save(const char * fname, FileFormat format, uint32_t flags,
+		    Attribute variant) const {
     std::FILE * fd = Platform::fopen(fname, "wb");
     if (!fd) return false;
     FileStream stream(fd);

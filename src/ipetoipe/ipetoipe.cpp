@@ -33,11 +33,11 @@
 #include <cstdlib>
 #include <cstring>
 
+using ipe::Attribute;
 using ipe::Document;
 using ipe::FileFormat;
 using ipe::SaveFlag;
 using ipe::String;
-using ipe::Attribute;
 
 static int topdf(Document * doc, String src, String dst, uint32_t flags,
 		 Attribute variant, int fromPage = -1, int toPage = -1, int viewNo = -1) {
@@ -46,7 +46,8 @@ static int topdf(Document * doc, String src, String dst, uint32_t flags,
 
     bool result = false;
     if (viewNo >= 0) {
-	result = doc->exportView(dst.z(), FileFormat::Pdf, flags, fromPage, viewNo, variant);
+	result =
+	    doc->exportView(dst.z(), FileFormat::Pdf, flags, fromPage, viewNo, variant);
     } else if (toPage >= 0) {
 	result = doc->exportPages(dst.z(), flags, fromPage, toPage, variant);
     } else {
@@ -237,7 +238,8 @@ int main(int argc, char * argv[]) {
     default: return 0;
 
     case FileFormat::Pdf:
-	return topdf(doc.get(), infile, outfile, flags, variant, fromPage, toPage, viewNo);
+	return topdf(doc.get(), infile, outfile, flags, variant, fromPage, toPage,
+		     viewNo);
     }
 }
 

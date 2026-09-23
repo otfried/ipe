@@ -70,6 +70,7 @@ const int TBICONSIZE = 24;
 
 const int GRIDSIZE_WIDTH = 160;
 const int ANGLESIZE_WIDTH = 100;
+const int VARIANT_WIDTH = 140;
 const int COLORBUTTON_SIZE = 22;
 const int COLORICON_SIZE = 18;
 
@@ -503,6 +504,7 @@ void AppUi::initUi() {
     lua_getfield(L, -1, "win_toolbar_order");
     bool showGridSizeCombo = false;
     bool showAngleSizeCombo = false;
+    iShowVariantCombo = false;
     if (lua_istable(L, -1)) {
 	int n = lua_rawlen(L, -1);
 	for (int i = 1; i <= n; ++i) {
@@ -519,6 +521,10 @@ void AppUi::initUi() {
 		    insert_tb(hRebar, rbBand, hSelector[EUiAngleSize],
 			      uiscale(ANGLESIZE_WIDTH));
 		    showAngleSizeCombo = true;
+		} else if (s == "variant") {
+		    insert_tb(hRebar, rbBand, hSelector[EUiVariant],
+			      uiscale(VARIANT_WIDTH));
+		    iShowVariantCombo = true;
 		} else if (s == "snap")
 		    insert_tb(hRebar, rbBand, hSnapTools, iSnapButtons * bw);
 		else if (s == "mode")
@@ -530,6 +536,7 @@ void AppUi::initUi() {
     lua_pop(L, 2); // win_toolbar_order, prefs
     if (!showGridSizeCombo) ShowWindow(hSelector[EUiGridSize], SW_HIDE);
     if (!showAngleSizeCombo) ShowWindow(hSelector[EUiAngleSize], SW_HIDE);
+    if (!iShowVariantCombo) ShowWindow(hSelector[EUiVariant], SW_HIDE);
 
     // ------------------------------------------------------------
 
@@ -619,6 +626,7 @@ void AppUi::initUi() {
 
     setTooltip(hSelector[EUiGridSize], "Grid size", true);
     setTooltip(hSelector[EUiAngleSize], "Angle for angular snap", true);
+    setTooltip(hSelector[EUiVariant], "Variant to display and to use for new text", true);
 
     setTooltip(hViewNumber, "Current view number");
     setTooltip(hPageNumber, "Current page number");
@@ -837,6 +845,8 @@ void AppUi::handleDpiChange(HWND hwnd, WPARAM wParam, LPARAM lParam) {
 	    size = uiscale(GRIDSIZE_WIDTH);
 	else if (child == hSelector[EUiAngleSize])
 	    size = uiscale(ANGLESIZE_WIDTH);
+	else if (child == hSelector[EUiVariant])
+	    size = uiscale(VARIANT_WIDTH);
 	rbBand.cxMinChild = size;
 	rbBand.cx = size;
 	SendMessage(hRebar, RB_SETBANDINFO, (WPARAM)band, (LPARAM)&rbBand);
@@ -909,7 +919,15 @@ void AppUi::addComboColors(AttributeSeq & sym, AttributeSeq & abs) {
     createColorIcons();
 }
 
-void AppUi::addCombo(int sel, String s) { addComboEx(hSelector[sel], s); }
+void AppUi::addCombo(int sel, String s) {
+    addComboEx(hSelector[sel], s);
+    if (sel == EUiVariant && iShowVariantCombo) {
+	if (iComboContents[EUiVariant].size() <= 1)
+	    ShowWindow(hSelector[EUiVariant], SW_HIDE);
+	else
+	    ShowWindow(hSelector[EUiVariant], SW_SHOW);
+    }
+}
 
 void AppUi::setComboCurrent(int sel, int idx) {
     SendMessage(hSelector[sel], CB_SETCURSEL, idx, 0);

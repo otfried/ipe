@@ -164,9 +164,11 @@ private:
     HWND hTip;
     HWND hStatusBar;
     HWND hSnapTools;
+    HWND hVariantTools;
     HWND hEditTools;
     HWND hObjectTools;
     int iToolButtonCount, iSnapButtons, iEditButtons, iObjectButtons;
+    bool iShowVariantCombo;
 
     HWND hRebar;
     HWND hNotes;

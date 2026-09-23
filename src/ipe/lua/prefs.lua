@@ -140,7 +140,7 @@ prefs.tools_visible = {
 prefs.osx_properties_width = 200.0
 
 -- on Windows, initial ordering of the toolbars
-prefs.win_toolbar_order = { "snap", "grid", "angle", "edit", "mode" }
+prefs.win_toolbar_order = { "snap", "grid", "angle", "variant", "edit", "mode" }
 
 -- on Windows, keep edit toolbar minimal?
 prefs.win_mini_edit = false
