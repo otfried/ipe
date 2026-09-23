@@ -22,12 +22,9 @@ You only need to unpack the archive, and you are ready to run.
 
 #### MacOS
 
-If you have homebrew, you can install Ipe by saying
-```
-brew install --cask ipe
-```
-You can also download the application directly from the 
-[home page](https://ipe.otfried.org/).
+You can download the MacOS application directly from the [home
+page](https://ipe.otfried.org/).
+
 Open it, drag `Ipe.app` to your computer, and you are ready to run.
 
 #### Linux
@@ -38,7 +35,7 @@ on Unix.
 
 ### Copyright
 
-Ipe is copyright (c) 1993-2024 Otfried Cheong
+Ipe is copyright (c) 1993-2026 Otfried Cheong
 
 Ipe is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free

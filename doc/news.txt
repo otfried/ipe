@@ -2,7 +2,7 @@
 
 Ipe 7.3.1
 
- * Ipe Web Edition and Ipe Electron Edition.
+ * Ipe Web Edition and Ipe VS Code Extension.
 
  * Implement the XDG Base Directory Specification on Linux, so your
    local files are no longer in `~/.ipe`.  Check "Show configuration"
@@ -37,6 +37,9 @@ Ipe 7.3.1
    (!557).  Thanks Alexander Firbas!
 
  * Fix crash when setting custom attribute to empty string (#569).
+
+ * Much faster rendering of tiling patterns and images (!581).
+   Thanks Alexander Firbas!
 
 ----------------------------------------------------------------------
 

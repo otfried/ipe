@@ -363,7 +363,8 @@ local home = os.getenv("HOME")
 local ipeletpath = os.getenv("IPELETPATH")
 if ipeletpath then
   config.ipeletDirs = {}
-  for w in string.gmatch(ipeletpath, prefs.fname_pattern) do
+  for ipelet in string.gmatch(ipeletpath, prefs.fname_pattern) do
+    local w = ipelet
     if w == "_" then w = ipe.folder("ipelets") end
     if w:sub(1,4) == "ipe:" then
       w = config.ipedrive .. w:sub(5)
@@ -379,7 +380,8 @@ end
 local ipestyles = os.getenv("IPESTYLES")
 if ipestyles then
   config.styleDirs = {}
-  for w in string.gmatch(ipestyles, prefs.fname_pattern) do
+  for dir in string.gmatch(ipestyles, prefs.fname_pattern) do
+    local w = dir
     if w == "_" then w = ipe.folder("styles") end
     if w:sub(1,4) == "ipe:" then
       w = config.ipedrive .. w:sub(5)

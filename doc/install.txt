@@ -9,26 +9,26 @@
 Quickstart for Linux
 --------------------
 
-Note: the following quick instructions will not compile support for
-spell checking, because there doesn't seem to be a Debian package for
-QtSpell on Qt6 yet.  You would need to compile that yourself if you
-want that, see below.
-
 If you have a recent Mint, Ubuntu, or Debian system, the following
 steps will install the necessary libraries and tools:
 
     sudo apt-get install build-essential checkinstall
     sudo apt-get install qt6-base-dev qt6-base-dev-tools
-    sudo apt-get install libqt6svg6
-    sudo apt-get install libfreetype6-dev libcairo2-dev libjpeg8-dev
-    sudo apt-get install libpng-dev liblua5.4-dev zlib1g-dev
+    sudo apt-get install libqt6svg6 libqtspell-qt6-dev
+    sudo apt-get install libfreetype6-dev libcairo2-dev
+    sudo apt-get install libjpeg8-dev libpng-dev zlib1g-dev
+    sudo apt-get install liblua5.5-dev lua5.5
     sudo apt-get install libspiro-dev libgsl-dev curl
+
+Use Lua 5.4 or Lua 5.3 if that is what you have.
+If you cannot install libqtspell-qt6-dev, just remove
+IPE_SPELLCHECK=1 in the make command below.
 
 Now you can compile and install Ipe into /usr/local:
 (Note that 7.x.y has to be replaced by the current Ipe version!)
 
     cd src
-    make IPEPREFIX=/usr/local
+    make IPEPREFIX=/usr/local IPE_SPELLCHECK=1
     sudo checkinstall --pkgname=ipe --pkgversion=7.x.y --backup=no \
     	 --fstrans=no --default make install IPEPREFIX=/usr/local
     sudo ldconfig
@@ -102,12 +102,12 @@ and libraries:
    "libjpeg-dev".  You can also use libjpeg-turbo instead (the
    package "libjpeg-turbo8-dev"), from "http://libjpeg-turbo.virtualgl.org/".
 
- * The Lua language (version 5.3 or 5.4)
+ * The Lua language (version 5.3, 5.4, or 5.5)
 
    Lua is an embeddable scripting language. On Debian/Ubuntu, install
-   "liblua5.4-dev".  Or compile from source at "www.lua.org" - the
-   sources are ANSI C and compile very easily.  Ipe requires Lua 5.3
-   or 5.4.
+   "liblua5.5-dev".  Or compile from source at "www.lua.org" - the
+   sources are ANSI C and compile very easily.  Ipe requires at least
+   Lua 5.3 and works at least up to 5.5.
 
    Make sure that you build a DYNAMIC library.  Ipe will not work if
    Lua is linked statically (linking statically would include three
@@ -125,13 +125,12 @@ and libraries:
 
  * The QtSpell widget
 
-   If you want spell checking in your text edit fields, you'd need to
-   compile the QtSpell widget from sources at
-   "https://github.com/manisandro/qtspell".  (There does not currently
-   seem to be a Debian/Ubuntu package for the Qt6 version.)
+   You need this if you want spell checking in your text edit fields.
+   On Debian/Ubuntu, install "libqtspell-qt6-dev", and make sure
+   IPE_SPELLCHECK is set in "config.mak".
 
-   You then need to set IPE_SPELLCHECK, SPELL_CFLAGS, and SPELL_LIBS
-   in config.mak.
+   You can also compile the QtSpell widget from source at
+   "https://github.com/manisandro/qtspell".
    
  * The GNU Scientific Library
 
@@ -183,7 +182,7 @@ listed above.  On Linux, you probably have a correctly working
 
 You'll have to check that the Lua package name is correct - try saying
 
-     pkg-config --modversion lua5.4
+     pkg-config --modversion lua5.5
 
 If the package isn't found, try 'lua5.3', 'lua' or 'lua53', etc.
 

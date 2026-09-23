@@ -81,8 +81,6 @@ else ifeq ($(IPEUI), GTK)
 PKG_CONFIG   ?= pkg-config
 CPPFLAGS     += -DIPEUI_GTK -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED
 IPEUI_GTK    := 1
-GTK_CFLAGS   ?= $(shell $(PKG_CONFIG) --cflags gtk+-2.0)
-GTK_LIBS     ?= $(shell $(PKG_CONFIG) --libs gtk+-2.0)
 UI_CFLAGS    = $(GTK_CFLAGS)
 UI_LIBS      = $(GTK_LIBS)
 all_sources  = $(sources) $(gtk_sources)

@@ -343,9 +343,13 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		    new QCheckBox(QString::fromUtf8(m.text.c_str()), qDialog);
 		ch->setChecked(m.value);
 		if (m.lua_method != LUA_NOREF)
-		    QObject::connect(
-			ch, &QCheckBox::stateChanged,
-			[&, method = m.lua_method](int) { callLua(method); });
+		    QObject::connect(ch,
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+				     &QCheckBox::checkStateChanged,
+#else
+                        &QCheckBox::stateChanged,
+#endif
+				     [&, method = m.lua_method]() { callLua(method); });
 		w = ch;
 	    } break;
 	    case EInput: {
