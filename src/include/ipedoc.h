@@ -83,6 +83,7 @@ public:
 	String iModified;
 	//! Program that created this document (e.g. "Ipe 7.5").
 	String iCreator;
+	Attribute iVariant;
     };
 
     //! Errors that can happen while loading documents
@@ -106,14 +107,11 @@ public:
     static Document * load(const char * fname, int & reason);
     static Document * loadWithErrorReport(const char * fname);
 
-    bool save(TellStream & stream, FileFormat format, uint32_t flags,
-	      Attribute variant) const;
-    bool save(const char * fname, FileFormat format, uint32_t flags,
-	      Attribute variant) const;
-    bool exportPages(const char * fname, uint32_t flags, int fromPage, int toPage,
-		     Attribute variant) const;
+    bool save(TellStream & stream, FileFormat format, uint32_t flags) const;
+    bool save(const char * fname, FileFormat format, uint32_t flags) const;
+    bool exportPages(const char * fname, uint32_t flags, int fromPage, int toPage) const;
     bool exportView(const char * fname, FileFormat format, uint32_t flags, int pno,
-		    int vno, Attribute variant) const;
+		    int vno) const;
 
     void saveAsXml(Stream & stream, bool usePdfBitmaps = false) const;
 
@@ -138,6 +136,8 @@ public:
     //! Return document properties.
     inline SProperties properties() const { return iProperties; }
     void setProperties(const SProperties & info);
+    //! Return current variant.
+    inline Attribute variant() const { return iProperties.iVariant; }
 
     //! Return stylesheet cascade.
     Cascade * cascade() { return iCascade; }

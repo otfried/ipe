@@ -55,6 +55,15 @@
 			},
 			{
 				"command": "ipe.keybinding",
+				"key": "ctrl+p",
+				"mac": "cmd+p",
+				"when": "activeCustomEditorId == ipe || activeCustomEditorId == ipe.pdf",
+				"args": {
+					"key": "Ctrl+P"
+				}
+			},
+			{
+				"command": "ipe.keybinding",
 				"key": "F1",
 				"when": "activeCustomEditorId == ipe || activeCustomEditorId == ipe.pdf",
 				"args": {

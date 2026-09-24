@@ -109,6 +109,11 @@ function MODEL:selector(prop, value)
     self.ui:setGridAngleSize(self.snap.gridsize, self.snap.anglesize)
     return
   end
+  if prop == "variant" then
+    self:setVariant(value)
+    self:autoRunLatex()
+    return
+  end
   if prop == "markshape" then
     local s = "mark/" .. value
     local name
@@ -143,10 +148,6 @@ function MODEL:selector(prop, value)
   end
   self.attributes[prop] = value
   self.ui:setAttributes(self.doc:sheets(), self.attributes)
-  if prop == "variant" then
-    self.ui:setVisibleVariant(value)
-    self.ui:update()
-  end
   if self:page():hasSelection() then
     self:setAttribute(prop, value)
     if prop == "textsize" or (prop == "stroke" and has_text(self:page())) then
@@ -1916,16 +1917,37 @@ function MODEL:action_delete_page()
   self.ui:explain(t.label)
 end
 
+local function update_variant(d, i)
+  local on = d:get("skip-" .. i)
+  d:setEnabled("title-" .. i, not on)
+  if on then d:set("title-" .. i, "") end
+end
+
 local function update_dialog(d, sec)
   local on = d:get("t" .. sec)
   d:setEnabled(sec, not on)
   if on then d:set(sec, "") end
 end
 
+local function setTitleAndSections(page, data)
+  page:setSections(data)
+  page:setTitle(nil, data.title, false)
+  for variant, s in pairs(data.variants) do
+    page:setTitle(variant, s.title, s.skipped)
+  end
+end
+
 function MODEL:action_edit_title()
   local d = ipeui.Dialog(self.ui:win(), "Ipe: Edit page title and sections", self.doc:properties().language)
   d:add("label1", "label", { label="Page title"}, 1, 1, 1, 4)
   d:add("title", "text", {}, 0, 1, 1, 4)
+  local variants = self.doc:sheets():allNames("variant")
+  for i, variant in ipairs(variants) do
+    d:add("label-" .. i, "label", { label="Page title (" .. variant .. ")"}, 0, 1, 1, 3)
+    d:add("skip-" .. i, "checkbox", {label="Skip this page",
+				     action=function (d) update_variant(d, i) end}, -1, 4)
+    d:add("title-" .. i, "text", {}, 0, 1, 1, 4)
+  end
   d:add("label2", "label", { label="Sections"}, 0, 1, 1, 4)
   d:add("label3", "label", { label="Section:" }, 0, 1)
   d:add("tsection", "checkbox",
@@ -1941,19 +1963,28 @@ function MODEL:action_edit_title()
   d:add("subsection", "input", {}, 0, 2, 1, 3)
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
-  d:setStretch("row", 2, 1)
   d:setStretch("column", 2, 1)
+  for row = 2, 2 + 2 * #variants, 2 do
+    d:setStretch("row", row, 1)
+  end
   -- setup original values
-  local ti = self:page():titles()
-  d:set("title", ti.title)
-  if ti.section then
-    d:set("section", ti.section)
+  local original = self:page():sections()
+  original.title, _ = self:page():title(nil)
+  d:set("title", original.title)
+  original.variants = {}
+  for i, variant in ipairs(variants) do
+    original.variants.title, original.variants.skipped = self:page():title(variant)
+    d:set("title-" .. i, original.variants.title)
+    d:set("skip-" .. i, original.variants.skipped)
+  end
+  if original.section then
+    d:set("section", original.section)
   else
     d:set("tsection", true)
     d:setEnabled("section", false)
   end
-  if ti.subsection then
-    d:set("subsection", ti.subsection)
+  if original.subsection then
+    d:set("subsection", original.subsection)
   else
     d:set("tsubsection", true)
     d:setEnabled("subsection", false)
@@ -1966,22 +1997,25 @@ function MODEL:action_edit_title()
   if not d:get("tsubsection") then
     final.subsection = d:get("subsection")
   end
-  if prefs.automatic_use_title and ti.title ~= final.title then
+  if prefs.automatic_use_title and original.title ~= final.title then
     final.section = true
     final.tsection = true
+  end
+  final.variants = {}
+  for i, variant in ipairs(variants) do
+    final.variants[variant] = {
+      title = d:get("title-" .. i),
+      skipped = d:get("skip-" .. i)
+    }
   end
   local t = { label="change title and sections of page " .. self.pno,
 	      pno = self.pno,
 	      vno = self.vno,
-	      original = ti,
+	      original = original,
 	      final = final,
-	    }
-  t.undo = function (t, doc)
-	     doc[t.pno]:setTitles(t.original)
-	   end
-  t.redo = function (t, doc)
-	     doc[t.pno]:setTitles(t.final)
-	   end
+	      undo = function (t, doc) setTitleAndSections(doc[t.pno], t.original) end,
+	      redo = function (t, doc) setTitleAndSections(doc[t.pno], t.final) end,
+  }
   self:register(t)
   self:autoRunLatex()
 end
@@ -2960,7 +2994,9 @@ function MODEL:action_document_properties()
   d:setStretch("column", 5, 1)
   d:setStretch("row", 8, 1)
   self:addEditorField(d, "preamble")
-  for n in pairs(p) do d:set(n, p[n]) end
+  for n in pairs(p) do
+    if n ~= "variant" then d:set(n, p[n]) end
+  end
   if not d:execute() then return end
 
   local t = { label="modify document properties",

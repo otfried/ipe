@@ -206,9 +206,7 @@ static int document_save(lua_State * L) {
     else
 	format = FileFormat(luaL_checkoption(L, 3, nullptr, format_name));
     uint32_t flags = check_flags(L, 4);
-    Attribute variant = Attribute::UNDEFINED();
-    if (!lua_isnoneornil(L, 5)) variant = check_property(EPropVariant, L, 5);
-    bool result = (*d)->save(fname.z(), format, flags, variant);
+    bool result = (*d)->save(fname.z(), format, flags);
     lua_pushboolean(L, result);
     return 1;
 }
@@ -219,9 +217,7 @@ static int document_exportPages(lua_State * L) {
     uint32_t flags = check_flags(L, 3);
     int fromPage = check_pageno(L, 4, *d);
     int toPage = check_pageno(L, 5, *d);
-    Attribute variant = Attribute::UNDEFINED();
-    if (!lua_isnoneornil(L, 6)) variant = check_property(EPropVariant, L, 6);
-    bool result = (*d)->exportPages(fname.z(), flags, fromPage, toPage, variant);
+    bool result = (*d)->exportPages(fname.z(), flags, fromPage, toPage);
     lua_pushboolean(L, result);
     return 1;
 }
@@ -237,9 +233,7 @@ static int document_exportView(lua_State * L) {
     uint32_t flags = check_flags(L, 4);
     int pno = check_pageno(L, 5, *d);
     int vno = check_viewno(L, 6, (*d)->page(pno));
-    Attribute variant = Attribute::UNDEFINED();
-    if (!lua_isnoneornil(L, 7)) variant = check_property(EPropVariant, L, 7);
-    bool result = (*d)->exportView(fname.z(), format, flags, pno, vno, variant);
+    bool result = (*d)->exportView(fname.z(), format, flags, pno, vno);
     lua_pushboolean(L, result);
     return 1;
 }
@@ -473,6 +467,8 @@ static int document_properties(lua_State * L) {
     lua_setfield(L, -2, "sequentialtext");
     lua_pushstring(L, tex_engine_names[int(prop.iTexEngine)]);
     lua_setfield(L, -2, "tex");
+    push_string(L, prop.iVariant.string());
+    lua_setfield(L, -2, "variant");
     return 1;
 }
 
@@ -505,6 +501,9 @@ static int document_setProperties(lua_State * L) {
     propString(L, "created", prop.iCreated);
     propString(L, "modified", prop.iModified);
     propString(L, "creator", prop.iCreator);
+    String variant;
+    propString(L, "variant", variant);
+    prop.iVariant = Attribute(true, variant);
     String tex;
     propString(L, "tex", tex);
     for (int i = 0; i < 4; ++i) {

@@ -48,7 +48,8 @@ class TextCollectingVisitor;
 
 class Latex {
 public:
-    Latex(const Cascade * sheet, LatexType latexType, bool sequentialText);
+    Latex(const Cascade * sheet, LatexType latexType, bool sequentialText,
+	  Attribute variant);
     ~Latex();
 
     int scanObject(const Object * obj);
@@ -78,6 +79,7 @@ private:
     bool iXetex;
     bool iSequentialText;
     LatexType iLatexType;
+    Attribute iVariant;
 
     PdfFile iPdf;
 

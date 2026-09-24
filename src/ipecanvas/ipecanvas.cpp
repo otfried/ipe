@@ -358,7 +358,7 @@ void CanvasBase::drawObjects(cairo_t * cc) {
 	if (pn) pn->draw(painter);
     }
 
-    const Text * title = iPage->titleText();
+    const Text * title = iPage->titleText(iVisibleVariant);
     if (title) title->draw(painter);
 
     for (int i = 0; i < iPage->count(); ++i) {

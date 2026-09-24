@@ -426,13 +426,14 @@ end
 function MODEL:getBookmarks()
   local b = {}
   for _,p in self.doc:pages() do
-    local t = p:titles()
+    local title = p:title(self.doc:properties().variant)
+    local t = p:sections()
     if t.section then
       if t.section ~= "" then b[#b+1] = t.section end
-    elseif t.title ~= "" then b[#b+1] = t.title end
+    elseif title ~= "" then b[#b+1] = title end
     if t.subsection then
       if t.subsection ~= "" then b[#b+1] = "  " .. t.subsection end
-    elseif t.title ~= "" then b[#b+1] = "   " .. t.title end
+    elseif title ~= "" then b[#b+1] = "   " .. title end
   end
   return b
 end
@@ -711,10 +712,7 @@ function MODEL:tryLoadDocument(fname)
     self.redo = {}
     self:markAsUnmodified()
 
-    if self.attributes.variant == "undefined" then
-      local variantL = self.doc:sheets():allNames("variant")
-      if #variantL > 1 then self.attributes.variant = variantL[2] end
-    end
+    self.attributes.variant = self.doc:properties().variant
 
     self:setPage()
 
@@ -770,7 +768,7 @@ function MODEL:saveDocument(fname)
   props.creator = config.version
   self.doc:setProperties(props)
 
-  if not self.doc:save(fname, fm, {}, self.attributes.variant) or not self:persistFile(fname) then
+  if not self.doc:save(fname, fm, {}) or not self:persistFile(fname) then
     self:warning("File not saved!", "Error saving the document")
     return
   end
@@ -796,7 +794,7 @@ function MODEL:auto_export(fname)
     for _, format  in ipairs(prefs.auto_export) do
       local ename = fname:sub(1,-4) .. format
       if format == "pdf" then
-	if not self.doc:save(ename, "pdf", { export=true }, self.attributes.variant) then
+	if not self.doc:save(ename, "pdf", { export=true }) then
 	  self:warning("Auto-exporting failed",
 		       "I could not export in PDF format to file '" .. ename .. "'.")
 	end
@@ -997,6 +995,32 @@ function MODEL:setAttribute(prop, value)
     t.original_primary = self:page():primarySelection()
     self:registerOnly(t)
   end
+end
+
+function MODEL:switch_variant(variant)
+  local p = self.doc:properties()
+  p.variant = variant
+  self.doc:setProperties(p)
+  self.attributes.variant = variant
+  self.ui:setAttributes(self.doc:sheets(), self.attributes)
+  self.ui:setVisibleVariant(variant)
+  self.ui:update()
+end
+
+function MODEL:setVariant(variant)
+  local current = self.doc:properties().variant
+  if current == variant then return end
+  local t = { label="set variant " .. tostring(variant),
+	      original=current,
+	      variant=variant,
+	      redo = function (t, doc)
+		self:switch_variant(t.variant)
+	      end,
+	      undo = function (t, doc)
+		self:switch_variant(t.original)
+	      end
+  }
+  self:register(t)
 end
 
 ----------------------------------------------------------------------

@@ -15,7 +15,8 @@
 	  pagemode CDATA #FIXED "fullscreen"
 	  numberpages (yes|no) #IMPLIED
 	  sequentialtext (yes|no) "no"
-	  tex (pdftex|xetex|luatex) "pdftex" >
+	  tex (pdftex|xetex|luatex) "pdftex"
+	  variant CDATA #IMPLIED >
 
 <!ELEMENT preamble (#PCDATA)>
 
@@ -37,6 +38,12 @@
 	  section CDATA #IMPLIED
 	  subsection CDATA #IMPLIED
 	  marked (yes|no) "yes" >
+
+<!ELEMENT pagevariant EMPTY>
+<!ATTLIST pagevariant
+          variant CDATA #REQUIRED
+	  title CDATA #IMPLIED
+	  skip (yes|no) "no" >
 
 <!ELEMENT notes (#PCDATA)>
 
@@ -147,7 +154,7 @@
 <!ELEMENT ipestyle ((bitmap|symbol|preamble|cmap|textstyle|layout|textpad|
 	  titlestyle|pagenumberstyle|pathstyle|gradient|tiling|effect|
 	  color|dashstyle|pen|textsize|textstretch|opacity|
-	  symbolsize|arrowsize|gridsize|anglesize)*)>
+	  symbolsize|arrowsize|gridsize|anglesize|variant)*)>
 <!ATTLIST ipestyle name CDATA #IMPLIED>
 
 <!ELEMENT pen EMPTY>
@@ -179,6 +186,9 @@
 
 <!ELEMENT anglesize EMPTY>
 <!ATTLIST anglesize name CDATA #REQUIRED value CDATA #REQUIRED>
+
+<!ELEMENT variant EMPTY>
+<!ATTLIST variant name CDATA #REQUIRED value CDATA #REQUIRED>
 
 <!ELEMENT symbol (group|image|use|text|path)>
 <!ATTLIST symbol 

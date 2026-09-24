@@ -123,14 +123,15 @@ public:
 
     void setVisible(int view, String layer, bool vis);
 
-    //! Return title of this page.
-    String title() const;
-    void setTitle(String title);
+    String title(Attribute variant) const;
+    bool skipped(Attribute variant) const;
+    void setTitle(Attribute variant, String title, bool skip);
+
     String section(int level) const;
     void setSection(int level, bool useTitle, String name);
     //! Does this section title reflect the page title?
     bool sectionUsesTitle(int level) const { return iUseTitle[level]; }
-    const Text * titleText() const;
+    const Text * titleText(Attribute variant) const;
     void applyTitleStyle(const Cascade * sheet);
 
     //! Return page style.
@@ -189,6 +190,11 @@ public:
     void ensurePrimarySelection();
 
 private:
+    struct STitle;
+    const STitle * findTitle(Attribute variant) const;
+    STitle & getTitle(Attribute variant);
+
+private:
     struct SLayer {
     public:
 	SLayer(String name);
@@ -238,8 +244,14 @@ private:
     LayerSeq iLayers;
     ViewSeq iViews;
 
-    String iTitle;
-    Text iTitleObject;
+    struct STitle {
+	Attribute iVariant;
+	String iTitle;
+	Text iTitleObject;
+	bool iSkip;
+    };
+    std::vector<STitle> iTitles;
+
     bool iUseTitle[2];
     String iSection[2];
     ObjSeq iObjects;

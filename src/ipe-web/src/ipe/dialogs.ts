@@ -154,7 +154,7 @@ export function setupElements(
 	}
 	contents.style.gridTemplateRows = rowt;
 	contents.style.columnGap = "20px";
-	contents.style.rowGap = "10px";
+	contents.style.rowGap = "6px";
 	for (const w of options.elements) {
 		let el: HTMLElement | null = null;
 		switch (w.type) {

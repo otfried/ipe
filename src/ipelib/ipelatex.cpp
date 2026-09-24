@@ -47,12 +47,14 @@ using namespace ipe;
 */
 
 //! Create a converter object.
-Latex::Latex(const Cascade * sheet, LatexType latexType, bool sequentialText) {
+Latex::Latex(const Cascade * sheet, LatexType latexType, bool sequentialText,
+	     Attribute variant) {
     iCascade = sheet;
     iResources = new PdfResources;
     iLatexType = latexType;
     iXetex = (latexType == LatexType::Xetex);
     iSequentialText = sequentialText;
+    iVariant = variant;
 }
 
 //! Destructor.
@@ -123,7 +125,7 @@ int Latex::scanObject(const Object * obj) {
 int Latex::scanPage(Page * page) {
     page->applyTitleStyle(iCascade);
     TextCollectingVisitor visitor(&iTextObjects);
-    const Text * title = page->titleText();
+    const Text * title = page->titleText(iVariant);
     if (title) title->accept(visitor);
     for (int i = 0; i < page->count(); ++i) {
 	visitor.iTextFound = false;
@@ -202,6 +204,7 @@ int Latex::createLatexSource(Stream & stream, String preamble) {
     stream << "\\def\\ipedefinecolors#1{\\ipecolorpreamble{#1}"
 	      "\\let\\ipecolorpreamble\\relax}\n"
 	   << "\\def\\ipecolorpreamble#1{\\usepackage[#1]{xcolor}\n";
+    stream << "\\def\\ipeVariant{" << iVariant.string() << "}\n";
     AttributeSeq colors;
     iCascade->allNames(EColor, colors);
     for (AttributeSeq::const_iterator it = colors.begin(); it != colors.end(); ++it) {

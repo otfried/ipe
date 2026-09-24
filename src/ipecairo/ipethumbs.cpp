@@ -163,20 +163,24 @@ bool Thumbnail::saveRender(TargetFormat fm, const char * dst, const Page * page,
     std::vector<Matrix> layerMatrices = page->layerMatrices(view);
     painter.pushMatrix();
 
+    Attribute variant = iDoc->variant();
+
     if (iNoCrop) {
 	Attribute bg = page->backgroundSymbol(iDoc->cascade());
 	const Symbol * background = iDoc->cascade()->findSymbol(bg);
 	if (background && page->findLayer("BACKGROUND") < 0) painter.drawSymbol(bg);
 
-	const Text * title = page->titleText();
+	const Text * title = page->titleText(variant);
 	if (title) title->draw(painter);
     }
 
     for (int i = 0; i < page->count(); ++i) {
 	if (page->objectVisible(view, i)) {
+	    auto obj = page->object(i);
+	    if (!obj->displayInVariant(variant)) continue;
 	    painter.pushMatrix();
 	    painter.transform(layerMatrices[page->layerOf(i)]);
-	    page->object(i)->draw(painter);
+	    obj->draw(painter);
 	    painter.popMatrix();
 	}
     }

@@ -74,8 +74,7 @@ using namespace ipe;
 
 //! The default constructor creates a new empty page.
 /*! This page still needs a layer and a view to be usable! */
-Page::Page()
-    : iTitle() {
+Page::Page() {
     iUseTitle[0] = iUseTitle[1] = false;
     iMarked = true;
     iStyle = Attribute::NORMAL();
@@ -97,9 +96,9 @@ Page * Page::basic() {
 //! save page in XML format.
 void Page::saveAsXml(Stream & stream) const {
     stream << "<page";
-    if (!title().empty()) {
+    if (!title(Attribute::UNDEFINED()).empty()) {
 	stream << " title=\"";
-	stream.putXmlString(title());
+	stream.putXmlString(title(Attribute::UNDEFINED()));
 	stream << "\"";
     }
     if (iUseTitle[0]) {
@@ -120,6 +119,20 @@ void Page::saveAsXml(Stream & stream) const {
     if (!iStyle.isNormal()) stream << " style=\"" << iStyle.string() << "\"";
 
     stream << ">\n";
+    for (const STitle & stitle : iTitles) {
+	if (!stitle.iVariant.isUndefined()) {
+	    stream << "<pagevariant variant=\"";
+	    stream.putXmlString(stitle.iVariant.string());
+	    stream << "\"";
+	    if (!stitle.iTitle.empty()) {
+		stream << " title=\"";
+		stream.putXmlString(stitle.iTitle);
+		stream << "\"";
+	    }
+	    if (stitle.iSkip) stream << " skip=\"yes\"";
+	    stream << "/>\n";
+	}
+    }
     if (!iNotes.empty()) {
 	stream << "<notes>";
 	stream.putXmlString(iNotes);
@@ -617,7 +630,7 @@ bool Page::setAttribute(int i, Property prop, Attribute value) {
 /*! Level 0 is the section, level 1 the subsection. */
 String Page::section(int level) const {
     if (iUseTitle[level])
-	return title();
+	return title(Attribute::UNDEFINED());
     else
 	return iSection[level];
 }
@@ -633,15 +646,42 @@ void Page::setSection(int level, bool useTitle, String name) {
     iSection[level] = useTitle ? String() : name;
 }
 
+const Page::STitle * Page::findTitle(Attribute variant) const {
+    for (auto & stitle : iTitles) {
+	if (variant == stitle.iVariant) return &stitle;
+    }
+    return nullptr;
+}
+
+Page::STitle & Page::getTitle(Attribute variant) {
+    for (auto & stitle : iTitles) {
+	if (variant == stitle.iVariant) return stitle;
+    }
+    iTitles.push_back(STitle());
+    iTitles.back().iVariant = variant;
+    return iTitles.back();
+}
+
 //! Set the title of this page.
 /*! An empty title is not displayed. */
-void Page::setTitle(String title) {
-    iTitle = title;
-    iTitleObject.setText(String("\\PageTitle{") + title + "}");
+void Page::setTitle(Attribute variant, String title, bool skip) {
+    STitle & s = getTitle(variant);
+    s.iTitle = title;
+    s.iTitleObject.setText(String("\\PageTitle{") + title + "}");
+    s.iSkip = skip;
 }
 
 //! Return title of this page.
-String Page::title() const { return iTitle; }
+String Page::title(Attribute variant) const {
+    const STitle * s = findTitle(variant);
+    return s ? s->iTitle : String();
+}
+
+//! Return if the page is skipped for this variant.
+bool Page::skipped(Attribute variant) const {
+    const STitle * s = findTitle(variant);
+    return s ? s->iSkip : false;
+}
 
 //! Set the notes of this page.
 void Page::setNotes(String notes) { iNotes = notes; }
@@ -653,21 +693,23 @@ void Page::setMarked(bool marked) { iMarked = marked; }
 /*! Return 0 if no title is set.
   Ownership of object remains with Page.
 */
-const Text * Page::titleText() const {
-    if (title().empty()) return nullptr;
-    return &iTitleObject;
+const Text * Page::titleText(Attribute variant) const {
+    const STitle * s = findTitle(variant);
+    if (!s || s->iTitle.empty()) return nullptr;
+    return &(s->iTitleObject);
 }
 
 //! Apply styling to title text object.
 void Page::applyTitleStyle(const Cascade * sheet) {
-    if (title().empty()) return;
     const StyleSheet::TitleStyle * ts = sheet->findTitleStyle();
     if (!ts) return;
-    iTitleObject.setMatrix(Matrix(ts->iPos));
-    iTitleObject.setSize(ts->iSize);
-    iTitleObject.setStroke(ts->iColor);
-    iTitleObject.setHorizontalAlignment(ts->iHorizontalAlignment);
-    iTitleObject.setVerticalAlignment(ts->iVerticalAlignment);
+    for (auto & s : iTitles) {
+	s.iTitleObject.setMatrix(Matrix(ts->iPos));
+	s.iTitleObject.setSize(ts->iSize);
+	s.iTitleObject.setStroke(ts->iColor);
+	s.iTitleObject.setHorizontalAlignment(ts->iHorizontalAlignment);
+	s.iTitleObject.setVerticalAlignment(ts->iVerticalAlignment);
+    }
 }
 
 void Page::setStyle(Attribute style) { iStyle = style; }

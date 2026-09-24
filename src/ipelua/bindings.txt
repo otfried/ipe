@@ -600,9 +600,9 @@ doc[i]  -- return page #i, where 1 <= i <= #doc
 -- format == nil: guess from filename
 -- flags is either nil, or a table with keys
 -- "export", "nozip", "lastview", "nocolor"
-doc:save(filename, format, flags, variant)  
-doc:exportPages(filename, flags, fromPage, toPage, variant)
-doc:exportView(filename, format, flags, pageNo, viewNo, variant)
+doc:save(filename, format, flags)  
+doc:exportPages(filename, flags, fromPage, toPage)
+doc:exportView(filename, format, flags, pageNo, viewNo)
 
 -- iterating over pages of document:
 for i, p in doc:pages() do
@@ -617,9 +617,11 @@ doc:countTotalViews()
 doc:sheets()              -- returns style sheet cascade
 old = doc:replaceSheets(sheets)  -- replace and return old cascade
 doc:has(what)  -- where what in { "truetype", "gradients", "tilings", "transparency" }
-doc:runLatex(docname)     -- pass filename of Ipe document or nil
+doc:runLatex(docname)  -- pass filename of Ipe document or nil
 -- returns either true, nil, result code, logfile
 --         or     false, error message, result code, logfile
+
+doc:prepareLatexRun() -- prepare to run Latex in background
 
 doc:fontPool()    -- returns light userdata
 doc:checkStyle()  -- returns list of undefined symbolic names

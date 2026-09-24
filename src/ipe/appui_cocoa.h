@@ -159,7 +159,7 @@ private:
     NSLayoutConstraint * iViewToLeft;
 
     NSView * iVariantBar;
-    
+
     NSPanel * iNotesPanel;
     NSTextView * iNotesField;
     NSPanel * iBookmarksPanel;

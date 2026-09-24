@@ -967,7 +967,8 @@ void AppUi::makeSnapBar() {
 
 void AppUi::makeVariantBar() {
     iVariantBar = [[NSView alloc] initWithFrame:NSMakeRect(0., 0., 100., 32.)];
-    iSelector[EUiVariant] = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 100, 40) pullsDown:NO];
+    iSelector[EUiVariant] =
+	[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 100, 40) pullsDown:NO];
     iSelector[EUiVariant].toolTip = @"Variant to display and to use for new text";
     iSelector[EUiVariant].target = iDelegate;
     iSelector[EUiVariant].action = @selector(ipeSelectorChanged:);
@@ -1007,7 +1008,7 @@ void AppUi::addCombo(int sel, String s) {
     iInUiUpdate = true;
     [iSelector[sel] addItemWithTitle:I2N(s)];
     if (sel == EUiVariant)
-        [iVariantBar setHidden:(iComboContents[EUiVariant].size() <= 1)];
+	[iVariantBar setHidden:(iComboContents[EUiVariant].size() <= 1)];
     iInUiUpdate = false;
 }
 

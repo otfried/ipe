@@ -122,8 +122,8 @@ static void fillWithPages(PageSelector * sel, Document * doc, int page, int item
 
 	    String s;
 	    StringStream ss(s);
-	    if (!p->title(doc->properties().iVariant).empty())
-		ss << i + 1 << ": " << p->title(doc->properties().iVariant);
+	    if (!p->title(doc->variant()).empty())
+		ss << i + 1 << ": " << p->title(doc->variant());
 	    else
 		ss << "Page " << i + 1;
 	    labels.push_back(s);

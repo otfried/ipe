@@ -51,6 +51,10 @@ using namespace ipe;
 
 */
 
+static inline bool symbolName(String s) {
+    return (!s.empty() && (('a' <= s[0] && s[0] <= 'z') || ('A' <= s[0] && s[0] <= 'Z')));
+}
+
 ImlParser::ImlParser(DataSource & source)
     : XmlParser(source) {
     // nothing
@@ -112,6 +116,8 @@ int ImlParser::parseDocument(Document & doc) {
 	    properties.iTexEngine = LatexType::Xetex;
 	else if (tex == "luatex")
 	    properties.iTexEngine = LatexType::Luatex;
+	properties.iVariant = Attribute::UNDEFINED();
+	if (att.has("variant")) properties.iVariant = Attribute(true, att["variant"]);
 
 	tag = parseToTag();
     }
@@ -183,7 +189,7 @@ bool ImlParser::parsePage(Page & page) {
     if (!parseAttributes(att)) return false;
 
     String str;
-    if (att.has("title", str)) page.setTitle(str);
+    if (att.has("title", str)) page.setTitle(Attribute::UNDEFINED(), str, false);
 
     if (att.has("section", str))
 	page.setSection(0, str.empty(), str);
@@ -200,6 +206,16 @@ bool ImlParser::parsePage(Page & page) {
     if (att.has("style", str)) page.setStyle(Attribute(true, str));
 
     String tag = parseToTag();
+
+    while (tag == "pagevariant") {
+	XmlAttributes att;
+	if (!parseAttributes(att) || !att.slash()) return false;
+	String variant = att["variant"];
+	if (!symbolName(variant)) return false;
+	page.setTitle(Attribute(true, variant), att["title"], att["skip"] == "yes");
+
+	tag = parseToTag();
+    }
 
     if (tag == "notes") {
 	XmlAttributes att;
@@ -366,10 +382,6 @@ Object * ImlParser::parseObject(String tag, String & layer) {
 	return ObjectFactory::createImage(tag, attr, bitmap);
     } else
 	return ObjectFactory::createObject(tag, attr, pcdata);
-}
-
-static inline bool symbolName(String s) {
-    return (!s.empty() && (('a' <= s[0] && s[0] <= 'z') || ('A' <= s[0] && s[0] <= 'Z')));
 }
 
 bool ImlParser::parseAttributeMapping(AttributeMap & map) {

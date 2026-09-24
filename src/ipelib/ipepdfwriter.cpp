@@ -696,7 +696,7 @@ void PdfWriter::paintView(Stream & stream, int pno, int view) {
 	if (pn) pn->draw(painter);
     }
 
-    const Text * title = page->titleText();
+    const Text * title = page->titleText(iVariant);
     if (title) title->draw(painter);
 
     for (int i = 0; i < page->count(); ++i) {

@@ -431,11 +431,9 @@ static int page_ensurePrimarySelection(lua_State * L) {
     return 0;
 }
 
-static int page_titles(lua_State * L) {
+static int page_sections(lua_State * L) {
     Page * p = check_page(L, 1)->page;
-    lua_createtable(L, 3, 0);
-    push_string(L, p->title());
-    lua_setfield(L, -2, "title");
+    lua_createtable(L, 2, 0);
     if (!p->sectionUsesTitle(0)) {
 	push_string(L, p->section(0));
 	lua_setfield(L, -2, "section");
@@ -447,11 +445,9 @@ static int page_titles(lua_State * L) {
     return 1;
 }
 
-static int page_setTitles(lua_State * L) {
+static int page_setSections(lua_State * L) {
     Page * p = check_page(L, 1)->page;
     luaL_checktype(L, 2, LUA_TTABLE);
-    lua_getfield(L, 2, "title");
-    if (lua_isstring(L, -1)) p->setTitle(lua_tolstring(L, -1, nullptr));
     lua_getfield(L, 2, "section");
     if (lua_isstring(L, -1))
 	p->setSection(0, false, lua_tolstring(L, -1, nullptr));
@@ -463,6 +459,23 @@ static int page_setTitles(lua_State * L) {
     else
 	p->setSection(1, true, "");
     lua_pop(L, 3); // title, section, subsection
+    return 0;
+}
+
+static int page_title(lua_State * L) {
+    Page * p = check_page(L, 1)->page;
+    Attribute variant = Attribute::UNDEFINED();
+    if (!lua_isnoneornil(L, 2)) variant = check_property(EPropVariant, L, 2);
+    push_string(L, p->title(variant));
+    lua_pushboolean(L, p->skipped(variant));
+    return 2;
+}
+
+static int page_setTitle(lua_State * L) {
+    Page * p = check_page(L, 1)->page;
+    Attribute variant = Attribute::UNDEFINED();
+    if (!lua_isnoneornil(L, 2)) variant = check_property(EPropVariant, L, 2);
+    p->setTitle(variant, lua_tolstring(L, 3, nullptr), lua_toboolean(L, 4));
     return 0;
 }
 
@@ -771,8 +784,10 @@ static const struct luaL_Reg page_methods[] = {
     {"deselectAll", page_deselectAll},
     {"ensurePrimarySelection", page_ensurePrimarySelection},
     {"findEdge", page_findedge},
-    {"titles", page_titles},
-    {"setTitles", page_setTitles},
+    {"title", page_title},
+    {"setTitle", page_setTitle},
+    {"sections", page_sections},
+    {"setSections", page_setSections},
     {"notes", page_notes},
     {"setNotes", page_setNotes},
     {"marked", page_marked},

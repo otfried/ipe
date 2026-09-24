@@ -96,7 +96,7 @@ static void insertItem(HWND h, SData * d, int index, int page, bool marked) {
 	    sprintf(buf, "View %d", page + 1);
     } else {
 	Page * p = d->doc->page(page);
-	t = p->title();
+	t = p->title(d->doc->variant());
 	if (t != "")
 	    sprintf(buf, "%d: ", page + 1);
 	else

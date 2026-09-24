@@ -256,8 +256,7 @@ Document * Document::loadWithErrorReport(const char * fname) {
 //! Save in a stream.
 /*! Returns true if sucessful.
  */
-bool Document::save(TellStream & stream, FileFormat format, uint32_t flags,
-		    Attribute variant) const {
+bool Document::save(TellStream & stream, FileFormat format, uint32_t flags) const {
     if (format == FileFormat::Xml) {
 	stream << "<?xml version=\"1.0\"?>\n";
 	stream << "<!DOCTYPE ipe SYSTEM \"ipe.dtd\">\n";
@@ -269,7 +268,8 @@ bool Document::save(TellStream & stream, FileFormat format, uint32_t flags,
     if (flags & SaveFlag::NoZip) compresslevel = 0;
 
     if (format == FileFormat::Pdf) {
-	PdfWriter writer(stream, this, iResources, flags, 0, -1, compresslevel, variant);
+	PdfWriter writer(stream, this, iResources, flags, 0, -1, compresslevel,
+			 iProperties.iVariant);
 	writer.createPages();
 	writer.createBookmarks();
 	writer.createNamedDests();
@@ -294,19 +294,18 @@ bool Document::save(TellStream & stream, FileFormat format, uint32_t flags,
     return false;
 }
 
-bool Document::save(const char * fname, FileFormat format, uint32_t flags,
-		    Attribute variant) const {
+bool Document::save(const char * fname, FileFormat format, uint32_t flags) const {
     std::FILE * fd = Platform::fopen(fname, "wb");
     if (!fd) return false;
     FileStream stream(fd);
-    bool result = save(stream, format, flags, variant);
+    bool result = save(stream, format, flags);
     std::fclose(fd);
     return result;
 }
 
 //! Export a single view to PDF
 bool Document::exportView(const char * fname, FileFormat format, uint32_t flags, int pno,
-			  int vno, Attribute variant) const {
+			  int vno) const {
     if (format != FileFormat::Pdf) return false;
 
     int compresslevel = 9;
@@ -316,7 +315,8 @@ bool Document::exportView(const char * fname, FileFormat format, uint32_t flags,
     if (!fd) return false;
     FileStream stream(fd);
 
-    PdfWriter writer(stream, this, iResources, flags, pno, pno, compresslevel, variant);
+    PdfWriter writer(stream, this, iResources, flags, pno, pno, compresslevel,
+		     iProperties.iVariant);
     writer.createPageView(pno, vno);
     writer.createTrailer();
     std::fclose(fd);
@@ -324,15 +324,15 @@ bool Document::exportView(const char * fname, FileFormat format, uint32_t flags,
 }
 
 //! Export a range of pages to PDF.
-bool Document::exportPages(const char * fname, uint32_t flags, int fromPage, int toPage,
-			   Attribute variant) const {
+bool Document::exportPages(const char * fname, uint32_t flags, int fromPage,
+			   int toPage) const {
     int compresslevel = 9;
     if (flags & SaveFlag::NoZip) compresslevel = 0;
     std::FILE * fd = Platform::fopen(fname, "wb");
     if (!fd) return false;
     FileStream stream(fd);
     PdfWriter writer(stream, this, iResources, flags, fromPage, toPage, compresslevel,
-		     variant);
+		     iProperties.iVariant);
     writer.createPages();
     writer.createTrailer();
     std::fclose(fd);
@@ -390,6 +390,11 @@ void Document::saveAsXml(Stream & stream, bool usePdfBitmaps) const {
     if (!iProperties.iLanguage.empty()) {
 	infoStr << " language=\"";
 	infoStr.putXmlString(iProperties.iLanguage);
+	infoStr << "\"";
+    }
+    if (!iProperties.iVariant.isUndefined()) {
+	infoStr << " variant=\"";
+	infoStr.putXmlString(iProperties.iVariant.string());
 	infoStr << "\"";
     }
     if (iProperties.iFullScreen) { infoStr << " pagemode=\"fullscreen\""; }
@@ -532,8 +537,9 @@ Page * Document::remove(int no) {
 
 int Document::prepareLatexRun(Latex ** pConverter) {
     *pConverter = nullptr;
-    std::unique_ptr<Latex> converter(
-	new Latex(cascade(), iProperties.iTexEngine, iProperties.iSequentialText));
+    std::unique_ptr<Latex> converter(new Latex(cascade(), iProperties.iTexEngine,
+					       iProperties.iSequentialText,
+					       iProperties.iVariant));
     AttributeSeq seq;
     cascade()->allNames(ESymbol, seq);
 

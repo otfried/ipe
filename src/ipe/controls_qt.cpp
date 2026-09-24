@@ -298,6 +298,7 @@ PageSorter::PageSorter(Document * doc, int pno, int itemWidth, QWidget * parent)
 	    addItem(item);
 	}
     } else {
+	Attribute variant = doc->variant();
 	for (int i = 0; i < doc->countPages(); ++i) {
 	    Page * p = doc->page(i);
 	    Buffer b = r.render(p, p->countViews() - 1);
@@ -307,7 +308,7 @@ PageSorter::PageSorter(Document * doc, int pno, int itemWidth, QWidget * parent)
 	    QIcon icon(QPixmap::fromImage(bits.copy()));
 
 	    QString s;
-	    QString t = QString::fromUtf8(p->title().z());
+	    QString t = QString::fromUtf8(p->title(variant).z());
 	    if (t != "") {
 		s = QString("%1: ").arg(i + 1);
 		s += t;

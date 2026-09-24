@@ -218,7 +218,7 @@ int CanvasBase::selectPageOrView(Document * doc, int page, int startIndex, int p
     } else {
 	for (int i = 0; i < doc->countPages(); ++i) {
 	    Page * p = doc->page(i);
-	    String t = p->title();
+	    String t = p->title(doc->variant());
 	    String text;
 	    StringStream ss(text);
 	    if (t != "")

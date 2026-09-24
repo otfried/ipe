@@ -40,18 +40,17 @@ using ipe::SaveFlag;
 using ipe::String;
 
 static int topdf(Document * doc, String src, String dst, uint32_t flags,
-		 Attribute variant, int fromPage = -1, int toPage = -1, int viewNo = -1) {
+		 int fromPage = -1, int toPage = -1, int viewNo = -1) {
     int res = doc->runLatex(src);
     if (res) return res;
 
     bool result = false;
     if (viewNo >= 0) {
-	result =
-	    doc->exportView(dst.z(), FileFormat::Pdf, flags, fromPage, viewNo, variant);
+	result = doc->exportView(dst.z(), FileFormat::Pdf, flags, fromPage, viewNo);
     } else if (toPage >= 0) {
-	result = doc->exportPages(dst.z(), flags, fromPage, toPage, variant);
+	result = doc->exportPages(dst.z(), flags, fromPage, toPage);
     } else {
-	result = doc->save(dst.z(), FileFormat::Pdf, flags, variant);
+	result = doc->save(dst.z(), FileFormat::Pdf, flags);
     }
     if (!result) {
 	fprintf(stderr, "Failed to save or export document!\n");
@@ -79,6 +78,7 @@ static void usage() {
 	" -runlatex    : run Latex even for XML output.\n"
 	" -nozip       : do not compress PDF streams.\n"
 	" -keepnotes   : save page notes as PDF annotations even when exporting.\n"
+	" -variant <variant> : set output document to this variant.\n"
 	"Pages can be specified by page number or by section title.\n");
     exit(1);
 }
@@ -227,19 +227,19 @@ int main(int argc, char * argv[]) {
 	    (ipe::IPELIB_VERSION / 100) % 100, ipe::IPELIB_VERSION % 100);
     Document::SProperties props = doc->properties();
     props.iCreator = buf;
+    if (!variant.isUndefined()) props.iVariant = variant;
     doc->setProperties(props);
 
     switch (frm) {
     case FileFormat::Xml:
 	if (runLatex)
-	    return topdf(doc.get(), infile, outfile, flags, variant);
+	    return topdf(doc.get(), infile, outfile, flags);
 	else
-	    doc->save(outfile.z(), FileFormat::Xml, SaveFlag::SaveNormal, variant);
+	    doc->save(outfile.z(), FileFormat::Xml, SaveFlag::SaveNormal);
     default: return 0;
 
     case FileFormat::Pdf:
-	return topdf(doc.get(), infile, outfile, flags, variant, fromPage, toPage,
-		     viewNo);
+	return topdf(doc.get(), infile, outfile, flags, fromPage, toPage, viewNo);
     }
 }
 
