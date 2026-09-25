@@ -144,6 +144,8 @@ appear in the document.</p>
 <dt><code class="docutils literal notranslate"><span class="pre">tex</span></code> (optional)</dt><dd><p>determines the TeX-engine used to translate your text.  The
 possible values are <code class="docutils literal notranslate"><span class="pre">pdftex</span></code>, <code class="docutils literal notranslate"><span class="pre">xetex</span></code>, and <code class="docutils literal notranslate"><span class="pre">luatex</span></code>.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">variant</span></code> (optional)</dt><dd><p>determines the current variant being shown (and written to PDF).</p>
+</dd>
 </dl>
 <p>This element must be empty.</p>
 </div>
@@ -232,7 +234,8 @@ value of this attribute is <code class="docutils literal notranslate"><span clas
 </dl>
 <p><em>Contents</em></p>
 <ol class="arabic simple">
-<li><p>An optional <code class="docutils literal notranslate"><span class="pre">&lt;notes&gt;</span></code> element,</p></li>
+<li><p>A possibly empty sequence of <code class="docutils literal notranslate"><span class="pre">&lt;pagevariant&gt;</span></code> elements,</p></li>
+<li><p>an optional <code class="docutils literal notranslate"><span class="pre">&lt;notes&gt;</span></code> element,</p></li>
 <li><p>a possibly empty sequence of <code class="docutils literal notranslate"><span class="pre">&lt;layer&gt;</span></code> elements,</p></li>
 <li><p>a possibly empty sequence of <code class="docutils literal notranslate"><span class="pre">&lt;view&gt;</span></code> elements,</p></li>
 <li><p>a possibly empty sequence of Ipe object elements.</p></li>
@@ -241,6 +244,21 @@ value of this attribute is <code class="docutils literal notranslate"><span clas
 layer named <code class="docutils literal notranslate"><span class="pre">alpha</span></code>, visible and editable.</p>
 <p>If a page contains no view element, a single view where all layers are
 visible is assumed.</p>
+<div class="section" id="the-pagevariant-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;pagevariant&gt;</span></code> element<a class="headerlink" href="#the-pagevariant-element" title="Permalink to this headline">¶</a></h3>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">variant</span></code> (required)</dt><dd><p>Name of the variant.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">title</span></code> (optional)</dt><dd><p>title of this page in this variant (displayed at a fixed
+location in a format specified by the style sheet),</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">skip</span></code> (optional)</dt><dd><p>The page will be skipped in this variant if the
+value of this attribute is <code class="docutils literal notranslate"><span class="pre">yes</span></code>.</p>
+</dd>
+</dl>
+<p>The pagevariant element must be empty.</p>
+</div>
 <div class="section" id="the-notes-element">
 <h3>The <code class="docutils literal notranslate"><span class="pre">&lt;notes&gt;</span></code> element<a class="headerlink" href="#the-notes-element" title="Permalink to this headline">¶</a></h3>
 <p>This element has no attributes.  Its contents is plain text,
@@ -853,6 +871,9 @@ fill the grid size selector in the user interface.</p>
 name cannot actually be used by objects in the document — it is
 only used to fill the angle selector in the user interface.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">&lt;variant&gt;</span></code></dt><dd><p>Defines a document variant. The symbolic name is used everywhere to
+select the variant, the value is only for documentation.</p>
+</dd>
 </dl>
 <p><em>Common attributes</em></p>
 <dl class="simple">
@@ -881,6 +902,7 @@ only used to fill the angle selector in the user interface.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#the-page-element">The <code class="docutils literal notranslate"><span class="pre">&lt;page&gt;</span></code> element</a><ul>
+<li><a class="reference internal" href="#the-pagevariant-element">The <code class="docutils literal notranslate"><span class="pre">&lt;pagevariant&gt;</span></code> element</a></li>
 <li><a class="reference internal" href="#the-notes-element">The <code class="docutils literal notranslate"><span class="pre">&lt;notes&gt;</span></code> element</a></li>
 <li><a class="reference internal" href="#the-layer-element">The <code class="docutils literal notranslate"><span class="pre">&lt;layer&gt;</span></code> element</a></li>
 <li><a class="reference internal" href="#the-view-element">The <code class="docutils literal notranslate"><span class="pre">&lt;view&gt;</span></code> element</a></li>

@@ -128,6 +128,9 @@ The ``<info>`` element
   determines the TeX-engine used to translate your text.  The
   possible values are ``pdftex``, ``xetex``, and ``luatex``. 
 
+``variant`` (optional)
+  determines the current variant being shown (and written to PDF).
+
 This element must be empty.
 
 
@@ -236,7 +239,8 @@ The ``<page>`` element
 
 *Contents*
 
-#. An optional ``<notes>`` element,
+#. A possibly empty sequence of ``<pagevariant>`` elements,
+#. an optional ``<notes>`` element,
 #. a possibly empty sequence of ``<layer>`` elements,
 #. a possibly empty sequence of ``<view>`` elements,
 #. a possibly empty sequence of Ipe object elements.
@@ -246,6 +250,25 @@ layer named ``alpha``, visible and editable.
 
 If a page contains no view element, a single view where all layers are
 visible is assumed.
+
+
+The ``<pagevariant>`` element
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*Attributes*
+
+``variant`` (required)
+  Name of the variant.
+
+``title`` (optional)
+  title of this page in this variant (displayed at a fixed
+  location in a format specified by the style sheet),
+
+``skip`` (optional)
+  The page will be skipped in this variant if the
+  value of this attribute is ``yes``.
+
+The pagevariant element must be empty.
 
 
 The ``<notes>`` element
@@ -1017,6 +1040,10 @@ The remaining style definition elements are:
   Defines an angular snap angle.  The symbolic
   name cannot actually be used by objects in the document --- it is
   only used to fill the angle selector in the user interface.
+
+``<variant>``
+  Defines a document variant. The symbolic name is used everywhere to
+  select the variant, the value is only for documentation.
 
 *Common attributes*
 
