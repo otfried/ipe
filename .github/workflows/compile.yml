@@ -16,6 +16,7 @@ jobs:
       IPEPREFIX: /usr/local
       IPESTRICT: 1
       IPEQVORONOI: 1
+      IPEUI: QT
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -39,6 +40,7 @@ jobs:
       IPEPREFIX: /usr/local
       IPESTRICT: 1
       IPEQVORONOI: 1
+      IPEUI: QT
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -70,7 +72,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install \
-                  libgtk2.0-dev \
+                  libgtk-3-dev \
                   libfreetype6-dev libcairo2-dev \
                   libjpeg8-dev libpng-dev \
                   libgsl-dev libspiro-dev libqhull-r8.0 libqhull-dev \

@@ -59,8 +59,8 @@ MOC	      ?= /usr/lib/qt6/libexec/moc
 endif
 #
 ifeq ($(IPEUI), GTK)
-GTK_CFLAGS   ?= $(shell $(PKG_CONFIG) --cflags gtk+-2.0)
-GTK_LIBS     ?= $(shell $(PKG_CONFIG) --libs gtk+-2.0)
+GTK_CFLAGS   ?= $(shell $(PKG_CONFIG) --cflags gtk+-3.0)
+GTK_LIBS     ?= $(shell $(PKG_CONFIG) --libs gtk+-3.0)
 endif
 #
 # Library needed to use dlopen/dlsym/dlclose calls

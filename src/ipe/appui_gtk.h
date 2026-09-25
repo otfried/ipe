@@ -33,6 +33,9 @@
 #define APPUI_GTK_H
 
 #include "appui.h"
+#include "controls_gtk.h"
+
+#include <map>
 
 using namespace ipe;
 
@@ -76,7 +79,7 @@ public:
 private:
     int actionId(const char * name) const;
     virtual void addRootMenu(int id, const char * name);
-    void addItem(GtkMenuShell * shell, const char * title, const char * name);
+    int addItem(GtkMenuShell * shell, const char * title, const char * name);
     virtual void addItem(int id, const char * title, const char * name);
     virtual void startSubMenu(int id, const char * name, int tag);
     virtual void addSubItem(const char * title, const char * name);
@@ -91,22 +94,91 @@ private:
     virtual void setPathView(const AllAttributes & all, Cascade * sheet);
     virtual void setButtonColor(int sel, Color color);
 
+    // helpers to build the UI
+    GdkPixbuf * prefsPixbuf(String name, int size);
+    void setButtonIcon(GtkWidget * button, String name, int size);
+    void setButtonColorIcon(GtkWidget * button, Color color, int size);
+    void setActionAccelerator(GtkWidget * item, const char * name);
+    String menuLabel(int idx) const;
+    GtkWidget * addToolButton(GtkWidget * toolbar, const char * name,
+			      const char * title = nullptr);
+    void addSnap(const char * name);
+    void addEdit(const char * name);
+    void aboutIpe();
+    void showPathStylePopup(int x, int y);
+    void showLayerBoxPopup(int x, int y, String layer);
+    void layerAction(String name, String layer);
+    void absoluteButton(int id);
+    void comboSelector(int id);
+    void bookmarkSelected(int index);
+    void recentFileSelected(String name);
+    void toggleToolVisible(int m);
+    void syncAndTrigger(int idx, bool active, GtkWidget * source);
+    String selectorCurrentText(int sel) const;
+    void populateDynamicMenu(GtkWidget * menu, int kind);
+
     static void menuitem_cb(GtkWidget * item, gpointer data);
+    static void toolitem_cb(GtkWidget * item, gpointer data);
+    static void combo_changed_cb(GtkComboBox * combo, gpointer data);
+    static void absolute_button_cb(GtkWidget * b, gpointer data);
+    static void shift_key_cb(GtkWidget * b, gpointer data);
+    static void abort_cb(GtkWidget * b, gpointer data);
+    static void bookmark_row_activated_cb(GtkListBox * box, GtkListBoxRow * row,
+					  gpointer data);
+    static void recent_file_cb(GtkWidget * item, gpointer data);
+    static void dynamic_menu_item_cb(GtkWidget * item, gpointer data);
+    static void populate_menu_cb(GtkWidget * menu, gpointer data);
+    static gboolean delete_event_cb(GtkWidget * w, GdkEvent * ev, gpointer data);
 
 private:
     struct SAction {
 	String name;
-	GtkWidget * menuItem;
+	GtkWidget * menuItem = nullptr;
+	GtkWidget * toolItem = nullptr;
     };
     std::vector<SAction> iActions;
+
     GtkWidget * iWindow;
     GtkWidget * iRootMenu[ENumMenu];
     GtkWidget * iSubMenu[ENumMenu];
+
     GtkWidget * iStatusBar;
     int iStatusBarContextid;
     GtkWidget * iMousePosition;
+    GtkWidget * iSnapIndicator;
     GtkWidget * iResolution;
     GtkAccelGroup * iAccelGroup;
+
+    GtkWidget * iSnapTools;
+    GtkWidget * iVariantTools;
+    GtkWidget * iEditTools;
+    GtkWidget * iObjectTools;
+
+    GtkWidget * iPropertiesTools;
+    GtkWidget * iLayerTools;
+    GtkWidget * iBookmarkTools;
+    GtkWidget * iNotesTools;
+
+    GtkWidget * iButton[EUiOpacity]; // color/pen/textsize/symbolsize absolute buttons
+    GtkWidget * iSelector[EUiView];  // combo boxes
+
+    GtkWidget * iViewNumber;
+    GtkWidget * iPageNumber;
+    GtkWidget * iViewMarked;
+    GtkWidget * iPageMarked;
+
+    GtkWidget * iShiftKey;
+    GtkWidget * iAbortButton;
+
+    GtkWidget * iModeIndicator; // GtkImage
+    GSList * iModeToolGroup;
+
+    GtkWidget * iBookmarks; // GtkListBox
+    LayerBox iLayerList;
+    PathView iPathView;
+    GtkWidget * iPageNotes; // GtkTextView
+
+    std::map<String, GdkPixbuf *> iIconCache;
 };
 
 // --------------------------------------------------------------------

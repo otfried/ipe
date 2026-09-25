@@ -65,9 +65,12 @@ static void setup_globals(lua_State * L) {
 		    (IPELIB_VERSION / 100) % 100, IPELIB_VERSION % 100);
     lua_setfield(L, -2, "version");
 
-    GdkScreen * screen = gdk_screen_get_default();
-    int width = gdk_screen_get_width(screen);
-    int height = gdk_screen_get_height(screen);
+    GdkDisplay * display = gdk_display_get_default();
+    GdkMonitor * monitor = gdk_display_get_monitor(display, 0);
+    GdkRectangle geometry;
+    gdk_monitor_get_geometry(monitor, &geometry);
+    int width = geometry.width;
+    int height = geometry.height;
     ipeDebug("Screen resolution is (%d x %d)", width, height);
 
     setup_common_config(L);

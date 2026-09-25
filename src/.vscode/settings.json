@@ -1,0 +1,6 @@
+{
+    "[cpp]": {
+        "editor.tabSize": 8,
+        "editor.detectIndentation": false
+    }
+}

@@ -36,7 +36,7 @@ luasources = lua/main.lua lua/model.lua lua/actions.lua \
 qt_sources = main_qt.cpp appui_qt.cpp controls_qt.cpp 
 moc_headers = appui_qt.h controls_qt.h waitdlg_qt.h
 win_sources = main_win.cpp appui_win.cpp pathview_win.cpp pagesorter_win.cpp
-gtk_sources = main_gtk.cpp appui_gtk.cpp
+gtk_sources = main_gtk.cpp appui_gtk.cpp controls_gtk.cpp
 cocoa_sources = main_cocoa.cpp appui_cocoa.cpp controls_cocoa.cpp \
 	pagesorter_cocoa.cpp
 js_sources = main_js.cpp appui_js.cpp controls_js.cpp

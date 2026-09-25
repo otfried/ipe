@@ -31,6 +31,28 @@
 #include "ipeui_common.h"
 using String = std::string;
 
+// does the same as change_mnemonic in appui_gtk.cpp,
+// but let's keep this library self-contained.
+std::string gtkMnemonic(const std::string & text) {
+    std::string result;
+    result.reserve(text.size());
+
+    for (size_t i = 0; i < text.size(); ++i) {
+	if (text[i] == '&') {
+	    if (i + 1 < text.size() && text[i + 1] == '&') {
+		result.push_back('&');
+		++i;
+	    } else {
+		result.push_back('_');
+	    }
+	} else {
+	    result.push_back(text[i]);
+	}
+    }
+
+    return result;
+}
+
 // --------------------------------------------------------------------
 
 class PDialog : public Dialog {
@@ -49,6 +71,8 @@ private:
     static GtkWidget * createListBox(const SElement & m);
     static void fillListStore(GtkListStore * store, const SElement & m);
     static void itemResponse(GtkWidget * item, PDialog * dlg);
+    static gboolean escapeResponse(GtkAccelGroup *, GObject *, guint, GdkModifierType,
+				   PDialog * dlg);
 
 private:
     std::vector<GtkWidget *> iWidgets;
@@ -66,8 +90,9 @@ PDialog::~PDialog() {
 
 void PDialog::acceptDialog(lua_State * L) {
     int accept = lua_toboolean(L, 2);
-    (void)accept; // TODO
-		  // QDialog::done(accept);
+    retrieveValues();
+    gtk_dialog_response(GTK_DIALOG(hDialog),
+			accept ? GTK_RESPONSE_ACCEPT : GTK_RESPONSE_REJECT);
 }
 
 void PDialog::itemResponse(GtkWidget * item, PDialog * dlg) {
@@ -171,7 +196,6 @@ GtkWidget * PDialog::createListBox(const SElement & m) {
     GtkWidget * w = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     g_object_unref(G_OBJECT(store));
     GtkCellRenderer * renderer = gtk_cell_renderer_text_new();
-    // g_object_set(G_OBJECT(renderer), "foreground", "red", NULL);
     GtkTreeViewColumn * column =
 	gtk_tree_view_column_new_with_attributes("Title", renderer, "text", 0, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(w), column);
@@ -191,12 +215,18 @@ static GtkWidget * addScrollBar(GtkWidget * w) {
     return ww;
 }
 
-static void ctrlEnterResponse(GtkWidget *, GtkDialog * dlg) {
+static gboolean ctrlEnterResponse(GtkAccelGroup *, GObject *, guint, GdkModifierType,
+				  GtkDialog * dlg) {
     gtk_dialog_response(dlg, GTK_RESPONSE_ACCEPT);
+    return TRUE;
 }
 
-static void escapeResponse(GtkWidget *, GtkDialog * dlg) {
-    // catching escape, doing nothing
+gboolean PDialog::escapeResponse(GtkAccelGroup *, GObject *, guint, GdkModifierType,
+				 PDialog * dlg) {
+    dlg->retrieveValues();
+    if (dlg->iElements[dlg->iIgnoreEscapeField].text == dlg->iIgnoreEscapeText)
+	gtk_dialog_response(GTK_DIALOG(dlg->hDialog), GTK_RESPONSE_DELETE_EVENT);
+    return TRUE;
 }
 
 Dialog::Result PDialog::buildAndRun(int w, int h) {
@@ -212,42 +242,47 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 			    g_cclosure_new(G_CALLBACK(ctrlEnterResponse), hDialog, NULL));
     if (iIgnoreEscapeField >= 0) {
 	gtk_accelerator_parse("Escape", &accel_key, &accel_mods);
-	gtk_accel_group_connect(
-	    accel_group, accel_key, accel_mods, GtkAccelFlags(0),
-	    g_cclosure_new(G_CALLBACK(escapeResponse), hDialog, NULL));
+	gtk_accel_group_connect(accel_group, accel_key, accel_mods, GtkAccelFlags(0),
+				g_cclosure_new(G_CALLBACK(escapeResponse), this, NULL));
     }
 
     if (w > 0 && h > 0) gtk_window_set_default_size(GTK_WINDOW(hDialog), w, h);
 
     GtkWidget * ca = gtk_dialog_get_content_area(GTK_DIALOG(hDialog));
-    GtkWidget * grid = gtk_table_new(iNoRows, iNoCols, FALSE);
-    gtk_table_set_row_spacings(GTK_TABLE(grid), 8);
-    gtk_table_set_col_spacings(GTK_TABLE(grid), 8);
-    gtk_table_set_homogeneous(GTK_TABLE(grid), FALSE);
+    GtkWidget * grid = gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 8);
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 8);
     gtk_container_set_border_width(GTK_CONTAINER(grid), 12);
     gtk_box_pack_start(GTK_BOX(ca), grid, TRUE, TRUE, 0);
     gtk_widget_show(grid);
 
-    GtkWidget * aa = gtk_dialog_get_action_area(GTK_DIALOG(hDialog));
-
     for (int i = 0; i < int(iElements.size()); ++i) {
 	SElement & m = iElements[i];
 	GtkWidget * w = nullptr;
-	GtkWidget * ww = nullptr; // for alignment
-	int xOptions = 0;         // GTK_EXPAND|GTK_SHRINK|GTK_FILL
-	int yOptions = 0;         // GTK_EXPAND|GTK_SHRINK|GTK_FILL
+	GtkWidget * ww =
+	    nullptr; // widget actually placed in the grid, if different from w
+	bool hexpand = false;
+	bool vexpand = false;
 	if (m.row < 0) {
 	    if (m.flags & EAccept) {
-		w = gtk_dialog_add_button(GTK_DIALOG(hDialog), m.text.c_str(),
+		w = gtk_dialog_add_button(GTK_DIALOG(hDialog),
+					  gtkMnemonic(m.text).c_str(),
 					  GTK_RESPONSE_ACCEPT);
 		gtk_widget_set_can_default(w, TRUE);
 		gtk_widget_grab_default(w);
-	    } else if (m.flags & EReject)
-		w = gtk_dialog_add_button(GTK_DIALOG(hDialog), m.text.c_str(),
-					  GTK_RESPONSE_ACCEPT);
-	    else {
-		w = gtk_button_new_with_label(m.text.c_str());
-		gtk_box_pack_start(GTK_BOX(aa), w, FALSE, FALSE, 0);
+	    } else if (m.flags & EReject) {
+		w = gtk_dialog_add_button(GTK_DIALOG(hDialog),
+					  gtkMnemonic(m.text).c_str(),
+					  GTK_RESPONSE_REJECT);
+	    } else {
+		// we are not using the standard accept/reject buttons
+		// but a normal button and sneak it into the action area
+		w = gtk_button_new_with_mnemonic(gtkMnemonic(m.text).c_str());
+		G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+		gtk_box_pack_start(
+		    GTK_BOX(gtk_dialog_get_action_area(GTK_DIALOG(hDialog))), w, FALSE,
+		    FALSE, 0);
+		G_GNUC_END_IGNORE_DEPRECATIONS
 		gtk_widget_show(w);
 		if (m.lua_method)
 		    g_signal_connect(w, "clicked", G_CALLBACK(itemResponse), this);
@@ -255,14 +290,15 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	} else {
 	    switch (m.type) {
 	    case ELabel:
-		ww = gtk_alignment_new(0.0, 0.5, 0.0, 1.0);
 		w = gtk_label_new(m.text.c_str());
-		gtk_container_add(GTK_CONTAINER(ww), w);
-		xOptions |= GTK_FILL; // left align in cell
+		gtk_label_set_xalign(GTK_LABEL(w), 0.0);
+		gtk_widget_set_halign(w, GTK_ALIGN_START);
 		break;
-	    case EButton: w = gtk_button_new_with_label(m.text.c_str()); break;
+	    case EButton:
+		w = gtk_button_new_with_mnemonic(gtkMnemonic(m.text).c_str());
+		break;
 	    case ECheckBox:
-		w = gtk_check_button_new_with_label(m.text.c_str());
+		w = gtk_check_button_new_with_mnemonic(gtkMnemonic(m.text).c_str());
 		if (m.lua_method)
 		    g_signal_connect(w, "toggled", G_CALLBACK(itemResponse), this);
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w), m.value);
@@ -270,7 +306,8 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	    case EInput:
 		w = gtk_entry_new();
 		gtk_entry_set_activates_default(GTK_ENTRY(w), TRUE);
-		xOptions |= GTK_FILL;
+		gtk_widget_set_halign(w, GTK_ALIGN_FILL);
+		hexpand = true;
 		break;
 	    case ETextEdit:
 		w = gtk_text_view_new();
@@ -279,39 +316,43 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 					 m.text.c_str(), -1);
 		gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(w), GTK_WRAP_WORD);
 		ww = addScrollBar(w);
-		xOptions |= GTK_FILL;
-		yOptions |= GTK_FILL;
+		gtk_widget_set_halign(ww, GTK_ALIGN_FILL);
+		gtk_widget_set_valign(ww, GTK_ALIGN_FILL);
+		hexpand = true;
+		vexpand = true;
 		break;
 	    case ECombo: {
-		ww = gtk_alignment_new(0.5, 0.0, 1.0, 0.0);
 		GtkListStore * store = gtk_list_store_new(1, G_TYPE_STRING);
 		fillListStore(store, m);
 		w = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
+		g_object_unref(store);
 		GtkCellRenderer * renderer = gtk_cell_renderer_text_new();
 		gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(w), renderer, TRUE);
 		gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(w), renderer, "text", 0);
-		gtk_container_add(GTK_CONTAINER(ww), w);
 		gtk_combo_box_set_active(GTK_COMBO_BOX(w), m.value);
-		xOptions |= GTK_FILL;
-		yOptions |= GTK_FILL; // align at top
+		gtk_widget_set_halign(w, GTK_ALIGN_FILL);
+		gtk_widget_set_valign(w, GTK_ALIGN_START);
+		hexpand = true;
 	    } break;
 	    case EList:
 		w = createListBox(m);
 		ww = addScrollBar(w);
-		xOptions |= GTK_FILL;
-		yOptions |= GTK_FILL;
+		gtk_widget_set_halign(ww, GTK_ALIGN_FILL);
+		gtk_widget_set_valign(ww, GTK_ALIGN_FILL);
+		hexpand = true;
+		vexpand = true;
 		break;
 	    default: break;
 	    }
 	    for (int r = m.row; r < m.row + m.rowspan; ++r)
-		if (iRowStretch[r] > 0) yOptions |= GTK_EXPAND;
+		if (iRowStretch[r] > 0) vexpand = true;
 	    for (int c = m.col; c < m.col + m.colspan; ++c)
-		if (iColStretch[c] > 0) xOptions |= GTK_EXPAND;
+		if (iColStretch[c] > 0) hexpand = true;
 	    if (ww == nullptr) ww = w;
 	    if (ww != nullptr) {
-		gtk_table_attach(GTK_TABLE(grid), ww, m.col, m.col + m.colspan, m.row,
-				 m.row + m.rowspan, GtkAttachOptions(xOptions),
-				 GtkAttachOptions(yOptions), 0, 0);
+		gtk_widget_set_hexpand(ww, hexpand);
+		gtk_widget_set_vexpand(ww, vexpand);
+		gtk_grid_attach(GTK_GRID(grid), ww, m.col, m.row, m.colspan, m.rowspan);
 		gtk_widget_show(ww);
 		gtk_widget_show(w);
 	    }
@@ -410,11 +451,7 @@ int PMenu::execute(lua_State * L) {
     iPopupX = (int)luaL_checkinteger(L, 2);
     iPopupY = (int)luaL_checkinteger(L, 3);
     iSelectedItem = -1;
-    gtk_menu_popup(GTK_MENU(iMenu), NULL, NULL,
-		   // GtkMenuPositionFunc(positionResponse), this,
-		   NULL, NULL,
-		   0, // initiated by button release
-		   gtk_get_current_event_time());
+    gtk_menu_popup_at_pointer(GTK_MENU(iMenu), nullptr);
 
     // nested main loop
     gtk_main();
@@ -430,16 +467,26 @@ int PMenu::execute(lua_State * L) {
 	return 0;
 }
 
-static GtkWidget * colorIcon(double red, double green, double blue) {
-    GtkWidget * w = gtk_drawing_area_new();
-    gtk_widget_set_size_request(w, 13, 13);
-    GdkColor color;
-    color.red = int(red * 65535.0);
-    color.green = int(green * 65535.0);
-    color.blue = int(blue * 65535.0);
-    gtk_widget_modify_bg(w, GTK_STATE_NORMAL, &color);
-    g_object_ref_sink(w);
-    return w;
+// GtkImageMenuItem is gone in GTK3; build a plain menu item whose child is a
+// small box with a color swatch and a label instead.
+static GtkWidget * colorMenuItem(double r, double g, double b, const char * text) {
+    GdkPixbuf * pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 16, 16);
+    guint32 pixel = (guint32(r * 255) << 24) | (guint32(g * 255) << 16)
+		    | (guint32(b * 255) << 8) | 0xff;
+    gdk_pixbuf_fill(pixbuf, pixel);
+    GtkWidget * image = gtk_image_new_from_pixbuf(pixbuf);
+    g_object_unref(pixbuf);
+
+    GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
+    GtkWidget * label = gtk_label_new(text);
+    gtk_label_set_xalign(GTK_LABEL(label), 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+
+    GtkWidget * item = gtk_menu_item_new();
+    gtk_container_add(GTK_CONTAINER(item), hbox);
+    gtk_widget_show_all(hbox);
+    return item;
 }
 
 int PMenu::add(lua_State * L) {
@@ -493,15 +540,24 @@ int PMenu::add(lua_State * L) {
 
 	    const char * text = lua_tostring(L, -1);
 
-	    GtkWidget * w = nullptr;
-	    if (hascheck)
+	    GtkWidget * w;
+	    if (hascolor) {
+		lua_pushvalue(L, 6);  // function
+		lua_pushnumber(L, i); // index
+		lua_pushvalue(L, -3); // name
+		lua_call(L, 2, 3);    // function returns red, green, blue
+		double red = luaL_checknumber(L, -3);
+		double green = luaL_checknumber(L, -2);
+		double blue = luaL_checknumber(L, -1);
+		lua_pop(L, 3); // pop result
+		w = colorMenuItem(red, green, blue, text);
+	    } else if (hascheck) {
 		w = gtk_check_menu_item_new_with_label(text);
-	    else if (hascolor)
-		w = gtk_image_menu_item_new_with_label(text);
-	    else
+		if (!g_strcmp0(item, current))
+		    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(w), true);
+	    } else {
 		w = gtk_menu_item_new_with_label(text);
-	    if (hascheck && !g_strcmp0(item, current))
-		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(w), true);
+	    }
 	    gtk_menu_shell_append(GTK_MENU_SHELL(sm), w);
 	    g_signal_connect(w, "activate", G_CALLBACK(itemResponse), this);
 	    gtk_widget_show(w);
@@ -512,20 +568,6 @@ int PMenu::add(lua_State * L) {
 	    mitem.widget = w;
 	    items.push_back(mitem);
 
-	    if (hascolor) {
-		gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM(w), true);
-		lua_pushvalue(L, 6);  // function
-		lua_pushnumber(L, i); // index
-		lua_pushvalue(L, -4); // name
-		lua_call(L, 2, 3);    // function returns red, green, blue
-		double red = luaL_checknumber(L, -3);
-		double green = luaL_checknumber(L, -2);
-		double blue = luaL_checknumber(L, -1);
-		lua_pop(L, 3); // pop result
-		GtkWidget * im = colorIcon(red, green, blue);
-		gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(w), im);
-		g_object_unref(im);
-	    }
 	    lua_pop(L, 2); // item, text
 	}
 	GtkWidget * sme = gtk_menu_item_new_with_label(title);
@@ -552,28 +594,28 @@ static int menu_constructor(lua_State * L) {
 // --------------------------------------------------------------------
 
 static int ipeui_getColor(lua_State * L) {
-    check_winid(L, 1);
+    GtkWidget * parent = check_winid(L, 1);
     const char * title = luaL_checkstring(L, 2);
     double r = luaL_checknumber(L, 3);
     double g = luaL_checknumber(L, 4);
     double b = luaL_checknumber(L, 5);
 
-    GdkColor color;
-    color.red = int(r * 65535);
-    color.green = int(g * 65535);
-    color.blue = int(b * 65535);
+    GdkRGBA color;
+    color.red = r;
+    color.green = g;
+    color.blue = b;
+    color.alpha = 1.0;
 
-    GtkWidget * dlg = gtk_color_selection_dialog_new(title);
-    GtkColorSelection * sel = GTK_COLOR_SELECTION(
-	gtk_color_selection_dialog_get_color_selection(GTK_COLOR_SELECTION_DIALOG(dlg)));
-    gtk_color_selection_set_current_color(sel, &color);
+    GtkWidget * dlg =
+	gtk_color_chooser_dialog_new(title, parent ? GTK_WINDOW(parent) : nullptr);
+    gtk_color_chooser_set_rgba(GTK_COLOR_CHOOSER(dlg), &color);
     int result = gtk_dialog_run(GTK_DIALOG(dlg));
     if (result == GTK_RESPONSE_OK) {
-	gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(sel), &color);
+	gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER(dlg), &color);
 	gtk_widget_destroy(dlg);
-	lua_pushnumber(L, color.red / 65535.0);
-	lua_pushnumber(L, color.green / 65535.0);
-	lua_pushnumber(L, color.blue / 65535.0);
+	lua_pushnumber(L, color.red);
+	lua_pushnumber(L, color.green);
+	lua_pushnumber(L, color.blue);
 	return 3;
     }
     gtk_widget_destroy(dlg);
@@ -595,8 +637,8 @@ static int ipeui_fileDialog(lua_State * L) {
 
     GtkWidget * dlg = gtk_file_chooser_dialog_new(
 	caption, parent,
-	(type ? GTK_FILE_CHOOSER_ACTION_SAVE : GTK_FILE_CHOOSER_ACTION_OPEN),
-	GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, NULL);
+	(type ? GTK_FILE_CHOOSER_ACTION_SAVE : GTK_FILE_CHOOSER_ACTION_OPEN), "_Cancel",
+	GTK_RESPONSE_REJECT, "_OK", GTK_RESPONSE_ACCEPT, NULL);
     if (dir) gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dlg), dir);
     if (name) gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dlg), name);
 
@@ -649,25 +691,24 @@ static int ipeui_messageBox(lua_State * L) {
 	gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dlg), "%s", details);
     switch (buttons) {
     case 0: // "ok"
-	gtk_dialog_add_buttons(GTK_DIALOG(dlg), GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
+	gtk_dialog_add_buttons(GTK_DIALOG(dlg), "_OK", GTK_RESPONSE_OK, NULL);
 	break;
     case 1: // "okcancel"
-	gtk_dialog_add_buttons(GTK_DIALOG(dlg), GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-			       GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
+	gtk_dialog_add_buttons(GTK_DIALOG(dlg), "_Cancel", GTK_RESPONSE_CANCEL, "_OK",
+			       GTK_RESPONSE_OK, NULL);
 	break;
     case 2: // "yesnocancel"
-	gtk_dialog_add_buttons(GTK_DIALOG(dlg), GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-			       GTK_STOCK_NO, GTK_RESPONSE_NO, GTK_STOCK_YES,
-			       GTK_RESPONSE_YES, NULL);
+	gtk_dialog_add_buttons(GTK_DIALOG(dlg), "_Cancel", GTK_RESPONSE_CANCEL, "_No",
+			       GTK_RESPONSE_NO, "_Yes", GTK_RESPONSE_YES, NULL);
 	break;
     case 3: // "discardcancel"
-	gtk_dialog_add_buttons(GTK_DIALOG(dlg), GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-			       GTK_STOCK_DISCARD, GTK_RESPONSE_NO, NULL);
+	gtk_dialog_add_buttons(GTK_DIALOG(dlg), "_Cancel", GTK_RESPONSE_CANCEL,
+			       "_Discard", GTK_RESPONSE_NO, NULL);
 	break;
     case 4: // "savediscardcancel"
-	gtk_dialog_add_buttons(GTK_DIALOG(dlg), GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-			       GTK_STOCK_DISCARD, GTK_RESPONSE_NO, GTK_STOCK_SAVE,
-			       GTK_RESPONSE_YES, NULL);
+	gtk_dialog_add_buttons(GTK_DIALOG(dlg), "_Cancel", GTK_RESPONSE_CANCEL,
+			       "_Discard", GTK_RESPONSE_NO, "_Save", GTK_RESPONSE_YES,
+			       NULL);
     default: break;
     }
 
