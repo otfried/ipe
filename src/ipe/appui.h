@@ -40,7 +40,7 @@ typedef struct lua_State lua_State;
 #ifdef IPEUI_GTK
 #include <gtk/gtk.h>
 typedef GtkWidget * WINID;
-typedef GtkMenu * MENUHANDLE;
+typedef GMenu * MENUHANDLE;
 #endif
 #ifdef IPEUI_WIN32
 #include <windows.h>

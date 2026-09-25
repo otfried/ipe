@@ -112,7 +112,7 @@ else
   prefs.editable_textfile = nil
 end
 
-if config.platform == "apple" or config.toolkit == "htmljs" then
+if config.platform == "apple" or config.toolkit == "htmljs" or config.toolkit == "gtk" then
   prefs.delete_key = "\8"
 else
   prefs.delete_key = "\127"

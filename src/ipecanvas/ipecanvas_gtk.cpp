@@ -38,83 +38,107 @@ using namespace ipe;
 
 // --------------------------------------------------------------------
 
-void Canvas::invalidate() {
-    GdkRectangle r;
-    r.x = r.y = 0;
-#if GTK_MAJOR_VERSION >= 3
-    r.width = gtk_widget_get_allocated_width(iWindow);
-    r.height = gtk_widget_get_allocated_height(iWindow);
-#else
-    r.width = iWindow->allocation.width;
-    r.height = iWindow->allocation.height;
-#endif
-    gdk_window_invalidate_rect(gtk_widget_get_window(iWindow), &r, FALSE);
-}
+void Canvas::invalidate() { gtk_widget_queue_draw(iWindow); }
 
-void Canvas::invalidate(int x, int y, int w, int h) {
-    GdkRectangle r;
-    r.x = x;
-    r.y = y;
-    r.width = w;
-    r.height = h;
-    gdk_window_invalidate_rect(gtk_widget_get_window(iWindow), &r, FALSE);
-}
+void Canvas::invalidate(int, int, int, int) { gtk_widget_queue_draw(iWindow); }
 
 // --------------------------------------------------------------------
 
-void Canvas::buttonHandler(GdkEventButton * ev) {
-    // ipeDebug("Canvas::button %d %d %g %g", ev->button, ev->type, ev->x, ev->y);
-    iGlobalPos = Vector(ev->x_root, ev->y_root);
-    computeFifi(ev->x, ev->y);
-    // TODO: int mod = getModifiers() | iAdditionalModifiers;
-    int mod = iAdditionalModifiers;
-    bool down = (ev->type == GDK_BUTTON_PRESS);
-    if (iTool)
-	iTool->mouseButton(ev->button | mod, down);
-    else if (down && iObserver)
-	iObserver->canvasObserverMouseAction(ev->button | mod);
+static int convertModifiers(GdkModifierType state) {
+    int mod = 0;
+    if (state & GDK_SHIFT_MASK) mod |= CanvasBase::EShift;
+    if (state & GDK_CONTROL_MASK) mod |= CanvasBase::EControl;
+    if (state & GDK_ALT_MASK) mod |= CanvasBase::EAlt;
+    if (state & GDK_SUPER_MASK) mod |= CanvasBase::EMeta;
+    return mod;
 }
 
-void Canvas::motionHandler(GdkEventMotion * event) {
-    // ipeDebug("Canvas::mouseMove %g %g", event->x, event->y);
-    computeFifi(event->x, event->y);
+static int convertMouseButton(guint gbutton) {
+    switch (gbutton) {
+    case 1: // left
+    default: return 1;
+    case 2: // middle
+	return 4;
+    case 3: // right
+	return 2;
+    case 8: // extra 1
+	return 8;
+    case 9: // extra 2
+	return 16;
+    }
+}
+
+void Canvas::buttonHandler(double x, double y, GtkGestureClick * gesture, int nPress,
+			   bool down) {
+    guint gbutton = gtk_gesture_single_get_current_button(GTK_GESTURE_SINGLE(gesture));
+    GdkModifierType state =
+	gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
+    // ipeDebug("Canvas::button %d %g %g %d %d %d", gbutton, x, y, down, nPress, state);
+    int button = convertMouseButton(gbutton);
+    if (button == 1 && nPress == 2)
+	// left double click
+	button = 0x81;
+    iGlobalPos = Vector(x, y);
+    computeFifi(x, y);
+    int mod = convertModifiers(state) | iAdditionalModifiers;
+    if (iTool)
+	iTool->mouseButton(button | mod, down);
+    else if (down && iObserver)
+	iObserver->canvasObserverMouseAction(button | mod);
+}
+
+gboolean Canvas::keyHandler(guint keyval, guint keycode, GdkModifierType state) {
+    String key = gdk_keyval_name(keyval);
+    ipeDebug("Key pressed: %s (keyval: %u, keycode: %u)", key.z(), keyval, keycode);
+
+    // TODO: add key translation
+    // need at least Escape -> \027
+    // space -> 0x20
+    // BackSpace -> \8
+    // Delete -> \127
+    // linestool : s a y
+    // TODO; remove delete_key from prefs, simply interpret both!
+
+    if (iTool && iTool->key(key, convertModifiers(state) | iAdditionalModifiers))
+	return GDK_EVENT_STOP; // Event handled
+    else
+	return GDK_EVENT_PROPAGATE; // Pass unhandled keys up to parent widgets
+}
+
+void Canvas::motionHandler(double x, double y) {
+    // ipeDebug("Canvas::mouseMove %g %g", x, y);
+    computeFifi(x, y);
     if (iTool) iTool->mouseMove();
     if (iObserver) iObserver->canvasObserverPositionChanged();
 }
 
-void Canvas::scrollHandler(GdkEventScroll * event) {
-    int zDelta = (event->direction == GDK_SCROLL_UP) ? 120 : -120;
-    int kind = (event->state & GDK_CONTROL_MASK) ? 2 : 0;
-    // ipeDebug("Canvas::wheel %d", zDelta);
+void Canvas::scrollHandler(double dx, double dy, GdkModifierType state) {
+    int kind = (state & GDK_CONTROL_MASK) ? 2 : 0;
+    // ipeDebug("Canvas::wheel %g %g", dx, dy);
     if (iObserver) {
-	if (event->state & GDK_SHIFT_MASK)
-	    iObserver->canvasObserverWheelMoved(zDelta, 0.0, kind);
+	if (state & GDK_SHIFT_MASK)
+	    iObserver->canvasObserverWheelMoved(15 * dy, 15 * dx, kind);
 	else
-	    iObserver->canvasObserverWheelMoved(0.0, zDelta, kind);
+	    iObserver->canvasObserverWheelMoved(15 * dx, -15 * dy, kind);
     }
 }
 
-#if GTK_MAJOR_VERSION >= 3
-void Canvas::exposeHandler(cairo_t * cr) {
-    iWidth = gtk_widget_get_allocated_width(iWindow);
-    iHeight = gtk_widget_get_allocated_height(iWindow);
-#else
-void Canvas::exposeHandler(GdkEventExpose * event) {
-    iWidth = iWindow->allocation.width;
-    iHeight = iWindow->allocation.height;
-#endif
+void Canvas::exposeHandler(cairo_t * cr, int width, int height) {
+    iWidth = width;
+    iHeight = height;
+    int scale = gtk_widget_get_scale_factor(iWindow);
+    iBWidth = iWidth * scale;
+    iBHeight = iHeight * scale;
+    // ipeDebug("Canvas::exposeHandler %gx%g (%gx%g)", iWidth, iHeight, iBWidth,
+    // iBHeight);
 
     refreshSurface();
 
-#if GTK_MAJOR_VERSION < 3
-    cairo_t * cr = gdk_cairo_create(iWindow->window);
-    cairo_rectangle(cr, event->area.x, event->area.y, event->area.width,
-		    event->area.height);
-    cairo_clip(cr);
-#endif
-
+    cairo_save(cr);
+    cairo_scale(cr, 1.0 / scale, 1.0 / scale);
     cairo_set_source_surface(cr, iSurface, 0.0, 0.0);
     cairo_paint(cr);
+    cairo_restore(cr);
 
     if (iFifiVisible) drawFifi(cr);
 
@@ -125,38 +149,40 @@ void Canvas::exposeHandler(GdkEventExpose * event) {
 	drawTool(cp);
 	cp.popMatrix();
     }
-#if GTK_MAJOR_VERSION < 3
-    cairo_destroy(cr);
-#endif
 }
 
 // --------------------------------------------------------------------
 
-gboolean Canvas::button_cb(GtkWidget * widget, GdkEvent * event, Canvas * canvas) {
-    canvas->buttonHandler((GdkEventButton *)event);
+void Canvas::expose_cb(GtkDrawingArea *, cairo_t * cr, int width, int height,
+		       Canvas * canvas) {
+    canvas->exposeHandler(cr, width, height);
+}
+
+void Canvas::pressed_cb(GtkGestureClick * gesture, int nPress, double x, double y,
+			Canvas * canvas) {
+    canvas->buttonHandler(x, y, gesture, nPress, true);
+}
+
+void Canvas::released_cb(GtkGestureClick * gesture, int nPress, double x, double y,
+			 Canvas * canvas) {
+    canvas->buttonHandler(x, y, gesture, nPress, false);
+}
+
+void Canvas::motion_cb(GtkEventControllerMotion *, double x, double y, Canvas * canvas) {
+    canvas->motionHandler(x, y);
+}
+
+gboolean Canvas::scroll_cb(GtkEventControllerScroll * controller, double dx, double dy,
+			   Canvas * canvas) {
+    GdkModifierType state =
+	gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(controller));
+    canvas->scrollHandler(dx, dy, state);
     return TRUE;
 }
 
-#if GTK_MAJOR_VERSION < 3
-gboolean Canvas::expose_cb(GtkWidget * widget, GdkEvent * event, Canvas * canvas) {
-    canvas->exposeHandler((GdkEventExpose *)event);
-    return TRUE;
-}
-#else
-gboolean Canvas::expose_cb(GtkWidget * widget, cairo_t * cr, Canvas * canvas) {
-    canvas->exposeHandler(cr);
-    return TRUE;
-}
-#endif
-
-gboolean Canvas::motion_cb(GtkWidget * widget, GdkEvent * event, Canvas * canvas) {
-    canvas->motionHandler((GdkEventMotion *)event);
-    return TRUE;
-}
-
-gboolean Canvas::scroll_cb(GtkWidget * widget, GdkEvent * event, Canvas * canvas) {
-    canvas->scrollHandler((GdkEventScroll *)event);
-    return TRUE;
+gboolean Canvas::keypress_cb(GtkEventControllerKey * controller, guint keyval,
+			     guint keycode, GdkModifierType state, Canvas * canvas) {
+    return canvas->keyHandler(keyval, keycode, state);
 }
 
 void Canvas::setCursor(TCursor cursor, double w, Color * color) {
@@ -165,28 +191,45 @@ void Canvas::setCursor(TCursor cursor, double w, Color * color) {
 
 // --------------------------------------------------------------------
 
-Canvas::Canvas(GtkWidget * parent) {
+Canvas::Canvas(GtkWidget * /* parent */) {
     iWindow = gtk_drawing_area_new();
-    gtk_widget_add_events(iWindow, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
-				       | GDK_POINTER_MOTION_MASK);
+    gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(iWindow), 600);
+    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(iWindow), 400);
     gtk_widget_set_size_request(iWindow, 600, 400);
+    gtk_widget_set_hexpand(iWindow, TRUE);
+    gtk_widget_set_vexpand(iWindow, TRUE);
     gtk_widget_set_can_focus(iWindow, TRUE);
-    g_signal_connect(G_OBJECT(iWindow), "button-release-event", G_CALLBACK(button_cb),
-		     this);
-    g_signal_connect(G_OBJECT(iWindow), "button-press-event", G_CALLBACK(button_cb),
-		     this);
-#if GTK_MAJOR_VERSION < 3
-    g_signal_connect(G_OBJECT(iWindow), "expose-event", G_CALLBACK(expose_cb), this);
-#else
-    g_signal_connect(G_OBJECT(iWindow), "draw", G_CALLBACK(expose_cb), this);
-#endif
-    g_signal_connect(G_OBJECT(iWindow), "motion-notify-event", G_CALLBACK(motion_cb),
-		     this);
-    g_signal_connect(G_OBJECT(iWindow), "scroll-event", G_CALLBACK(scroll_cb), this);
+    gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(iWindow),
+				   GtkDrawingAreaDrawFunc(expose_cb), this, nullptr);
+
+    GtkGesture * click = gtk_gesture_click_new();
+    gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click), 0);
+    g_signal_connect(click, "pressed", G_CALLBACK(pressed_cb), this);
+    g_signal_connect(click, "released", G_CALLBACK(released_cb), this);
+    gtk_widget_add_controller(iWindow, GTK_EVENT_CONTROLLER(click));
+
+    GtkEventController * motion = gtk_event_controller_motion_new();
+    g_signal_connect(motion, "motion", G_CALLBACK(motion_cb), this);
+    gtk_widget_add_controller(iWindow, motion);
+
+    GtkEventController * scroll =
+	gtk_event_controller_scroll_new(GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES);
+    g_signal_connect(scroll, "scroll", G_CALLBACK(scroll_cb), this);
+    gtk_widget_add_controller(iWindow, scroll);
+
+    gtk_widget_set_focusable(iWindow, TRUE);
+
+    // grab focus when clicked
+    g_signal_connect_swapped(click, "pressed", G_CALLBACK(gtk_widget_grab_focus),
+			     iWindow);
+
+    GtkEventController * key = gtk_event_controller_key_new();
+    // make sure we get keys before the global accelerators are recognized
+    gtk_event_controller_set_propagation_phase(key, GTK_PHASE_CAPTURE);
+    g_signal_connect(key, "key-pressed", G_CALLBACK(keypress_cb), this);
+    gtk_widget_add_controller(iWindow, key);
 }
 
-Canvas::~Canvas() {
-    // do I need to delete the GTK Window?  It is owned by its parent.
-}
+Canvas::~Canvas() {}
 
 // --------------------------------------------------------------------

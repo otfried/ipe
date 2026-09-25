@@ -736,13 +736,18 @@ static const struct luaL_Reg appui_methods[] = {
     {"renderPage", appui_renderPage},
 #ifdef IPEUI_JS
     {"js", appui_jsCall},
+#endif
+#if defined(IPEUI_JS) || defined(IPEUI_GTK)
     {"getClipboardAsync", appui_clipboard},
-    {"selectPageAsync", appui_selectPage},
     {"pageSorterAsync", appui_pageSorter},
 #else
-    {"selectPage", appui_selectPage},
     {"pageSorter", appui_pageSorter},
     {"getClipboard", appui_clipboard},
+#endif
+#ifdef IPEUI_JS
+    {"selectPageAsync", appui_selectPage},
+#else
+    {"selectPage", appui_selectPage},
 #endif
     {nullptr, nullptr}};
 

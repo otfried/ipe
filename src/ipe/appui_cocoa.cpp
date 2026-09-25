@@ -972,7 +972,6 @@ void AppUi::makeSnapBar() {
     layout(iSnapButton[8], iSelector[EUiVariant], "l>r", PAD);
     // layout(iSnapButton[8], iSnapButton[7], "l>r", PAD);
     layout(iSnapBar, iSnapButton[8], "r=r", MARGIN);
-
 }
 
 // --------------------------------------------------------------------
@@ -1007,7 +1006,7 @@ void AppUi::addCombo(int sel, String s) {
     iInUiUpdate = true;
     [iSelector[sel] addItemWithTitle:I2N(s)];
     if (sel == EUiVariant)
-      [iSelector[sel] setHidden:(iComboContents[EUiVariant].size() <= 1)];
+	[iSelector[sel] setHidden:(iComboContents[EUiVariant].size() <= 1)];
     iInUiUpdate = false;
 }
 

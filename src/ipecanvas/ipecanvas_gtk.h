@@ -44,7 +44,7 @@ public:
     Canvas(GtkWidget * parent);
     ~Canvas();
 
-    GtkWidget * window() const { return GTK_WIDGET(iWindow); }
+    GtkWidget * window() const { return iWindow; }
 
 private:
     virtual void setCursor(TCursor cursor, double w = 1.0, Color * color = nullptr);
@@ -52,20 +52,25 @@ private:
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);
 
-#if GTK_MAJOR_VERSION >= 3
-    static gboolean expose_cb(GtkWidget * widget, cairo_t * cr, Canvas * canvas);
-    void exposeHandler(cairo_t * cr);
-#else
-    static gboolean expose_cb(GtkWidget * widget, GdkEvent * event, Canvas * canvas);
-    void exposeHandler(GdkEventExpose * event);
-#endif
-    void buttonHandler(GdkEventButton * event);
-    void motionHandler(GdkEventMotion * event);
-    void scrollHandler(GdkEventScroll * event);
+    void exposeHandler(cairo_t * cr, int width, int height);
+    void buttonHandler(double x, double y, GtkGestureClick * gesture, int nPress,
+		       bool down);
+    void motionHandler(double x, double y);
+    void scrollHandler(double dx, double dy, GdkModifierType state);
+    gboolean keyHandler(guint keyval, guint keycode, GdkModifierType state);
 
-    static gboolean button_cb(GtkWidget * widget, GdkEvent * event, Canvas * data);
-    static gboolean motion_cb(GtkWidget * widget, GdkEvent * event, Canvas * canvas);
-    static gboolean scroll_cb(GtkWidget * widget, GdkEvent * event, Canvas * canvas);
+    static void expose_cb(GtkDrawingArea * area, cairo_t * cr, int width, int height,
+			  Canvas * canvas);
+    static void pressed_cb(GtkGestureClick * gesture, int nPress, double x, double y,
+			   Canvas * canvas);
+    static void released_cb(GtkGestureClick * gesture, int nPress, double x, double y,
+			    Canvas * canvas);
+    static void motion_cb(GtkEventControllerMotion * controller, double x, double y,
+			  Canvas * canvas);
+    static gboolean scroll_cb(GtkEventControllerScroll * controller, double dx, double dy,
+			      Canvas * canvas);
+    static gboolean keypress_cb(GtkEventControllerKey * controller, guint keyval,
+				guint keycode, GdkModifierType state, Canvas * canvas);
 
 private:
     GtkWidget * iWindow;

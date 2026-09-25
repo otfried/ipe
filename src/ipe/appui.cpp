@@ -766,7 +766,7 @@ void AppUiBase::setAttributes(const AllAttributes & all, Cascade * sheet) {
     setCheckMark("linecap", Attribute(iAll.iLineCap));
     setCheckMark("fillrule", Attribute(iAll.iFillRule));
 
-#ifdef IPEUI_JS
+#if defined(IPEUI_JS) || defined(IPEUI_GTK)
     setCheckMark("textstyle", Attribute(iAll.iTextStyle));
     setCheckMark("labelstyle", Attribute(iAll.iLabelStyle));
 #endif

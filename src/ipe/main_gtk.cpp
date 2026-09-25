@@ -31,6 +31,8 @@
 #include "ipebase.h"
 #include "ipelua.h"
 
+#include "appui_gtk.h"
+
 #include <cstdio>
 #include <cstdlib>
 
@@ -40,6 +42,10 @@ using namespace ipe;
 using namespace ipelua;
 
 #include "main_common.i"
+
+// --------------------------------------------------------------------
+
+GtkApplication * ipeApp = nullptr;
 
 // --------------------------------------------------------------------
 
@@ -65,9 +71,14 @@ static void setup_globals(lua_State * L) {
 		    (IPELIB_VERSION / 100) % 100, IPELIB_VERSION % 100);
     lua_setfield(L, -2, "version");
 
-    GdkScreen * screen = gdk_screen_get_default();
-    int width = gdk_screen_get_width(screen);
-    int height = gdk_screen_get_height(screen);
+    GdkDisplay * display = gdk_display_get_default();
+    GListModel * monitors = gdk_display_get_monitors(display);
+    GdkMonitor * monitor = GDK_MONITOR(g_list_model_get_item(monitors, 0));
+    GdkRectangle geometry;
+    gdk_monitor_get_geometry(monitor, &geometry);
+    g_object_unref(monitor);
+    int width = geometry.width;
+    int height = geometry.height;
     ipeDebug("Screen resolution is (%d x %d)", width, height);
 
     setup_common_config(L);
@@ -88,13 +99,27 @@ static void setup_globals(lua_State * L) {
 // --------------------------------------------------------------------
 
 int mainloop(lua_State * L) {
-    gtk_main();
-    return 0;
+    // Windows created from Lua before this point already keep the
+    // application alive (see AppUi::AppUi calling gtk_application_add_window)
+    return g_application_run(G_APPLICATION(ipeApp), 0, nullptr);
 }
+
+// windows are created explicitly from Lua, not in response to "activate"
+static void on_activate(GApplication *, gpointer) { /* nothing to do */ }
 
 int main(int argc, char * argv[]) {
     Platform::initLib(IPELIB_VERSION);
-    gtk_init(&argc, &argv);
+    gtk_init();
+
+    ipeApp = gtk_application_new(nullptr, G_APPLICATION_NON_UNIQUE);
+    g_signal_connect(ipeApp, "activate", G_CALLBACK(on_activate), nullptr);
+    GError * error = nullptr;
+    if (!g_application_register(G_APPLICATION(ipeApp), nullptr, &error)) {
+	fprintf(stderr, "Could not register application: %s\n", error->message);
+	g_error_free(error);
+	return 1;
+    }
+
     lua_State * L = setup_lua();
 
     // create table with arguments
@@ -110,6 +135,7 @@ int main(int argc, char * argv[]) {
     lua_run_ipe(L, mainloop);
 
     lua_close(L);
+    g_object_unref(ipeApp);
     return 0;
 }
 

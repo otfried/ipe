@@ -37,7 +37,6 @@ IPESRCDIR ?= ..
 ifndef WIN32
 ifndef IPEWASM
   include $(IPESRCDIR)/$(IPECONFIGMAK)
-  BUILDDIR ?= $(IPESRCDIR)/../build
 endif
 endif
 
@@ -57,6 +56,7 @@ UI_CFLAGS    = $(QT_CFLAGS)
 UI_LIBS      = $(QT_LIBS)
 moc_sources  = $(addprefix moc_, $(subst .h,.cpp,$(moc_headers)))
 all_sources  = $(sources) $(qt_sources)
+BUILDDIR ?= $(IPESRCDIR)/../build
 objects      = $(addprefix $(OBJDIR)/, $(subst .cpp,.o,$(all_sources) \
 		$(moc_sources)))
 # -------------------- WIN32 --------------------
@@ -67,6 +67,11 @@ UI_CFLAGS    :=
 UI_LIBS      := -lcomctl32 -lcomdlg32 -lgdi32 -lgdiplus
 all_sources  = $(sources) $(win_sources)
 objects      = $(addprefix $(OBJDIR)/, $(subst .cpp,.o,$(all_sources)))
+ifeq ($(IPECROSS),i686)
+BUILDDIR ?= $(IPESRCDIR)/../mingw32
+else
+BUILDDIR ?= $(IPESRCDIR)/../mingw64
+endif
 # -------------------- COCOA --------------------
 else ifeq ($(IPEUI), COCOA)
 CPPFLAGS     += -DIPEUI_COCOA
@@ -76,15 +81,19 @@ UI_LIBS      = -framework Cocoa -framework AppKit \
 	-framework ApplicationServices
 all_sources  = $(sources) $(cocoa_sources)
 objects      = $(addprefix $(OBJDIR)/, $(subst .cpp,.o,$(all_sources)))
+BUILDDIR ?= $(IPESRCDIR)/../build
 # -------------------- GTK --------------------
 else ifeq ($(IPEUI), GTK)
 PKG_CONFIG   ?= pkg-config
 CPPFLAGS     += -DIPEUI_GTK -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED
+# GtkDialog and friends are deprecated in GTK4 but still fully usable;
+# revisit when GTK provides a replacement we actually want to adopt.
+CXXFLAGS += -Wno-deprecated-declarations
 IPEUI_GTK    := 1
 UI_CFLAGS    = $(GTK_CFLAGS)
 UI_LIBS      = $(GTK_LIBS)
 all_sources  = $(sources) $(gtk_sources)
-BUILDDIR     = $(IPESRCDIR)/../gtkbuild
+BUILDDIR ?= $(IPESRCDIR)/../gtkbuild
 objects      = $(addprefix $(OBJDIR)/, $(subst .cpp,.o,$(all_sources)))
 else ifeq ($(IPEUI), JS)
 # user interface using HTML, Javascript, and webassembly
@@ -94,6 +103,7 @@ UI_CFLAGS    =
 UI_LIBS      =
 all_sources  = $(sources) $(js_sources)
 objects      = $(addprefix $(OBJDIR)/, $(subst .cpp,.o,$(all_sources)))
+BUILDDIR ?= $(IPESRCDIR)/../emscripten
 else
   error("Unknown IPEUI selected")
 endif
@@ -147,11 +157,6 @@ ifdef WIN32
   ipelet_target  = $(BUILDDIR)/ipelets/$1.dll
   check_lua      = luac -p
 
-ifeq ($(IPECROSS),i686)
-  BUILDDIR       = $(IPESRCDIR)/../mingw32
-else
-  BUILDDIR       = $(IPESRCDIR)/../mingw64
-endif
   CXXFLAGS	 += -g -O2
 ifdef IPECROSS
   # --------------- Cross compiling with Mingw-w64 ---------------
