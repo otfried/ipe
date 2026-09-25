@@ -166,47 +166,35 @@ bool dctDecode(Buffer dctData, Buffer pixelData) {
 
 // --------------------------------------------------------------------
 
-//! Read PNG image from file.
-/*! Returns the image as a Bitmap.
-  It will be compressed if \a deflate is set.
-  Sets \a dotsPerInch if the image file contains a resolution,
-  otherwise sets it to (0,0).
-  If reading the file fails, returns a null Bitmap,
-  and sets the error message \a errmsg.
-*/
-Bitmap Bitmap::readPNG(const char * fname, Vector & dotsPerInch, const char *& errmsg) {
+const char * Bitmap::readPNGData(const char * fname, int & width, int & height,
+				 uint32_t & flags, Buffer & pixels,
+				 Vector & dotsPerInch) {
     FILE * fp = Platform::fopen(fname, "rb");
-    if (!fp) {
-	errmsg = "Error opening file";
-	return Bitmap();
-    }
+    if (!fp) { return "Error opening file"; }
 
     static const char pngerr[] = "PNG library error";
     uint8_t header[8];
     if (fread(header, 1, 8, fp) != 8 || png_sig_cmp(header, 0, 8)) {
-	errmsg = "The file does not appear to be a PNG image";
 	fclose(fp);
-	return Bitmap();
+	return "The file does not appear to be a PNG image";
     }
 
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
 						 (png_voidp) nullptr, nullptr, nullptr);
     if (!png_ptr) {
-	errmsg = pngerr;
 	fclose(fp);
-	return Bitmap();
+	return pngerr;
     }
     png_infop info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr) {
 	png_destroy_read_struct(&png_ptr, (png_infopp) nullptr, (png_infopp) nullptr);
-	errmsg = pngerr;
-	return Bitmap();
+	fclose(fp);
+	return pngerr;
     }
     if (setjmp(png_jmpbuf(png_ptr))) {
 	png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) nullptr);
-	errmsg = pngerr;
 	fclose(fp);
-	return Bitmap();
+	return pngerr;
     }
 
 #if PNG_LIBPNG_VER >= 10504
@@ -217,8 +205,9 @@ Bitmap Bitmap::readPNG(const char * fname, Vector & dotsPerInch, const char *& e
     png_set_sig_bytes(png_ptr, 8);
     png_read_info(png_ptr, info_ptr);
 
-    int width = png_get_image_width(png_ptr, info_ptr);
-    int height = png_get_image_height(png_ptr, info_ptr);
+    width = png_get_image_width(png_ptr, info_ptr);
+    height = png_get_image_height(png_ptr, info_ptr);
+    flags = Bitmap::ERGB | Bitmap::EAlpha;
     int color_type = png_get_color_type(png_ptr, info_ptr);
 
     if (color_type == PNG_COLOR_TYPE_PALETTE) {
@@ -251,16 +240,15 @@ Bitmap Bitmap::readPNG(const char * fname, Vector & dotsPerInch, const char *& e
     png_read_update_info(png_ptr, info_ptr);
     if (png_get_bit_depth(png_ptr, info_ptr) != 8) {
 	png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) nullptr);
-	errmsg = "Depth of PNG image is not eight bits.";
 	fclose(fp);
-	return Bitmap();
+	return "Depth of PNG image is not eight bits.";
     }
 
     const double mpi = 25.4 / 1000.0;
     dotsPerInch = Vector(mpi * png_get_x_pixels_per_meter(png_ptr, info_ptr),
 			 mpi * png_get_y_pixels_per_meter(png_ptr, info_ptr));
 
-    Buffer pixels(4 * width * height);
+    pixels = Buffer(4 * width * height);
     std::vector<png_bytep> row(height);
     for (int y = 0; y < height; ++y) row[y] = (png_bytep)pixels.data() + 4 * width * y;
     png_read_image(png_ptr, row.data());
@@ -269,8 +257,7 @@ Bitmap Bitmap::readPNG(const char * fname, Vector & dotsPerInch, const char *& e
     png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) nullptr);
     fclose(fp);
 
-    Bitmap bm(width, height, Bitmap::ERGB | Bitmap::EAlpha, pixels);
-    return bm;
+    return nullptr;
 }
 
 // --------------------------------------------------------------------
