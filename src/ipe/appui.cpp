@@ -154,7 +154,6 @@ void AppUiBase::buildMenus() {
     addItem(EFileMenu, "Run Latex", "run_latex");
     addItem(EFileMenu);
     addItem(EFileMenu, "Document properties", "document_properties");
-    addItem(EFileMenu, "Add style sheets", "add_style_sheets");
     addItem(EFileMenu, "Style sheets", "style_sheets");
     addItem(EFileMenu, "Update style sheets", "update_style_sheets");
     addItem(EFileMenu, "Check symbolic attributes", "check_style");

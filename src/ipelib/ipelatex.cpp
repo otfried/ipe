@@ -201,10 +201,10 @@ int Latex::createLatexSource(Stream & stream, String preamble) {
 	   << "\\newcounter{ipePages}\\newcounter{ipeViews}\n"
 	   << "\\newcommand{\\PageTitle}[1]{#1}\n"
 	   << "\\newcommand{\\ipesymbol}[4]{$\\bullet$}\n";
+    stream << "\\def\\ipeVariant{" << iVariant.string() << "}\n";
     stream << "\\def\\ipedefinecolors#1{\\ipecolorpreamble{#1}"
 	      "\\let\\ipecolorpreamble\\relax}\n"
 	   << "\\def\\ipecolorpreamble#1{\\usepackage[#1]{xcolor}\n";
-    stream << "\\def\\ipeVariant{" << iVariant.string() << "}\n";
     AttributeSeq colors;
     iCascade->allNames(EColor, colors);
     for (AttributeSeq::const_iterator it = colors.begin(); it != colors.end(); ++it) {

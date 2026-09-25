@@ -28,7 +28,7 @@
 
 --]]
 
-function MODEL:externalEditor(d, field)
+local function external_editor_inner(model, d, field)
   local text = d:get(field)
   local fname = os.tmpname()
   if prefs.editable_textfile then
@@ -37,8 +37,8 @@ function MODEL:externalEditor(d, field)
   local f = io.open(fname, "w")
   f:write(text)
   f:close()
-  self.ui:waitDialog(string.format(prefs.external_editor, fname),
-		     "Waiting for external editor")
+  model:waitDialog(string.format(prefs.external_editor, fname),
+		   "Waiting for external editor")
   f = io.open(fname, "r")
   text = f:read("*all")
   f:close()
@@ -49,9 +49,18 @@ function MODEL:externalEditor(d, field)
   end
 end
 
+function MODEL:externalEditor(d, field)
+  external_editor_inner(self, d, field)
+end
+
+function MODEL:externalEditorNested(d, field)
+  self:nestedCall(external_editor_inner, self, d, field)
+end
+
 function MODEL:addEditorField(d, field)
   if prefs.external_editor then
-    d:addButton("editor", "&Editor", function (d) self:externalEditor(d, field) end)
+    d:addButton("editor", "&Editor",
+		function (d) self:externalEditorNested(d, field) end)
   end
 end
 
@@ -962,7 +971,7 @@ function MODEL:createText(mode, pos, width, pinned)
     d:setEnabled("style", false)
   end
   if prefs.auto_external_editor then
-    externalEditor(d, "text")
+    self:externalEditor(d, "text")
   end
   if ((prefs.auto_external_editor and prefs.editor_closes_dialog)
     or d:execute(prefs.editor_size)) then
@@ -1453,7 +1462,7 @@ function MODEL:action_edit_text(prim, obj)
     d:set("size", data.size)
   end
   if prefs.auto_external_editor then
-    externalEditor(d, "text")
+    self:externalEditor(d, "text")
   end
   if ((prefs.auto_external_editor and prefs.editor_closes_dialog)
     or d:execute(prefs.editor_size)) then
@@ -1513,7 +1522,7 @@ function MODEL:action_edit_group_text(prim, obj)
   d:set("text", tobj:text())
   d:set("ignore-escape", "text", tobj:text())
   if prefs.auto_external_editor then
-    externalEditor(d, "text")
+    self:externalEditor(d, "text")
   end
   if ((prefs.auto_external_editor and prefs.editor_closes_dialog)
     or d:execute(prefs.editor_size)) then

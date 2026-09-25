@@ -2260,7 +2260,7 @@ function MODEL:saction_edit_as_xml()
   d:setStretch("row", 1, 1);
   d:set("xml", xml)
   if prefs.auto_external_editor then
-    externalEditor(d, "xml")
+    self:externalEditor(d, "xml")
   end
   if ((prefs.auto_external_editor and prefs.editor_closes_dialog)
     or d:execute(prefs.editor_size)) then
@@ -2761,12 +2761,31 @@ local function sheets_add(d, dd)
   dd.modified = true
 end
 
-local function sheets_edit(d, dd)
-  if not prefs.external_editor then
-    dd.model:warning("Cannot edit stylesheet",
-		     "No external editor defined")
+local function sheets_add_list_inner(d, dd)
+  local i = d:get("list")
+  if not i then i = 1 end
+  local name = dd.available[d:get("addlist")]
+  local s, s1 = dd.model:findStyle(name, nil)
+  if not s then
+    dd.model:warning("Cannot load stylesheet", "No style sheet found for '" .. name .. "'")
     return
   end
+  local sheet, msg = ipe.Sheet(s1)
+  if not sheet then
+    dd.model:warning("Cannot load stylesheet", msg)
+    return
+  end
+  table.insert(dd.list, i, sheet)
+  d:set("list", sheets_namelist(dd.list))
+  d:set("list", i)
+  dd.modified = true
+end
+
+local function sheets_add_list(d, dd)
+  dd.model:nestedCall(sheets_add_list_inner, d, dd)
+end
+
+local function sheets_edit_inner(d, dd)
   local i = d:get("list")
   if not i or dd.list[i]:isStandard() then return end
   local data = dd.list[i]:xml(true)
@@ -2797,6 +2816,15 @@ local function sheets_edit(d, dd)
   d:set("list", i)
   dd.modified = true
   os.remove(fname)
+end
+
+local function sheets_edit(d, dd)
+  if not prefs.external_editor then
+    dd.model:warning("Cannot edit stylesheet",
+		     "No external editor defined")
+    return
+  end
+  dd.model:nestedCall(sheets_edit_inner, d, dd)
 end
 
 local function sheets_del(d, dd)
@@ -2862,29 +2890,35 @@ end
 
 function MODEL:action_style_sheets()
   local sheets = self.doc:sheets()
+  local available = self:findAllStyleSheets()
+  table.sort(available)
   local dd = { list = {},
 	       model = self,
-	       modified = false
+	       modified = false,
+	       available = available,
 	     }
   for i = 1,sheets:count() do
     dd.list[i] = sheets:sheet(i):clone()
   end
   local d = ipeui.Dialog(self.ui:win(), "Ipe style sheets")
   d:add("label1", "label", { label="Style sheets"}, 1, 1, 1, 4)
-  d:add("list", "list", sheets_namelist(dd.list), 2, 1, 7, 3)
+  d:add("addlist", "combo", available, 2, 1)
+  d:add("add1", "button",
+	{ label="&Add", action=function (d) sheets_add_list(d, dd) end }, 2, 4)
+  d:add("list", "list", sheets_namelist(dd.list), 3, 1, 8, 3)
   d:add("del", "button",
-	{ label="Del", action=function (d) sheets_del(d, dd) end }, 2, 4)
+	{ label="Del", action=function (d) sheets_del(d, dd) end }, 3, 4)
   d:add("up", "button",
-	{ label="&Up", action=function (d) sheets_up(d, dd) end }, 3, 4)
+	{ label="&Up", action=function (d) sheets_up(d, dd) end }, 4, 4)
   d:add("down", "button",
-	{ label="&Down", action=function (d) sheets_down(d, dd) end }, 4, 4)
+	{ label="&Down", action=function (d) sheets_down(d, dd) end }, 5, 4)
   if config.toolkit ~= "htmljs" then
   d:add("add", "button",
-	{ label="&Add", action=function (d) sheets_add(d, dd) end }, 5, 4)
+	{ label="&Add file", action=function (d) sheets_add(d, dd) end }, 6, 4)
   d:add("edit", "button",
-	{ label="Edit", action=function (d) sheets_edit(d, dd) end }, 6, 4)
+	{ label="Edit", action=function (d) sheets_edit(d, dd) end }, 7, 4)
   d:add("save", "button",
-	{ label="&Save", action=function (d) sheets_save(d, dd) end }, 7, 4)
+	{ label="&Save", action=function (d) sheets_save(d, dd) end }, 8, 4)
   end
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
@@ -2897,58 +2931,6 @@ function MODEL:action_style_sheets()
   for i,s in ipairs(dd.list) do
     t.final:insert(i, s)
   end
-  t.undo = function (t, doc)
-	     t.final = doc:replaceSheets(t.original)
-	   end
-  t.redo = function (t, doc)
-	     t.original = doc:replaceSheets(t.final)
-	   end
-  self:register(t)
-  self:action_check_style()
-end
-
-----------------------------------------------------------------------
-
-function MODEL:action_add_style_sheets()
-  local d = ipeui.Dialog(self.ui:win(), "Ipe: add style sheets")
-  d:add("label", "label", { label="Names of sheets to add, separated by spaces" }, 0, 1)
-  local available = self:findAllStyleSheets()
-  table.sort(available)
-  d:add("available", "label", { label = "Available stylesheets: " ..
-				  table.concat(available, ", ") }, 0, 1)
-  d:add("sheets", "input", {}, 0, 1)
-  d:add("nobasic", "checkbox", { label="Remove basic stylesheet" }, 0, 1)
-  d:addButton("ok", "&Ok", "accept")
-  d:addButton("cancel", "&Cancel", "reject")
-  if not d:execute() then return end
-  self:preloadFileExists()
-  local final = self.doc:sheets():clone()
-  if d:get("nobasic") then
-    for i = 1,final:count() do
-      if final:sheet(i):name() == "basic" then
-	final:remove(i)
-	break
-      end
-    end
-  end
-  for name in string.gmatch(d:get("sheets"), "%S+") do
-    local s, s1 = self:findStyle(name, nil)
-    if not s then
-      messageBox(self.ui:win(), "warning", "No style sheet found for '" .. name .. "'")
-      return
-    end
-    self:preloadFile(s)
-    local nsheet = ipe.Sheet(s1)
-    if not nsheet then
-      messageBox(self.ui:win(), "warning", "Failed to load style sheet '" .. s .. "'")
-      return
-    end
-    final:insert(1, nsheet)
-  end
-  local t = { label="add style sheets",
-	      final = final,
-	      style_sheets_changed = true,
-	    }
   t.undo = function (t, doc)
 	     t.final = doc:replaceSheets(t.original)
 	   end
@@ -3004,7 +2986,7 @@ function MODEL:action_document_properties()
 	      final = {},
 	    }
   for n in pairs(p) do
-    if n == "creator" or n == "created" or n == "modified" then
+    if n == "creator" or n == "created" or n == "modified" or n == "variant" then
       t.final[n] = p[n]
     elseif n == "tex" then
       t.final[n] = engines[d:get(n)]

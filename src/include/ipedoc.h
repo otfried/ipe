@@ -83,7 +83,7 @@ public:
 	String iModified;
 	//! Program that created this document (e.g. "Ipe 7.5").
 	String iCreator;
-	Attribute iVariant;
+	Attribute iVariant{Attribute::UNDEFINED()};
     };
 
     //! Errors that can happen while loading documents

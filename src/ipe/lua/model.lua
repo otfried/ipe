@@ -195,8 +195,26 @@ end
 
 -- called by the UI to resume when Lua has yielded in an async operation
 function MODEL:resumeLua(...)
+  if self.nested_wait and coroutine.status(self.nested_wait) == "suspended" then
+    local s = self.nested_wait
+    self.nested_wait = nil
+    coroutine.resume(s, ...)
+    return
+  end
   if self.current_action then coroutine.resume(self.current_action, ...) end
 end
+
+function MODEL:nestedCall(f, ...)
+  self.nested_wait = coroutine.create(f)
+  coroutine.resume(self.nested_wait, ...)
+end
+
+function MODEL:waitDialog(cmd, text)
+  local done = self.ui:waitDialog(cmd, text)
+  if not done then coroutine.yield() end
+end
+
+------------------------------------------------------------------------------------------
 
 function MODEL:preloadFile(fname)
   if config.platform == "electron" then
@@ -230,7 +248,7 @@ function MODEL:clipboard(allowBitmap)
   end
 end
 
-----------------------------------------------------------------------
+------------------------------------------------------------------------------------------
 
 function MODEL:resetGridSize()
   self.snap.gridsize = prefs.initial.grid_size
@@ -299,11 +317,6 @@ function MODEL:getDouble(caption, label, value, minv, maxv)
       return n
     end
   end
-end
-
-function MODEL:waitDialog(cmd, text)
-  local done = self.ui:waitDialog(cmd, text)
-  if not done then coroutine.yield() end
 end
 
 ----------------------------------------------------------------------
@@ -381,7 +394,12 @@ end
 
 -- show a warning messageBox
 function MODEL:warning(text, details)
-  messageBox(self.ui:win(), "warning", text, details)
+  if coroutine.status(self.current_action) == "suspended" then
+    -- this is called from a dialog
+    self:nestedCall(messageBox, self.ui:win(), "warning", text, details)
+  else
+    messageBox(self.ui:win(), "warning", text, details)
+  end
 end
 
 function numberFormatForMax(m)
@@ -1179,4 +1197,3 @@ function MODEL:findStyle(w, dir)
 end
 
 ----------------------------------------------------------------------
-

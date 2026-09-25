@@ -99,7 +99,7 @@ else
   end
   -- For Emacs users:
   -- prefs.external_editor = "emacsclient %s"
-  -- if you use Visual studio, you make like the following:
+  -- if you use Visual studio, you may like the following:
   -- prefs.external_editor = "code --wait %s"
 end
 

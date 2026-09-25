@@ -462,7 +462,8 @@ static val createPageItems(Document * doc, int pno, int thumbWidth) {
 	    std::string fn = std::format("/tmp/pages/select-{}.png", i);
 	    r.saveRender(Thumbnail::EPNG, fn.c_str(), p, p->countViews() - 1, zoom);
 	    if (!p->title(doc->variant()).empty())
-		item.set("label", std::format("{}: {}", i + 1, p->title(doc->variant()).z()));
+		item.set("label",
+			 std::format("{}: {}", i + 1, p->title(doc->variant()).z()));
 	    else
 		item.set("label", std::format("Page {}", i + 1));
 	    item.set("marked", p->marked());
