@@ -384,7 +384,7 @@ void MainWindow::closeEvent(QCloseEvent * event) {
 
 static const char * const aboutText =
     "<qt><h1>IpePresenter %d.%d.%d</h1>"
-    "<p>Copyright (c) 2020-2024 Otfried Cheong</p>"
+    "<p>Copyright (c) 2020-2026 Otfried Cheong</p>"
     "<p>A presentation tool for giving PDF presentations "
     "created in Ipe or using beamer.</p>"
     "<p>Originally invented by Dmitriy Morozov, "

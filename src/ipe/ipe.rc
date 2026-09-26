@@ -21,7 +21,7 @@ BEGIN
       VALUE "FileDescription", "Ipe drawing editor\0"
       VALUE "FileVersion", "7.3.1\0"
       VALUE "InternalName", "Ipe\0"
-      VALUE "LegalCopyright", "Copyright (c) 1993-2024\0"
+      VALUE "LegalCopyright", "Copyright (c) 1993-2026\0"
       VALUE "OriginalFilename", "Ipe.exe\0"
       VALUE "ProductName", "Ipe\0"
       VALUE "ProductVersion", "7.3.1\0"

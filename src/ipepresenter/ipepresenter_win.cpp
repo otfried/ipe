@@ -465,7 +465,7 @@ void AppUi::browseLaunch(bool launch, String dest) {
 
 static const char * const aboutText =
     "IpePresenter %d.%d.%d\n\n"
-    "Copyright (c) 2020-2024 Otfried Cheong\n\n"
+    "Copyright (c) 2020-2026 Otfried Cheong\n\n"
     "A presentation tool for giving PDF presentations "
     "created in Ipe or using beamer.\n"
     "Originally invented by Dmitriy Morozov, "
