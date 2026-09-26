@@ -6,6 +6,9 @@ on:
       - 'src/**'
       - '!src/ipe-vscode/**'
       - '!src/ipe-web/**'
+      - '!src/**/*_cocoa.*'
+      - '!src/**/*_win.*'
+      - '!src/**/*_js.*'
 jobs:
   BuildQt2404:
     runs-on: ubuntu-24.04

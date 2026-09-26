@@ -63,7 +63,7 @@ NSSize thumbnail_size;
 	else
 	    return [NSString stringWithFormat:@"%d: %@", index + 1, C2N(t.z())];
     } else {
-	String t = self.doc->page(index)->title();
+	String t = self.doc->page(index)->title(self.doc->variant());
 	if (t.empty())
 	    return [NSString stringWithFormat:@"Page %d", index + 1];
 	else
