@@ -60,9 +60,10 @@ Detailed instructions
      and PS backend (they are enabled by default), all others are
      optional (disable the X11 backends to create a smaller library).
 
- * The Lua language (version 5.3 or 5.4)
+ * The Lua language (version 5.3 - 5.5)
 
-   Lua is an embeddable scripting language. Ipe requires Lua 5.3 or 5.4.
+   Lua is an embeddable scripting language. Ipe requires at least Lua
+   5.3 is known to work until Lua 5.5.
 
    Download the prebuild binaries from 
       http://luabinaries.sourceforge.net/download.html

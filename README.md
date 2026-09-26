@@ -17,11 +17,21 @@ See the [home page](https://ipe.otfried.org/) or the
 You can try Ipe, without downloading anything,
 in the [web edition](https://ipe-web.otfried.org).
 
+This is nearly always the cutting edge development version, and may
+have features you don't find in the downloads below. Those are updated
+only when a new version is released.
+
 #### Visual Studio Code extension
 
 Ipe is available as an extension that you can install in [Visual
-Studio Code](https://code.visualstudio.com/).  The same extension
-works across all platforms supported by VS Code.
+Studio Code](https://code.visualstudio.com/) or
+[VSCodium](https://vscodium.com/).  The same extension works across
+all platforms supported by VS Code/VSCodium.
+
+You find the extension on the [release
+page](https://github.com/otfried/ipe/releases).  Once we are out of
+beta testing, I plan to provide it through the VS Code and VSCodium
+market places.
 
 #### Windows
 
