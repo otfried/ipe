@@ -12,18 +12,27 @@ See the [home page](https://ipe.otfried.org/) or the
 
 ### Download Ipe
 
+#### Web Edition
+
 You can try Ipe, without downloading anything,
 in the [web edition](https://ipe-web.otfried.org).
 
+#### Visual Studio Code extension
+
+Ipe is available as an extension that you can install in [Visual
+Studio Code](https://code.visualstudio.com/).  The same extension
+works across all platforms supported by VS Code.
+
 #### Windows
 
-A Windows package for Ipe is available on the [home page](https://ipe.otfried.org/). 
-You only need to unpack the archive, and you are ready to run.
+A Windows package for Ipe is available on the [release
+page](https://github.com/otfried/ipe/releases).  You only need to
+unpack the archive, and you are ready to run.
 
 #### MacOS
 
-You can download the MacOS application directly from the [home
-page](https://ipe.otfried.org/).
+You can download the MacOS application directly from the [release
+page](https://github.com/otfried/ipe/releases).
 
 Open it, drag `Ipe.app` to your computer, and you are ready to run.
 
@@ -62,8 +71,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 Ipe uses the Zlib library (www.gzip.org/zlib), the Freetype 2 library
 (www.freetype.org), the Cairo library (www.cairographics.org), the
-libspiro library (http://github.com/fontforge/libspiro), as well as some code
-from Xpdf (www.foolabs.com/xpdf).  Ipe contains the Lua 5.4
+libspiro library (http://github.com/fontforge/libspiro), as well as
+some code from Xpdf (www.foolabs.com/xpdf).  Ipe contains the Lua 5.5
 interpreter (www.lua.org), and relies on Pdflatex for rendering text,
 either locally on your computer or in a cloud service.
 
