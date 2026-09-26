@@ -685,22 +685,18 @@ AppUi::AppUi(lua_State * L0, int model)
     iZoomIndicator.drawsBackground = NO;
 
     makeSnapBar();
-    makeVariantBar();
 
     addToLayout(iContent, iView);
     addToLayout(iContent, iPropertiesBox);
     addToLayout(iContent, iLayerBox);
     addToLayout(iContent, iSnapBar);
-    addToLayout(iContent, iVariantBar);
     addToLayout(iContent, iStatus);
     addToLayout(iContent, iSnapIndicator);
     addToLayout(iContent, iMouseIndicator);
     addToLayout(iContent, iZoomIndicator);
 
     layout(iSnapBar, iContent, "t=t");
-    layout(iVariantBar, iContent, "t=t");
-    layout(iVariantBar, iContent, "r=r");
-    layout(iSnapBar, iVariantBar, "r=l");
+    layout(iSnapBar, iContent, "r=r");
     layout(iSnapBar, iView, "l=l");
     layout(iPropertiesBox, iContent, "l=l");
     layout(iPropertiesBox, iContent, "t=t");
@@ -942,6 +938,14 @@ void AppUi::makeSnapBar() {
     iSelector[EUiAngleSize].tag = EUiAngleSize;
     addToLayout(iSnapBar, iSelector[EUiAngleSize]);
 
+    iSelector[EUiVariant] =
+	[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 10, 40) pullsDown:NO];
+    iSelector[EUiVariant].toolTip = @"Variant to display and to use for new text";
+    iSelector[EUiVariant].target = iDelegate;
+    iSelector[EUiVariant].action = @selector(ipeSelectorChanged:);
+    iSelector[EUiVariant].tag = EUiVariant;
+    addToLayout(iSnapBar, iSelector[EUiVariant]);
+
     // Order: "vtx", "ctl", "bd", "int", "grid", "angle", "custom", "auto", "visible"
     for (int i = 0; i < NUMSNAPBUTTONS; ++i) {
 	layout(iSnapButton[i], iSnapBar, "t=t", MARGIN);
@@ -950,10 +954,13 @@ void AppUi::makeSnapBar() {
     }
     layout(iSelector[EUiGridSize], iSnapBar, "t=t", MARGIN);
     layout(iSelector[EUiAngleSize], iSnapBar, "t=t", MARGIN);
+    layout(iSelector[EUiVariant], iSnapBar, "t=t", MARGIN);
     layout(iSnapBar, iSelector[EUiGridSize], "b>b", MARGIN);
     layout(iSnapBar, iSelector[EUiAngleSize], "b>b", MARGIN);
+    layout(iSnapBar, iSelector[EUiVariant], "b>b", MARGIN);
     layout(iSelector[EUiGridSize], nil, "w>0", 160);
     layout(iSelector[EUiAngleSize], nil, "w>0", 100);
+    layout(iSelector[EUiVariant], nil, "w>0", 20);
 
     layout(iSnapButton[0], iSnapBar, "l=l", MARGIN);
     layout(iSelector[EUiGridSize], iSnapButton[4], "l=r", PAD);
@@ -961,19 +968,11 @@ void AppUi::makeSnapBar() {
     layout(iSelector[EUiAngleSize], iSnapButton[5], "l=r", PAD);
     layout(iSnapButton[6], iSelector[EUiAngleSize], "l=r", PAD);
     layout(iSnapButton[7], iSnapButton[6], "l=r", PAD);
-    layout(iSnapButton[8], iSnapButton[7], "l>r", PAD);
+    layout(iSelector[EUiVariant], iSnapButton[7], "l=r", PAD);
+    layout(iSnapButton[8], iSelector[EUiVariant], "l>r", PAD);
+    // layout(iSnapButton[8], iSnapButton[7], "l>r", PAD);
     layout(iSnapBar, iSnapButton[8], "r=r", MARGIN);
-}
 
-void AppUi::makeVariantBar() {
-    iVariantBar = [[NSView alloc] initWithFrame:NSMakeRect(0., 0., 100., 32.)];
-    iSelector[EUiVariant] =
-	[[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 100, 40) pullsDown:NO];
-    iSelector[EUiVariant].toolTip = @"Variant to display and to use for new text";
-    iSelector[EUiVariant].target = iDelegate;
-    iSelector[EUiVariant].action = @selector(ipeSelectorChanged:);
-    iSelector[EUiVariant].tag = EUiVariant;
-    addToLayout(iVariantBar, iSelector[EUiVariant]);
 }
 
 // --------------------------------------------------------------------
@@ -1008,7 +1007,7 @@ void AppUi::addCombo(int sel, String s) {
     iInUiUpdate = true;
     [iSelector[sel] addItemWithTitle:I2N(s)];
     if (sel == EUiVariant)
-	[iVariantBar setHidden:(iComboContents[EUiVariant].size() <= 1)];
+      [iSelector[sel] setHidden:(iComboContents[EUiVariant].size() <= 1)];
     iInUiUpdate = false;
 }
 
