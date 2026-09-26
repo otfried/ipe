@@ -145,6 +145,7 @@ ifdef WIN32
   dll_symlinks   = 
   install_symlinks = 
   ipelet_target  = $(BUILDDIR)/ipelets/$1.dll
+  check_lua      = luac -p
 
 ifeq ($(IPECROSS),i686)
   BUILDDIR       = $(IPESRCDIR)/../mingw32
@@ -224,6 +225,7 @@ ifdef MACOS
   dll_symlinks    = ln -sf lib$1.$(IPEVERS).dylib $(buildlib)/lib$1.dylib
   install_symlinks = ln -sf lib$1.$(IPEVERS).dylib \
 		$(INSTALL_ROOT)$(IPELIBDIR)/lib$1.dylib
+  check_lua      = echo
 else
 ifdef IPEWASM
   # -------------------- emscripten --------------------
@@ -237,6 +239,7 @@ ifdef IPEWASM
   CXXFLAGS	 += -O3
   CPPFLAGS	 += -DIPEWASM
   IPEBUNDLE      = 1
+  check_lua      = luac -p
   ZLIB_CFLAGS    = --use-port=zlib
   ZLIB_LIBS      = --use-port=zlib
   PNG_CFLAGS     := -I$(IPEDEPS)/include/libpng16
@@ -271,6 +274,11 @@ endif
   buildbin       = $(BUILDDIR)/bin
   buildipelets   = $(BUILDDIR)/ipelets
   ipelet_target  = $(BUILDDIR)/ipelets/$1.so
+ifdef IPESTRICT
+  check_lua      = luac -p
+else
+  check_lua      = echo
+endif
 endif
 endif
 

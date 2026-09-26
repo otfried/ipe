@@ -29,7 +29,10 @@ endif
 
 all: $(TARGET)
 
-sources	= tools.cpp appui.cpp uilua.cpp 
+sources	= tools.cpp appui.cpp uilua.cpp
+luasources = lua/main.lua lua/model.lua lua/actions.lua \
+	lua/tools.lua lua/properties.lua lua/editpath.lua \
+	lua/prefs.lua lua/shortcuts.lua lua/mouse.lua
 qt_sources = main_qt.cpp appui_qt.cpp controls_qt.cpp 
 moc_headers = appui_qt.h controls_qt.h waitdlg_qt.h
 win_sources = main_win.cpp appui_win.cpp pathview_win.cpp pagesorter_win.cpp
@@ -63,14 +66,20 @@ else
 nib = 
 endif
 
-$(TARGET): $(objects) $(resource) $(nib) Makefile $(WASM_LIBS)
-	luac -p lua/*.lua
+luastamp = $(OBJDIR)/luacheck.stamp
+
+$(TARGET): $(objects) $(resource) $(nib) Makefile $(WASM_LIBS) | $(luastamp)
 	$(MAKE_BINDIR)
 	$(MAKE_ASSETS)
 	$(CXX) $(LDFLAGS) -o $@ $(objects) $(resource) $(LIBS)
 
+$(luastamp): $(luasources)
+	$(check_lua) $?
+	@mkdir -p $(dir $@)
+	@touch $@
+
 clean:
-	@-rm -f $(objects) $(resource) $(TARGET) $(DEPEND)
+	@-rm -f $(objects) $(resource) $(TARGET) $(DEPEND) $(luastamp)
 
 $(DEPEND): Makefile
 	$(MAKE_DEPEND)
