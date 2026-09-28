@@ -112,12 +112,6 @@ else
   prefs.editable_textfile = nil
 end
 
-if config.platform == "apple" or config.toolkit == "htmljs" or config.toolkit == "gtk" then
-  prefs.delete_key = "\8"
-else
-  prefs.delete_key = "\127"
-end
-
 -- Where the tools should be placed (left or right)
 -- and which ones should be displayed on start-up
 -- tools_placement is only used with Qt toolkit

@@ -285,7 +285,7 @@ function LINESTOOL:explain()
 end
 
 function LINESTOOL:key(text, modifiers)
-  if text == prefs.delete_key then  -- Delete
+  if text == "\8" or text == "\127" then  -- Backspace or Delete
     if #self.v > 2 then
       table.remove(self.v)
       table.remove(self.t)
@@ -501,7 +501,7 @@ function SPLINEGONTOOL:mouseMove()
 end
 
 function SPLINEGONTOOL:key(text, modifiers)
-  if text == prefs.delete_key then  -- Delete
+  if text == "\8" or text == "\127" then  -- Backspace or Delete
     if #self.v > 2 then
       table.remove(self.v)
       self:compute(true)
