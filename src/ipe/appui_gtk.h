@@ -146,7 +146,8 @@ private:
 private:
     // -------------------- icons --------------------
     GdkPixbuf * prefsPixbuf(String name, int size);
-    void setButtonIcon(GtkWidget * button, String name, int size);
+    void setButtonIcon(GtkWidget * button, String name, int size,
+		       const char * cssName = nullptr);
     void setButtonColorIcon(GtkWidget * button, Color color, int size);
     virtual void setButtonColor(int sel, Color color);
     virtual void setPathView(const AllAttributes & all, Cascade * sheet);
@@ -169,8 +170,6 @@ private:
 
 private:
     GtkWidget * iWindow;
-
-    GtkCssProvider * iCssProvider;
 
     // one GMenu per top-level menu, plus the section currently being filled
     // (GMenu has no separator concept, only nested "sections")

@@ -121,18 +121,6 @@ static bool parse_accelerator(String s, guint & keyval, GdkModifierType & mods) 
     return keyval != 0 && keyval != GDK_KEY_VoidSymbol;
 }
 
-static void ensureBookmarkCss() {
-    static bool loaded = false;
-    if (loaded) return;
-    loaded = true;
-    GtkCssProvider * provider = gtk_css_provider_new();
-    gtk_css_provider_load_from_string(provider, ".bookmark-marked { color: blue; }");
-    gtk_style_context_add_provider_for_display(gdk_display_get_default(),
-					       GTK_STYLE_PROVIDER(provider),
-					       GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    g_object_unref(provider);
-}
-
 static GtkWidget * makeFramed(const char * title, GtkWidget * child) {
     gtk_widget_set_margin_start(child, 4);
     gtk_widget_set_margin_end(child, 4);
@@ -189,7 +177,8 @@ GdkPixbuf * AppUi::prefsPixbuf(String name, int size) {
     return pixbuf;
 }
 
-void AppUi::setButtonIcon(GtkWidget * button, String name, int size) {
+void AppUi::setButtonIcon(GtkWidget * button, String name, int size,
+			  const char * cssName) {
     GdkPixbuf * pixbuf = prefsPixbuf(name, size);
     if (!pixbuf) return;
     GdkTexture * texture = textureFromPixbuf(pixbuf);
@@ -197,7 +186,15 @@ void AppUi::setButtonIcon(GtkWidget * button, String name, int size) {
     gtk_image_set_pixel_size(GTK_IMAGE(image), size);
     g_object_unref(texture);
     gtk_button_set_child(GTK_BUTTON(button), image);
-    gtk_widget_add_css_class(button, "tight-button");
+    ipeDebug("Button %s", name.z());
+    if (cssName) {
+	gtk_widget_add_css_class(button, cssName);
+    } else if (name.hasPrefix("snap")) {
+	gtk_widget_add_css_class(button, "snap");
+    } else if (name.hasPrefix("mode_")) {
+	gtk_widget_add_css_class(button, "mode");
+    } else
+	gtk_widget_add_css_class(button, "action");
 }
 
 void AppUi::setButtonColorIcon(GtkWidget * button, Color color, int size) {
@@ -212,7 +209,7 @@ void AppUi::setButtonColorIcon(GtkWidget * button, Color color, int size) {
     gtk_image_set_pixel_size(GTK_IMAGE(image), size);
     g_object_unref(texture);
     gtk_button_set_child(GTK_BUTTON(button), image);
-    gtk_widget_add_css_class(button, "tight-button");
+    gtk_widget_add_css_class(button, "color");
 }
 
 void AppUi::setButtonColor(int sel, Color color) {
@@ -595,9 +592,11 @@ void AppUi::abort_cb(GtkWidget *, gpointer data) { ((AppUi *)data)->action("stop
 // --------------------------------------------------------------------
 // combo boxes (GtkDropDown)
 
-static GtkWidget * newTextDropDown() {
+static GtkWidget * newTextDropDown(const char * cssClass) {
     GtkStringList * list = gtk_string_list_new(nullptr);
-    return gtk_drop_down_new(G_LIST_MODEL(list), nullptr);
+    GtkWidget * w = gtk_drop_down_new(G_LIST_MODEL(list), nullptr);
+    gtk_widget_add_css_class(w, cssClass);
+    return w;
 }
 
 void AppUi::setup_combo_item_cb(GtkListItemFactory *, GtkListItem * item, gpointer) {
@@ -638,6 +637,7 @@ static GtkWidget * newColorDropDown() {
     g_signal_connect(factory, "bind", G_CALLBACK(AppUi::bind_combo_item_cb), nullptr);
     gtk_drop_down_set_factory(GTK_DROP_DOWN(dd), factory);
     g_object_unref(factory);
+    gtk_widget_add_css_class(dd, "color");
     return dd;
 }
 
@@ -803,7 +803,6 @@ void AppUi::bookmark_row_activated_cb(GtkListBox *, GtkListBoxRow * row, gpointe
 void AppUi::bookmarkSelected(int index) { luaBookmarkSelected(index); }
 
 void AppUi::setBookmarks(int no, const String * s) {
-    ensureBookmarkCss();
     GtkWidget * child;
     while ((child = gtk_widget_get_first_child(iBookmarks)) != nullptr)
 	gtk_list_box_remove(GTK_LIST_BOX(iBookmarks), child);
@@ -866,10 +865,10 @@ void AppUi::action(String name) {
 	aboutIpe();
     } else {
 	if (name.left(5) == "mode_") {
-	    GdkTexture * texture = textureFromPixbuf(prefsPixbuf(name, 28));
+	    GdkTexture * texture = textureFromPixbuf(prefsPixbuf(name, 22));
 	    gtk_image_set_from_paintable(GTK_IMAGE(iModeIndicator),
 					 GDK_PAINTABLE(texture));
-	    gtk_image_set_pixel_size(GTK_IMAGE(iModeIndicator), 28);
+	    gtk_image_set_pixel_size(GTK_IMAGE(iModeIndicator), 22);
 	    g_object_unref(texture);
 	}
 	luaAction(name);
@@ -1134,10 +1133,10 @@ AppUi::AppUi(lua_State * L0, int model)
     iWindow = gtk_application_window_new(ipeApp);
     g_signal_connect(iWindow, "close-request", G_CALLBACK(close_request_cb), this);
 
-    iSnapTools = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
-    iVariantTools = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+    iSnapTools = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    iVariantTools = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     iEditTools = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    iObjectTools = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+    iObjectTools = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
     iSelectLayerAction = g_simple_action_new("selectlayer", G_VARIANT_TYPE_STRING);
     g_object_set_data_full(G_OBJECT(iSelectLayerAction), "ipe-prefix",
@@ -1156,30 +1155,17 @@ AppUi::AppUi(lua_State * L0, int model)
     g_signal_connect(iRecentFileAction, "activate", G_CALLBACK(recent_file_cb), this);
     g_action_map_add_action(G_ACTION_MAP(iWindow), G_ACTION(iRecentFileAction));
 
-    // TODO: merge with bookmark CSS
-    iCssProvider = gtk_css_provider_new();
-
-    gtk_css_provider_load_from_string(iCssProvider,
-				      "button.tight-button {"
-				      "  padding: 2px 2px;"
-				      "  min-height: 0;"
-				      "  min-width: 0;"
-				      "}"
-				      "dropdown {"
-				      "  padding-top: 2px;"
-				      "  padding-bottom: 2px;"
-				      "  min-height: 0;"
-				      "}"
-				      // Reduce padding on the internal button container
-				      "dropdown > button {"
-				      "  padding-top: 6px;"
-				      "  padding-bottom: 6px;"
-				      "  min-height: 0;"
-				      "}");
-
-    gtk_style_context_add_provider_for_display(gdk_display_get_default(),
-					       GTK_STYLE_PROVIDER(iCssProvider),
-					       GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    lua_getglobal(L, "prefs");
+    lua_getfield(L, -1, "visual_css");
+    if (lua_isstring(L, -1)) {
+	GtkCssProvider * cssProvider = gtk_css_provider_new();
+	gtk_css_provider_load_from_string(cssProvider, lua_tolstring(L, -1, nullptr));
+	gtk_style_context_add_provider_for_display(
+	    gdk_display_get_default(), GTK_STYLE_PROVIDER(cssProvider),
+	    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	g_object_unref(cssProvider);
+    }
+    lua_pop(L, 2);
 
     buildMenus();
     for (int i = 0; i < ENumMenu; ++i) flushSection(i);
@@ -1234,32 +1220,20 @@ AppUi::AppUi(lua_State * L0, int model)
     gtk_widget_set_margin_bottom(row2, 4);
     gtk_box_append(GTK_BOX(vbox), row2);
 
-    iShiftKey = gtk_toggle_button_new();
-    setButtonIcon(iShiftKey, "shift_key", 22);
-    gtk_widget_set_tooltip_text(iShiftKey, "Shift key");
-    g_signal_connect(iShiftKey, "clicked", G_CALLBACK(shift_key_cb), this);
-    gtk_box_append(GTK_BOX(iEditTools), iShiftKey);
-
-    iAbortButton = gtk_button_new();
-    setButtonIcon(iAbortButton, "stop", 22);
-    gtk_widget_set_tooltip_text(iAbortButton, "Stop current operation");
-    g_signal_connect(iAbortButton, "clicked", G_CALLBACK(abort_cb), this);
-    gtk_box_append(GTK_BOX(iEditTools), iAbortButton);
-
     addSnap("snapvtx");
     addSnap("snapctl");
     addSnap("snapbd");
     addSnap("snapint");
     addSnap("snapgrid");
-    iSelector[EUiGridSize] = newTextDropDown();
+    iSelector[EUiGridSize] = newTextDropDown("bar");
     gtk_box_append(GTK_BOX(iSnapTools), iSelector[EUiGridSize]);
     addSnap("snapangle");
-    iSelector[EUiAngleSize] = newTextDropDown();
+    iSelector[EUiAngleSize] = newTextDropDown("bar");
     gtk_box_append(GTK_BOX(iSnapTools), iSelector[EUiAngleSize]);
     addSnap("snapcustom");
     addSnap("snapauto");
 
-    iSelector[EUiVariant] = newTextDropDown();
+    iSelector[EUiVariant] = newTextDropDown("bar");
     gtk_box_append(GTK_BOX(iVariantTools), iSelector[EUiVariant]);
 
     addEdit("copy");
@@ -1275,9 +1249,22 @@ AppUi::AppUi(lua_State * L0, int model)
     addEdit("fit_width");
     addEdit("grid_visible");
 
+    iShiftKey = gtk_toggle_button_new();
+    setButtonIcon(iShiftKey, "shift_key", 22);
+    gtk_widget_set_tooltip_text(iShiftKey, "Shift key");
+    g_signal_connect(iShiftKey, "clicked", G_CALLBACK(shift_key_cb), this);
+    gtk_box_append(GTK_BOX(iEditTools), iShiftKey);
+
+    iAbortButton = gtk_button_new();
+    setButtonIcon(iAbortButton, "stop", 22);
+    gtk_widget_set_tooltip_text(iAbortButton, "Stop current operation");
+    g_signal_connect(iAbortButton, "clicked", G_CALLBACK(abort_cb), this);
+    gtk_box_append(GTK_BOX(iEditTools), iAbortButton);
+
     for (int i = 0; i < EUiView; ++i) {
 	if (i != EUiGridSize && i != EUiAngleSize && i != EUiVariant)
-	    iSelector[i] = isColorSelector(i) ? newColorDropDown() : newTextDropDown();
+	    iSelector[i] =
+		isColorSelector(i) ? newColorDropDown() : newTextDropDown("properties");
 	g_object_set_data(G_OBJECT(iSelector[i]), "ipe-sel", GINT_TO_POINTER(i));
 	g_signal_connect(iSelector[i], "notify::selected", G_CALLBACK(combo_changed_cb),
 			 this);
@@ -1305,9 +1292,9 @@ AppUi::AppUi(lua_State * L0, int model)
     }
     setButtonColorIcon(iButton[EUiStroke], Color(1000, 0, 0), 16);
     setButtonColorIcon(iButton[EUiFill], Color(1000, 1000, 0), 16);
-    setButtonIcon(iButton[EUiPen], "pen", 22);
-    setButtonIcon(iButton[EUiTextSize], "mode_label", 22);
-    setButtonIcon(iButton[EUiSymbolSize], "mode_marks", 22);
+    setButtonIcon(iButton[EUiPen], "pen", 16, "absolute");
+    setButtonIcon(iButton[EUiTextSize], "mode_label", 16, "absolute");
+    setButtonIcon(iButton[EUiSymbolSize], "mode_marks", 16, "absolute");
     gtk_widget_set_tooltip_text(iButton[EUiStroke], "Absolute stroke color");
     gtk_widget_set_tooltip_text(iButton[EUiFill], "Absolute fill color");
     gtk_widget_set_tooltip_text(iButton[EUiPen], "Absolute pen width");

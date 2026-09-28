@@ -88,16 +88,16 @@ void Canvas::buttonHandler(double x, double y, GtkGestureClick * gesture, int nP
 }
 
 gboolean Canvas::keyHandler(guint keyval, guint keycode, GdkModifierType state) {
-    String key = gdk_keyval_name(keyval);
-    ipeDebug("Key pressed: %s (keyval: %u, keycode: %u)", key.z(), keyval, keycode);
+    String gKey = gdk_keyval_name(keyval);
+    ipeDebug("Key pressed: %s (keyval: %u, keycode: %u)", gKey.z(), keyval, keycode);
+    String key = gKey;
 
-    // TODO: add key translation
-    // need at least Escape -> \027
-    // space -> 0x20
-    // BackSpace -> \8
-    // Delete -> \127
-    // linestool : s a y
-    // TODO; remove delete_key from prefs, simply interpret both!
+    if (gKey == "Escape")
+	key = "\x1b";
+    else if (gKey == "BackSpace")
+	key = "\x08";
+    else if (gKey == "Delete")
+	key = "\x7f";
 
     if (iTool && iTool->key(key, convertModifiers(state) | iAdditionalModifiers))
 	return GDK_EVENT_STOP; // Event handled

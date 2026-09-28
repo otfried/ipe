@@ -476,3 +476,70 @@ else
 end
 
 ----------------------------------------------------------------------
+
+if config.toolkit == "gtk" then
+  prefs.visual_css = [[
+.bookmark-marked {
+  color: blue;
+}
+button.snap {
+  padding: 0px 4px;
+  min-height: 0;
+  min-width: 0;
+}
+button.mode {
+  padding: 4px 4px;
+  min-height: 0;
+  min-width: 0;
+}
+button.action {
+  padding: 0px 4px;
+  min-height: 0;
+  min-width: 0;
+}
+button.absolute {
+  padding: 0px 2px;
+  min-height: 0;
+  min-width: 0;
+}
+button.color {
+  padding: 0px 2px;
+  min-height: 0;
+  min-width: 0;
+}
+// items on the dropdown menu
+dropdown.bar {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  min-height: 0;
+}
+// the button being shown
+dropdown.bar > button {
+  padding-top: 0px;
+  padding-bottom: 0px;
+  min-height: 0;
+}
+dropdown.properties {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  min-height: 0;
+}
+dropdown.properties > button {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  min-height: 0;
+}
+dropdown.color {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  min-height: 0;
+}
+dropdown.color > button {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  min-height: 0;
+}
+]]
+end
+
+------------------------------------------------------------------------
