@@ -100,7 +100,7 @@ static void setup_globals(lua_State * L) {
 
 int mainloop(lua_State * L) {
     // Windows created from Lua before this point already keep the
-    // application alive (see AppUi::AppUi calling gtk_application_add_window)
+    // application alive (see AppUi::AppUi calling gtk_application_window_new)
     return g_application_run(G_APPLICATION(ipeApp), 0, nullptr);
 }
 
@@ -109,9 +109,11 @@ static void on_activate(GApplication *, gpointer) { /* nothing to do */ }
 
 int main(int argc, char * argv[]) {
     Platform::initLib(IPELIB_VERSION);
+    // GTK4's gtk_init() takes no argv, so prgname (used for WM_CLASS / fallback app_id) is unset
+    g_set_prgname("org.otfried.Ipe");
     gtk_init();
 
-    ipeApp = gtk_application_new(nullptr, G_APPLICATION_NON_UNIQUE);
+    ipeApp = gtk_application_new("org.otfried.Ipe", G_APPLICATION_NON_UNIQUE);
     g_signal_connect(ipeApp, "activate", G_CALLBACK(on_activate), nullptr);
     GError * error = nullptr;
     if (!g_application_register(G_APPLICATION(ipeApp), nullptr, &error)) {

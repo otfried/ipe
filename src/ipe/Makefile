@@ -136,6 +136,20 @@ install: $(TARGET)
 	$(INSTALL_FILES) ../../artwork/icons.ipe $(INSTALL_ROOT)$(IPEICONDIR)
 	$(INSTALL_FILES) ../../artwork/ipe_logo.ipe $(INSTALL_ROOT)$(IPEICONDIR)
 	$(INSTALL_FILES) ../../artwork/ipe.iconset/icon_128x128.png $(INSTALL_ROOT)$(IPEICONDIR)
-
+	desktop-file-install --dir $(INSTALL_ROOT)$(IPEAPPLICATIONS) \
+		--set-key=Exec --set-value="$(IPEBINDIR)/ipe %F" \
+		../../doc/org.otfried.Ipe.desktop
+	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEAPPLICATIONICONS)/hicolor/16x16/apps
+	$(INSTALL_FILES) ../../artwork/hicolor/16x16/apps/org.otfried.Ipe.png \
+		$(INSTALL_ROOT)$(IPEAPPLICATIONICONS)/hicolor/16x16/apps
+	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEAPPLICATIONICONS)/hicolor/48x48/apps
+	$(INSTALL_FILES) ../../artwork/hicolor/48x48/apps/org.otfried.Ipe.png \
+		$(INSTALL_ROOT)$(IPEAPPLICATIONICONS)/hicolor/48x48/apps
+	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEAPPLICATIONICONS)/hicolor/256x256/apps
+	$(INSTALL_FILES) ../../artwork/hicolor/256x256/apps/org.otfried.Ipe.png \
+		$(INSTALL_ROOT)$(IPEAPPLICATIONICONS)/hicolor/256x256/apps
+	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEAPPLICATIONICONS)/hicolor/scalable/apps
+	$(INSTALL_FILES) ../../artwork/hicolor/scalable/apps/org.otfried.Ipe.svg \
+		$(INSTALL_ROOT)$(IPEAPPLICATIONICONS)/hicolor/scalable/apps
 
 # --------------------------------------------------------------------

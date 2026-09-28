@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Ipe
+Comment=Extensible drawing editor
+Exec=ipe %F
+Icon=org.otfried.Ipe
+Terminal=false
+Categories=Graphics;2DGraphics;VectorGraphics;
+MimeType=application/pdf;application/x-ipe;
+StartupWMClass=org.otfried.Ipe

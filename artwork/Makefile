@@ -10,9 +10,10 @@
 
 ipelogo = ipe_logo.ipe
 ICONSET = ipe.iconset
+DESKTOPICONS = hicolor
 IPERENDER ?= iperender
 
-GOAL ?= $(ICONSET)
+all: $(ICONSET) $(DESKTOPICONS)
 
 $(ICONSET): $(ipelogo)
 	mkdir -p $(ICONSET)
@@ -24,3 +25,16 @@ $(ICONSET): $(ipelogo)
 	$(IPERENDER) -png -resolution 1286 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_512x512.png
 	$(IPERENDER) -png -resolution 2570 -transparent -nocrop $(ipelogo) $(ICONSET)/icon_512x512@2x.png
 
+$(DESKTOPICONS): $(ipelogo)
+	mkdir -p $(DESKTOPICONS)/16x16/apps
+	mkdir -p $(DESKTOPICONS)/48x48/apps
+	mkdir -p $(DESKTOPICONS)/256x256/apps
+	mkdir -p $(DESKTOPICONS)/scalable/apps
+	$(IPERENDER) -png -resolution 41 -transparent -nocrop $(ipelogo) \
+		$(DESKTOPICONS)/16x16/apps/org.otfried.Ipe.png
+	$(IPERENDER) -png -resolution 122 -transparent -nocrop $(ipelogo) \
+		$(DESKTOPICONS)/48x48/apps/org.otfried.Ipe.png
+	$(IPERENDER) -png -resolution 644 -transparent -nocrop $(ipelogo) \
+		$(DESKTOPICONS)/256x256/apps/org.otfried.Ipe.png
+	$(IPERENDER) -svg -transparent -nocrop $(ipelogo) \
+		$(DESKTOPICONS)/scalable/apps/org.otfried.Ipe.svg

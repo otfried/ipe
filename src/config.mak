@@ -140,4 +140,12 @@ IPEDOCDIR ?= $(IPEPREFIX)/share/ipe/$(IPEVERS)/doc
 #
 IPEMANDIR ?= $(IPEPREFIX)/share/man/man1
 #
+# The Ipe.desktop file will be installed into IPEAPPLICATIONS
+#
+IPEAPPLICATIONS ?= $(IPEPREFIX)/share/applications
+#
+# The desktop icons will be installed into IPEAPPLICATIONICONS
+#
+IPEAPPLICATIONICONS ?= $(IPEPREFIX)/share/icons
+#
 # --------------------------------------------------------------------
