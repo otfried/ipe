@@ -784,8 +784,7 @@ thread is started for the command.  If this thread terminates quickly
 'true'.  Otherwise, the dialog appears, and the function immediately
 returns with value 'false'.  In this case, the calling Lua code should
 yield to return to the main event loop.  When the thread terminates,
-the method 'resumeLua' on the model of the ui object will be called to
-resume the incomplete action.
+it will resume the Lua coroutine.
 
 3. On JS, the dialog is modal on the normal browser event loop.
 'command' must be the name of a tex engine.  The method now calls the

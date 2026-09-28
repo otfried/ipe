@@ -61,13 +61,22 @@ function dialog1()
   print("combo is", d:get("combo"))
 end
 
-function show_menu(x, y)
+function showMenuInner(x, y)
   print("Show menu", x, y)
   local m = ipeui.Menu(appui)
   m:add("open", "Open")
   m:add("save", "Save")
   m:add("dialog 1", "Show dialog")
   m:add("messagebox", "MessageBox...")
+  m:add("submenu1", "Submenu 1", { "alpha", "beta", "gamma" })
+  m:add("submenu2", "Submenu 2", { "alpha", "beta", "gamma" },
+	{"January", "February", "March"})
+  m:add("submenu3", "Submenu 3", { "alpha", "beta", "gamma" },
+	function (i, item) return "select " .. item end)
+  m:add("submenu4", "Submenu 4", { "alpha", "beta", "gamma" }, nil, "beta")
+  m:add("submenu5", "Submenu 5", { "alpha", "beta", "gamma" },
+	function (i, item) return "Variant " .. item end,
+	"gamma")
   m:add("color", "Colors", { "red", "green", "blue" }, nil, 
 	function (i, item) 
 	  if item == "red" then return 1, 0, 0
@@ -75,14 +84,19 @@ function show_menu(x, y)
 	  else return 0, 0, 1
 	  end
 	end)
-  m:add("name", "Submenu", { "alpha", "beta", "gamma" },
-	function (i, item) return "select " .. item end,
-	"gamma")
   m:add("start timer", "Start timer")
   m:add("collect garbage", "Collect garbage")
   local r,s,t = m:execute(x, y)
   print(r,s,t)
   action(r)
+end
+
+-- stores coroutine
+local currentAction = nil
+
+function show_menu(x, y)
+  currentAction = coroutine.create(showMenuInner)
+  coroutine.resume(currentAction, x, y)
 end
 
 local timtab = { elapse = function (t) print("Timer", t) end }
@@ -105,9 +119,6 @@ function actionInner(cmd)
   end 
 end
 
--- stores coroutine
-local currentAction = nil
-
 function action(cmd)
   print("Action", cmd)
   if cmd == "collect garbage" then
@@ -124,5 +135,4 @@ end
 
 print("UI Test")
 print("Current date and time are", ipeui.currentDateTime())
-
 print("한글")

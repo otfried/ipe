@@ -49,6 +49,8 @@
 using namespace ipe;
 using namespace ipelua;
 
+extern void resumeLuaThread(lua_State * T, int nArgs);
+
 // --------------------------------------------------------------------
 // dynamic (rebuilt-on-change) submenus
 enum {
@@ -186,7 +188,6 @@ void AppUi::setButtonIcon(GtkWidget * button, String name, int size,
     gtk_image_set_pixel_size(GTK_IMAGE(image), size);
     g_object_unref(texture);
     gtk_button_set_child(GTK_BUTTON(button), image);
-    ipeDebug("Button %s", name.z());
     if (cssName) {
 	gtk_widget_add_css_class(button, cssName);
     } else if (name.hasPrefix("snap")) {
@@ -847,10 +848,23 @@ void AppUi::aboutIpe() {
     std::vector<char> buf(strlen(aboutText) + 100);
     sprintf(buf.data(), aboutText, IPELIB_VERSION / 10000, (IPELIB_VERSION / 100) % 100,
 	    IPELIB_VERSION % 100, COPYRIGHT_YEAR);
-    GtkWidget * dialog = gtk_message_dialog_new(
-	GTK_WINDOW(iWindow), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, nullptr);
+    // avoid GtkMessageDialog (deprecated GTK4 shim): its icon area appears to
+    // reflow after the first frame, which is what was causing the jump
+    GtkWidget * dialog = gtk_dialog_new();
     gtk_window_set_title(GTK_WINDOW(dialog), "About Ipe");
-    gtk_message_dialog_set_markup(GTK_MESSAGE_DIALOG(dialog), buf.data());
+    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(iWindow));
+
+    GtkWidget * label = gtk_label_new(nullptr);
+    gtk_label_set_markup(GTK_LABEL(label), buf.data());
+    gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
+    gtk_widget_set_margin_start(label, 20);
+    gtk_widget_set_margin_end(label, 20);
+    gtk_widget_set_margin_top(label, 20);
+    gtk_widget_set_margin_bottom(label, 20);
+    gtk_box_append(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), label);
+    gtk_dialog_add_button(GTK_DIALOG(dialog), "_OK", GTK_RESPONSE_OK);
+
     g_signal_connect(dialog, "response", G_CALLBACK(about_response_cb), nullptr);
     gtk_window_present(GTK_WINDOW(dialog));
 }
@@ -1056,7 +1070,7 @@ int AppUi::clipboard(lua_State * L) {
 
 namespace {
 struct WaitCtx {
-    AppUi * self;
+    lua_State * thread;
     GtkWidget * dialog;
     bool shown = false;
     bool completed = false;
@@ -1067,15 +1081,16 @@ void waitdialog_child_watch_cb(GPid pid, gint, gpointer data) {
     g_spawn_close_pid(pid);
     ctx->completed = true;
     if (ctx->shown) {
-	AppUi * self = ctx->self;
+	lua_State * co = ctx->thread;
 	gtk_window_destroy(GTK_WINDOW(ctx->dialog));
 	delete ctx;
-	self->resumeLua();
+	resumeLuaThread(co, 0);
+	// TODO: unref thread
     }
 }
 } // namespace
 
-bool AppUi::waitDialog(const char * cmd, const char * label) {
+bool AppUi::waitDialog(lua_State * co, const char * cmd, const char * label) {
     GPid pid;
     GError * error = nullptr;
     char shell[] = "/bin/sh";
@@ -1091,7 +1106,8 @@ bool AppUi::waitDialog(const char * cmd, const char * label) {
     }
 
     WaitCtx * ctx = new WaitCtx();
-    ctx->self = this;
+    ctx->thread = co;
+    // TODO: ref it
 
     GtkWidget * dialog = gtk_window_new();
     gtk_window_set_title(GTK_WINDOW(dialog), "Ipe: waiting");

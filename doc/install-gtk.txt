@@ -5,6 +5,10 @@
 
 ****  For MAC OS X, see the separate document "macos.txt"! ****
 
+**** For Linux, you can build Ipe with QT or with GTK-4.   ****
+**** These instructions are for GTK-4.  See install-qt.txt ****
+**** for building with QT.                                 ****
+
 
 Quickstart for Linux
 --------------------
@@ -13,24 +17,23 @@ If you have a recent Mint, Ubuntu, or Debian system, the following
 steps will install the necessary libraries and tools:
 
     sudo apt-get install build-essential checkinstall
-    sudo apt-get install qt6-base-dev qt6-base-dev-tools
-    sudo apt-get install libqt6svg6 libqtspell-qt6-dev
+    sudo apt-get install libgtk-4-dev libspelling-1-dev
     sudo apt-get install libfreetype6-dev libcairo2-dev
     sudo apt-get install libjpeg8-dev libpng-dev zlib1g-dev
     sudo apt-get install liblua5.5-dev lua5.5
     sudo apt-get install libspiro-dev libgsl-dev curl
 
-Use Lua 5.4 or Lua 5.3 if that is what you have.
-If you cannot install libqtspell-qt6-dev, just remove
+Use Lua 5.4 or Lua 5.3 if that is what you have.  You can omit
+libspelling-q-dev to compile without spell checking, just remove
 IPE_SPELLCHECK=1 in the make command below.
 
 Now you can compile and install Ipe into /usr/local:
 (Note that 7.x.y has to be replaced by the current Ipe version!)
 
     cd src
-    make IPEPREFIX=/usr/local IPE_SPELLCHECK=1
+    make IPEUI=GTK IPEPREFIX=/usr/local IPE_SPELLCHECK=1
     sudo checkinstall --pkgname=ipe --pkgversion=7.x.y --backup=no \
-    	 --fstrans=no --default make install IPEPREFIX=/usr/local
+    	 --fstrans=no --default make install IPEUI=GTK IPEPREFIX=/usr/local
     sudo ldconfig
 
 The line with "checkinstall" makes sure that Ipe is installed as
@@ -113,25 +116,6 @@ and libraries:
    Lua is linked statically (linking statically would include three
    copies of the Lua interpreter, resulting in random crashes).
 
- * The Qt 6 toolkit
-
-   On Linux, you most likely already have it. On Debian/Ubuntu, you
-   would need the packages "qt6-base-dev", "qt6-base-dev-tools",
-   and "libqt6svg6" (the latter is the SVG plugin needed to display
-   the icons).
-
-   You can also download binaries or sources at "www.qt.io/".  You
-   only need the Qt6Core, Qt6Gui, and Qt6Widgets libraries.
-
- * The QtSpell widget
-
-   You need this if you want spell checking in your text edit fields.
-   On Debian/Ubuntu, install "libqtspell-qt6-dev", and make sure
-   IPE_SPELLCHECK is set in "config.mak".
-
-   You can also compile the QtSpell widget from source at
-   "https://github.com/manisandro/qtspell".
-   
  * The GNU Scientific Library
 
    This library is used to improve the precision of intersections of
@@ -167,6 +151,16 @@ and libraries:
    "curl" package.  You can also install from source at
    "https://curl.haxx.se/libcurl/".
 
+ * The GTK-4 toolkit
+
+   On Linux, you most likely already have it. On Debian/Ubuntu, you
+   would need the package "libgtk-4-dev".
+
+ * The spell checking library libspelling
+
+   You need this if you want spell checking in your text edit fields.
+   On Debian/Ubuntu, install "libspelling-1-dev", and make sure
+   IPE_SPELLCHECK is set in "config.mak".
 
 
 Configuring and building Ipe

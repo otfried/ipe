@@ -44,7 +44,7 @@ public:
     PDialog(lua_State * L0, WINID parent, const char * caption, const char * language);
     bool ignoresEscapeKey();
     void callLuaMethod(int method);
-    virtual int takeDown(lua_State * L);
+    void resume(int result);
 
 protected:
     virtual void setMapped(lua_State * L, int idx);
@@ -58,6 +58,7 @@ protected:
 
 private:
     val iOptions; // dialog description for JS
+    int threadRef;
 };
 
 // --------------------------------------------------------------------
@@ -91,6 +92,7 @@ PDialog::PDialog(lua_State * L0, WINID parent, const char * caption,
 		 const char * language)
     : Dialog(L0, parent, caption, language) {}
 
+// make it public
 void PDialog::callLuaMethod(int method) { callLua(method); }
 
 void PDialog::setMapped(lua_State * L, int idx) {
@@ -160,16 +162,21 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
     iOptions.set("rowstretch", rowstretch);
     iOptions.set("colstretch", colstretch);
     iOptions.set("dialogId", (uintptr_t)this);
+
+    lua_pushthread(L);
+    threadRef = luaL_ref(L, LUA_REGISTRYINDEX);
+
     jsUi().call<void>("showDialog", iOptions);
     return Result::MODAL;
 }
 
-int PDialog::takeDown(lua_State * L) {
-    int result = luaL_checkinteger(L, 2);
+void PDialog::resume(int result) {
     release(L); // release references to Lua objects
     retrieveValues();
-    lua_pushboolean(L, result == 1);
-    return 1;
+
+    lua_pushnumber(L, result);
+    resumeLuaThread(L, 1);
+    luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
 }
 
 // --------------------------------------------------------------------
@@ -205,7 +212,11 @@ PMenu::PMenu() { iItems = val::array(); }
 int PMenu::execute(lua_State * L) {
     int vx = (int)luaL_checknumber(L, 2);
     int vy = (int)luaL_checknumber(L, 3);
-    jsUi().call<void>("showPopupMenu", vx, vy, iItems);
+
+    lua_pushthread(L);
+    int threadRef = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    jsUi().call<void>("showPopupMenu", vx, vy, iItems, threadRef);
     return 0;
 }
 
@@ -386,7 +397,10 @@ static int ipeui_fileDialog(lua_State * L) {
     arg.set("dir", dir);
     arg.set("path", path);
     arg.set("selected", selected);
-    jsUi().call<void>("fileDialog", arg);
+
+    lua_pushthread(L);
+    int threadRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    jsUi().call<void>("fileDialog", arg, threadRef);
     return 0;
 }
 
@@ -414,7 +428,10 @@ static int ipeui_messageBox(lua_State * L) {
     arg.set("text", text);
     arg.set("details", details);
     arg.set("buttons", buttons);
-    jsUi().call<void>("messageBox", arg);
+
+    lua_pushthread(L);
+    int threadRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    jsUi().call<void>("messageBox", arg, threadRef);
     return 0;
 }
 
@@ -510,6 +527,12 @@ EMSCRIPTEN_KEEPALIVE
 extern "C" void dialogCallLua(uintptr_t dialogId, int method) {
     PDialog * d = (PDialog *)dialogId;
     d->callLuaMethod(method);
+}
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" void dialogResume(uintptr_t dialogId, int result) {
+    PDialog * d = (PDialog *)dialogId;
+    d->resume(result);
 }
 
 // --------------------------------------------------------------------

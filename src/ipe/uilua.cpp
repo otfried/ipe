@@ -385,7 +385,7 @@ static int appui_shapetool(lua_State * L) {
     CanvasBase * canvas = (*ui)->canvas();
     lua_pushvalue(L, 2);
     int luatool = luaL_ref(L, LUA_REGISTRYINDEX);
-    ShapeTool * tool = new ShapeTool(canvas, L, luatool, (*ui)->model());
+    ShapeTool * tool = new ShapeTool(canvas, L, luatool);
     // add methods to Lua tool
     lua_rawgeti(L, LUA_REGISTRYINDEX, luatool);
     lua_pushlightuserdata(L, tool);
@@ -410,7 +410,7 @@ static int appui_pastetool(lua_State * L) {
     Object * obj = check_object(L, 2)->obj;
     lua_pushvalue(L, 3);
     int luatool = luaL_ref(L, LUA_REGISTRYINDEX);
-    PasteTool * tool = new PasteTool(canvas, L, luatool, (*ui)->model(), obj->clone());
+    PasteTool * tool = new PasteTool(canvas, L, luatool, obj->clone());
     // add methods to Lua tool
     lua_rawgeti(L, LUA_REGISTRYINDEX, luatool);
     lua_pushlightuserdata(L, tool);
@@ -673,7 +673,7 @@ static int appui_waitDialog(lua_State * L) {
     AppUiBase ** ui = check_appui(L, 1);
     const char * cmd = luaL_checklstring(L, 2, nullptr);
     const char * label = luaL_checklstring(L, 3, nullptr);
-    lua_pushboolean(L, (*ui)->waitDialog(cmd, label));
+    lua_pushboolean(L, (*ui)->waitDialog(L, cmd, label));
     return 1;
 }
 

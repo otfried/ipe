@@ -141,7 +141,6 @@ public:
     void luaShowPathStylePopup(Vector v);
     void luaBookmarkSelected(int index);
     void luaRecentFileSelected(String name);
-    void resumeLua();
     void luaAbsoluteButton(const char * s);
     void luaSelector(String name, String value);
     void luaLayerAction(String name, String layer);
@@ -182,7 +181,7 @@ public: // What platforms must implement:
 
     virtual void setRecentFileMenu(const std::vector<String> & names) = 0;
 
-    virtual bool waitDialog(const char * cmd, const char * label) = 0;
+    virtual bool waitDialog(lua_State * co, const char * cmd, const char * label) = 0;
 
 protected: // What platforms must implement:
     virtual void addRootMenu(int id, const char * name) = 0;
@@ -202,7 +201,7 @@ protected: // What platforms must implement:
 
 protected:
     virtual void canvasObserverWheelMoved(double xDegrees, double yDegrees, int kind);
-    virtual void canvasObserverMouseAction(int button);
+    virtual void canvasObserverMouseAction(int buttonAndModifiers);
     virtual void canvasObserverPositionChanged();
     virtual void canvasObserverToolChanged(bool hasTool);
     virtual void canvasObserverSizeChanged();
@@ -222,8 +221,8 @@ protected:
     int ipeIcon(String action);
 
 protected:
-    lua_State * L;
-    int iModel; // reference to Lua model
+    lua_State * L; // Lua main thread
+    int iModel;    // reference to Lua model
 
     MENUHANDLE iRecentFileMenu;
     MENUHANDLE iSelectLayerMenu;

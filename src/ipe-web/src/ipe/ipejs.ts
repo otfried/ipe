@@ -54,7 +54,7 @@ export declare class Ipe {
 		dpr: number,
 		platform: StringHandle,
 	): void;
-	_resume(result: ResumeResult): void;
+	_resume(result: ResumeResult, threadRef: number): void;
 	_action(action: StringHandle): void;
 	_openFile(fn: StringHandle): void;
 	_absoluteButton(sel: StringHandle): void;
@@ -68,6 +68,7 @@ export declare class Ipe {
 
 	_dialogIgnoresEscapeKey(dialogId: DialogId): boolean;
 	_dialogCallLua(dialogId: DialogId, method: number): void;
+	_dialogResume(dialogId: DialogId, result: DialogResult): void;
 }
 
 declare function instantiateIpe(): (ipe: Ipe) => void;

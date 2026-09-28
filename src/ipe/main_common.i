@@ -31,7 +31,7 @@ static int traceback (lua_State *L)
   }
   lua_pushvalue(L, 1);    // pass error message
   lua_pushinteger(L, 2);  // skip this function and traceback
-  luacall(L, 2, 1);       // call debug.traceback
+  lua_call(L, 2, 1);       // call debug.traceback
   return 1;
 }
 

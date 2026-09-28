@@ -40,7 +40,7 @@ export interface PopupItemOptions {
 // action and current item in submenu
 export type PopupMenuResults = [string, string];
 
-type PopupCallback = (results: PopupMenuResults) => void;
+type PopupCallback = (results: PopupMenuResults | null) => void;
 
 export class PopupMenu {
 	pane: HTMLDivElement;
@@ -52,6 +52,7 @@ export class PopupMenu {
 	private _pinnedSubmenu = false;
 	private _currentSubmenuAnchor: HTMLDivElement | null = null;
 	private _touchBased = false;
+	private _popupCallback: PopupCallback | null = null;
 
 	constructor() {
 		const pane = document.getElementById("popup-menu-pane") as HTMLDivElement;
@@ -78,6 +79,7 @@ export class PopupMenu {
 		if (this._isOpen) {
 			if (event.key === "Escape") {
 				this.close();
+				if (this._popupCallback) this._popupCallback(null);
 				return true;
 			}
 		}
@@ -91,6 +93,7 @@ export class PopupMenu {
 			return false;
 		} else {
 			this.close();
+			if (this._popupCallback) this._popupCallback(null);
 			return true;
 		}
 	}
@@ -195,6 +198,7 @@ export class PopupMenu {
 		cb: PopupCallback,
 	): void {
 		if (this._isOpen) this.close();
+		this._popupCallback = cb;
 		this._menu = document.createElement("div");
 		this._menu.classList.add("popup-menu");
 		for (const m of items) {
@@ -222,6 +226,7 @@ export class PopupMenu {
 		cb: MainMenuCallback,
 	): void {
 		if (this._isOpen) this.close();
+		this._popupCallback = null;
 		this._menu = document.createElement("div");
 		this._menu.classList.add("popup-menu");
 		for (const m of items) {

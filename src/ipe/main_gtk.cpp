@@ -109,7 +109,8 @@ static void on_activate(GApplication *, gpointer) { /* nothing to do */ }
 
 int main(int argc, char * argv[]) {
     Platform::initLib(IPELIB_VERSION);
-    // GTK4's gtk_init() takes no argv, so prgname (used for WM_CLASS / fallback app_id) is unset
+    // GTK4's gtk_init() takes no argv, so prgname (used for WM_CLASS / fallback app_id)
+    // is unset
     g_set_prgname("org.otfried.Ipe");
     gtk_init();
 

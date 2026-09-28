@@ -1724,13 +1724,7 @@ VOID CALLBACK waitCallback(PVOID lpParameter, BOOLEAN timerOrWaitFired) {
     EndDialog(d->hwnd, 1);
 }
 
-DWORD CALLBACK waitLuaThreadProc(LPVOID lpParameter) {
-    lua_State * L = (lua_State *)lpParameter;
-    lua_callk(L, 0, 0, 0, nullptr);
-    return 0;
-}
-
-bool AppUi::waitDialog(const char * cmd, const char * label) {
+bool AppUi::waitDialog(lua_State * co, const char * cmd, const char * label) {
     std::vector<short> t;
 
     // Dialog flags

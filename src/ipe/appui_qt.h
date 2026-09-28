@@ -92,7 +92,8 @@ public:
 
     virtual void setRecentFileMenu(const std::vector<String> & names) override;
 
-    virtual bool waitDialog(const char * cmd, const char * label) override;
+    virtual bool waitDialog(lua_State * co, const char * cmd,
+			    const char * label) override;
 
 public slots:
     void action(String name) override;

@@ -2761,7 +2761,7 @@ local function sheets_add(d, dd)
   dd.modified = true
 end
 
-local function sheets_add_list_inner(d, dd)
+local function sheets_add_list(d, dd)
   local i = d:get("list")
   if not i then i = 1 end
   local name = dd.available[d:get("addlist")]
@@ -2781,11 +2781,12 @@ local function sheets_add_list_inner(d, dd)
   dd.modified = true
 end
 
-local function sheets_add_list(d, dd)
-  dd.model:nestedCall(sheets_add_list_inner, d, dd)
-end
-
-local function sheets_edit_inner(d, dd)
+local function sheets_edit(d, dd)
+  if not prefs.external_editor then
+    dd.model:warning("Cannot edit stylesheet",
+		     "No external editor defined")
+    return
+  end
   local i = d:get("list")
   if not i or dd.list[i]:isStandard() then return end
   local data = dd.list[i]:xml(true)
@@ -2816,15 +2817,6 @@ local function sheets_edit_inner(d, dd)
   d:set("list", i)
   dd.modified = true
   os.remove(fname)
-end
-
-local function sheets_edit(d, dd)
-  if not prefs.external_editor then
-    dd.model:warning("Cannot edit stylesheet",
-		     "No external editor defined")
-    return
-  end
-  dd.model:nestedCall(sheets_edit_inner, d, dd)
 end
 
 local function sheets_del(d, dd)

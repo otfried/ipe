@@ -67,7 +67,6 @@ function MODEL:init(fname)
   self.ui = AppUi(self)
   self.pristine = false
   self.first_show = true
-  self.current_action = nil
   self.okay_close = false
 
   self.type3_font = false
@@ -127,18 +126,19 @@ function MODEL:init(fname)
     self:warning("Document '" .. fname .. "' could not be opened", err)
   end
 
-  if self.auto_latex then
+  if self.auto_latex and fname then
     self.first_latex_timer = ipeui.Timer(self, "runFirstTimeLatex")
     self.first_latex_timer:setSingleShot(true)
     self.first_latex_timer:setInterval(0) -- next iteration of event loop
     self.first_latex_timer:start()
-  end
+    end
 end
 
 function MODEL:runFirstTimeLatex()
   if self.first_latex_timer then
     self.first_latex_timer = nil -- free timer
-    self:wrapCall(self.runLatex, self)
+    local run = coroutine.create(self.runLatex)
+    coroutine.resume(run, self)
   end
 end
 
@@ -159,55 +159,6 @@ function MODEL:dpiChange(oldDpi, newDpi)
 end
 
 ----------------------------------------------------------------------
-
--- every call from the UI into Lua code must be wrapped:
--- 1. inside a thread, so actions can yield and wait for UI or
---    background activity
--- 2. if an error happens in Lua code, there will be a message and
---    Ipe continues to run, instead of crashing.
-
-function MODEL:wrapCall(f, ...)
-  local wrapper = function(f, ...)
-    local result, err = xpcall(f, debug.traceback, ...)
-    if not result then
-      messageBox(nil, "critical",
-		 "Lua error\n\n"..
-		   "Data may have been corrupted. \n" ..
-		   "Save your file!",
-		 err)
-    end
-  end
-  if self.current_action then
-    local status = coroutine.status(self.current_action)
-    if status == "suspended" then
-      messageBox(nil, "warning",
-		 "An operation is still waiting for a dialog, Latex, "
-		   .. "or an external editor, yet a new action happens.")
-      coroutine.close(self.current_action)
-    elseif status == "normal" then
-      print("DANGER! THIS SHOULD NOT HAPPEN!")
-      print("Calling into Lua while an operation is ongoing.  What's going on?")
-    end
-  end
-  self.current_action = coroutine.create(wrapper)
-  coroutine.resume(self.current_action, f, ...)
-end
-
--- called by the UI to resume when Lua has yielded in an async operation
-function MODEL:resumeLua(...)
-  if self.nested_wait and coroutine.status(self.nested_wait) == "suspended" then
-    local s = self.nested_wait
-    self.nested_wait = nil
-    coroutine.resume(s, ...)
-    return
-  end
-  if self.current_action then coroutine.resume(self.current_action, ...) end
-end
-
-function MODEL:nestedCall(f, ...)
-  self.nested_wait = coroutine.create(f)
-  coroutine.resume(self.nested_wait, ...)
-end
 
 function MODEL:waitDialog(cmd, text)
   local done = self.ui:waitDialog(cmd, text)
@@ -394,12 +345,7 @@ end
 
 -- show a warning messageBox
 function MODEL:warning(text, details)
-  if coroutine.status(self.current_action) == "suspended" then
-    -- this is called from a dialog
-    self:nestedCall(messageBox, self.ui:win(), "warning", text, details)
-  else
-    messageBox(self.ui:win(), "warning", text, details)
-  end
+  messageBox(self.ui:win(), "warning", text, details)
 end
 
 function numberFormatForMax(m)
@@ -608,6 +554,7 @@ function MODEL:latexErrorBox(log)
 end
 
 function MODEL:runLatex()
+  print("runLatex: ", self)
   self.ui:type3Font() -- reset flag in canvas
   self.type3_font = false
   local success, errmsg, result, log

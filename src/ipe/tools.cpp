@@ -45,6 +45,8 @@ extern "C" {
 using namespace ipe;
 using namespace ipelua;
 
+extern bool protectedLuaCall(lua_State * L, int nArgs, int nResults);
+
 // --------------------------------------------------------------------
 
 IpeTransformTool::IpeTransformTool(CanvasBase * canvas, Page * page, int view, TType type,
@@ -60,7 +62,7 @@ void IpeTransformTool::report() {
     // call back to Lua to report final transformation
     lua_rawgeti(L, LUA_REGISTRYINDEX, iMethod);
     push_matrix(L, iTransform);
-    lua_callk(L, 1, 0, 0, nullptr);
+    lua_call(L, 1, 0);
 }
 
 // --------------------------------------------------------------------
@@ -86,27 +88,22 @@ void push_button(lua_State * L, int button) {
 
 // --------------------------------------------------------------------
 
-LuaTool::LuaTool(CanvasBase * canvas, lua_State * L0, int luatool, int model)
+LuaTool::LuaTool(CanvasBase * canvas, lua_State * L0, int luatool)
     : Tool(canvas) {
     lua_rawgeti(L0, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
     L = lua_tothread(L0, -1);
-    iModel = model;
     iLuaTool = luatool;
     iColor = Color(0, 0, 0);
 }
 
 LuaTool::~LuaTool() { luaL_unref(L, LUA_REGISTRYINDEX, iLuaTool); }
 
-void LuaTool::wrapCall(String method, int nArgs, int nResults) {
-    lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-    lua_getfield(L, -1, "wrapCall");
-    lua_insert(L, -2); // move before model
+bool LuaTool::wrapCall(String method, int nArgs, int nResults) {
     lua_rawgeti(L, LUA_REGISTRYINDEX, iLuaTool);
     lua_getfield(L, -1, method.z());
-    lua_insert(L, -2); // move before luaTool
-    if (nArgs) lua_rotate(L, -nArgs - 4, 4);
-    // calling: model.wrapCall model method luaTool <nArgs>
-    luacall(L, nArgs + 3, nResults);
+    lua_rotate(L, -2, 1);         // flip tool and method
+    lua_rotate(L, -nArgs - 2, 2); // tool, method, <nArgs>
+    return protectedLuaCall(L, nArgs + 1, nResults);
 }
 
 void LuaTool::mouseButton(int button, bool press) {
@@ -118,18 +115,16 @@ void LuaTool::mouseButton(int button, bool press) {
 void LuaTool::mouseMove() { wrapCall("mouseMove", 0, 0); }
 
 bool LuaTool::key(String text, int modifiers) {
-    lua_State * L0 = L; // need to save L since
+    lua_State * L0 = L; // need to save L since key may delete tool
     push_string(L, text);
     push_modifiers(L, modifiers);
-    wrapCall("key", 2, 1); // this may delete tool
-    bool used = lua_toboolean(L0, -1);
-    return used;
+    return wrapCall("key", 2, 1) && lua_toboolean(L0, -1);
 }
 
 // --------------------------------------------------------------------
 
-ShapeTool::ShapeTool(CanvasBase * canvas, lua_State * L0, int luatool, int model)
-    : LuaTool(canvas, L0, luatool, model) {
+ShapeTool::ShapeTool(CanvasBase * canvas, lua_State * L0, int luatool)
+    : LuaTool(canvas, L0, luatool) {
     iPen = 1.0;
     iSnap = false;
     iSkipLast = false;
@@ -169,14 +164,14 @@ void ShapeTool::draw(Painter & painter) const {
 	default:
 	    painter.newPath();
 	    painter.moveTo(Vector(6 * z, 0));
-	    painter.drawArc(Arc(Matrix(6 * z, 0, 0, 6 * z, 0, 0)));
+	    painter.drawArc(ipe::Arc(Matrix(6 * z, 0, 0, 6 * z, 0, 0)));
 	    painter.closePath();
 	    painter.drawPath(EFilledOnly);
 	    break;
 	case ECurrent:
 	    painter.newPath();
 	    painter.moveTo(Vector(9 * z, 0));
-	    painter.drawArc(Arc(Matrix(9 * z, 0, 0, 9 * z, 0, 0)));
+	    painter.drawArc(ipe::Arc(Matrix(9 * z, 0, 0, 9 * z, 0, 0)));
 	    painter.closePath();
 	    painter.drawPath(EStrokedOnly);
 	    break;
@@ -243,9 +238,8 @@ void ShapeTool::snapVtx(const Vector & mouse, Vector & pos, double & bound,
 
 // --------------------------------------------------------------------
 
-PasteTool::PasteTool(CanvasBase * canvas, lua_State * L0, int luatool, int model,
-		     Object * obj)
-    : LuaTool(canvas, L0, luatool, model) {
+PasteTool::PasteTool(CanvasBase * canvas, lua_State * L0, int luatool, Object * obj)
+    : LuaTool(canvas, L0, luatool) {
     iObject = obj;
 }
 

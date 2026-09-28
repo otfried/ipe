@@ -52,8 +52,7 @@ Lua-aware event loop.  Actions are triggered from the event loop in
 protected calls.  One can't just call arbitrary operations on the
 `IpeUi` from browser events - they should always go through Lua
 protection.  The standard way of doing this is to call `IpeUi.action`.
-There is an interface between Typescript `async` and Lua coroutines,
-see `MODEL:wrapCall` and `MODEL:resumeLua`.
+There is an interface between Typescript `async` and Lua coroutines.
 
 
 

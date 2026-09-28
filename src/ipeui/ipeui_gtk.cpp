@@ -31,6 +31,15 @@
 #include "ipeui_common.h"
 using String = std::string;
 
+#ifdef IPE_SPELLCHECK
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#include <libspelling.h>
+#pragma GCC diagnostic pop
+#endif
+
+#include <format>
+
 // does the same as change_mnemonic in appui_gtk.cpp,
 // but let's keep this library self-contained.
 std::string gtkMnemonic(const std::string & text) {
@@ -65,15 +74,14 @@ public:
     virtual void retrieveValues();
     virtual void enableItem(int idx, bool value);
     virtual void acceptDialog(lua_State * L);
-    virtual int takeDown(lua_State * L);
 
 private:
     static void itemResponse(GtkWidget * item, PDialog * dlg);
     static void response_cb(GtkDialog * dialog, int response, PDialog * dlg);
     static void button_response_cb(GtkButton * button, PDialog * dlg);
-    static gboolean escape_response_cb(GtkEventControllerKey * controller, guint keyval,
-				       guint keycode, GdkModifierType state,
-				       PDialog * dlg);
+    static gboolean key_press_cb(GtkEventControllerKey * controller, guint keyval,
+				 guint keycode, GdkModifierType state, PDialog * dlg);
+    void takeDown(int result);
 
 private:
     std::vector<GtkWidget *> iWidgets;
@@ -95,8 +103,14 @@ void PDialog::button_response_cb(GtkButton * button, PDialog * dlg) {
     gtk_dialog_response(GTK_DIALOG(dlg->hDialog), response);
 }
 
-gboolean PDialog::escape_response_cb(GtkEventControllerKey *, guint keyval, guint,
-				     GdkModifierType, PDialog * dlg) {
+gboolean PDialog::key_press_cb(GtkEventControllerKey *, guint keyval, guint,
+			       GdkModifierType state, PDialog * dlg) {
+    if ((keyval == GDK_KEY_Return || keyval == GDK_KEY_KP_Enter)
+	&& (state & GDK_CONTROL_MASK)) {
+	dlg->retrieveValues();
+	gtk_dialog_response(GTK_DIALOG(dlg->hDialog), GTK_RESPONSE_ACCEPT);
+	return TRUE;
+    }
     if (keyval != GDK_KEY_Escape) return FALSE;
     dlg->retrieveValues();
     if (dlg->iIgnoreEscapeField >= 0
@@ -211,6 +225,84 @@ static GtkWidget * addScrollBar(GtkWidget * w) {
     return ww;
 }
 
+// simple regex-based LaTeX syntax highlighting, similar to the Qt version
+static void highlightLatex(GtkTextBuffer * buffer, GtkWidget * view) {
+    static GRegex * mathExp =
+	g_regex_new("\\$[^$]+\\$", G_REGEX_DEFAULT, G_REGEX_MATCH_DEFAULT, nullptr);
+    static GRegex * cmdExp =
+	g_regex_new("\\\\[a-zA-Z]+", G_REGEX_DEFAULT, G_REGEX_MATCH_DEFAULT, nullptr);
+
+    GtkTextTagTable * table = gtk_text_buffer_get_tag_table(buffer);
+    GtkTextTag * mathTag = gtk_text_tag_table_lookup(table, "latex-math");
+    GtkTextTag * cmdTag = gtk_text_tag_table_lookup(table, "latex-cmd");
+    if (!mathTag || !cmdTag) {
+	GdkRGBA fg;
+	gtk_widget_get_color(view, &fg);
+	bool dark = (0.299 * fg.red + 0.587 * fg.green + 0.114 * fg.blue) > 0.5;
+	if (!mathTag)
+	    mathTag = gtk_text_buffer_create_tag(buffer, "latex-math", "foreground",
+						 dark ? "cyan" : "red", nullptr);
+	if (!cmdTag)
+	    cmdTag = gtk_text_buffer_create_tag(buffer, "latex-cmd", "foreground",
+						dark ? "yellow" : "blue", "weight",
+						PANGO_WEIGHT_BOLD, nullptr);
+    }
+
+    GtkTextIter start, end;
+    gtk_text_buffer_get_start_iter(buffer, &start);
+    gtk_text_buffer_get_end_iter(buffer, &end);
+    gtk_text_buffer_remove_tag(buffer, mathTag, &start, &end);
+    gtk_text_buffer_remove_tag(buffer, cmdTag, &start, &end);
+
+    gchar * text = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);
+    auto applyRegex = [&](GRegex * regex, GtkTextTag * tag) {
+	GMatchInfo * match;
+	g_regex_match(regex, text, G_REGEX_MATCH_DEFAULT, &match);
+	while (g_match_info_matches(match)) {
+	    gint sByte, eByte;
+	    g_match_info_fetch_pos(match, 0, &sByte, &eByte);
+	    GtkTextIter s, e;
+	    gtk_text_buffer_get_iter_at_offset(
+		buffer, &s, g_utf8_pointer_to_offset(text, text + sByte));
+	    gtk_text_buffer_get_iter_at_offset(
+		buffer, &e, g_utf8_pointer_to_offset(text, text + eByte));
+	    gtk_text_buffer_apply_tag(buffer, tag, &s, &e);
+	    g_match_info_next(match, nullptr);
+	}
+	g_match_info_free(match);
+    };
+    applyRegex(mathExp, mathTag);
+    applyRegex(cmdExp, cmdTag);
+    g_free(text);
+}
+
+static void latex_changed_cb(GtkTextBuffer * buffer, gpointer view) {
+    highlightLatex(buffer, GTK_WIDGET(view));
+}
+
+#ifdef IPE_SPELLCHECK
+static void enableSpellCheck(GtkWidget * view, const std::string & language) {
+    static bool inited = false;
+    if (!inited) {
+	spelling_init();
+	inited = true;
+    }
+    GtkSourceBuffer * buffer =
+	GTK_SOURCE_BUFFER(gtk_text_view_get_buffer(GTK_TEXT_VIEW(view)));
+    SpellingChecker * checker =
+	spelling_checker_new(nullptr, language.empty() ? nullptr : language.c_str());
+    SpellingTextBufferAdapter * adapter =
+	spelling_text_buffer_adapter_new(buffer, checker);
+    g_object_unref(checker);
+    spelling_text_buffer_adapter_set_enabled(adapter, TRUE);
+    gtk_text_view_set_extra_menu(GTK_TEXT_VIEW(view),
+				 spelling_text_buffer_adapter_get_menu_model(adapter));
+    gtk_widget_insert_action_group(view, "spelling", G_ACTION_GROUP(adapter));
+    // tie the adapter's lifetime to the view
+    g_object_set_data_full(G_OBJECT(view), "spelling-adapter", adapter, g_object_unref);
+}
+#endif
+
 Dialog::Result PDialog::buildAndRun(int w, int h) {
     hDialog = gtk_dialog_new();
     gtk_window_set_title(GTK_WINDOW(hDialog), iCaption.c_str());
@@ -218,11 +310,11 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
     if (iParent) gtk_window_set_transient_for(GTK_WINDOW(hDialog), GTK_WINDOW(iParent));
     if (w > 0 && h > 0) gtk_window_set_default_size(GTK_WINDOW(hDialog), w, h);
     g_signal_connect(hDialog, "response", G_CALLBACK(response_cb), this);
-    if (iIgnoreEscapeField >= 0) {
-	GtkEventController * key = gtk_event_controller_key_new();
-	g_signal_connect(key, "key-pressed", G_CALLBACK(escape_response_cb), this);
-	gtk_widget_add_controller(hDialog, key);
-    }
+    GtkEventController * key = gtk_event_controller_key_new();
+    g_signal_connect(key, "key-pressed", G_CALLBACK(key_press_cb), this);
+    // capture phase: see the key before a focused GtkTextView consumes Return itself
+    gtk_event_controller_set_propagation_phase(key, GTK_PHASE_CAPTURE);
+    gtk_widget_add_controller(hDialog, key);
 
     GtkWidget * content = gtk_dialog_get_content_area(GTK_DIALOG(hDialog));
     GtkWidget * grid = gtk_grid_new();
@@ -282,11 +374,29 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		hexpand = true;
 		break;
 	    case ETextEdit:
+#ifdef IPE_SPELLCHECK
+		widget = gtk_source_view_new();
+#else
 		widget = gtk_text_view_new();
+#endif
 		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), !(m.flags & EReadOnly));
+		gtk_text_view_set_top_margin(GTK_TEXT_VIEW(widget), 4);
+		gtk_text_view_set_bottom_margin(GTK_TEXT_VIEW(widget), 4);
+		gtk_text_view_set_left_margin(GTK_TEXT_VIEW(widget), 4);
+		gtk_text_view_set_right_margin(GTK_TEXT_VIEW(widget), 4);
+		if (m.flags & ELatex) {
+		    GtkTextBuffer * buffer =
+			gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget));
+		    g_signal_connect(buffer, "changed", G_CALLBACK(latex_changed_cb),
+				     widget);
+		}
+#ifdef IPE_SPELLCHECK
+		if (!(m.flags & ELogFile)) enableSpellCheck(widget, iLanguage);
+#endif
 		gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)),
 					 m.text.c_str(), -1);
-		placed = addScrollBar(widget);
+		placed = gtk_frame_new(nullptr);
+		gtk_frame_set_child(GTK_FRAME(placed), addScrollBar(widget));
 		hexpand = vexpand = true;
 		break;
 	    case ECombo: {
@@ -323,8 +433,8 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	    gtk_grid_attach(GTK_GRID(grid), placed, m.col, m.row, m.colspan, m.rowspan);
 	}
 	if (widget && (m.flags & EDisabled)) gtk_widget_set_sensitive(widget, FALSE);
+	if (widget && (m.flags & EFocused)) gtk_widget_grab_focus(widget);
 	iWidgets.push_back(widget);
-	fprintf(stderr, "%d: %ld of type %d\n", i, iWidgets.size(), m.type);
     }
     // save current thread
     lua_pushthread(L);
@@ -334,25 +444,22 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
     return Result::MODAL;
 }
 
-void PDialog::response_cb(GtkDialog * dialog, int response, PDialog * dlg) {
-    lua_pushnumber(dlg->L, response);
-    int nresults = 1;
-    lua_resume(dlg->L, nullptr, nresults, &nresults);
-    luaL_unref(dlg->L, LUA_REGISTRYINDEX, dlg->threadRef);
+void PDialog::response_cb(GtkDialog * dialog, int result, PDialog * dlg) {
+    dlg->takeDown(result);
 }
 
-int PDialog::takeDown(lua_State * L) {
-    int result = luaL_checkinteger(L, 2);
-    release(L); // release references to Lua objects
-
+void PDialog::takeDown(int result) {
+    if (iLuaDialog == LUA_NOREF) return; // we already processed the response
+    release(L);                          // release references to Lua objects
     retrieveValues();
 
-    fprintf(stderr, "destroying window\n");
+    // close will call this callback again
     gtk_window_close(GTK_WINDOW(hDialog));
     hDialog = nullptr;
 
-    lua_pushboolean(L, result == 1);
-    return 1;
+    lua_pushnumber(L, result);
+    resumeLuaThread(L, 1);
+    luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
 }
 
 // --------------------------------------------------------------------
@@ -388,6 +495,8 @@ public:
 
 private:
     static void activate_cb(GSimpleAction * action, GVariant *, PMenu * menu);
+    static void closed_cb(GtkPopover * popover, PMenu * menu);
+    static gboolean idle_resume_cb(gpointer data);
     WINID iParent;
     GMenu * iMenu;
     GSimpleActionGroup * iActions;
@@ -398,19 +507,57 @@ private:
     std::vector<Item> iItems;
     int iNextAction = 0;
     int iSelected = -1;
-    GMainLoop * iLoop = nullptr;
+    lua_State * L = nullptr;
+    int iThreadRef = LUA_NOREF;
+    GtkWidget * iPopover = nullptr;
 };
 
 void PMenu::activate_cb(GSimpleAction * action, GVariant *, PMenu * menu) {
     menu->iSelected = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(action), "index"));
-    if (menu->iLoop) g_main_loop_quit(menu->iLoop);
+}
+
+// GtkPopoverMenu closes the popover synchronously on click, but defers the
+// row's action "activate" signal to an idle callback. Queue our own idle
+// after that one, so iSelected is set by the time we resume Lua.
+void PMenu::closed_cb(GtkPopover *, PMenu * menu) { g_idle_add(idle_resume_cb, menu); }
+
+gboolean PMenu::idle_resume_cb(gpointer data) {
+    PMenu * menu = static_cast<PMenu *>(data);
+    int nresults = 0;
+    if (menu->iSelected >= 0) {
+	lua_pushstring(menu->L, menu->iItems[menu->iSelected].name.c_str());
+	lua_pushstring(menu->L, menu->iItems[menu->iSelected].itemName.c_str());
+	nresults = 2;
+    }
+    resumeLuaThread(menu->L, nresults);
+    luaL_unref(menu->L, LUA_REGISTRYINDEX, menu->iThreadRef);
+    menu->iThreadRef = LUA_NOREF;
+    gtk_widget_unparent(menu->iPopover);
+    menu->iPopover = nullptr;
+    return G_SOURCE_REMOVE;
+}
+
+// GtkModelButton hides its icon whenever a text label is also shown
+// (see gtkmodelbutton.c:update_visibility), so a real GIcon next to a
+// label never renders. Use a small colored glyph in the markup label instead.
+static std::string colorSwatchMarkup(double r, double g, double b, const char * label) {
+    char hex[8];
+    snprintf(hex, sizeof hex, "#%02x%02x%02x", int(r * 255 + 0.5), int(g * 255 + 0.5),
+	     int(b * 255 + 0.5));
+    gchar * escaped = g_markup_escape_text(label, -1);
+    gchar * markup =
+	g_strdup_printf("<span foreground='%s'>\u2588\u258b</span>  %s", hex, escaped);
+    std::string result(markup);
+    g_free(escaped);
+    g_free(markup);
+    return result;
 }
 
 int PMenu::add(lua_State * L) {
     const char * name = luaL_checkstring(L, 2);
     const char * title = luaL_checkstring(L, 3);
     auto addItem = [&](GMenu * menu, const char * label, const char * itemName,
-		       bool checkable, bool active) {
+		       bool checkable, bool active, bool markup = false) {
 	char action_name[32];
 	sprintf(action_name, "item%d", iNextAction++);
 	GSimpleAction * action =
@@ -425,6 +572,9 @@ int PMenu::add(lua_State * L) {
 	char detailed[40];
 	sprintf(detailed, "menu.%s", action_name);
 	GMenuItem * menuItem = g_menu_item_new(label, detailed);
+	// gtk_menu_tracker_item_get_use_markup() reads this attribute with
+	// format "&s", so it must be a string, not a boolean, to be honored.
+	if (markup) g_menu_item_set_attribute(menuItem, "use-markup", "s", "true");
 	g_menu_append_item(menu, menuItem);
 	g_object_unref(menuItem);
     };
@@ -466,9 +616,22 @@ int PMenu::add(lua_State * L) {
 	    lua_pushvalue(L, -1);
 	}
 	const char * label = lua_tostring(L, -1);
-	// Color callbacks are intentionally ignored for the GTK-4 menu.
-	addItem(submenu, label, itemName, hascheck,
-		hascheck && !g_strcmp0(itemName, current));
+	std::string markupLabel;
+	bool hasMarkup = false;
+	if (hascolor) {
+	    lua_pushvalue(L, 6);  // function
+	    lua_pushnumber(L, i); // index
+	    lua_pushvalue(L, -3); // name
+	    lua_call(L, 2, 3);    // function returns red, green, blue
+	    double red = luaL_checknumber(L, -3);
+	    double green = luaL_checknumber(L, -2);
+	    double blue = luaL_checknumber(L, -1);
+	    lua_pop(L, 3); // pop result
+	    markupLabel = colorSwatchMarkup(red, green, blue, label);
+	    hasMarkup = true;
+	}
+	addItem(submenu, hasMarkup ? markupLabel.c_str() : label, itemName, hascheck,
+		hascheck && !g_strcmp0(itemName, current), hasMarkup);
 	lua_pop(L, 2);
     }
     GMenuItem * parentItem = g_menu_item_new_submenu(title, G_MENU_MODEL(submenu));
@@ -487,16 +650,14 @@ int PMenu::execute(lua_State * L) {
     GdkRectangle rect = {x, y, 1, 1};
     gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
     iSelected = -1;
-    iLoop = g_main_loop_new(nullptr, FALSE);
+    iPopover = popover;
+    this->L = L;
+    // keep the calling coroutine alive until the menu is dismissed
+    lua_pushthread(L);
+    iThreadRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    g_signal_connect(popover, "closed", G_CALLBACK(closed_cb), this);
     gtk_popover_popup(GTK_POPOVER(popover));
-    g_main_loop_run(iLoop);
-    g_main_loop_unref(iLoop);
-    iLoop = nullptr;
-    gtk_widget_unparent(popover);
-    if (iSelected < 0) return 0;
-    lua_pushstring(L, iItems[iSelected].name.c_str());
-    lua_pushstring(L, iItems[iSelected].itemName.c_str());
-    return 2;
+    return 0;
 }
 
 // GtkImageMenuItem is gone in GTK3; build a plain menu item whose child is a
@@ -631,6 +792,44 @@ int PMenu::add(lua_State * L) {
 	int threadRef;
     };
 
+    static void ipeui_getColor_response(GObject * source, GAsyncResult * result,
+					gpointer data) {
+	auto * context = static_cast<LuaAsyncContext *>(data);
+	GError * error = nullptr;
+	GdkRGBA * color =
+	    gtk_color_dialog_choose_rgba_finish(GTK_COLOR_DIALOG(source), result, &error);
+	int nresults = 0;
+	if (color) {
+	    lua_pushnumber(context->lua, color->red);
+	    lua_pushnumber(context->lua, color->green);
+	    lua_pushnumber(context->lua, color->blue);
+	    nresults = 3;
+	    g_free(color);
+	}
+	if (error) g_error_free(error);
+	resumeLuaThread(context->lua, nresults);
+	luaL_unref(context->lua, LUA_REGISTRYINDEX, context->threadRef);
+	g_object_unref(source);
+	delete context;
+    }
+
+    static int ipeui_getColorAsync(lua_State * L) {
+	GtkWindow * parent = GTK_WINDOW(check_winid(L, 1));
+	const char * title = luaL_checkstring(L, 2);
+	GdkRGBA color = {float(luaL_checknumber(L, 3)), float(luaL_checknumber(L, 4)),
+			 float(luaL_checknumber(L, 5)), 1.0f};
+	GtkColorDialog * dialog = gtk_color_dialog_new();
+	gtk_color_dialog_set_title(dialog, title);
+	gtk_color_dialog_set_with_alpha(dialog, FALSE);
+	lua_pushthread(L);
+	auto * context = new LuaAsyncContext{L, luaL_ref(L, LUA_REGISTRYINDEX)};
+	gtk_color_dialog_choose_rgba(dialog, parent, &color, nullptr,
+				     ipeui_getColor_response, context);
+	return 0;
+    }
+
+    // ------------------------------------------------------------------------------------------
+
     struct FileDialogContext : LuaAsyncContext {
 	bool save;
     };
@@ -651,46 +850,10 @@ int PMenu::add(lua_State * L) {
 	}
 	if (error) g_error_free(error);
 	int nresults = file ? 1 : 0;
-	lua_resume(context->lua, nullptr, nresults, &nresults);
+	resumeLuaThread(context->lua, nresults);
 	luaL_unref(context->lua, LUA_REGISTRYINDEX, context->threadRef);
 	g_object_unref(source);
 	delete context;
-    }
-
-    static void ipeui_getColor_response(GObject * source, GAsyncResult * result,
-					gpointer data) {
-	auto * context = static_cast<LuaAsyncContext *>(data);
-	GError * error = nullptr;
-	GdkRGBA * color =
-	    gtk_color_dialog_choose_rgba_finish(GTK_COLOR_DIALOG(source), result, &error);
-	int nresults = 0;
-	if (color) {
-	    lua_pushnumber(context->lua, color->red);
-	    lua_pushnumber(context->lua, color->green);
-	    lua_pushnumber(context->lua, color->blue);
-	    nresults = 3;
-	    g_free(color);
-	}
-	if (error) g_error_free(error);
-	lua_resume(context->lua, nullptr, nresults, &nresults);
-	luaL_unref(context->lua, LUA_REGISTRYINDEX, context->threadRef);
-	g_object_unref(source);
-	delete context;
-    }
-
-    static int ipeui_getColorAsync(lua_State * L) {
-	GtkWindow * parent = GTK_WINDOW(check_winid(L, 1));
-	const char * title = luaL_checkstring(L, 2);
-	GdkRGBA color = {float(luaL_checknumber(L, 3)), float(luaL_checknumber(L, 4)),
-			 float(luaL_checknumber(L, 5)), 1.0f};
-	GtkColorDialog * dialog = gtk_color_dialog_new();
-	gtk_color_dialog_set_title(dialog, title);
-	gtk_color_dialog_set_with_alpha(dialog, FALSE);
-	lua_pushthread(L);
-	auto * context = new LuaAsyncContext{L, luaL_ref(L, LUA_REGISTRYINDEX)};
-	gtk_color_dialog_choose_rgba(dialog, parent, &color, nullptr,
-				     ipeui_getColor_response, context);
-	return 0;
     }
 
     static int ipeui_fileDialogAsync(lua_State * L) {
@@ -722,33 +885,27 @@ int PMenu::add(lua_State * L) {
 	return 0;
     }
 
-    struct AlertContext {
+    // ------------------------------------------------------------------------------------------
+
+    struct MessageBoxContext {
 	lua_State * lua;
 	int threadRef;
 	int buttons;
     };
 
-    static void alert_response(GObject * source, GAsyncResult * result, gpointer data) {
-	auto * context = static_cast<AlertContext *>(data);
-	GtkAlertDialog * dialog = GTK_ALERT_DIALOG(source);
-	GError * error = nullptr;
-	int response = gtk_alert_dialog_choose_finish(dialog, result, &error);
+    static void message_response_cb(GtkDialog * dialog, int response, gpointer data) {
+	auto * context = static_cast<MessageBoxContext *>(data);
 	int buttons = context->buttons;
+	int positive = (buttons == 0) ? 0 : ((buttons == 2 || buttons == 4) ? 2 : 1);
 	int value = -1;
-	if (!error) {
-	    int positive = (buttons == 0) ? 0 : ((buttons == 2 || buttons == 4) ? 2 : 1);
-	    if (response == positive)
-		value = 1;
-	    else if (response > 0)
-		value = 0;
-	}
-	(void)value;
-	if (error) g_error_free(error);
-	g_object_unref(dialog);
+	if (response == positive)
+	    value = 1;
+	else if (response > 0)
+	    value = 0;
+	gtk_window_destroy(GTK_WINDOW(dialog));
 
 	lua_pushinteger(context->lua, value);
-	int nresults = 0;
-	lua_resume(context->lua, nullptr, 1, &nresults);
+	resumeLuaThread(context->lua, 1);
 	luaL_unref(context->lua, LUA_REGISTRYINDEX, context->threadRef);
 	delete context;
     }
@@ -781,19 +938,46 @@ int PMenu::add(lua_State * L) {
 	static const char * const * const buttonsets[] = {
 	    ok, okcancel, yesnocancel, discardcancel, savediscardcancel};
 
-	GtkAlertDialog * dialog = gtk_alert_dialog_new("%s", text);
-	gtk_alert_dialog_set_modal(dialog, TRUE);
-	gtk_alert_dialog_set_buttons(dialog, buttonsets[buttons]);
-	gtk_alert_dialog_set_cancel_button(dialog, 0);
-	gtk_alert_dialog_set_default_button(dialog, buttons == 0                     ? 0
-						    : (buttons == 2 || buttons == 4) ? 2
-										     : 1);
-	if (details) gtk_alert_dialog_set_detail(dialog, details);
+	// avoid GtkAlertDialog: same first-frame reflow/jump seen with GtkMessageDialog
+	GtkWidget * dialog = gtk_dialog_new();
+	gtk_window_set_title(GTK_WINDOW(dialog), text);
+	gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+	gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+
+	GtkWidget * content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+	std::string markup = std::format("<span size='x-large'>{}</span>", text);
+	GtkWidget * label = gtk_label_new(nullptr);
+	gtk_label_set_markup(GTK_LABEL(label), markup.c_str());
+	gtk_label_set_wrap(GTK_LABEL(label), TRUE);
+	gtk_widget_set_margin_start(label, 20);
+	gtk_widget_set_margin_end(label, 20);
+	gtk_widget_set_margin_top(label, 20);
+	gtk_widget_set_margin_bottom(label, details ? 16 : 20);
+	gtk_box_append(GTK_BOX(content), label);
+
+	if (details) {
+	    GtkWidget * detailLabel = gtk_label_new(details);
+	    gtk_label_set_wrap(GTK_LABEL(detailLabel), TRUE);
+	    // gtk_widget_add_css_class(detailLabel, "dim-label");
+	    gtk_widget_set_margin_start(detailLabel, 20);
+	    gtk_widget_set_margin_end(detailLabel, 20);
+	    gtk_widget_set_margin_bottom(detailLabel, 20);
+	    gtk_box_append(GTK_BOX(content), detailLabel);
+	}
+
+	const char * const * names = buttonsets[buttons];
+	int defaultIndex = (buttons == 0) ? 0 : ((buttons == 2 || buttons == 4) ? 2 : 1);
+	for (int i = 0; names[i]; ++i) {
+	    GtkWidget * button = gtk_dialog_add_button(GTK_DIALOG(dialog), names[i], i);
+	    if (i == defaultIndex) gtk_widget_add_css_class(button, "suggested-action");
+	}
+	gtk_dialog_set_default_response(GTK_DIALOG(dialog), defaultIndex);
 
 	lua_pushthread(L);
-	auto * context = new AlertContext{L, luaL_ref(L, LUA_REGISTRYINDEX), buttons};
-
-	gtk_alert_dialog_choose(dialog, parent, nullptr, alert_response, context);
+	auto * context =
+	    new MessageBoxContext{L, luaL_ref(L, LUA_REGISTRYINDEX), buttons};
+	g_signal_connect(dialog, "response", G_CALLBACK(message_response_cb), context);
+	gtk_window_present(GTK_WINDOW(dialog));
 	return 0;
     }
 

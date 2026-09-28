@@ -79,9 +79,12 @@ void Dialog::callLua(int luaMethod) {
     // only call back to Lua during execute()
     if (iLuaDialog == LUA_NOREF) return;
 
-    lua_rawgeti(L, LUA_REGISTRYINDEX, luaMethod);
-    lua_rawgeti(L, LUA_REGISTRYINDEX, iLuaDialog);
-    luacall(L, 1, 0);
+    lua_State * co = lua_newthread(L);
+    int ref = luaL_ref(L, LUA_REGISTRYINDEX); // anchor thread during resume
+    lua_rawgeti(co, LUA_REGISTRYINDEX, luaMethod);
+    lua_rawgeti(co, LUA_REGISTRYINDEX, iLuaDialog);
+    resumeLuaThread(co, 1);
+    luaL_unref(L, LUA_REGISTRYINDEX, ref);
 }
 
 // name, label, action
@@ -406,11 +409,6 @@ int Dialog::setStretch(lua_State * L) {
     return 0;
 }
 
-int Dialog::takeDown(lua_State * L) {
-    luaL_error(L, "Dialog::takeDown not implemented for this toolkit");
-    return 0;
-}
-
 // --------------------------------------------------------------------
 
 static int dialog_tostring(lua_State * L) {
@@ -489,11 +487,6 @@ static int dialog_accept(lua_State * L) {
     return 0;
 }
 
-static int dialog_takeDown(lua_State * L) {
-    Dialog ** dlg = check_dialog(L, 1);
-    return (*dlg)->takeDown(L);
-}
-
 // --------------------------------------------------------------------
 
 static const struct luaL_Reg dialog_methods[] = {
@@ -507,7 +500,6 @@ static const struct luaL_Reg dialog_methods[] = {
     {"get", dialog_get},
     {"setEnabled", dialog_setEnabled},
     {"accept", dialog_accept},
-    {"takeDown", dialog_takeDown},
     {nullptr, nullptr}};
 
 // --------------------------------------------------------------------
@@ -545,7 +537,7 @@ static int menu_add(lua_State * L) {
 
 static const struct luaL_Reg menu_methods[] = {{"__tostring", menu_tostring},
 					       {"__gc", menu_destructor},
-#ifdef IPEUI_JS
+#if defined(IPEUI_JS) || defined(IPEUI_GTK)
 					       {"executeAsync", menu_execute},
 #else
 					       {"execute", menu_execute},
@@ -580,9 +572,9 @@ void Timer::callLua() {
 	lua_pop(L, 3); // pop weak table, table, nil
 	return;
     }
-    lua_remove(L, -3); // remove weak table
-    lua_insert(L, -2); // stack is now: method, table
-    luacall(L, 1, 0);  // call method
+    lua_remove(L, -3);    // remove weak table
+    lua_rotate(L, -2, 1); // flip method and table
+    lua_call(L, 1, 0);    // call method
 }
 
 int Timer::setSingleShot(lua_State * L) {
@@ -655,14 +647,13 @@ static void make_metatable(lua_State * L, const char * name,
     if (!strcmp(name, "Ipe.dialog")) {
 	int ok = luaL_loadstring(
 	    L, "return function (d, s, l)"
-	       "done, accepted = d:executeAsync(s, l)"
-	       "if not done then accepted = d:takeDown(coroutine.yield()) end "
-	       "return accepted end");
+	       "local done, accepted = d:executeAsync(s, l)"
+	       "if done then return accepted else return coroutine.yield() end end");
 	if (ok != LUA_OK) luaL_error(L, "cannot prepare d:execute function");
 	lua_call(L, 0, 1);
 	lua_setfield(L, -2, "execute");
     }
-#ifdef IPEUI_JS
+#if defined(IPEUI_JS) || defined(IPEUI_GTK)
     if (!strcmp(name, "Ipe.menu")) {
 	int ok = luaL_loadstring(L, "return function (m, x, y)"
 				    "m:executeAsync(x, y)"
@@ -681,6 +672,85 @@ int luaopen_ipeui_common(lua_State * L) {
     make_metatable(L, "Ipe.menu", menu_methods);
     make_metatable(L, "Ipe.timer", timer_methods);
     return 0;
+}
+
+// --------------------------------------------------------------------
+
+static void reportLuaError(lua_State * main, lua_State * T, const char * what) {
+    const char * msg = lua_tostring(T, -1);
+    if (msg == nullptr) msg = luaL_typename(T, -1); // non-string error object
+    luaL_traceback(main, T, msg, 0);
+    // TODO: show in a native message box
+    fprintf(stderr, "%s: %s\n", what, lua_tostring(main, -1));
+    lua_pop(main, 1);
+}
+
+// Every resume into Lua, both by UI components of ipeui and
+// by the application itself must do so using this function.
+// The caller pushes nArgs results onto T, they will become
+// the return values of coroutine.yield in Lua.
+// A UI component that relies on yielding must hold a reference
+// to the Lua thread, and should unref it only after this function returns.
+
+void resumeLuaThread(lua_State * T, int nArgs) {
+    lua_rawgeti(T, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+    lua_State * main = lua_tothread(T, -1);
+    lua_pop(T, 1);
+
+    int st = lua_status(T);
+    if (T == main || !(st == LUA_YIELD || st == LUA_OK)) {
+	fprintf(stderr, "resumeLuaThread: thread is not resumable\n");
+	lua_pop(T, nArgs);
+	return;
+    }
+
+    int nres = 0;
+    int status = lua_resume(T, nullptr, nArgs, &nres);
+    if (status == LUA_YIELD) {
+	// The coroutine yielded in (another) UI component,
+	// it's no longer our problem.
+	lua_pop(T, nres);
+	return;
+    }
+    if (status != LUA_OK) reportLuaError(main, T, "Lua error in action");
+#if LUA_VERSION_RELEASE_NUM < 50406
+    if (lua_resetthread(T) != LUA_OK) // run to-be-closed vars, clear stack
+	reportLuaError(main, T, "Lua error while closing action");
+#else
+    if (lua_closethread(T, main) != LUA_OK) // run to-be-closed vars, clear stack
+	reportLuaError(main, T, "Lua error while closing action");
+#endif
+}
+
+// --------------------------------------------------------------------
+
+// Message handler for lua_pcall: adds a traceback to the error message
+static int traceback_handler(lua_State * L) {
+    const char * msg = lua_tostring(L, 1);
+    if (msg == nullptr) { // non-string error object
+	if (luaL_callmeta(L, 1, "__tostring") && lua_type(L, -1) == LUA_TSTRING)
+	    return 1; // use its string representation, without traceback
+	msg = lua_pushfstring(L, "(error object is a %s value)", luaL_typename(L, 1));
+    }
+    luaL_traceback(L, L, msg, 1); // level 1: skip the handler itself
+    return 1;
+}
+
+// Like lua_pcall, but prints the error with a traceback on stderr.
+// Stack on entry: function, nArgs arguments.
+// On success, nResults results are left on the stack. On error, nothing is left.
+bool protectedLuaCall(lua_State * L, int nArgs, int nResults) {
+    int base = lua_gettop(L) - nArgs; // index of the function
+    lua_pushcfunction(L, traceback_handler);
+    lua_insert(L, base); // put handler below the function
+    int status = lua_pcall(L, nArgs, nResults, base);
+    if (status != LUA_OK) {
+	const char * msg = lua_tostring(L, -1);
+	fprintf(stderr, "Lua error: %s\n", msg ? msg : "(no message)");
+	lua_pop(L, 1); // error message
+    }
+    lua_remove(L, base); // handler
+    return status == LUA_OK;
 }
 
 // --------------------------------------------------------------------

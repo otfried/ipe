@@ -2,7 +2,8 @@
 
 Ipe 7.3.1
 
- * Ipe Web Edition and Ipe VS Code Extension.
+ * New Ipe Editions: Ipe Web, Ipe VS Code extension (for all platforms
+   on which VS Code or VSCodium exist), and GTK-4 edition on Linux.
 
  * Support for variants of Ipe documents: keep German and English
    versions of your slides in the same document, or make both a
@@ -20,11 +21,7 @@ Ipe 7.3.1
  * Refactor UI code to make use of Lua coroutines.  It's now possible
    to use aynchronous services (like online Latex) without a blocking
    wait on a second thread.  All calls into Lua are now protected, so
-   a bug in the Lua code will not cause Ipe to crash.  Hopefully this
-   will also improve the robustness of the wait dialog with respect to
-   the various versions of Qt.
-
- * Another version of the Ipe UI using HTML/CSS/JS.
+   a bug in the Lua code will not cause Ipe to crash.  
 
  * Apply text padding also when displaying text XForm objects inside
    Ipe (bug #531).

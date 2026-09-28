@@ -58,7 +58,7 @@ class WaitDialog : public QDialog {
     Q_OBJECT
 
 public:
-    WaitDialog(QString label, AppUiBase * observer);
+    WaitDialog(QString label, lua_State * co);
     bool showDialog(); // returns true if dialog is showing now
     bool isRunning() const noexcept { return running; }
 public slots:
@@ -69,7 +69,7 @@ protected:
     void closeEvent(QCloseEvent * ev);
 
 private:
-    AppUiBase * observer;
+    lua_State * iThread;
     bool running; // the waiter has not yet signaled completed
     QMutex mutex; // locked when dialog is waiting modally
 };

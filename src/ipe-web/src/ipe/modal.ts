@@ -32,7 +32,7 @@ const knownFileTypes: { [ext: string]: FileType } = {
 	lua: { dir: "ipelets", mimeType: "text/plain" },
 };
 
-type ResumeCallback = (result: ResumeResult) => void;
+type ResumeCallback = (result: ResumeResult, threadRef: number) => void;
 
 export interface MessageBoxOptions {
 	type: "none" | "warning" | "information" | "question" | "critical";
@@ -78,6 +78,7 @@ export class Modal {
 	dialogId: DialogId | null = null;
 	ctrlEnterHandler: (() => void) | null = null;
 	private readonly resumeCallback: ResumeCallback;
+	private threadRef: number | null = null;
 
 	constructor(ipe: Ipe, cb: ResumeCallback) {
 		this.ipe = ipe;
@@ -103,7 +104,7 @@ export class Modal {
 		this.inModal = true;
 	}
 
-	close(result: ResumeResult) {
+	close(result: ResumeResult, threadRef?: number) {
 		if (result === CANCEL && (this.inFileDialog || this.inPageSelector))
 			result = null;
 		this.ctrlEnterHandler = null;
@@ -115,8 +116,11 @@ export class Modal {
 		this.inModal = false;
 		this.inFileDialog = false;
 		this.inPageSelector = false;
-		this.dialogId = null;
-		this.resumeCallback(result);
+		if (this.dialogId) {
+			this.ipe._dialogResume(this.dialogId, result as DialogResult);
+			this.dialogId = null;
+		} else if (threadRef != null) this.resumeCallback(result, threadRef);
+		else if (this.threadRef) this.resumeCallback(result, this.threadRef);
 		setTimeout(() => {
 			// give dialog a chance to retrieve values before we destroy the nodes
 			removeChildren(this.body);
@@ -143,10 +147,11 @@ export class Modal {
 	showBanner(header: string, body: string) {
 		this.header.innerText = header;
 		this.body.innerHTML = body;
+		this.threadRef = null;
 		this.show();
 	}
 
-	messageBox(options: MessageBoxOptions) {
+	messageBox(options: MessageBoxOptions, threadRef: number) {
 		this.header.innerText = options.text;
 		this.body.innerText = options.details;
 		setupMessageBoxButtons(
@@ -154,6 +159,7 @@ export class Modal {
 			options.buttons,
 			(result: DialogResult) => this.close(result),
 		);
+		this.threadRef = threadRef;
 		this.show();
 		this.ctrlEnterHandler = () => this.close(ACCEPT);
 	}
@@ -165,6 +171,7 @@ export class Modal {
 		setupButtons(this.footer, options, (result) => this.close(result));
 		this.ctrlEnterHandler = () => this.close(ACCEPT);
 		if (focus) setTimeout(() => focus.focus(), 0);
+		this.threadRef = null;
 		this.show();
 	}
 
@@ -212,7 +219,7 @@ export class Modal {
 		}
 	}
 
-	async fileDialog(options: FileDialogOptions) {
+	async fileDialog(options: FileDialogOptions, threadRef: number | null) {
 		const dir = dirFromOptions(options);
 		this.body.style.display = "none";
 		this.file.style.display = "flex";
@@ -240,6 +247,7 @@ export class Modal {
 			);
 		}
 		this.inFileDialog = true;
+		this.threadRef = threadRef;
 		this.show();
 	}
 

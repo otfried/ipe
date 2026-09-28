@@ -117,10 +117,6 @@ inline ipe::Ipelet ** check_ipelet(lua_State * L, int i) {
     return (ipe::Ipelet **)luaL_checkudata(L, i, "Ipe.ipelet");
 }
 
-inline void luacall(lua_State * L, int nargs, int nresults) {
-    lua_callk(L, nargs, nresults, 0, nullptr);
-}
-
 // --------------------------------------------------------------------
 
 extern void make_metatable(lua_State * L, const char * name,

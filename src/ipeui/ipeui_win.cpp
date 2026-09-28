@@ -721,7 +721,7 @@ int PMenu::add(lua_State * L) {
 		lua_pushvalue(L, 5);  // function
 		lua_pushnumber(L, i); // index
 		lua_pushvalue(L, -3); // name
-		luacall(L, 2, 1);     // function returns label
+		lua_call(L, 2, 1);    // function returns label
 		luaL_argcheck(L, lua_isstring(L, -1), 5,
 			      "function does not return string");
 	    } else
@@ -740,7 +740,7 @@ int PMenu::add(lua_State * L) {
 		lua_pushvalue(L, 6);  // function
 		lua_pushnumber(L, i); // index
 		lua_pushvalue(L, -4); // name
-		luacall(L, 2, 3);     // function returns red, green, blue
+		lua_call(L, 2, 3);    // function returns red, green, blue
 		double red = luaL_checknumber(L, -3);
 		double green = luaL_checknumber(L, -2);
 		double blue = luaL_checknumber(L, -1);

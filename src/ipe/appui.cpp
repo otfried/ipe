@@ -38,6 +38,8 @@
 using namespace ipe;
 using namespace ipelua;
 
+extern void resumeLuaThread(lua_State * T, int nArgs);
+
 // --------------------------------------------------------------------------------
 
 const char * const AppUiBase::selectorNames[] = {
@@ -45,8 +47,12 @@ const char * const AppUiBase::selectorNames[] = {
     "markshape", "symbolsize", "opacity", "gridsize",   "variant",
     "anglesize", "view",       "page",    "viewmarked", "pagemarked"};
 
-AppUiBase::AppUiBase(lua_State * L0, int model) {
-    L = L0;
+// T might be a short-lived coroutine when we are opening a second window
+AppUiBase::AppUiBase(lua_State * T, int model) {
+    lua_rawgeti(T, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+    L = lua_tothread(T, -1);
+    lua_pop(T, 1);
+
     iModel = model;
     isInkMode = false;
 
@@ -503,8 +509,8 @@ void AppUiBase::canvasObserverPositionChanged() {
     setMouseIndicator(s);
 }
 
-void AppUiBase::canvasObserverMouseAction(int button) {
-    push_button(L, button);
+void AppUiBase::canvasObserverMouseAction(int buttonAndModifiers) {
+    push_button(L, buttonAndModifiers); // pushes two elements
     wrapCall("mouseButtonAction", 2);
 }
 
@@ -513,8 +519,8 @@ void AppUiBase::canvasObserverSizeChanged() {
     // while Latex is running or a dialog is showing
     lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
     lua_getfield(L, -1, "sizeChanged");
-    lua_insert(L, -2); // move before model
-    luacall(L, 1, 0);
+    lua_rotate(L, -2, 1); // flip
+    lua_call(L, 1, 0);
 }
 
 // --------------------------------------------------------------------
@@ -571,14 +577,15 @@ void AppUiBase::luaAction(String name) {
 }
 
 void AppUiBase::wrapCall(String method, int nArgs) {
-    lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-    lua_getfield(L, -1, "wrapCall");
-    lua_insert(L, -2); // move before model
-    lua_getfield(L, -1, method.z());
-    lua_pushvalue(L, -2); // model again
-    lua_rotate(L, -nArgs - 4, 4);
-    // calling: model.wrapCall model method model <nArgs>
-    luacall(L, nArgs + 3, 0);
+    lua_State * T = lua_newthread(L); // anchored on main stack
+    lua_rawgeti(T, LUA_REGISTRYINDEX, iModel);
+    lua_getfield(T, -1, method.z());
+    lua_rotate(T, -2, 1);         // flip model and method
+    lua_rotate(L, -nArgs - 1, 1); // move thread below the arguments
+    lua_xmove(L, T, nArgs);       // move arguments to T
+    // on T's stack: method model <nArgs>
+    resumeLuaThread(T, nArgs + 1);
+    lua_pop(L, 1); // drop anchor
 }
 
 void AppUiBase::luaShowPathStylePopup(Vector v) {
@@ -615,14 +622,6 @@ void AppUiBase::luaLayerOrderChanged(std::vector<String> & order) {
 	lua_rawseti(L, -2, i + 1);
     }
     wrapCall("layerOrderChanged", 1);
-}
-
-void AppUiBase::resumeLua() {
-    // calls model:resumeLua
-    lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-    lua_getfield(L, -1, "resumeLua");
-    lua_insert(L, -2); // before model
-    luacall(L, 1, 0);
 }
 
 // --------------------------------------------------------------------

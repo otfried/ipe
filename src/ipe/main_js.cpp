@@ -176,8 +176,8 @@ extern "C" void startIpe(int width, int height, double dpr, const char * platfor
 }
 
 EMSCRIPTEN_KEEPALIVE
-extern "C" void resume(EM_VAL result) {
-    theAppUi->resumeLua(val::take_ownership(result));
+extern "C" void resume(EM_VAL result, int threadRef) {
+    theAppUi->resumeLua(val::take_ownership(result), threadRef);
 }
 
 EMSCRIPTEN_KEEPALIVE

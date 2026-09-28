@@ -28,6 +28,9 @@
 
 */
 
+// This is not meant to be included by clients, as the interface is
+// entirely through Lua.
+
 #ifndef IPEUI_COMMON_H
 #define IPEUI_COMMON_H
 
@@ -80,10 +83,6 @@ inline std::string tostring(lua_State * L, int i) {
     return std::string(lua_tolstring(L, i, nullptr));
 }
 
-inline void luacall(lua_State * L, int nargs, int nresults) {
-    lua_callk(L, nargs, nresults, 0, nullptr);
-}
-
 // --------------------------------------------------------------------
 
 class Dialog {
@@ -108,7 +107,6 @@ public:
     Result execute(lua_State * L, int w, int h);
     virtual void retrieveValues() = 0;
     void release(lua_State * LM);
-    virtual int takeDown(lua_State * L);
     virtual void acceptDialog(lua_State * L) = 0;
 
     WINID winId() const { return hDialog; }
@@ -231,6 +229,9 @@ inline Timer ** check_timer(lua_State * L, int i) {
 // --------------------------------------------------------------------
 
 extern int luaopen_ipeui_common(lua_State * L);
+
+extern void resumeLuaThread(lua_State * T, int nArgs);
+extern bool protectedLuaCall(lua_State * L, int nArgs, int nResults);
 
 // --------------------------------------------------------------------
 #endif

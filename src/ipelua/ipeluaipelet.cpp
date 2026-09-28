@@ -195,7 +195,7 @@ void Helper::message(const char * msg) {
     lua_pushvalue(L, -2); // luahelper
     lua_remove(L, -3);
     lua_pushstring(L, msg);
-    luacall(L, 2, 0);
+    lua_call(L, 2, 0);
 }
 
 int Helper::messageBox(const char * text, const char * details, int buttons) {
@@ -209,7 +209,7 @@ int Helper::messageBox(const char * text, const char * details, int buttons) {
     else
 	lua_pushnil(L);
     lua_pushnumber(L, buttons);
-    luacall(L, 4, 1);
+    lua_call(L, 4, 1);
     if (lua_isnumber(L, -1))
 	return int(lua_tonumberx(L, -1, nullptr));
     else
@@ -223,7 +223,7 @@ bool Helper::getString(const char * prompt, String & str) {
     lua_remove(L, -3);
     lua_pushstring(L, prompt);
     push_string(L, str);
-    luacall(L, 3, 1);
+    lua_call(L, 3, 1);
     if (lua_isstring(L, -1)) {
 	str = lua_tolstring(L, -1, nullptr);
 	return true;

@@ -61,6 +61,11 @@ endif
 ifeq ($(IPEUI), GTK)
 GTK_CFLAGS   ?= $(shell $(PKG_CONFIG) --cflags gtk4)
 GTK_LIBS     ?= $(shell $(PKG_CONFIG) --libs gtk4)
+#
+ifdef IPE_SPELLCHECK
+SPELL_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags libspelling-1)
+SPELL_LIBS    ?= $(shell $(PKG_CONFIG) --libs libspelling-1)
+endif
 endif
 #
 # Library needed to use dlopen/dlsym/dlclose calls

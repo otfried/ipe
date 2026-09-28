@@ -1025,8 +1025,8 @@ void Waiter::process() {
 
 // --------------------------------------------------------------------
 
-WaitDialog::WaitDialog(QString label, AppUiBase * observer)
-    : observer{observer}
+WaitDialog::WaitDialog(QString label, lua_State * co)
+    : iThread{co}
     , running{true} {
     QGridLayout * lo = new QGridLayout;
     setLayout(lo);
@@ -1066,17 +1066,18 @@ void WaitDialog::completed() {
 	mutex.unlock();
 	done(0);
 	deleteLater(); // schedule myself for deletion
-	observer->resumeLua();
+	int nResults = 0;
+	lua_resume(iThread, nullptr, 0, &nResults);
     }
 }
 
 // --------------------------------------------------------------------
 
-bool AppUi::waitDialog(const char * cmd, const char * label) {
+bool AppUi::waitDialog(lua_State * co, const char * cmd, const char * label) {
     QThread * thread = new QThread();
     Waiter * waiter = new Waiter(cmd);
     waiter->moveToThread(thread);
-    WaitDialog * dialog = new WaitDialog(QIpe(label), this);
+    WaitDialog * dialog = new WaitDialog(QIpe(label), co);
 
     // waiter is in a different thread, but connect does this right
     QObject::connect(thread, &QThread::started, waiter, &Waiter::process);

@@ -28,7 +28,7 @@
 
 --]]
 
-local function external_editor_inner(model, d, field)
+function MODEL:externalEditor(d, field)
   local text = d:get(field)
   local fname = os.tmpname()
   if prefs.editable_textfile then
@@ -49,18 +49,10 @@ local function external_editor_inner(model, d, field)
   end
 end
 
-function MODEL:externalEditor(d, field)
-  external_editor_inner(self, d, field)
-end
-
-function MODEL:externalEditorNested(d, field)
-  self:nestedCall(external_editor_inner, self, d, field)
-end
-
 function MODEL:addEditorField(d, field)
   if prefs.external_editor then
     d:addButton("editor", "&Editor",
-		function (d) self:externalEditorNested(d, field) end)
+		function (d) self:externalEditor(d, field) end)
   end
 end
 

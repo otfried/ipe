@@ -516,6 +516,7 @@ first_model:action_fit_top()
 first_model.ui:setScreen(prefs.start_screen)
 
 local acc, accsub = win32_shortcuts(first_model.ui)
+
 mainloop(acc, accsub)
 
 ----------------------------------------------------------------------

@@ -89,7 +89,7 @@ void Canvas::buttonHandler(double x, double y, GtkGestureClick * gesture, int nP
 
 gboolean Canvas::keyHandler(guint keyval, guint keycode, GdkModifierType state) {
     String gKey = gdk_keyval_name(keyval);
-    ipeDebug("Key pressed: %s (keyval: %u, keycode: %u)", gKey.z(), keyval, keycode);
+    // ipeDebug("Key pressed: %s (keyval: %u, keycode: %u)", gKey.z(), keyval, keycode);
     String key = gKey;
 
     if (gKey == "Escape")

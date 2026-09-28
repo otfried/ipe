@@ -92,7 +92,9 @@ export class IpeUi {
 		this.mainMenu = [];
 		this.actions = {};
 		window.ipeui = this;
-		this.modal = new Modal(ipe, (result) => this.resume(result));
+		this.modal = new Modal(ipe, (result, threadRef) =>
+			this.resume(result, threadRef),
+		);
 		this.version = this.ipe.Emval.toValue(this.ipe._ipeVersion());
 		this.touch = new TouchDragZoom(this.ipe, this.topCanvas);
 		this.platform = platform;
@@ -123,7 +125,7 @@ export class IpeUi {
 		window.onclick = (event) => {
 			if (event.target === this.modal.pane) this.modal.close(CANCEL);
 			if (event.target === this.popupMenu.pane) {
-				if (this.popupMenu.closeOne()) this.resume(null);
+				this.popupMenu.closeOne();
 			}
 		};
 	}
@@ -158,8 +160,9 @@ export class IpeUi {
 		this._setupPathView();
 	}
 
-	resume(result: ResumeResult): void {
-		this.ipe._resume(this.ipe.Emval.toHandle(result));
+	resume(result: ResumeResult, threadRef: number): void {
+		console.log("Resuming with result = ", result, " threadRef = ", threadRef);
+		this.ipe._resume(this.ipe.Emval.toHandle(result), threadRef);
 	}
 
 	// when the Lua code yields (e.g. to show a modal dialog
@@ -425,7 +428,6 @@ export class IpeUi {
 
 	private _handleKeyEvent(event: KeyboardEvent) {
 		if (this.popupMenu.keyPressEvent(event)) {
-			this.resume(null);
 			return;
 		}
 		if (this.modal.keyPressEvent(event)) return;
@@ -709,10 +711,18 @@ export class IpeUi {
 		}
 	}
 
-	async showPopupMenu(x: number, y: number, items: PopupItemOptions[]) {
+	async showPopupMenu(
+		x: number,
+		y: number,
+		items: PopupItemOptions[],
+		threadRef: number,
+	) {
 		if (window.ipeBridge?.popupMenu)
-			this.resume(await window.ipeBridge.popupMenu(items));
-		else this.popupMenu.openPopup(x, y, items, (result) => this.resume(result));
+			this.resume(await window.ipeBridge.popupMenu(items), threadRef);
+		else
+			this.popupMenu.openPopup(x, y, items, (result) =>
+				this.resume(result, threadRef),
+			);
 	}
 
 	// ------------------------------------------------------------------------------------
@@ -725,7 +735,7 @@ export class IpeUi {
 		this.ipe.FS.writeFile(tmpname, data);
 		this.preloadCache[fname] = tmpname;
 		console.log("Preload cache: ", Object.keys(this.preloadCache).join(", "));
-		this.resume(null);
+		// this.resume(null, null);
 	}
 
 	async preloadFileExists() {
@@ -740,7 +750,7 @@ export class IpeUi {
 			"File-exists cache: ",
 			Object.keys(this.fileExistsCache).join(", "),
 		);
-		this.resume(null);
+		// this.resume(null, null);
 	}
 
 	async persistFile(fname: string) {
@@ -750,13 +760,13 @@ export class IpeUi {
 			console.log("persisting", fname, tmpname);
 			const data = this.ipe.FS.readFile(tmpname);
 			await window.ipeBridge.saveFile(fname, data);
-			this.resume(true);
+			// this.resume(true, null);
 		}
 	}
 
 	// ------------------------------------------------------------------------------------
 
-	async waitDialog(cmd: string, label: string) {
+	async waitDialog(cmd: string, label: string, threadRef: number) {
 		this.modal.header.innerText = "Ipe: waiting";
 		this.modal.body.innerText = label;
 		this.modal.show();
@@ -773,7 +783,7 @@ export class IpeUi {
 				this.ipe.FS.writeFile("/tmp/latexrun/ipetemp.log", log);
 				if (pdf != null)
 					this.ipe.FS.writeFile("/tmp/latexrun/ipetemp.pdf", pdf);
-				this.modal.close(null);
+				this.modal.close(null, threadRef);
 			} else {
 				const tarFile = this.ipe.Emval.toValue(
 					this.ipe._createTarball(this.ipe.stringToNewUTF8(texfile)),
@@ -807,18 +817,18 @@ export class IpeUi {
 				} catch (err) {
 					console.error("Latex online fetch failed: ", err);
 				} finally {
-					this.modal.close(null);
+					this.modal.close(null, threadRef);
 				}
 			}
 		} else throw new Error(`Unsupported operation: ${op}`);
 	}
 
-	async messageBox(options: MessageBoxOptions) {
+	async messageBox(options: MessageBoxOptions, threadRef: number) {
 		if (window.ipeBridge?.messageBox != null) {
 			// TODO: add option to use inline messagebox
-			this.resume(await window.ipeBridge.messageBox(options));
+			this.resume(await window.ipeBridge.messageBox(options), threadRef);
 		} else {
-			this.modal.messageBox(options);
+			this.modal.messageBox(options, threadRef);
 		}
 	}
 
@@ -848,11 +858,11 @@ export class IpeUi {
 	}
 
 	// not used on vscode at all
-	async fileDialog(options: FileDialogOptions) {
+	async fileDialog(options: FileDialogOptions, threadRef: number) {
 		if (this.platform === "electron" && window.ipeBridge?.fileDialog) {
-			this.resume(await window.ipeBridge.fileDialog(options));
+			this.resume(await window.ipeBridge.fileDialog(options), threadRef);
 		} else {
-			this.modal.fileDialog(options);
+			this.modal.fileDialog(options, threadRef);
 		}
 	}
 
@@ -871,11 +881,11 @@ export class IpeUi {
 		}
 	}
 
-	async getClipboard(allowBitmap: boolean) {
+	async getClipboard(allowBitmap: boolean, threadRef: number) {
 		if (window.ipeBridge != null) {
-			this.resume(await window.ipeBridge.getClipboard(allowBitmap));
+			this.resume(await window.ipeBridge.getClipboard(allowBitmap), threadRef);
 		} else {
-			this.resume(await navigator.clipboard.readText());
+			this.resume(await navigator.clipboard.readText(), threadRef);
 		}
 	}
 
@@ -1106,14 +1116,14 @@ export class IpeUi {
 	}
 
 	// used on VS Code to retrieve the list of all available style sheets
-	async findAllStyleSheets() {
-		this.resume([await window.ipeBridge?.findAllStyleSheets()]);
+	async findAllStyleSheets(threadRef: number) {
+		this.resume([await window.ipeBridge?.findAllStyleSheets()], threadRef);
 	}
 
 	// used on VS Code to fetch external style sheets
 	// returns the external name, copies it into the local file system,
 	// and returns the local path as well
-	async fetchStyleSheet(name: string) {
-		this.resume(await window.ipeBridge?.fetchStyleSheet(name));
+	async fetchStyleSheet(name: string, threadRef: number) {
+		this.resume(await window.ipeBridge?.fetchStyleSheet(name), threadRef);
 	}
 }

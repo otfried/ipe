@@ -46,6 +46,8 @@ using namespace ipelua;
 using namespace emscripten;
 using std::string;
 
+extern void resumeLuaThread(lua_State * T, int nArgs);
+
 // --------------------------------------------------------------------
 
 static const char * submenuNames[] = {
@@ -351,14 +353,18 @@ int AppUi::setClipboard(lua_State * L) {
 
 int AppUi::clipboard(lua_State * L) {
     bool allowBitmap = lua_toboolean(L, 2);
-    val result = jsUi().call<val>("getClipboard", allowBitmap);
+    lua_pushthread(L);
+    int threadRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    val result = jsUi().call<val>("getClipboard", allowBitmap, threadRef);
     // this operation is async, it will later resume Lua with the result
     return 0;
 }
 
-bool AppUi::waitDialog(const char * cmd, const char * label) {
-    // cmd is either: "runlatex:<tex engine>" or "editor:"
-    jsUi().call<void>("waitDialog", string(cmd), string(label));
+// cmd is either: "runlatex:<tex engine>" or "editor:"
+bool AppUi::waitDialog(lua_State * co, const char * cmd, const char * label) {
+    lua_pushthread(co);
+    int threadRef = luaL_ref(co, LUA_REGISTRYINDEX);
+    jsUi().call<void>("waitDialog", string(cmd), string(label), threadRef);
     // this operation is async, it will later resume Lua with the result
     return false;
 }
@@ -387,18 +393,18 @@ static void convertVal(lua_State * L, val value) {
     }
 }
 
-void AppUi::resumeLua(val result) {
-    // calls model:resumeLua with an argument
-    lua_rawgeti(L, LUA_REGISTRYINDEX, iModel);
-    lua_getfield(L, -1, "resumeLua");
-    lua_insert(L, -2); // before model
+void AppUi::resumeLua(val result, int threadRef) {
+    lua_rawgeti(L, LUA_REGISTRYINDEX, threadRef);
+    lua_State * co = lua_tothread(L, -1);
+    lua_pop(L, 1); // remove the thread from the stack
     int nArgs = 1;
     if (result.isArray()) {
 	nArgs = result["length"].as<int>();
-	for (int i = 0; i < nArgs; ++i) convertVal(L, result[i]);
+	for (int i = 0; i < nArgs; ++i) convertVal(co, result[i]);
     } else
-	convertVal(L, result);
-    luacall(L, 1 + nArgs, 0); // model is self argument
+	convertVal(co, result);
+    resumeLuaThread(co, nArgs);
+    luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
 }
 
 void AppUi::openFile(String fn) {
@@ -429,6 +435,9 @@ int appui_jsCall(lua_State * L) {
 	jsUi().call<void>(method, convertLua(L, 2), convertLua(L, 3));
     } else if (nArgs == 3) {
 	jsUi().call<void>(method, convertLua(L, 2), convertLua(L, 3), convertLua(L, 4));
+    } else if (nArgs == 4) {
+	jsUi().call<void>(method, convertLua(L, 2), convertLua(L, 3), convertLua(L, 4),
+			  convertLua(L, 5));
     } else
 	luaL_error(L, "too many arguments");
     return 0;

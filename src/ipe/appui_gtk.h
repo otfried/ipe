@@ -77,7 +77,8 @@ public:
 
     virtual void setRecentFileMenu(const std::vector<String> & names) override;
 
-    virtual bool waitDialog(const char * cmd, const char * label) override;
+    virtual bool waitDialog(lua_State * co, const char * cmd,
+			    const char * label) override;
 
     // used by free-function helpers that build GtkDropDown widgets
     static void setup_combo_item_cb(GtkListItemFactory *, GtkListItem * item, gpointer);

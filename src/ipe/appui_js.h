@@ -80,8 +80,9 @@ public:
 
     void openFile(String fn);
 
-    virtual bool waitDialog(const char * cmd, const char * label) override;
-    void resumeLua(emscripten::val result);
+    virtual bool waitDialog(lua_State * co, const char * cmd,
+			    const char * label) override;
+    void resumeLua(emscripten::val result, int threadRef);
     virtual void setupSymbolicNames(const Cascade * sheet) override;
 
 private:

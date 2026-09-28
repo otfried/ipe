@@ -61,7 +61,7 @@ static int traceback(lua_State * L) {
     }
     lua_pushvalue(L, 1);   // pass error message
     lua_pushinteger(L, 2); // skip this function and traceback
-    luacall(L, 2, 1);      // call debug.traceback
+    lua_call(L, 2, 1);     // call debug.traceback
     return 1;
 }
 
@@ -154,7 +154,7 @@ int main(int argc, char * argv[]) {
     lua_pushcfunction(L, traceback);
     assert(luaL_loadstring(L, s.z()) == 0);
 
-    if (lua_pcallk(L, 0, 0, -2, 0, nullptr)) {
+    if (lua_pcall(L, 0, 0, -2)) {
 	const char * errmsg = lua_tolstring(L, -1, nullptr);
 	fprintf(stderr, "%s\n", errmsg);
     }
