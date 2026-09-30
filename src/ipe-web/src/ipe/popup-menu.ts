@@ -30,11 +30,20 @@ export interface PopupSubitemOptions {
 	color?: Color;
 }
 
+export interface ComboColorItem {
+	name: string;
+	color?: Color;
+}
+
 export interface PopupItemOptions {
 	name: string;
 	label: string;
 	current?: string; // if there is submenu
 	submenu?: PopupSubitemOptions[];
+}
+
+export function toRgb(rgb: Color): string {
+	return `rgb(${255 * rgb.red}, ${255 * rgb.green}, ${255 * rgb.blue})`;
 }
 
 // action and current item in submenu
@@ -45,6 +54,8 @@ type PopupCallback = (results: PopupMenuResults | null) => void;
 export class PopupMenu {
 	pane: HTMLDivElement;
 	subpane: HTMLDivElement;
+	// whether closing the currently open popup must resume a suspended WASM call
+	needsResume = true;
 	private _menu: HTMLDivElement | null = null;
 	private _submenu: HTMLDivElement | null = null;
 	private _isOpen = false;
@@ -303,7 +314,18 @@ export class PopupMenu {
 		for (const m of entry.submenu!) {
 			const item = document.createElement("div");
 			item.classList.add("popup-submenu-item");
-			item.innerText = m.label.replace("&&", "&");
+			if (m.color) {
+				const swatch = document.createElement("span");
+				swatch.style.color = toRgb(m.color);
+				swatch.innerHTML = "&#x2588;";
+				item.appendChild(swatch);
+				const text = document.createElement("span");
+				text.innerText = m.label.replace("&&", "&");
+				item.appendChild(text);
+				item.classList.add("color-menu-item");
+			} else {
+				item.innerText = m.label.replace("&&", "&");
+			}
 			if (m.name === entry.current) item.classList.add("checked");
 			item.addEventListener("click", () => {
 				this.close();
@@ -314,5 +336,43 @@ export class PopupMenu {
 		}
 		const r = handle.getBoundingClientRect();
 		this._show(r.right, r.top, r.bottom, this.subpane, this._submenu!);
+	}
+
+	// dropdown used by a select-like color combo (see IpeUi.addComboColors)
+	public openColorCombo(
+		anchor: HTMLElement,
+		items: ComboColorItem[],
+		current: number,
+		cb: (idx: number) => void,
+	): void {
+		if (this._isOpen) this.close();
+		this.needsResume = false;
+		this._menu = document.createElement("div");
+		this._menu.classList.add("popup-menu");
+		items.forEach((it, idx) => {
+			const item = document.createElement("div");
+			item.classList.add("popup-menu-item");
+			if (it.color) {
+				const swatch = document.createElement("span");
+				swatch.style.color = toRgb(it.color);
+				swatch.innerHTML = "&#x2588;";
+				item.appendChild(swatch);
+				const text = document.createElement("span");
+				text.innerText = it.name;
+				item.appendChild(text);
+				item.classList.add("color-menu-item");
+			} else {
+				item.innerText = it.name;
+			}
+			if (idx === current) item.classList.add("checked");
+			item.addEventListener("click", () => {
+				this.close();
+				cb(idx);
+			});
+			this._menu!.appendChild(item);
+		});
+		const r = anchor.getBoundingClientRect();
+		this._menu.style.minWidth = `${r.width}px`;
+		this._show(r.left, r.bottom, r.bottom, this.pane, this._menu);
 	}
 }

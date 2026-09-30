@@ -36,6 +36,12 @@ div#popup-submenu-pane {
 	padding: 4px 10px 1px 10px;
 	cursor: default;
 }
+.color-menu-item {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	column-gap: 10px;
+}
 .main-menu-item {
 	display: flex;
 	flex-direction: row;
