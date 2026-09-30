@@ -547,13 +547,11 @@ static const struct luaL_Reg menu_methods[] = {{"__tostring", menu_tostring},
 
 // --------------------------------------------------------------------
 
-Timer::Timer(lua_State * L0, int lua_object, const char * method)
+Timer::Timer(lua_State * T, int lua_object, const char * method)
     : iMethod(method) {
-    L = L0;
-    lua_rawgeti(L, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
-    if (lua_tothread(L, -1) != L)
-	luaL_error(L, "timer can only be created from main thread");
-    lua_pop(L, 1);
+    lua_rawgeti(T, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+    L = lua_tothread(T, -1);
+    lua_pop(T, 1);
     iLuaObject = lua_object;
     iSingleShot = false;
 }
@@ -561,6 +559,7 @@ Timer::Timer(lua_State * L0, int lua_object, const char * method)
 Timer::~Timer() { luaL_unref(L, LUA_REGISTRYINDEX, iLuaObject); }
 
 void Timer::callLua() {
+    // callbacks always happen on main thread
     lua_rawgeti(L, LUA_REGISTRYINDEX, iLuaObject);
     lua_rawgeti(L, -1, 1); // get Lua object
     if (lua_isnil(L, -1)) {
@@ -574,7 +573,7 @@ void Timer::callLua() {
     }
     lua_remove(L, -3);    // remove weak table
     lua_rotate(L, -2, 1); // flip method and table
-    lua_call(L, 1, 0);    // call method
+    protectedLuaCall(L, 1, 0); // call method
 }
 
 int Timer::setSingleShot(lua_State * L) {
