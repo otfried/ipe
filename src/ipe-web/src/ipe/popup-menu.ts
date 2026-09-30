@@ -47,15 +47,13 @@ export function toRgb(rgb: Color): string {
 }
 
 // action and current item in submenu
-export type PopupMenuResults = [string, string];
+export type PopupMenuResults = [string, string] | null;
 
-type PopupCallback = (results: PopupMenuResults | null) => void;
+type PopupCallback = (results: PopupMenuResults) => void;
 
 export class PopupMenu {
 	pane: HTMLDivElement;
 	subpane: HTMLDivElement;
-	// whether closing the currently open popup must resume a suspended WASM call
-	needsResume = true;
 	private _menu: HTMLDivElement | null = null;
 	private _submenu: HTMLDivElement | null = null;
 	private _isOpen = false;
@@ -346,7 +344,7 @@ export class PopupMenu {
 		cb: (idx: number) => void,
 	): void {
 		if (this._isOpen) this.close();
-		this.needsResume = false;
+		this._popupCallback = null;
 		this._menu = document.createElement("div");
 		this._menu.classList.add("popup-menu");
 		items.forEach((it, idx) => {

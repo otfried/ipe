@@ -386,6 +386,7 @@ export class Modal {
 		result: PopupMenuResults,
 		item: HTMLDivElement,
 	) {
+		if (!result) return;
 		switch (result[0]) {
 			case "delete":
 				item.remove();

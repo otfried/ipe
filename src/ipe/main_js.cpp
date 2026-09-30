@@ -262,11 +262,4 @@ extern "C" EM_VAL ipeVersion() {
     return result.release_ownership();
 }
 
-EMSCRIPTEN_KEEPALIVE
-extern "C" void clipboardResult(const char * type, const char * value) {
-    theAppUi->clipboardResult(type, value);
-    std::free((void *)type);
-    std::free((void *)value);
-}
-
 // --------------------------------------------------------------------

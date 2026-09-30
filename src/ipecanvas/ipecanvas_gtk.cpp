@@ -78,7 +78,13 @@ void Canvas::buttonHandler(double x, double y, GtkGestureClick * gesture, int nP
     if (button == 1 && nPress == 2)
 	// left double click
 	button = 0x81;
-    iGlobalPos = Vector(x, y);
+    GtkRoot * root = gtk_widget_get_root(iWindow);
+    graphene_point_t point = GRAPHENE_POINT_INIT(float(x), float(y));
+    graphene_point_t windowPoint;
+    if (root && gtk_widget_compute_point(iWindow, GTK_WIDGET(root), &point, &windowPoint))
+	iGlobalPos = Vector(windowPoint.x, windowPoint.y);
+    else
+	iGlobalPos = Vector(x, y);
     computeFifi(x, y);
     int mod = convertModifiers(state) | iAdditionalModifiers;
     if (iTool)

@@ -37,8 +37,8 @@ function MODEL:externalEditor(d, field)
   local f = io.open(fname, "w")
   f:write(text)
   f:close()
-  model:waitDialog(string.format(prefs.external_editor, fname),
-		   "Waiting for external editor")
+  self:waitDialog(string.format(prefs.external_editor, fname),
+		  "Waiting for external editor")
   f = io.open(fname, "r")
   text = f:read("*all")
   f:close()
@@ -1725,7 +1725,8 @@ function PASTETOOL:mouseButton(button, modifiers, press)
 	   end
   self.model:page():deselectAll()
   self.model:register(t)
-  self.model:autoRunLatex()
+  -- we cannot run Latex from here, as a tool handler must not yield
+  -- self.model:autoRunLatex()
 end
 
 function PASTETOOL:mouseMove()

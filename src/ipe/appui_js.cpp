@@ -351,15 +351,13 @@ int AppUi::setClipboard(lua_State * L) {
     return 0;
 }
 
-void AppUi::clipboardResult(const char * type, const char * value) {
-}
-
 int AppUi::clipboard(lua_State * L) {
     bool allowBitmap = lua_toboolean(L, 2);
     lua_pushthread(L);
     int threadRef = luaL_ref(L, LUA_REGISTRYINDEX);
     val result = jsUi().call<val>("getClipboard", allowBitmap, threadRef);
-    // this operation is async, it will later call clipboardResult
+    // this operation is async, it will later resume Lua with the result
+    return 0;
 }
 
 // cmd is either: "runlatex:<tex engine>" or "editor:"
@@ -427,7 +425,7 @@ static val convertLua(lua_State * L, int index) {
 	// on resume, need to call unref
 	return val(luaL_ref(L, LUA_REGISTRYINDEX));
     }
-    ipeDebug("Unsupported Lua type");
+    ipeDebug("Unsupported Lua type %s", lua_typename(L, lua_type(L, index)));
     return val::undefined();
 }
 

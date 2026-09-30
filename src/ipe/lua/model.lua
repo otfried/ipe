@@ -93,7 +93,7 @@ function MODEL:init(fname)
   end
 
   -- on vscode, host is responsible for backup
-  if config.platform ~= "vscode" and prefs.autosave_interval then
+  if config.toolkit ~= "htmljs" and prefs.autosave_interval then
     self.timer = ipeui.Timer(self, "autosave")
     self.timer:setInterval(1000 * prefs.autosave_interval) -- millisecs
     self.timer:start()
@@ -193,7 +193,19 @@ end
 function MODEL:clipboard(allowBitmap)
   if config.toolkit == "htmljs" then
     self.ui:getClipboardAsync(allowBitmap, coroutine.running())
-    return coroutine.yield()
+    local format, value = coroutine.yield()
+    if format == "text" then return value end
+    if format == "png" or format == "jpeg" then
+      local bitmap, res = ipe.readImage(value, format)
+      if not bitmap then
+	print("Error reading image: ", res)
+	return nil
+      end
+      local info = bitmap:info()
+      local r = self:compute_rect(info.width, info.height, res)
+      return ipe.Image(r, bitmap)
+    end
+    return nil
   else
     return self.ui:getClipboard(allowBitmap)
   end
@@ -1120,7 +1132,8 @@ function MODEL:findAllStyleSheets()
     end
   end
   if config.platform == "vscode" then
-    self.ui.js("findAllStyleSheets", coroutine.running())
+    local t = coroutine.running()
+    self.ui.js("findAllStyleSheets", t)
     local external = coroutine.yield()
     table.move(external, 1, #external, #result + 1, result)
   end
@@ -1135,7 +1148,8 @@ function MODEL:findStyle(w, dir)
     return s, s
   end
   if config.platform == "vscode" then
-    self.ui.js("fetchStyleSheet", w, coroutine.running())
+    local t = coroutine.running()
+    self.ui.js("fetchStyleSheet", w, t)
     local s, s1 = coroutine.yield()
     if s then return s, s1 end
   end

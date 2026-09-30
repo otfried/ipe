@@ -904,18 +904,18 @@ export class IpeUi {
 						const blob = await item.getType("image/jpeg");
 						const data = new Uint8Array(await blob.arrayBuffer());
 						this.ipe.FS.writeFile("/tmp/clipboard.jpeg", data);
-						console.log("Image retrieved:", blob.size);
+						this.resume(["jpeg", "/tmp/clipboard.jpeg"], threadRef);
 						return;
 					} else if (item.types.some((type) => type === "image/png")) {
 						const blob = await item.getType("image/png");
 						const data = new Uint8Array(await blob.arrayBuffer());
 						this.ipe.FS.writeFile("/tmp/clipboard.png", data);
-						console.log("Image retrieved:", blob.size);
+						this.resume(["png", "/tmp/clipboard.png"], threadRef);
 						return;
 					}
 				}
 			}
-			this.resume(await navigator.clipboard.readText(), threadRef);
+			this.resume(["text", await navigator.clipboard.readText()], threadRef);
 		}
 	}
 

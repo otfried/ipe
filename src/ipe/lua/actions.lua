@@ -2915,7 +2915,7 @@ function MODEL:action_style_sheets()
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("column", 2, 1)
-  if not d:execute() or not dd.modified then return end
+  if d:execute() <= 0 or not dd.modified then return end
   local t = { label="modify style sheets",
 	      final = ipe.Sheets(),
 	      style_sheets_changed = true,

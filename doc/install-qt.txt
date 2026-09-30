@@ -32,9 +32,9 @@ Now you can compile and install Ipe into /usr/local:
 (Note that 7.x.y has to be replaced by the current Ipe version!)
 
     cd src
-    make IPEPREFIX=/usr/local IPE_SPELLCHECK=1
+    make IPEUI=QT IPEPREFIX=/usr/local IPE_SPELLCHECK=1
     sudo checkinstall --pkgname=ipe --pkgversion=7.x.y --backup=no \
-    	 --fstrans=no --default make install IPEPREFIX=/usr/local
+    	 --fstrans=no --default make install IPEUI=QT IPEPREFIX=/usr/local
     sudo ldconfig
 
 The line with "checkinstall" makes sure that Ipe is installed as

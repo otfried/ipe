@@ -4,6 +4,7 @@ import type { PopupMenuResults } from "./popup-menu";
 type PageSorterResults = [number[], boolean[]];
 type FindAllStyleSheetsResult = [string[]];
 type FetchStyleSheetResult = [string | null, string | null];
+type ClipboardResult = [string, string] | null;
 
 export declare type ResumeResult =
 	| DialogResult
@@ -11,6 +12,7 @@ export declare type ResumeResult =
 	| PageSorterResults
 	| FindAllStyleSheetsResult
 	| FetchStyleSheetResult
+	| ClipboardResult
 	| null
 	| boolean
 	| number

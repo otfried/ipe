@@ -74,7 +74,6 @@ public:
 			   int thumbWidth) override;
     virtual int clipboard(lua_State * L) override;
     virtual int setClipboard(lua_State * L) override;
-    void clipboardResult(const char * type, const char * value);
 
     virtual void setRecentFileMenu(const std::vector<String> & names) override;
     virtual void action(String name) override;

@@ -331,6 +331,16 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
     gtk_widget_set_margin_end(action_area, 12);
     gtk_box_append(GTK_BOX(content), action_area);
 
+    bool hasCustomButton = false;
+    int numButtons = 0;
+    for (int i = 0; i < int(iElements.size()); ++i) {
+	SElement & m = iElements[i];
+	if (m.row < 0) {
+	    numButtons++;
+	    if (m.lua_method != LUA_NOREF) hasCustomButton = true;
+	}
+    }
+
     for (int i = 0; i < int(iElements.size()); ++i) {
 	SElement & m = iElements[i];
 	GtkWidget * widget = nullptr;
@@ -338,18 +348,32 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	bool hexpand = false;
 	bool vexpand = false;
 	if (m.row < 0) {
-	    widget = gtk_button_new_with_mnemonic(gtkMnemonic(m.text).c_str());
-	    gtk_box_append(GTK_BOX(action_area), widget);
-	    if (m.flags & EAccept) {
-		g_object_set_data(G_OBJECT(widget), "response",
-				  GINT_TO_POINTER(GTK_RESPONSE_ACCEPT));
-		g_signal_connect(widget, "clicked", G_CALLBACK(button_response_cb), this);
-	    } else if (m.flags & EReject) {
-		g_object_set_data(G_OBJECT(widget), "response",
-				  GINT_TO_POINTER(GTK_RESPONSE_REJECT));
-		g_signal_connect(widget, "clicked", G_CALLBACK(button_response_cb), this);
-	    } else if (m.lua_method) {
-		g_signal_connect(widget, "clicked", G_CALLBACK(itemResponse), this);
+	    if (hasCustomButton) {
+		widget = gtk_button_new_with_mnemonic(gtkMnemonic(m.text).c_str());
+		gtk_box_append(GTK_BOX(action_area), widget);
+		if (m.flags & EAccept) {
+		    g_object_set_data(G_OBJECT(widget), "response",
+				      GINT_TO_POINTER(GTK_RESPONSE_ACCEPT));
+		    g_signal_connect(widget, "clicked", G_CALLBACK(button_response_cb),
+				     this);
+		} else if (m.flags & EReject) {
+		    g_object_set_data(G_OBJECT(widget), "response",
+				      GINT_TO_POINTER(GTK_RESPONSE_REJECT));
+		    g_signal_connect(widget, "clicked", G_CALLBACK(button_response_cb),
+				     this);
+		} else if (m.lua_method != LUA_NOREF) {
+		    g_signal_connect(widget, "clicked", G_CALLBACK(itemResponse), this);
+		}
+	    } else {
+		gint response = GTK_RESPONSE_NONE;
+		if (m.flags & EAccept)
+		    response = GTK_RESPONSE_ACCEPT;
+		else if (m.flags & EReject)
+		    response = GTK_RESPONSE_REJECT;
+		std::string name = gtkMnemonic(m.text);
+		widget =
+		    gtk_dialog_add_button(GTK_DIALOG(hDialog), name.c_str(), response);
+		if (numButtons == 1) gtk_widget_add_css_class(widget, "suggested-action");
 	    }
 	} else {
 	    switch (m.type) {
@@ -359,13 +383,13 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		break;
 	    case EButton:
 		widget = gtk_button_new_with_mnemonic(gtkMnemonic(m.text).c_str());
-		if (m.lua_method)
+		if (m.lua_method != LUA_NOREF)
 		    g_signal_connect(widget, "clicked", G_CALLBACK(itemResponse), this);
 		break;
 	    case ECheckBox:
 		widget = gtk_check_button_new_with_mnemonic(gtkMnemonic(m.text).c_str());
 		gtk_check_button_set_active(GTK_CHECK_BUTTON(widget), m.value);
-		if (m.lua_method)
+		if (m.lua_method != LUA_NOREF)
 		    g_signal_connect(widget, "toggled", G_CALLBACK(itemResponse), this);
 		break;
 	    case EInput:
@@ -555,7 +579,8 @@ static std::string colorSwatchMarkup(double r, double g, double b, const char * 
 
 int PMenu::add(lua_State * L) {
     const char * name = luaL_checkstring(L, 2);
-    const char * title = luaL_checkstring(L, 3);
+    std::string title = luaL_checkstring(L, 3);
+    title = gtkMnemonic(title);
     auto addItem = [&](GMenu * menu, const char * label, const char * itemName,
 		       bool checkable, bool active, bool markup = false) {
 	char action_name[32];
@@ -571,6 +596,11 @@ int PMenu::add(lua_State * L) {
 	iItems.push_back({name, itemName ? itemName : ""});
 	char detailed[40];
 	sprintf(detailed, "menu.%s", action_name);
+	std::string slabel;
+	if (label) {
+	    slabel = gtkMnemonic(label);
+	    label = slabel.c_str();
+	}
 	GMenuItem * menuItem = g_menu_item_new(label, detailed);
 	// gtk_menu_tracker_item_get_use_markup() reads this attribute with
 	// format "&s", so it must be a string, not a boolean, to be honored.
@@ -580,7 +610,7 @@ int PMenu::add(lua_State * L) {
     };
 
     if (lua_gettop(L) == 3) {
-	addItem(iMenu, title, nullptr, false, false);
+	addItem(iMenu, title.c_str(), nullptr, false, false);
 	return 0;
     }
 
@@ -634,7 +664,8 @@ int PMenu::add(lua_State * L) {
 		hascheck && !g_strcmp0(itemName, current), hasMarkup);
 	lua_pop(L, 2);
     }
-    GMenuItem * parentItem = g_menu_item_new_submenu(title, G_MENU_MODEL(submenu));
+    GMenuItem * parentItem =
+	g_menu_item_new_submenu(title.c_str(), G_MENU_MODEL(submenu));
     g_menu_append_item(iMenu, parentItem);
     g_object_unref(parentItem);
     g_object_unref(submenu);
@@ -642,12 +673,12 @@ int PMenu::add(lua_State * L) {
 }
 
 int PMenu::execute(lua_State * L) {
-    int x = luaL_checkinteger(L, 2);
-    int y = luaL_checkinteger(L, 3);
+    float x = luaL_checknumber(L, 2);
+    float y = luaL_checknumber(L, 3);
     GtkWidget * popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(iMenu));
     gtk_widget_insert_action_group(popover, "menu", G_ACTION_GROUP(iActions));
     gtk_widget_set_parent(popover, iParent);
-    GdkRectangle rect = {x, y, 1, 1};
+    GdkRectangle rect = {int(x), int(y), 1, 1};
     gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
     iSelected = -1;
     iPopover = popover;
@@ -660,476 +691,360 @@ int PMenu::execute(lua_State * L) {
     return 0;
 }
 
-// GtkImageMenuItem is gone in GTK3; build a plain menu item whose child is a
-// small box with a color swatch and a label instead.
-#if GTK_MAJOR_VERSION < 4
-static GtkWidget * colorMenuItem(double r, double g, double b, const char * text) {
-    GdkPixbuf * pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 16, 16);
-    guint32 pixel = (guint32(r * 255) << 24) | (guint32(g * 255) << 16)
-		    | (guint32(b * 255) << 8) | 0xff;
-    gdk_pixbuf_fill(pixbuf, pixel);
-    GtkWidget * image = gtk_image_new_from_pixbuf(pixbuf);
-    g_object_unref(pixbuf);
+// --------------------------------------------------------------------
 
-    GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
-    gtk_box_pack_start(GTK_BOX(hbox), image, FALSE, FALSE, 0);
-    GtkWidget * label = gtk_label_new(text);
-    gtk_label_set_xalign(GTK_LABEL(label), 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
-
-    GtkWidget * item = gtk_menu_item_new();
-    gtk_container_add(GTK_CONTAINER(item), hbox);
-    gtk_widget_show_all(hbox);
-    return item;
+static int menu_constructor(lua_State * L) {
+    GtkWidget * parent = check_winid(L, 1);
+    Menu ** m = (Menu **)lua_newuserdata(L, sizeof(Menu *));
+    *m = nullptr;
+    luaL_getmetatable(L, "Ipe.menu");
+    lua_setmetatable(L, -2);
+    *m = new PMenu(parent);
+    return 1;
 }
 
-int PMenu::add(lua_State * L) {
-    const char * name = luaL_checkstring(L, 2);
-    const char * title = luaL_checkstring(L, 3);
-    if (lua_gettop(L) == 3) {
-	GtkWidget * w = gtk_menu_item_new_with_label(title);
-	gtk_menu_shell_append(GTK_MENU_SHELL(iMenu), w);
-	g_signal_connect(w, "activate", G_CALLBACK(itemResponse), this);
-	gtk_widget_show(w);
-	Item item;
-	item.name = g_strdup(name);
-	item.itemName = nullptr;
-	item.itemIndex = 0;
-	item.widget = w;
-	items.push_back(item);
-    } else {
-	luaL_argcheck(L, lua_istable(L, 4), 4, "argument is not a table");
-	bool hasmap = !lua_isnoneornil(L, 5) && lua_isfunction(L, 5);
-	bool hastable = !hasmap && !lua_isnoneornil(L, 5);
-	bool hascolor = !lua_isnoneornil(L, 6) && lua_isfunction(L, 6);
-	bool hascheck = !hascolor && !lua_isnoneornil(L, 6);
-	if (hastable)
-	    luaL_argcheck(L, lua_istable(L, 5), 5, "argument is not a function or table");
-	const char * current = nullptr;
-	if (hascheck) {
-	    luaL_argcheck(L, lua_isstring(L, 6), 6,
-			  "argument is not a function or string");
-	    current = luaL_checkstring(L, 6);
+// --------------------------------------------------------------------
 
-	    GtkWidget * sm = gtk_menu_new();
+struct LuaAsyncContext {
+    lua_State * lua;
+    int threadRef;
+};
 
-	    int no = lua_rawlen(L, 4);
-	    for (int i = 1; i <= no; ++i) {
-		lua_rawgeti(L, 4, i);
-		luaL_argcheck(L, lua_isstring(L, -1), 4, "items must be strings");
-		const char * item = lua_tostring(L, -1);
-		if (hastable) {
-		    lua_rawgeti(L, 5, i);
-		    luaL_argcheck(L, lua_isstring(L, -1), 5, "labels must be strings");
-		} else if (hasmap) {
-		    lua_pushvalue(L, 5);  // function
-		    lua_pushnumber(L, i); // index
-		    lua_pushvalue(L, -3); // name
-		    lua_call(L, 2, 1);    // function returns label
-		    luaL_argcheck(L, lua_isstring(L, -1), 5,
-				  "function does not return string");
-		} else
-		    lua_pushvalue(L, -1);
-
-		const char * text = lua_tostring(L, -1);
-
-		GtkWidget * w;
-		if (hascolor) {
-		    lua_pushvalue(L, 6);  // function
-		    lua_pushnumber(L, i); // index
-		    lua_pushvalue(L, -3); // name
-		    lua_call(L, 2, 3);    // function returns red, green, blue
-		    double red = luaL_checknumber(L, -3);
-		    double green = luaL_checknumber(L, -2);
-		    double blue = luaL_checknumber(L, -1);
-		    lua_pop(L, 3); // pop result
-		    w = colorMenuItem(red, green, blue, text);
-		} else if (hascheck) {
-		    w = gtk_check_menu_item_new_with_label(text);
-		    if (!g_strcmp0(item, current))
-			gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(w), true);
-		} else {
-		    w = gtk_menu_item_new_with_label(text);
-		}
-		gtk_menu_shell_append(GTK_MENU_SHELL(sm), w);
-		g_signal_connect(w, "activate", G_CALLBACK(itemResponse), this);
-		gtk_widget_show(w);
-		Item mitem;
-		mitem.name = g_strdup(name);
-		mitem.itemName = g_strdup(item);
-		mitem.itemIndex = i;
-		mitem.widget = w;
-		items.push_back(mitem);
-
-		lua_pop(L, 2); // item, text
-	    }
-	    GtkWidget * sme = gtk_menu_item_new_with_label(title);
-	    gtk_widget_show(sme);
-	    gtk_menu_item_set_submenu(GTK_MENU_ITEM(sme), sm);
-	    gtk_menu_shell_append(GTK_MENU_SHELL(iMenu), sme);
-	    gtk_widget_show(sme);
-	}
-	return 0;
+static void ipeui_getColor_response(GObject * source, GAsyncResult * result,
+				    gpointer data) {
+    auto * context = static_cast<LuaAsyncContext *>(data);
+    GError * error = nullptr;
+    GdkRGBA * color =
+	gtk_color_dialog_choose_rgba_finish(GTK_COLOR_DIALOG(source), result, &error);
+    int nresults = 0;
+    if (color) {
+	lua_pushnumber(context->lua, color->red);
+	lua_pushnumber(context->lua, color->green);
+	lua_pushnumber(context->lua, color->blue);
+	nresults = 3;
+	g_free(color);
     }
-#endif
+    if (error) g_error_free(error);
+    resumeLuaThread(context->lua, nresults);
+    luaL_unref(context->lua, LUA_REGISTRYINDEX, context->threadRef);
+    g_object_unref(source);
+    delete context;
+}
 
-    // --------------------------------------------------------------------
-
-    static int menu_constructor(lua_State * L) {
-	GtkWidget * parent = check_winid(L, 1);
-	Menu ** m = (Menu **)lua_newuserdata(L, sizeof(Menu *));
-	*m = nullptr;
-	luaL_getmetatable(L, "Ipe.menu");
-	lua_setmetatable(L, -2);
-	*m = new PMenu(parent);
-	return 1;
-    }
-
-    // --------------------------------------------------------------------
-
-    struct LuaAsyncContext {
-	lua_State * lua;
-	int threadRef;
-    };
-
-    static void ipeui_getColor_response(GObject * source, GAsyncResult * result,
-					gpointer data) {
-	auto * context = static_cast<LuaAsyncContext *>(data);
-	GError * error = nullptr;
-	GdkRGBA * color =
-	    gtk_color_dialog_choose_rgba_finish(GTK_COLOR_DIALOG(source), result, &error);
-	int nresults = 0;
-	if (color) {
-	    lua_pushnumber(context->lua, color->red);
-	    lua_pushnumber(context->lua, color->green);
-	    lua_pushnumber(context->lua, color->blue);
-	    nresults = 3;
-	    g_free(color);
-	}
-	if (error) g_error_free(error);
-	resumeLuaThread(context->lua, nresults);
-	luaL_unref(context->lua, LUA_REGISTRYINDEX, context->threadRef);
-	g_object_unref(source);
-	delete context;
-    }
-
-    static int ipeui_getColorAsync(lua_State * L) {
-	GtkWindow * parent = GTK_WINDOW(check_winid(L, 1));
-	const char * title = luaL_checkstring(L, 2);
-	GdkRGBA color = {float(luaL_checknumber(L, 3)), float(luaL_checknumber(L, 4)),
-			 float(luaL_checknumber(L, 5)), 1.0f};
-	GtkColorDialog * dialog = gtk_color_dialog_new();
-	gtk_color_dialog_set_title(dialog, title);
-	gtk_color_dialog_set_with_alpha(dialog, FALSE);
-	lua_pushthread(L);
-	auto * context = new LuaAsyncContext{L, luaL_ref(L, LUA_REGISTRYINDEX)};
-	gtk_color_dialog_choose_rgba(dialog, parent, &color, nullptr,
-				     ipeui_getColor_response, context);
-	return 0;
-    }
-
-    // ------------------------------------------------------------------------------------------
-
-    struct FileDialogContext : LuaAsyncContext {
-	bool save;
-    };
-
-    static void ipeui_fileDialog_response(GObject * source, GAsyncResult * result,
-					  gpointer data) {
-	auto * context = static_cast<FileDialogContext *>(data);
-	GError * error = nullptr;
-	GFile * file =
-	    context->save
-		? gtk_file_dialog_save_finish(GTK_FILE_DIALOG(source), result, &error)
-		: gtk_file_dialog_open_finish(GTK_FILE_DIALOG(source), result, &error);
-	if (file) {
-	    char * path = g_file_get_path(file);
-	    lua_pushstring(context->lua, path);
-	    g_free(path);
-	    g_object_unref(file);
-	}
-	if (error) g_error_free(error);
-	int nresults = file ? 1 : 0;
-	resumeLuaThread(context->lua, nresults);
-	luaL_unref(context->lua, LUA_REGISTRYINDEX, context->threadRef);
-	g_object_unref(source);
-	delete context;
-    }
-
-    static int ipeui_fileDialogAsync(lua_State * L) {
-	GtkWindow * parent = GTK_WINDOW(check_winid(L, 1));
-	static const char * const typenames[] = {"open", "save", nullptr};
-	int type = luaL_checkoption(L, 2, nullptr, typenames);
-	const char * caption = luaL_checkstring(L, 3);
-	if (!lua_isnoneornil(L, 4)) luaL_checktype(L, 4, LUA_TTABLE);
-	const char * dir = lua_isnoneornil(L, 5) ? nullptr : luaL_checkstring(L, 5);
-	const char * name = lua_isnoneornil(L, 6) ? nullptr : luaL_checkstring(L, 6);
-
-	GtkFileDialog * dialog = gtk_file_dialog_new();
-	gtk_file_dialog_set_title(dialog, caption);
-	if (dir) {
-	    GFile * folder = g_file_new_for_path(dir);
-	    gtk_file_dialog_set_initial_folder(dialog, folder);
-	    g_object_unref(folder);
-	}
-	if (name) gtk_file_dialog_set_initial_name(dialog, name);
-	lua_pushthread(L);
-	auto * context =
-	    new FileDialogContext{{L, luaL_ref(L, LUA_REGISTRYINDEX)}, type != 0};
-	if (type == 0)
-	    gtk_file_dialog_open(dialog, parent, nullptr, ipeui_fileDialog_response,
+static int ipeui_getColorAsync(lua_State * L) {
+    GtkWindow * parent = GTK_WINDOW(check_winid(L, 1));
+    const char * title = luaL_checkstring(L, 2);
+    GdkRGBA color = {float(luaL_checknumber(L, 3)), float(luaL_checknumber(L, 4)),
+		     float(luaL_checknumber(L, 5)), 1.0f};
+    GtkColorDialog * dialog = gtk_color_dialog_new();
+    gtk_color_dialog_set_title(dialog, title);
+    gtk_color_dialog_set_with_alpha(dialog, FALSE);
+    lua_pushthread(L);
+    auto * context = new LuaAsyncContext{L, luaL_ref(L, LUA_REGISTRYINDEX)};
+    gtk_color_dialog_choose_rgba(dialog, parent, &color, nullptr, ipeui_getColor_response,
 				 context);
-	else
-	    gtk_file_dialog_save(dialog, parent, nullptr, ipeui_fileDialog_response,
-				 context);
-	return 0;
+    return 0;
+}
+
+// ------------------------------------------------------------------------------------------
+
+struct FileDialogContext : LuaAsyncContext {
+    bool save;
+};
+
+static void ipeui_fileDialog_response(GObject * source, GAsyncResult * result,
+				      gpointer data) {
+    auto * context = static_cast<FileDialogContext *>(data);
+    GError * error = nullptr;
+    GFile * file =
+	context->save
+	    ? gtk_file_dialog_save_finish(GTK_FILE_DIALOG(source), result, &error)
+	    : gtk_file_dialog_open_finish(GTK_FILE_DIALOG(source), result, &error);
+    if (file) {
+	char * path = g_file_get_path(file);
+	lua_pushstring(context->lua, path);
+	g_free(path);
+	g_object_unref(file);
+    }
+    if (error) g_error_free(error);
+    int nresults = file ? 1 : 0;
+    resumeLuaThread(context->lua, nresults);
+    luaL_unref(context->lua, LUA_REGISTRYINDEX, context->threadRef);
+    g_object_unref(source);
+    delete context;
+}
+
+static int ipeui_fileDialogAsync(lua_State * L) {
+    GtkWindow * parent = GTK_WINDOW(check_winid(L, 1));
+    static const char * const typenames[] = {"open", "save", nullptr};
+    int type = luaL_checkoption(L, 2, nullptr, typenames);
+    const char * caption = luaL_checkstring(L, 3);
+    if (!lua_isnoneornil(L, 4)) luaL_checktype(L, 4, LUA_TTABLE);
+    const char * dir = lua_isnoneornil(L, 5) ? nullptr : luaL_checkstring(L, 5);
+    const char * name = lua_isnoneornil(L, 6) ? nullptr : luaL_checkstring(L, 6);
+
+    GtkFileDialog * dialog = gtk_file_dialog_new();
+    gtk_file_dialog_set_title(dialog, caption);
+    if (dir) {
+	GFile * folder = g_file_new_for_path(dir);
+	gtk_file_dialog_set_initial_folder(dialog, folder);
+	g_object_unref(folder);
+    }
+    if (name) gtk_file_dialog_set_initial_name(dialog, name);
+    lua_pushthread(L);
+    auto * context =
+	new FileDialogContext{{L, luaL_ref(L, LUA_REGISTRYINDEX)}, type != 0};
+    if (type == 0)
+	gtk_file_dialog_open(dialog, parent, nullptr, ipeui_fileDialog_response, context);
+    else
+	gtk_file_dialog_save(dialog, parent, nullptr, ipeui_fileDialog_response, context);
+    return 0;
+}
+
+// ------------------------------------------------------------------------------------------
+
+struct MessageBoxContext {
+    lua_State * lua;
+    int threadRef;
+    int buttons;
+};
+
+static void message_response_cb(GtkDialog * dialog, int response, gpointer data) {
+    auto * context = static_cast<MessageBoxContext *>(data);
+    int buttons = context->buttons;
+    int positive = (buttons == 0) ? 0 : ((buttons == 2 || buttons == 4) ? 2 : 1);
+    int value = -1;
+    if (response == positive)
+	value = 1;
+    else if (response > 0)
+	value = 0;
+    gtk_window_destroy(GTK_WINDOW(dialog));
+
+    lua_pushinteger(context->lua, value);
+    resumeLuaThread(context->lua, 1);
+    luaL_unref(context->lua, LUA_REGISTRYINDEX, context->threadRef);
+    delete context;
+}
+
+static int ipeui_messageBoxAsync(lua_State * L) {
+    GtkWindow * parent = GTK_WINDOW(check_winid(L, 1));
+    static const char * const options[] = {"none",     "warning",  "information",
+					   "question", "critical", nullptr};
+    luaL_checkoption(L, 2, "none", options); // not used in GTK
+    const char * text = luaL_checkstring(L, 3);
+    const char * details = nullptr;
+    if (!lua_isnoneornil(L, 4)) details = luaL_checkstring(L, 4);
+    int buttons = 0;
+    if (lua_isnumber(L, 5))
+	buttons = (int)luaL_checkinteger(L, 5);
+    else if (!lua_isnoneornil(L, 5)) {
+	static const char * const buttontype[] = {
+	    "ok",   "okcancel", "yesnocancel", "discardcancel", "savediscardcancel",
+	    nullptr};
+	buttons = luaL_checkoption(L, 5, nullptr, buttontype);
+    }
+    luaL_argcheck(L, 0 <= buttons && buttons <= 4, 5, "invalid button type");
+
+    static const char * const ok[] = {"_OK", nullptr};
+    static const char * const okcancel[] = {"_Cancel", "_OK", nullptr};
+    static const char * const yesnocancel[] = {"_Cancel", "_No", "_Yes", nullptr};
+    static const char * const discardcancel[] = {"_Cancel", "_Discard", nullptr};
+    static const char * const savediscardcancel[] = {"_Cancel", "_Discard", "_Save",
+						     nullptr};
+    static const char * const * const buttonsets[] = {ok, okcancel, yesnocancel,
+						      discardcancel, savediscardcancel};
+
+    // avoid GtkAlertDialog: same first-frame reflow/jump seen with GtkMessageDialog
+    GtkWidget * dialog = gtk_dialog_new();
+    gtk_window_set_title(GTK_WINDOW(dialog), text);
+    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+
+    GtkWidget * content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    std::string markup = std::format("<span size='x-large'>{}</span>", text);
+    GtkWidget * label = gtk_label_new(nullptr);
+    gtk_label_set_markup(GTK_LABEL(label), markup.c_str());
+    gtk_label_set_wrap(GTK_LABEL(label), TRUE);
+    gtk_widget_set_margin_start(label, 20);
+    gtk_widget_set_margin_end(label, 20);
+    gtk_widget_set_margin_top(label, 20);
+    gtk_widget_set_margin_bottom(label, details ? 16 : 20);
+    gtk_box_append(GTK_BOX(content), label);
+
+    if (details) {
+	GtkWidget * detailLabel = gtk_label_new(details);
+	gtk_label_set_wrap(GTK_LABEL(detailLabel), TRUE);
+	// gtk_widget_add_css_class(detailLabel, "dim-label");
+	gtk_widget_set_margin_start(detailLabel, 20);
+	gtk_widget_set_margin_end(detailLabel, 20);
+	gtk_widget_set_margin_bottom(detailLabel, 20);
+	gtk_box_append(GTK_BOX(content), detailLabel);
     }
 
-    // ------------------------------------------------------------------------------------------
-
-    struct MessageBoxContext {
-	lua_State * lua;
-	int threadRef;
-	int buttons;
-    };
-
-    static void message_response_cb(GtkDialog * dialog, int response, gpointer data) {
-	auto * context = static_cast<MessageBoxContext *>(data);
-	int buttons = context->buttons;
-	int positive = (buttons == 0) ? 0 : ((buttons == 2 || buttons == 4) ? 2 : 1);
-	int value = -1;
-	if (response == positive)
-	    value = 1;
-	else if (response > 0)
-	    value = 0;
-	gtk_window_destroy(GTK_WINDOW(dialog));
-
-	lua_pushinteger(context->lua, value);
-	resumeLuaThread(context->lua, 1);
-	luaL_unref(context->lua, LUA_REGISTRYINDEX, context->threadRef);
-	delete context;
+    const char * const * names = buttonsets[buttons];
+    int defaultIndex = (buttons == 0) ? 0 : ((buttons == 2 || buttons == 4) ? 2 : 1);
+    for (int i = 0; names[i]; ++i) {
+	GtkWidget * button = gtk_dialog_add_button(GTK_DIALOG(dialog), names[i], i);
+	if (i == defaultIndex) gtk_widget_add_css_class(button, "suggested-action");
     }
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), defaultIndex);
 
-    static int ipeui_messageBoxAsync(lua_State * L) {
-	GtkWindow * parent = GTK_WINDOW(check_winid(L, 1));
-	static const char * const options[] = {"none",     "warning",  "information",
-					       "question", "critical", nullptr};
-	luaL_checkoption(L, 2, "none", options); // not used in GTK
-	const char * text = luaL_checkstring(L, 3);
-	const char * details = nullptr;
-	if (!lua_isnoneornil(L, 4)) details = luaL_checkstring(L, 4);
-	int buttons = 0;
-	if (lua_isnumber(L, 5))
-	    buttons = (int)luaL_checkinteger(L, 5);
-	else if (!lua_isnoneornil(L, 5)) {
-	    static const char * const buttontype[] = {
-		"ok",   "okcancel", "yesnocancel", "discardcancel", "savediscardcancel",
-		nullptr};
-	    buttons = luaL_checkoption(L, 5, nullptr, buttontype);
-	}
-	luaL_argcheck(L, 0 <= buttons && buttons <= 4, 5, "invalid button type");
+    lua_pushthread(L);
+    auto * context = new MessageBoxContext{L, luaL_ref(L, LUA_REGISTRYINDEX), buttons};
+    g_signal_connect(dialog, "response", G_CALLBACK(message_response_cb), context);
+    gtk_window_present(GTK_WINDOW(dialog));
+    return 0;
+}
 
-	static const char * const ok[] = {"_OK", nullptr};
-	static const char * const okcancel[] = {"_Cancel", "_OK", nullptr};
-	static const char * const yesnocancel[] = {"_Cancel", "_No", "_Yes", nullptr};
-	static const char * const discardcancel[] = {"_Cancel", "_Discard", nullptr};
-	static const char * const savediscardcancel[] = {"_Cancel", "_Discard", "_Save",
-							 nullptr};
-	static const char * const * const buttonsets[] = {
-	    ok, okcancel, yesnocancel, discardcancel, savediscardcancel};
+// --------------------------------------------------------------------
 
-	// avoid GtkAlertDialog: same first-frame reflow/jump seen with GtkMessageDialog
-	GtkWidget * dialog = gtk_dialog_new();
-	gtk_window_set_title(GTK_WINDOW(dialog), text);
-	gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
-	gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+class PTimer : public Timer {
+public:
+    PTimer(lua_State * L0, int lua_object, const char * method);
+    virtual ~PTimer();
 
-	GtkWidget * content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-	std::string markup = std::format("<span size='x-large'>{}</span>", text);
-	GtkWidget * label = gtk_label_new(nullptr);
-	gtk_label_set_markup(GTK_LABEL(label), markup.c_str());
-	gtk_label_set_wrap(GTK_LABEL(label), TRUE);
-	gtk_widget_set_margin_start(label, 20);
-	gtk_widget_set_margin_end(label, 20);
-	gtk_widget_set_margin_top(label, 20);
-	gtk_widget_set_margin_bottom(label, details ? 16 : 20);
-	gtk_box_append(GTK_BOX(content), label);
+    virtual int setInterval(lua_State * L);
+    virtual int active(lua_State * L);
+    virtual int start(lua_State * L);
+    virtual int stop(lua_State * L);
 
-	if (details) {
-	    GtkWidget * detailLabel = gtk_label_new(details);
-	    gtk_label_set_wrap(GTK_LABEL(detailLabel), TRUE);
-	    // gtk_widget_add_css_class(detailLabel, "dim-label");
-	    gtk_widget_set_margin_start(detailLabel, 20);
-	    gtk_widget_set_margin_end(detailLabel, 20);
-	    gtk_widget_set_margin_bottom(detailLabel, 20);
-	    gtk_box_append(GTK_BOX(content), detailLabel);
-	}
+private:
+    gboolean elapsed();
+    static gboolean timerCallback(gpointer data);
 
-	const char * const * names = buttonsets[buttons];
-	int defaultIndex = (buttons == 0) ? 0 : ((buttons == 2 || buttons == 4) ? 2 : 1);
-	for (int i = 0; names[i]; ++i) {
-	    GtkWidget * button = gtk_dialog_add_button(GTK_DIALOG(dialog), names[i], i);
-	    if (i == defaultIndex) gtk_widget_add_css_class(button, "suggested-action");
-	}
-	gtk_dialog_set_default_response(GTK_DIALOG(dialog), defaultIndex);
+private:
+    guint iTimer;
+    guint iInterval;
+};
 
-	lua_pushthread(L);
-	auto * context =
-	    new MessageBoxContext{L, luaL_ref(L, LUA_REGISTRYINDEX), buttons};
-	g_signal_connect(dialog, "response", G_CALLBACK(message_response_cb), context);
-	gtk_window_present(GTK_WINDOW(dialog));
-	return 0;
-    }
+gboolean PTimer::timerCallback(gpointer data) {
+    PTimer * t = (PTimer *)data;
+    return t->elapsed();
+}
 
-    // --------------------------------------------------------------------
+PTimer::PTimer(lua_State * L0, int lua_object, const char * method)
+    : Timer(L0, lua_object, method) {
+    iTimer = 0;
+    iInterval = 0;
+}
 
-    class PTimer : public Timer {
-    public:
-	PTimer(lua_State * L0, int lua_object, const char * method);
-	virtual ~PTimer();
+PTimer::~PTimer() {
+    if (iTimer != 0) g_source_remove(iTimer);
+}
 
-	virtual int setInterval(lua_State * L);
-	virtual int active(lua_State * L);
-	virtual int start(lua_State * L);
-	virtual int stop(lua_State * L);
-
-    private:
-	gboolean elapsed();
-	static gboolean timerCallback(gpointer data);
-
-    private:
-	guint iTimer;
-	guint iInterval;
-    };
-
-    gboolean PTimer::timerCallback(gpointer data) {
-	PTimer * t = (PTimer *)data;
-	return t->elapsed();
-    }
-
-    PTimer::PTimer(lua_State * L0, int lua_object, const char * method)
-	: Timer(L0, lua_object, method) {
+gboolean PTimer::elapsed() {
+    callLua();
+    if (iSingleShot) {
 	iTimer = 0;
-	iInterval = 0;
+	return FALSE;
+    } else
+	return TRUE;
+}
+
+// does not update interval on running timer
+int PTimer::setInterval(lua_State * L) {
+    int t = (int)luaL_checkinteger(L, 2);
+    iInterval = t;
+    return 0;
+}
+
+int PTimer::active(lua_State * L) {
+    lua_pushboolean(L, (iTimer != 0));
+    return 1;
+}
+
+int PTimer::start(lua_State * L) {
+    if (iTimer == 0) {
+	if (iInterval > 3000)
+	    iTimer =
+		g_timeout_add_seconds(iInterval / 1000, GSourceFunc(timerCallback), this);
+	else
+	    iTimer = g_timeout_add(iInterval, GSourceFunc(timerCallback), this);
     }
+    return 0;
+}
 
-    PTimer::~PTimer() {
-	if (iTimer != 0) g_source_remove(iTimer);
+int PTimer::stop(lua_State * L) {
+    if (iTimer != 0) {
+	g_source_remove(iTimer);
+	iTimer = 0;
     }
+    return 0;
+}
 
-    gboolean PTimer::elapsed() {
-	callLua();
-	if (iSingleShot) {
-	    iTimer = 0;
-	    return FALSE;
-	} else
-	    return TRUE;
-    }
+// --------------------------------------------------------------------
 
-    // does not update interval on running timer
-    int PTimer::setInterval(lua_State * L) {
-	int t = (int)luaL_checkinteger(L, 2);
-	iInterval = t;
-	return 0;
-    }
+static int timer_constructor(lua_State * L) {
+    luaL_argcheck(L, lua_istable(L, 1), 1, "argument is not a table");
+    const char * method = luaL_checkstring(L, 2);
 
-    int PTimer::active(lua_State * L) {
-	lua_pushboolean(L, (iTimer != 0));
-	return 1;
-    }
+    Timer ** t = (Timer **)lua_newuserdata(L, sizeof(Timer *));
+    *t = nullptr;
+    luaL_getmetatable(L, "Ipe.timer");
+    lua_setmetatable(L, -2);
 
-    int PTimer::start(lua_State * L) {
-	if (iTimer == 0) {
-	    if (iInterval > 3000)
-		iTimer = g_timeout_add_seconds(iInterval / 1000,
-					       GSourceFunc(timerCallback), this);
-	    else
-		iTimer = g_timeout_add(iInterval, GSourceFunc(timerCallback), this);
-	}
-	return 0;
-    }
+    // create a table with weak reference to Lua object
+    lua_createtable(L, 1, 1);
+    lua_pushliteral(L, "v");
+    lua_setfield(L, -2, "__mode");
+    lua_pushvalue(L, -1);
+    lua_setmetatable(L, -2);
+    lua_pushvalue(L, 1);
+    lua_rawseti(L, -2, 1);
+    int lua_object = luaL_ref(L, LUA_REGISTRYINDEX);
+    *t = new PTimer(L, lua_object, method);
+    return 1;
+}
 
-    int PTimer::stop(lua_State * L) {
-	if (iTimer != 0) {
-	    g_source_remove(iTimer);
-	    iTimer = 0;
-	}
-	return 0;
-    }
+// --------------------------------------------------------------------
 
-    // --------------------------------------------------------------------
+static int ipeui_currentDateTime(lua_State * L) {
+    time_t t = time(NULL);
+    struct tm * tmp = localtime(&t);
+    if (tmp == NULL) return 0;
 
-    static int timer_constructor(lua_State * L) {
-	luaL_argcheck(L, lua_istable(L, 1), 1, "argument is not a table");
-	const char * method = luaL_checkstring(L, 2);
+    char buf[16];
+    strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", tmp);
+    lua_pushstring(L, buf);
+    return 1;
+}
 
-	Timer ** t = (Timer **)lua_newuserdata(L, sizeof(Timer *));
-	*t = nullptr;
-	luaL_getmetatable(L, "Ipe.timer");
-	lua_setmetatable(L, -2);
+// --------------------------------------------------------------------
 
-	// create a table with weak reference to Lua object
-	lua_createtable(L, 1, 1);
-	lua_pushliteral(L, "v");
-	lua_setfield(L, -2, "__mode");
-	lua_pushvalue(L, -1);
-	lua_setmetatable(L, -2);
-	lua_pushvalue(L, 1);
-	lua_rawseti(L, -2, 1);
-	int lua_object = luaL_ref(L, LUA_REGISTRYINDEX);
-	*t = new PTimer(L, lua_object, method);
-	return 1;
-    }
+static const struct luaL_Reg ipeui_functions[] = {
+    {"Dialog", dialog_constructor},
+    {"Menu", menu_constructor},
+    {"Timer", timer_constructor},
+    {"getColorAsync", ipeui_getColorAsync},
+    {"fileDialogAsync", ipeui_fileDialogAsync},
+    {"messageBoxAsync", ipeui_messageBoxAsync},
+    {"currentDateTime", ipeui_currentDateTime},
+    {nullptr, nullptr},
+};
 
-    // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-    static int ipeui_currentDateTime(lua_State * L) {
-	time_t t = time(NULL);
-	struct tm * tmp = localtime(&t);
-	if (tmp == NULL) return 0;
+void addMethod(lua_State * L, const char * name, const char * luacode) {
+    int ok = luaL_loadstring(L, luacode);
+    if (ok != LUA_OK) luaL_error(L, "cannot prepare function");
+    lua_call(L, 0, 1);
+    lua_setfield(L, -2, name);
+}
 
-	char buf[16];
-	strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", tmp);
-	lua_pushstring(L, buf);
-	return 1;
-    }
+int luaopen_ipeui(lua_State * L) {
+    luaL_newlib(L, ipeui_functions);
+    addMethod(L, "messageBox",
+	      "return function (...) ipeui.messageBoxAsync(...)"
+	      "return coroutine.yield() end");
+    addMethod(L, "fileDialog",
+	      "return function (...) ipeui.fileDialogAsync(...)"
+	      "return coroutine.yield(), 1 end");
+    addMethod(L, "getColor",
+	      "return function (...) ipeui.getColorAsync(...)"
+	      "return coroutine.yield() end");
+    lua_setglobal(L, "ipeui");
+    luaopen_ipeui_common(L);
+    return 0;
+}
 
-    // --------------------------------------------------------------------
-
-    static const struct luaL_Reg ipeui_functions[] = {
-	{"Dialog", dialog_constructor},
-	{"Menu", menu_constructor},
-	{"Timer", timer_constructor},
-	{"getColorAsync", ipeui_getColorAsync},
-	{"fileDialogAsync", ipeui_fileDialogAsync},
-	{"messageBoxAsync", ipeui_messageBoxAsync},
-	{"currentDateTime", ipeui_currentDateTime},
-	{nullptr, nullptr},
-    };
-
-    // --------------------------------------------------------------------
-
-    void addMethod(lua_State * L, const char * name, const char * luacode) {
-	int ok = luaL_loadstring(L, luacode);
-	if (ok != LUA_OK) luaL_error(L, "cannot prepare function");
-	lua_call(L, 0, 1);
-	lua_setfield(L, -2, name);
-    }
-
-    int luaopen_ipeui(lua_State * L) {
-	luaL_newlib(L, ipeui_functions);
-	addMethod(L, "messageBox",
-		  "return function (...) ipeui.messageBoxAsync(...)"
-		  "return coroutine.yield() end");
-	addMethod(L, "fileDialog",
-		  "return function (...) ipeui.fileDialogAsync(...)"
-		  "return coroutine.yield(), 1 end");
-	addMethod(L, "getColor",
-		  "return function (...) ipeui.getColorAsync(...)"
-		  "return coroutine.yield() end");
-	lua_setglobal(L, "ipeui");
-	luaopen_ipeui_common(L);
-	return 0;
-    }
-
-    // --------------------------------------------------------------------
+// --------------------------------------------------------------------
