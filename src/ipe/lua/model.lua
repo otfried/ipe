@@ -218,14 +218,14 @@ end
 
 function MODEL:preloadFile(fname)
   if config.platform == "electron" then
-    self.ui.js("preloadFile", fname, os.tmpname())
+    self.ui.js("preloadFile", fname, os.tmpname(), coroutine.running())
     coroutine.yield()
   end
 end
 
 function MODEL:persistFile(fname)
   if config.platform == "electron" then
-    self.ui.js("persistFile", fname)
+    self.ui.js("persistFile", fname, coroutine.running())
     return coroutine.yield()
   else
     return true
@@ -234,14 +234,14 @@ end
 
 function MODEL:preloadFileExists()
   if config.platform == "electron" then
-    self.ui.js("preloadFileExists")
+    self.ui.js("preloadFileExists", coroutine.running())
     coroutine.yield()
   end
 end
 
 function MODEL:clipboard(allowBitmap)
   if config.toolkit == "htmljs" then
-    self.ui:getClipboardAsync(allowBitmap)
+    self.ui:getClipboardAsync(allowBitmap, coroutine.running())
     return coroutine.yield()
   else
     return self.ui:getClipboard(allowBitmap)
@@ -1173,7 +1173,7 @@ function MODEL:findAllStyleSheets()
     end
   end
   if config.platform == "vscode" then
-    self.ui.js("findAllStyleSheets")
+    self.ui.js("findAllStyleSheets", coroutine.running())
     local external = coroutine.yield()
     table.move(external, 1, #external, #result + 1, result)
   end
@@ -1188,7 +1188,7 @@ function MODEL:findStyle(w, dir)
     return s, s
   end
   if config.platform == "vscode" then
-    self.ui.js("fetchStyleSheet", w)
+    self.ui.js("fetchStyleSheet", w, coroutine.running())
     local s, s1 = coroutine.yield()
     if s then return s, s1 end
   end

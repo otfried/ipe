@@ -15,10 +15,12 @@ import {
 } from "./modal";
 import {
 	type Color,
+	type ComboColorItem,
 	type MainMenuItemOptions,
 	type MainMenuItemType,
 	type PopupItemOptions,
 	PopupMenu,
+	toRgb,
 } from "./popup-menu";
 import { TouchDragZoom } from "./touch";
 import { get, removeChildren } from "./util";
@@ -36,10 +38,6 @@ interface Layer {
 	active: boolean;
 	locked: boolean;
 	snap: "normal" | "never" | "always";
-}
-
-function toRgb(rgb: Color): string {
-	return `rgb(${255 * rgb.red}, ${255 * rgb.green}, ${255 * rgb.blue})`;
 }
 
 type IpePlatform = "web" | "electron" | "vscode";
@@ -78,6 +76,16 @@ export class IpeUi {
 	customizationFileName = "";
 	readonly buildInfo: string;
 	readonly platform: IpePlatform;
+	// items and current index for the "stroke" and "fill" color combos,
+	// which are custom divs (not <select>) as browsers cannot style <option> children
+	private readonly colorComboItems: { [key: string]: ComboColorItem[] } = {
+		stroke: [],
+		fill: [],
+	};
+	private readonly colorComboCurrent: { [key: string]: number } = {
+		stroke: 0,
+		fill: 0,
+	};
 	private _actionCompletedCallback: (() => void) | null = null;
 	externalConfiguration = "";
 	private internalConfiguration = "";
@@ -123,7 +131,8 @@ export class IpeUi {
 		window.onclick = (event) => {
 			if (event.target === this.modal.pane) this.modal.close(CANCEL);
 			if (event.target === this.popupMenu.pane) {
-				if (this.popupMenu.closeOne()) this.resume(null);
+				const needsResume = this.popupMenu.needsResume;
+				if (this.popupMenu.closeOne() && needsResume) this.resume(null);
 			}
 		};
 	}
@@ -273,13 +282,17 @@ export class IpeUi {
 			if (el1)
 				el1.onclick = () =>
 					this.ipe._absoluteButton(this.ipe.stringToNewUTF8(b));
-			const el2 = get(b) as HTMLSelectElement;
-			el2.onchange = () => {
-				this.ipe._selector(
-					this.ipe.stringToNewUTF8(b),
-					this.ipe.stringToNewUTF8(el2.value),
-				);
-			};
+			if (b === "stroke" || b === "fill") {
+				get(b).onclick = () => this._openColorCombo(b);
+			} else {
+				const el2 = get(b) as HTMLSelectElement;
+				el2.onchange = () => {
+					this.ipe._selector(
+						this.ipe.stringToNewUTF8(b),
+						this.ipe.stringToNewUTF8(el2.value),
+					);
+				};
+			}
 		}
 
 		const addListener = (id: string, b: string) => {
@@ -425,7 +438,7 @@ export class IpeUi {
 
 	private _handleKeyEvent(event: KeyboardEvent) {
 		if (this.popupMenu.keyPressEvent(event)) {
-			this.resume(null);
+			if (this.popupMenu.needsResume) this.resume(null);
 			return;
 		}
 		if (this.modal.keyPressEvent(event)) return;
@@ -875,6 +888,24 @@ export class IpeUi {
 		if (window.ipeBridge != null) {
 			this.resume(await window.ipeBridge.getClipboard(allowBitmap));
 		} else {
+			if (allowBitmap) {
+				const items = await navigator.clipboard.read();
+				for (const item of items) {
+					if (item.types.some((type) => type === "image/jpeg")) {
+						const blob = await item.getType("image/jpeg");
+						const data = new Uint8Array(await blob.arrayBuffer());
+						this.ipe.FS.writeFile("/tmp/clipboard.jpeg", data);
+						console.log("Image retrieved:", blob.size);
+						return;
+					} else if (item.types.some((type) => type === "image/png")) {
+						const blob = await item.getType("image/png");
+						const data = new Uint8Array(await blob.arrayBuffer());
+						this.ipe.FS.writeFile("/tmp/clipboard.png", data);
+						console.log("Image retrieved:", blob.size);
+						return;
+					}
+				}
+			}
 			this.resume(await navigator.clipboard.readText());
 		}
 	}
@@ -919,8 +950,14 @@ export class IpeUi {
 
 	resetCombos() {
 		for (const sel of this.selectorNames) {
-			const el = get(sel);
-			if (el) removeChildren(el);
+			if (sel === "stroke" || sel === "fill") {
+				this.colorComboItems[sel] = [];
+				this.colorComboCurrent[sel] = 0;
+				this._renderColorCombo(sel);
+			} else {
+				const el = get(sel);
+				if (el) removeChildren(el);
+			}
 		}
 	}
 
@@ -939,32 +976,72 @@ export class IpeUi {
 	}
 
 	setComboCurrent(sel: number, idx: number) {
-		(get(this.selectorNames[sel]) as HTMLSelectElement).selectedIndex = idx;
+		const name = this.selectorNames[sel];
+		if (name === "stroke" || name === "fill") {
+			this.colorComboCurrent[name] = idx;
+			this._renderColorCombo(name);
+		} else {
+			(get(name) as HTMLSelectElement).selectedIndex = idx;
+		}
 	}
 
 	addComboColors(colors: { name: string; rgb: Color }[]) {
-		const stroke = get("stroke") as HTMLSelectElement;
-		const fill = get("fill") as HTMLSelectElement;
-		const addOption = (el: HTMLSelectElement, name: string, color?: Color) => {
-			const option = document.createElement("option");
-			option.innerText = name;
-			if (color) option.style.color = toRgb(color);
-			el.appendChild(option);
-		};
-		addOption(stroke, "<absolute>");
-		addOption(fill, "<absolute>");
+		this.colorComboItems.stroke = [{ name: "<absolute>" }];
+		this.colorComboItems.fill = [{ name: "<absolute>" }];
 		for (const item of colors) {
-			addOption(stroke, item.name, item.rgb);
-			addOption(fill, item.name, item.rgb);
+			this.colorComboItems.stroke.push({ name: item.name, color: item.rgb });
+			this.colorComboItems.fill.push({ name: item.name, color: item.rgb });
 		}
+		this.colorComboCurrent.stroke = 0;
+		this.colorComboCurrent.fill = 0;
+		this._renderColorCombo("stroke");
+		this._renderColorCombo("fill");
+	}
+
+	// redraws the closed-state display (swatch + label) of a stroke/fill color combo
+	private _renderColorCombo(sel: string) {
+		const el = get(sel);
+		removeChildren(el);
+		const item = this.colorComboItems[sel][this.colorComboCurrent[sel]];
+		if (item?.color) {
+			const swatch = document.createElement("span");
+			swatch.classList.add("colorSelector-swatch");
+			swatch.style.color = toRgb(item.color);
+			swatch.innerHTML = "&#x2588;";
+			el.appendChild(swatch);
+		}
+		const label = document.createElement("span");
+		label.classList.add("colorSelector-label");
+		label.innerText = item ? item.name : "";
+		el.appendChild(label);
+		const arrow = document.createElement("span");
+		arrow.classList.add("colorSelector-arrow");
+		el.appendChild(arrow);
+	}
+
+	private _openColorCombo(sel: string) {
+		const el = get(sel);
+		this.popupMenu.openColorCombo(
+			el,
+			this.colorComboItems[sel],
+			this.colorComboCurrent[sel],
+			(idx) => {
+				this.colorComboCurrent[sel] = idx;
+				this._renderColorCombo(sel);
+				this.ipe._selector(
+					this.ipe.stringToNewUTF8(sel),
+					this.ipe.stringToNewUTF8(this.colorComboItems[sel][idx].name),
+				);
+			},
+		);
 	}
 
 	setButtonColor(sel: number, color: Color) {
 		const el = get(`abs-${this.selectorNames[sel]}`);
 		if (el) {
 			const el1 = document.createElement("span");
-			el1.style.backgroundColor = toRgb(color);
-			el1.innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;";
+			el1.style.color = toRgb(color);
+			el1.innerHTML = "&#x2588;&#x258b;";
 			if (el.firstChild) el.removeChild(el.firstChild);
 			el.appendChild(el1);
 		}

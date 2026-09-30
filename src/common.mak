@@ -20,7 +20,6 @@ else
     IPEUI = COCOA
     IPECONFIGMAK ?= macos.mak
   else
-    IPEUI ?= QT
     IPECONFIGMAK ?= config.mak
   endif
 endif

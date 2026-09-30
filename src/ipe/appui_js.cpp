@@ -349,10 +349,13 @@ int AppUi::setClipboard(lua_State * L) {
     return 0;
 }
 
+void AppUi::clipboardResult(const char * type, const char * value) {
+}
+
 int AppUi::clipboard(lua_State * L) {
     bool allowBitmap = lua_toboolean(L, 2);
     val result = jsUi().call<val>("getClipboard", allowBitmap);
-    // this operation is async, it will later resume Lua with the result
+    // this operation is async, it will later call clipboardResult
     return 0;
 }
 
@@ -414,6 +417,11 @@ static val convertLua(lua_State * L, int index) {
     if (lua_isstring(L, index)) return val::u8string(lua_tostring(L, index));
     if (lua_isinteger(L, index)) return val(lua_tointeger(L, index));
     if (lua_isnumber(L, index)) return val(lua_tonumber(L, index));
+    if (lua_isthread(L, index)) {
+	// we save the thread in the registry and pass the ref instead
+	// on resume, need to call unref
+	return val(luaL_ref(L, LUA_REGISTRYINDEX));
+    }
     ipeDebug("Unsupported Lua type");
     return val::undefined();
 }

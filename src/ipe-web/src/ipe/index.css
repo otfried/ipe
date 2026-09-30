@@ -107,11 +107,22 @@ button.toolbutton:disabled {
 button.draw-toolbutton {
 	pointer-events: all;
 }
-select {
+.propertySelector {
 	/* try to make the iPad behave more sanely */
 	user-select: none;
 	border: 1px solid gray;
 	border-radius: 2px;
+}
+/* strip native OS chrome from real <select>s so they match the colorSelector
+   divs, which cannot acquire that chrome (it's not stylable via CSS) */
+select.propertySelector {
+	appearance: none;
+	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='gray'/></svg>");
+	background-repeat: no-repeat;
+	background-position: right 4px center;
+	background-size: 10px 6px;
+	padding: 0 16px 0 4px;
+	background-color: white;
 }
 
 /* Property panel */
@@ -127,12 +138,37 @@ button#abs-pen {
 button#abs-symbolsize {
 	grid-area: 7 / 1 / 9 / 1;
 }
-select {
-	justify-self: "stretch";
-	align-self: "stretch";
+.propertySelector {
+	justify-self: stretch;
+	align-self: stretch;
 }
 select#opacity {
 	grid-area: 9 / 1 / 10 / 3;
+}
+/* select-like combo for stroke/fill: native <option> elements cannot render
+   colored child markup, so this is a plain div driven by PopupMenu.openColorCombo */
+div.colorSelector {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	column-gap: 4px;
+	padding: 0 4px;
+	background: white;
+	cursor: default;
+}
+div.colorSelector > span.colorSelector-label {
+	flex-grow: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 14px;
+	color: #4e4e4e;
+}
+div.colorSelector > span.colorSelector-arrow {
+	width: 10px;
+	height: 6px;
+	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='gray'/></svg>");
+	background-repeat: no-repeat;
 }
 span#modeIndicator {
 	display: flex;

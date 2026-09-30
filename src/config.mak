@@ -1,9 +1,22 @@
+
 # -*- makefile -*-
 # --------------------------------------------------------------------
 #
 # Ipe configuration for Unix
 #
 # *** This File is NOT USED on MAC OS X ***
+#
+# --------------------------------------------------------------------
+# Which toolkit do you want to use?
+# Uncomment one of the two: GTK or QT
+# --------------------------------------------------------------------
+#
+# IPEUI=GTK
+# IPEUI=QT
+#
+# Add spell checking? (you'll need to set SPELL_CFLAGS and SPELL_LIBS below)
+#
+# IPE_SPELLCHECK = 1
 #
 # --------------------------------------------------------------------
 # Include and linking options for libraries
@@ -18,10 +31,6 @@ PKG_CONFIG ?= pkg-config
 # The name of the Lua package (it could be "lua", "lua55", or "lua5.5")
 #
 LUA_PACKAGE   ?= lua5.5
-#
-# Add spell checking? (you'll need to set SPELL_CFLAGS and SPELL_LIBS below)
-#
-# IPE_SPELLCHECK = 1
 #
 #
 ZLIB_CFLAGS   ?=
