@@ -63,6 +63,8 @@
 using namespace ipe;
 using namespace ipelua;
 
+extern void resumeLuaThread(lua_State * T, int nArgs);
+
 // --------------------------------------------------------------------
 
 inline QSize adapt_size(const QSize & size, int factor) {
@@ -1066,8 +1068,7 @@ void WaitDialog::completed() {
 	mutex.unlock();
 	done(0);
 	deleteLater(); // schedule myself for deletion
-	int nResults = 0;
-	lua_resume(iThread, nullptr, 0, &nResults);
+	resumeLuaThread(iThread, 0);
     }
 }
 
@@ -1089,7 +1090,10 @@ bool AppUi::waitDialog(lua_State * co, const char * cmd, const char * label) {
     thread->start();
     for (int i = 0; i < 3 && dialog->isRunning(); ++i) {
 	QThread::msleep(100);
-	QCoreApplication::processEvents();
+	// exclude user input: the dialog is not showing yet, so it would not be
+	// blocked, and the user could trigger another action (such as editing the
+	// same text object) while the Latex conversion is still in progress
+	QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
     }
     if (!dialog->isRunning()) {
 	// task completed, no need to show dialog, just return with done==true

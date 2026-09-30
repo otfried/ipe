@@ -1072,6 +1072,7 @@ namespace {
 struct WaitCtx {
     lua_State * thread;
     GtkWidget * dialog;
+    GtkWidget * appWindow;
     bool shown = false;
     bool completed = false;
 };
@@ -1083,6 +1084,7 @@ void waitdialog_child_watch_cb(GPid pid, gint, gpointer data) {
     if (ctx->shown) {
 	lua_State * co = ctx->thread;
 	gtk_window_destroy(GTK_WINDOW(ctx->dialog));
+	gtk_widget_set_sensitive(GTK_WIDGET(ctx->appWindow), TRUE);
 	delete ctx;
 	resumeLuaThread(co, 0);
 	// TODO: unref thread
@@ -1107,6 +1109,7 @@ bool AppUi::waitDialog(lua_State * co, const char * cmd, const char * label) {
 
     WaitCtx * ctx = new WaitCtx();
     ctx->thread = co;
+    ctx->appWindow = iWindow;
     // TODO: ref it
 
     GtkWidget * dialog = gtk_window_new();
@@ -1124,6 +1127,10 @@ bool AppUi::waitDialog(lua_State * co, const char * cmd, const char * label) {
 
     g_child_watch_add(pid, waitdialog_child_watch_cb, ctx);
 
+    // block input to the main window: the dialog is not shown yet, so it would
+    // not otherwise stop the user from triggering another action (such as
+    // editing the same text object) while the Latex conversion is in progress
+    gtk_widget_set_sensitive(iWindow, FALSE);
     for (int i = 0; i < 30 && !ctx->completed; ++i) {
 	g_usleep(10000);
 	while (g_main_context_pending(nullptr)) g_main_context_iteration(nullptr, FALSE);
@@ -1131,6 +1138,7 @@ bool AppUi::waitDialog(lua_State * co, const char * cmd, const char * label) {
 
     if (ctx->completed) {
 	gtk_window_destroy(GTK_WINDOW(dialog));
+	gtk_widget_set_sensitive(iWindow, TRUE);
 	delete ctx;
 	return true;
     }

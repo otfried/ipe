@@ -60,6 +60,7 @@
 #define ID_SELECTINLAYER_BASE 11300
 #define ID_GRIDSIZE_BASE 13300
 #define ID_ANGLESIZE_BASE 13500
+#define WM_LATEX_DONE (WM_APP + 1)
 
 using namespace ipe;
 using namespace ipelua;
@@ -1715,13 +1716,15 @@ BOOL CALLBACK waitDialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 	}
 	return TRUE;
     }
+    case WM_LATEX_DONE: EndDialog(hwnd, 1); return TRUE;
     default: return FALSE;
     }
 }
 
+// runs on a threadpool wait thread, so must not call UI functions directly
 VOID CALLBACK waitCallback(PVOID lpParameter, BOOLEAN timerOrWaitFired) {
     SDialogHandle * d = (SDialogHandle *)lpParameter;
-    EndDialog(d->hwnd, 1);
+    PostMessage(d->hwnd, WM_LATEX_DONE, 0, 0);
 }
 
 bool AppUi::waitDialog(lua_State * co, const char * cmd, const char * label) {
