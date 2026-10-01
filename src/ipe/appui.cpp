@@ -806,4 +806,10 @@ int AppUiBase::readImage(lua_State * L, String fn) {
     return 1;
 }
 
+void AppUiBase::handleDroppedImage(String fname, String format) {
+    push_string(L, fname);
+    push_string(L, format);
+    wrapCall("insert_image", 2);
+}
+
 // --------------------------------------------------------------------

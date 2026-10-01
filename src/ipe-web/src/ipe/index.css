@@ -49,6 +49,9 @@ div#stage {
 	margin: 4px;
 	flex-grow: 1;
 }
+div#stage.drag-over {
+	outline: 3px solid dodgerblue;
+}
 canvas#bottomCanvas {
 	position: absolute;
 	z-index: 1;

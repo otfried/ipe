@@ -533,6 +533,10 @@ dropdown.color > button {
   padding-bottom: 2px;
   min-height: 0;
 }
+:drop(active) {
+  outline: 3px solid dodgerblue;
+  outline-offset: -3px;
+}
 ]]
 end
 

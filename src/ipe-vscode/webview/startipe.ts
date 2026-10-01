@@ -294,7 +294,7 @@ class IpeVSCodeBridge {
 
 	private async handleInsertImage(content: Uint8Array, format: IpeFormat) {
 		this.ipe.FS.writeFile(`/home/ipe/image.${format}`, content);
-		await window.ipeui.actionSync(`vscode_insert_image_${format}`);
+		await window.ipeui.actionSync(`drop_image_${format}`);
 	}
 
 	exportFile(format: string) {

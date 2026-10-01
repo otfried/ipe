@@ -176,6 +176,8 @@ public: // What platforms must implement:
 			   int thumbWidth) = 0;
     virtual int clipboard(lua_State * L) = 0;
     virtual int setClipboard(lua_State * L) = 0;
+    virtual void handleDroppedImage(String fname, String format);
+
     // Only used on Windows to compute shortcuts:
     virtual int actionInfo(lua_State * L) const;
 

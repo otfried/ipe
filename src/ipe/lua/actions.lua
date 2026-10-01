@@ -976,11 +976,11 @@ function MODEL:insert_image(fname, format)
   end
 end
 
-function MODEL:action_vscode_insert_image_png()
+function MODEL:action_drop_image_png()
   self:insert_image("/home/ipe/image.png", "png")
 end
 
-function MODEL:action_vscode_insert_image_jpeg()
+function MODEL:action_drop_image_jpeg()
   self:insert_image("/home/ipe/image.jpeg", "jpeg")
 end
 

@@ -137,6 +137,29 @@ static void about_response_cb(GtkDialog * d, int, gpointer) {
     gtk_window_destroy(GTK_WINDOW(d));
 }
 
+static gboolean canvas_drop_cb(GtkDropTarget *, const GValue * value, double, double,
+                   gpointer data) {
+    AppUi * app = static_cast<AppUi *>(data);
+    auto * files = (GdkFileList *)g_value_get_boxed(value);
+    for (GSList * entry = gdk_file_list_get_files(files); entry; entry = entry->next) {
+        char * path = g_file_get_path(G_FILE(entry->data));
+        if (!path) continue;
+        GdkPixbufFormat * format = gdk_pixbuf_get_file_info(path, nullptr, nullptr);
+        char * name = format ? gdk_pixbuf_format_get_name(format) : nullptr;
+        bool supported = name && (!strcmp(name, "png") || !strcmp(name, "jpeg"));
+        String fformat = name;
+        String fname = path;
+        g_free(name);
+        g_free(path);
+        if (supported) {
+            ipeDebug("Dropped image file: %s", fname.z());
+            app->handleDroppedImage(fname, fformat);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 // --------------------------------------------------------------------
 // icons
 
@@ -922,9 +945,25 @@ AsyncCtx * newAsyncCtx(lua_State * L) {
 }
 
 void resumeAndFree(AsyncCtx * ctx, int nresults) {
-    lua_resume(ctx->L, nullptr, nresults, &nresults);
+    resumeLuaThread(ctx->L, nresults);
     luaL_unref(ctx->L, LUA_REGISTRYINDEX, ctx->threadRef);
     delete ctx;
+}
+
+void clipboard_read_cb(GObject * source, GAsyncResult * result, gpointer data) {
+    AsyncCtx * ctx = (AsyncCtx *)data;
+    GError * error = nullptr;
+    char * text = gdk_clipboard_read_text_finish(GDK_CLIPBOARD(source), result, &error);
+    int nResults = 0;
+    if (text) {
+	lua_pushstring(ctx->L, "text");
+	lua_pushstring(ctx->L, text);
+	g_free(text);
+	nResults = 2;
+    } else {
+	if (error) g_error_free(error);
+    }
+    resumeAndFree(ctx, nResults);
 }
 
 struct PageSorterCtx : AsyncCtx {
@@ -1042,23 +1081,6 @@ int AppUi::setClipboard(lua_State * L) {
     return 0;
 }
 
-namespace {
-void clipboard_read_cb(GObject * source, GAsyncResult * result, gpointer data) {
-    AsyncCtx * ctx = (AsyncCtx *)data;
-    GError * error = nullptr;
-    char * text = gdk_clipboard_read_text_finish(GDK_CLIPBOARD(source), result, &error);
-    int nresults = 1;
-    if (text) {
-	lua_pushstring(ctx->L, text);
-	g_free(text);
-    } else {
-	if (error) g_error_free(error);
-	lua_pushnil(ctx->L);
-    }
-    resumeAndFree(ctx, nresults);
-}
-} // namespace
-
 int AppUi::clipboard(lua_State * L) {
     // bitmap clipboard access is not implemented for GTK
     GdkClipboard * cb = gtk_widget_get_clipboard(iWindow);
@@ -1071,6 +1093,7 @@ int AppUi::clipboard(lua_State * L) {
 namespace {
 struct WaitCtx {
     lua_State * thread;
+    int threadRef = LUA_NOREF;
     GtkWidget * dialog;
     GtkWidget * appWindow;
     bool shown = false;
@@ -1083,11 +1106,12 @@ void waitdialog_child_watch_cb(GPid pid, gint, gpointer data) {
     ctx->completed = true;
     if (ctx->shown) {
 	lua_State * co = ctx->thread;
+	int threadRef = ctx->threadRef;
 	gtk_window_destroy(GTK_WINDOW(ctx->dialog));
 	gtk_widget_set_sensitive(GTK_WIDGET(ctx->appWindow), TRUE);
 	delete ctx;
 	resumeLuaThread(co, 0);
-	// TODO: unref thread
+	luaL_unref(co, LUA_REGISTRYINDEX, threadRef);
     }
 }
 } // namespace
@@ -1142,6 +1166,12 @@ bool AppUi::waitDialog(lua_State * co, const char * cmd, const char * label) {
 	delete ctx;
 	return true;
     }
+
+    // preserve thread before yielding
+    lua_pushthread(co);
+    ctx->threadRef = luaL_ref(co, LUA_REGISTRYINDEX);
+    lua_pop(co, 1);
+
     ctx->shown = true;
     gtk_window_present(GTK_WINDOW(dialog));
     return false;
@@ -1423,6 +1453,10 @@ AppUi::AppUi(lua_State * L0, int model)
     iCanvas = canvas;
     gtk_widget_set_hexpand(canvas->window(), TRUE);
     gtk_widget_set_vexpand(canvas->window(), TRUE);
+
+    GtkDropTarget * dropTarget = gtk_drop_target_new(GDK_TYPE_FILE_LIST, GDK_ACTION_COPY);
+    g_signal_connect(dropTarget, "drop", G_CALLBACK(canvas_drop_cb), this);
+    gtk_widget_add_controller(canvas->window(), GTK_EVENT_CONTROLLER(dropTarget));
 
     GtkWidget * innerPaned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_paned_set_start_child(GTK_PANED(innerPaned), canvas->window());

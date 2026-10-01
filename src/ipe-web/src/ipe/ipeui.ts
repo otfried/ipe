@@ -118,6 +118,44 @@ export class IpeUi {
 			this._handleKeyEvent(event);
 		});
 
+		const stage = get("stage");
+		let dragDepth = 0;
+		const clearDropFeedback = () => {
+			dragDepth = 0;
+			stage.classList.remove("drag-over");
+		};
+		stage.addEventListener("dragenter", (event) => {
+			event.preventDefault();
+			dragDepth++;
+			stage.classList.add("drag-over");
+		});
+		stage.addEventListener("dragover", (event) => {
+			event.preventDefault();
+		});
+		stage.addEventListener("dragleave", () => {
+			if (--dragDepth <= 0) clearDropFeedback();
+		});
+		stage.addEventListener("drop", async (event) => {
+			event.preventDefault();
+			clearDropFeedback();
+			const file = Array.from(event.dataTransfer?.files ?? []).find(
+				(file) => file.type === "image/png" || file.type === "image/jpeg",
+			);
+			if (!file) return;
+			const format = file.type === "image/png" ? "png" : "jpeg";
+			console.log(`Drop on stage in ${format}:`, event);
+			const filename = `/home/ipe/image.${format}`;
+			try {
+				const data = new Uint8Array(await file.arrayBuffer());
+				this.ipe.FS.writeFile(filename, data);
+				console.log("Dropped image written to:", filename);
+				this.ipe._action(this.ipe.stringToNewUTF8(`drop_image_${format}`));
+			} catch (err) {
+				console.error("Failed to write dropped image:", err);
+			}
+		});
+		window.addEventListener("dragend", clearDropFeedback);
+
 		if (this.platform === "electron") {
 			// allow mainWindow to send "ipeAction" events to the renderer,
 			// without having direct access to the IpeUi.
@@ -895,7 +933,10 @@ export class IpeUi {
 
 	async getClipboard(allowBitmap: boolean, threadRef: number) {
 		if (window.ipeBridge != null) {
-			this.resume(await window.ipeBridge.getClipboard(allowBitmap), threadRef);
+			this.resume(
+				["text", await window.ipeBridge.getClipboard(allowBitmap)],
+				threadRef,
+			);
 		} else {
 			if (allowBitmap) {
 				const items = await navigator.clipboard.read();

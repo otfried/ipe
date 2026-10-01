@@ -191,7 +191,7 @@ function MODEL:preloadFileExists()
 end
 
 function MODEL:clipboard(allowBitmap)
-  if config.toolkit == "htmljs" then
+  if config.toolkit == "htmljs" or config.toolkit == "gtk" then
     self.ui:getClipboardAsync(allowBitmap, coroutine.running())
     local format, value = coroutine.yield()
     if format == "text" then return value end
