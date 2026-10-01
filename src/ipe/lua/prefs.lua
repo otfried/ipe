@@ -165,8 +165,6 @@ prefs.editor_size = { 0, 0 }
 prefs.width_notes_bookmarks = 200
 
 -- Size of main window at startup
--- You can also determine the position of the main window by adding x and y coordinates,
--- like so: { 1160, 720, 500, 300 }
 prefs.window_size = { 1160, 720 }
 
 -- Should Ipe start maximized or even in full screen mode? (Windows and Qt only)

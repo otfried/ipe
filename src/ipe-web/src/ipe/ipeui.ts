@@ -931,31 +931,10 @@ export class IpeUi {
 		}
 	}
 
-	async getClipboard(allowBitmap: boolean, threadRef: number) {
+	async getClipboard(_allowBitmap: boolean, threadRef: number) {
 		if (window.ipeBridge != null) {
-			this.resume(
-				["text", await window.ipeBridge.getClipboard(allowBitmap)],
-				threadRef,
-			);
+			this.resume(["text", await window.ipeBridge.getClipboard()], threadRef);
 		} else {
-			if (allowBitmap) {
-				const items = await navigator.clipboard.read();
-				for (const item of items) {
-					if (item.types.some((type) => type === "image/jpeg")) {
-						const blob = await item.getType("image/jpeg");
-						const data = new Uint8Array(await blob.arrayBuffer());
-						this.ipe.FS.writeFile("/tmp/clipboard.jpeg", data);
-						this.resume(["jpeg", "/tmp/clipboard.jpeg"], threadRef);
-						return;
-					} else if (item.types.some((type) => type === "image/png")) {
-						const blob = await item.getType("image/png");
-						const data = new Uint8Array(await blob.arrayBuffer());
-						this.ipe.FS.writeFile("/tmp/clipboard.png", data);
-						this.resume(["png", "/tmp/clipboard.png"], threadRef);
-						return;
-					}
-				}
-			}
 			this.resume(["text", await navigator.clipboard.readText()], threadRef);
 		}
 	}

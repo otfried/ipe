@@ -80,8 +80,7 @@ public:
     virtual void setWindowCaption(bool mod, const char * caption,
 				  const char * fn) override;
     virtual void explain(const char * s, int t) override;
-    virtual void showWindow(int width, int height, int x, int y,
-			    const Color & pathViewColor) override;
+    virtual void showWindow(int width, int height, const Color & pathViewColor) override;
     virtual void setFullScreen(int mode) override;
     virtual void setBookmarks(int no, const String * s) override;
     virtual void setToolVisible(int m, bool vis) override;

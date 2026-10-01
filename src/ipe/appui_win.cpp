@@ -1313,9 +1313,9 @@ void AppUi::setWindowCaption(bool mod, const char * caption, const char * fn) {
     setWindowText(hwnd, caption);
 }
 
-void AppUi::showWindow(int width, int height, int x, int y, const Color & pathViewColor) {
+void AppUi::showWindow(int width, int height, const Color & pathViewColor) {
     iPathView->setColor(pathViewColor);
-    SetWindowPos(hwnd, nullptr, x, y, width, height, (x < 0) ? SWP_NOMOVE : 0);
+    SetWindowPos(hwnd, nullptr, 0, 0, width, height, SWP_NOMOVE);
     ShowWindow(hwnd, win_nCmdShow);
     UpdateWindow(hwnd);
 }

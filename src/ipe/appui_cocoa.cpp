@@ -1331,13 +1331,12 @@ void AppUi::setWindowCaption(bool mod, const char * caption, const char * fn) {
     [iWindow setTitle:[[NSString alloc] initWithUTF8String:caption]];
 }
 
-void AppUi::showWindow(int width, int height, int x, int y, const Color & pathViewColor) {
+void AppUi::showWindow(int width, int height, const Color & pathViewColor) {
     if (width > 0 && height > 0) {
 	NSRect e = [[NSScreen mainScreen] frame];
 	auto wd = e.size.width - width;
 	auto hd = e.size.height - height;
-	NSRect winr =
-	    NSMakeRect(x < 0 ? 0.5 * wd : x, y < 0 ? 0.5 * hd : y, width, height);
+	NSRect winr = NSMakeRect(0.5 * wd, 0.5 * hd, width, height);
 	[iWindow setFrame:winr display:YES];
     }
     [iWindow makeKeyAndOrderFront:iWindow];

@@ -853,18 +853,14 @@ static int appui_constructor(lua_State * L) {
     }
     lua_pop(L, 1); // canvas_style
 
-    int width = -1, height = -1, x = -1, y = -1;
+    int width = -1, height = -1;
     lua_getfield(L, -1, "window_size");
     if (lua_istable(L, -1)) {
 	lua_rawgeti(L, -1, 1);
 	if (lua_isnumber(L, -1)) width = lua_tointegerx(L, -1, nullptr);
 	lua_rawgeti(L, -2, 2);
 	if (lua_isnumber(L, -1)) height = lua_tointegerx(L, -1, nullptr);
-	lua_rawgeti(L, -3, 3);
-	if (lua_isnumber(L, -1)) x = lua_tointegerx(L, -1, nullptr);
-	lua_rawgeti(L, -4, 4);
-	if (lua_isnumber(L, -1)) y = lua_tointegerx(L, -1, nullptr);
-	lua_pop(L, 4);
+	lua_pop(L, 2);
     }
     lua_pop(L, 1); // window_size
 
@@ -872,7 +868,7 @@ static int appui_constructor(lua_State * L) {
 
     (*ui)->canvas()->setCanvasStyle(style);
 
-    (*ui)->showWindow(width, height, x, y, pathViewColor);
+    (*ui)->showWindow(width, height, pathViewColor);
 
     return 1;
 }

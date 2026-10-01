@@ -163,8 +163,7 @@ public: // What platforms must implement:
     virtual void setWindowCaption(bool mod, const char * caption, const char * fn) = 0;
     virtual void setNotes(String notes) = 0;
     virtual void explain(const char * s, int t) = 0;
-    virtual void showWindow(int width, int height, int x, int y,
-			    const Color & pathViewColor) = 0;
+    virtual void showWindow(int width, int height, const Color & pathViewColor) = 0;
     virtual void setFullScreen(int mode) = 0;
     virtual void action(String name) = 0;
     virtual void setActionsEnabled(bool mode) = 0;

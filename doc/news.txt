@@ -13,6 +13,10 @@ Ipe 7.3.1
 
  * Easily add a style sheet by selecting it by name.
 
+ * In Ipe Web, Ipe VS Code extension, and the GTK edition you can now
+   add images to your document by simply dragging them into the
+   canvas.
+
  * Implement the XDG Base Directory Specification on Linux, so your
    local files are no longer in `~/.ipe`.  Check "Show configuration"
    in the Help menu if you are unsure where they should go (#513).

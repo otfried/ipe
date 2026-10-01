@@ -1055,9 +1055,8 @@ void AppUi::setSnapIndicator(const char * s) {
     gtk_label_set_text(GTK_LABEL(iSnapIndicator), s);
 }
 
-void AppUi::showWindow(int width, int height, int, int, const Color & pathViewColor) {
+void AppUi::showWindow(int width, int height, const Color & pathViewColor) {
     iPathView.setColor(pathViewColor);
-    // window positioning (x, y) is not possible on GTK4/Wayland - dropped
     if (width > 0 && height > 0)
 	gtk_window_set_default_size(GTK_WINDOW(iWindow), width, height);
     gtk_window_present(GTK_WINDOW(iWindow));

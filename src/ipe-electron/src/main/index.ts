@@ -152,7 +152,7 @@ app.whenReady().then(() => {
 	ipcMain.handle("setClipboard", (_event, data: string) =>
 		clipboard.writeText(data),
 	);
-	ipcMain.handle("getClipboard", (_event, _allowBitmap: boolean) => {
+	ipcMain.handle("getClipboard", (_event) => {
 		const formats = clipboard.availableFormats();
 		console.log("Available formats: ", formats);
 		return clipboard.readText();

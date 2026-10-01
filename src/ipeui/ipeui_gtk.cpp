@@ -561,7 +561,7 @@ void PDialog::takeDown(int result) {
     gtk_window_close(GTK_WINDOW(hDialog));
     hDialog = nullptr;
 
-    lua_pushnumber(L, result);
+    lua_pushboolean(L, result > 0);
     resumeLuaThread(L, 1);
     luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
 }

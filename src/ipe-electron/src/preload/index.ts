@@ -26,8 +26,7 @@ contextBridge.exposeInMainWorld("ipeBridge", {
 	saveFile: (fname: string, data: string) =>
 		ipcRenderer.invoke("saveFile", fname, data),
 	setClipboard: (data: string) => ipcRenderer.invoke("setClipboard", data),
-	getClipboard: (allowBitmap: boolean) =>
-		ipcRenderer.invoke("getClipboard", allowBitmap),
+	getClipboard: () => ipcRenderer.invoke("getClipboard"),
 
 	fileDialog: (options: FileDialogOptions) =>
 		ipcRenderer.invoke("fileDialog", options),

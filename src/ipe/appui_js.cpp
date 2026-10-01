@@ -337,7 +337,7 @@ void AppUi::explain(const char * s, int t) {
     }
 }
 
-void AppUi::showWindow(int width, int height, int x, int y, const Color & pathViewColor) {
+void AppUi::showWindow(int width, int height, const Color & pathViewColor) {
     iPathView->setColor(pathViewColor);
 }
 

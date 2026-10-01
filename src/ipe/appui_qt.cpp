@@ -949,10 +949,9 @@ void AppUi::explain(const char * s, int t) {
     statusBar()->showMessage(QString::fromUtf8(s), t);
 }
 
-void AppUi::showWindow(int width, int height, int x, int y, const Color & pathViewColor) {
+void AppUi::showWindow(int width, int height, const Color & pathViewColor) {
     iPathView->setColor(pathViewColor);
     if (width > 0 && height > 0) resize(width, height);
-    if (x >= 0 && y >= 0) move(x, y);
     show();
 }
 

@@ -177,7 +177,7 @@ void PDialog::resume(int result) {
     release(L); // release references to Lua objects
     retrieveValues();
 
-    lua_pushnumber(L, result);
+    lua_pushboolean(L, result > 0);
     resumeLuaThread(L, 1);
     luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
 }

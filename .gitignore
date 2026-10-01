@@ -24,3 +24,5 @@ out/
 /src/ipe-vscode/webview/gitversion.ts
 /src/ipe-vscode/images/
 
+/src/**/*.ipe
+/src/**/*.pdf
