@@ -9,7 +9,9 @@ Ipe 7.3.1
    versions of your slides in the same document, or make both a
    short conference and a long seminar talk.
 
- * New function to add several style sheets at once by name.
+ * Visual style sheet editor contributed by Dmitriy Morozov. Thanks!
+
+ * Easily add a style sheet by selecting it by name.
 
  * Implement the XDG Base Directory Specification on Linux, so your
    local files are no longer in `~/.ipe`.  Check "Show configuration"
