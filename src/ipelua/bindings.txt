@@ -412,8 +412,11 @@ sheet:clone()            -- returns a private copy of the stylesheet
 sheet:xml(with_bitmaps)  -- return XML representation 
 sheet:add(kind, symbolic, value)
 sheet:addFrom(other_sheet, kind, symbolic)
-sheet:remove(kind, symbolic)			   
-sheet:set(kind, value)
+sheet:remove(kind, symbolic)
+sheet:allNames(kind)
+sheet:find(kind, name)
+sheet:setAttribute(kind, name, absolute)
+sheet:set(kind, value)  -- only for preamble, linejoin, linecap, fillrule
 sheet:isStandard()      -- is this the built-in stylesheet?
 sheet:name()            -- name of the stylesheet
 sheet:setName(name)
