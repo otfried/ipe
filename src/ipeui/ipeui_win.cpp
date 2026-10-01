@@ -31,7 +31,13 @@
 #include "ipeui_common.h"
 #include "ipeui_wstring.h"
 
+#include <windows.h>
 #include <windowsx.h>
+// must be before this
+#include <gdiplus.h>
+
+#include <algorithm>
+#include <sstream>
 
 // --------------------------------------------------------------------
 
@@ -82,12 +88,22 @@ static void fillRect(HDC dc, const RECT & r, COLORREF color) {
     DeleteObject(b);
 }
 
+static double previewNumber(const std::string & value, double fallback) {
+    std::istringstream stream(value);
+    double v;
+    if (stream >> v) return v;
+    return fallback;
+}
+
 static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
     size_t sep = spec.find('|');
+    size_t sep2 = sep == std::string::npos ? std::string::npos : spec.find('|', sep + 1);
     std::string kind = sep == std::string::npos ? spec : spec.substr(0, sep);
-    std::string value = sep == std::string::npos
-				    ? std::string()
-				    : spec.substr(sep + 1, spec.find('|', sep + 1) - sep - 1);
+    std::string value =
+	sep == std::string::npos ? std::string() : spec.substr(sep + 1, sep2 - sep - 1);
+    double zoom = sep2 == std::string::npos
+		      ? 1.0
+		      : std::clamp(previewNumber(spec.substr(sep2 + 1), 1.0), 0.1, 100.0);
 
     fillRect(dc, rc, RGB(255, 255, 220));
     HBRUSH frame = CreateSolidBrush(RGB(160, 160, 130));
@@ -96,7 +112,29 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
 
     RECT body = rc;
     InflateRect(&body, -18, -16);
-    (void)kind;
+
+    if (kind == "imagefile" && !value.empty()) {
+	// load without color correction, as in ipebitmap_win.cpp
+	Gdiplus::Bitmap bitmap(WString(value).c_str(), FALSE);
+	if (bitmap.GetLastStatus() == Gdiplus::Ok) {
+	    double iw = bitmap.GetWidth();
+	    double ih = bitmap.GetHeight();
+	    double bw = body.right - body.left;
+	    double bh = body.bottom - body.top;
+	    double scale = std::min(bw / (iw / zoom), bh / (ih / zoom));
+	    scale = std::min(1.0, scale) / zoom;
+	    double w = iw * scale;
+	    double h = ih * scale;
+	    double x = 0.5 * (body.left + body.right) - 0.5 * w;
+	    double y = 0.5 * (body.top + body.bottom) - 0.5 * h;
+	    Gdiplus::Graphics graphics(dc);
+	    graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+	    graphics.DrawImage(&bitmap, (Gdiplus::REAL)x, (Gdiplus::REAL)y, (Gdiplus::REAL)w,
+			       (Gdiplus::REAL)h);
+	    return;
+	}
+    }
+
     SetBkMode(dc, TRANSPARENT);
     DrawTextA(dc, kind == "imagefile" || value.empty() ? "Preview unavailable" : value.c_str(),
               -1, &body, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -633,6 +671,8 @@ BOOL PDialog::handleResize() {
 	// calculation is in dialog units, so convert back to pixels
 	MoveWindow(hwnd, x * iBaseX / 4, y * iBaseY / 8, w * iBaseX / 4, h * iBaseY / 8,
 		   TRUE);
+	// MoveWindow may just blit the old bits, but the image needs to be rescaled
+	if (m.type == EImage) InvalidateRect(hwnd, nullptr, TRUE);
     }
     return TRUE;
 }

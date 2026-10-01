@@ -56,8 +56,8 @@ function dialog1()
   -- d:setEnabled("list", false)
   d:set("list", 4)
   d:add("combo", "combo", {"red", "green", "blue", "violet", "yellow"}, 5, 2)
-  d:add("image", "image", {value="imagefile|../../artwork/ipe.iconset/icon_64x64.png|1.0",
-			   width=200, height=150}, 6, 1, 1, 2)
+  d:add("image", "image", {value="imagefile|../../artwork/ipe.iconset/icon_64x64.png|0.5",
+			   width=200, height=50}, 6, 1, 1, 2)
   d:setStretch("row", 4, 1)
   d:setStretch("row", 5, 1)
   d:setStretch("column", 1, 1)
