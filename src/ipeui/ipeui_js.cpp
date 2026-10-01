@@ -65,6 +65,7 @@ private:
 
 static const char * typenames[] = {
     "button", "textedit", "list", "label", "combo", "checkbox", "input",
+    "image",
 };
 
 val PDialog::element(const SElement & m) {
@@ -85,6 +86,8 @@ val PDialog::element(const SElement & m) {
     w.set("col", m.col);
     w.set("rowspan", m.rowspan);
     w.set("colspan", m.colspan);
+    w.set("width", m.minWidth);
+    w.set("height", m.minHeight);
     return w;
 }
 

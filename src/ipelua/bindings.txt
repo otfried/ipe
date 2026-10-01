@@ -903,7 +903,7 @@ Closing the dialog causes the Lua thread to be resumed.
 
 \e name can be an arbitrary string. \e what must be one of 
 \verbatim
-button, text, list, label, combo, checkbox, input
+button, text, list, label, combo, checkbox, input, image
 \endverbatim
 \e options is a table.  Most fields are optional:
 \verbatim 
@@ -931,7 +931,27 @@ label="string"  (Required!)
 action= Lua method  (called when state changed)
 
 -- input:
+
+-- image:
+value="string"  (see below, default is an empty preview)
+width=number    (preview area width in pixels, default 180)
+height=number   (preview area height in pixels, default 80)
 \endverbatim
+
+An \e image element shows a preview of a bitmap inside a fixed-size
+area.  It does not load or display an actual ipe::Image object:
+instead, its \e value is a string with three fields separated by
+vertical bars (\c |):
+\verbatim
+kind|value|zoom
+\endverbatim
+\e kind must be "imagefile", in which case \e value is the name of a
+PNG file to load and display (scaled to fit the preview area,
+multiplied by \e zoom).  If the file cannot be loaded, or \e kind is
+anything else, \e value is instead shown as a text message inside the
+preview area (and \e zoom is ignored).  The value of an \e image
+element can be changed using \e set, using the same string format.
+
 The Lua method for button, checkbox, combo, and list is called with
 the dialog as an argument.  Do not capture the dialog inside the
 method, as this would create a cyclic reference that would stop the
@@ -940,7 +960,7 @@ if the dialog is destroyed by Lua after the parent window has already
 deleted it.)
 
 The argument of \e set is:
-\li a string value for \e label, \e text, and \e input,
+\li a string value for \e label, \e text, \e input, and \e image,
 \li either an integer, a string, or an array of string items for \e
 list and \e combo,
 \li a boolean for \e checkbox.

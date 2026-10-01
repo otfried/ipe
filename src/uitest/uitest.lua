@@ -29,6 +29,17 @@ function help(d)
   d:set("combo", 5)
 end
 
+local showingImage = true
+
+function toggleImage(d)
+  showingImage = not showingImage
+  if showingImage then
+    d:set("image", "imagefile|../../artwork/ipe.iconset/icon_64x64.png|1.0")
+  else
+    d:set("image", "text|No image loaded|1.0")
+  end
+end
+
 function dialog1()
   local d = ipeui.Dialog(appui, "Test 1")
   local text = "Here is some initial text,\nspread lovingly over many lines,\nwhich you can read at your leisure.\n한글"
@@ -45,6 +56,8 @@ function dialog1()
   -- d:setEnabled("list", false)
   d:set("list", 4)
   d:add("combo", "combo", {"red", "green", "blue", "violet", "yellow"}, 5, 2)
+  d:add("image", "image", {value="imagefile|../../artwork/ipe.iconset/icon_64x64.png|1.0",
+			   width=200, height=150}, 6, 1, 1, 2)
   d:setStretch("row", 4, 1)
   d:setStretch("row", 5, 1)
   d:setStretch("column", 1, 1)
@@ -52,6 +65,7 @@ function dialog1()
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:addButton("help", "&Help", help)
+  d:addButton("toggle", "&Toggle image", toggleImage)
   local r = d:execute({800, 600})
   print("Dialog returns", r)
   print("check1 is", d:get("check1"))

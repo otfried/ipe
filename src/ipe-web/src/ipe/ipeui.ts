@@ -904,7 +904,7 @@ export class IpeUi {
 	}
 
 	dialogSet(element: ElementOptions) {
-		setElement(element);
+		setElement(this.ipe, element);
 	}
 
 	// not used on vscode at all

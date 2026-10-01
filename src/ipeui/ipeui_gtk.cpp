@@ -29,6 +29,10 @@
 */
 
 #include "ipeui_common.h"
+
+#include <algorithm>
+#include <sstream>
+
 using String = std::string;
 
 #ifdef IPE_SPELLCHECK
@@ -98,6 +102,69 @@ PDialog::~PDialog() {
     //
 }
 
+static double previewNumber(const std::string & value, double fallback) {
+    std::istringstream stream(value);
+    double v;
+    if (stream >> v) return v;
+    return fallback;
+}
+
+static void drawImagePreview(GtkDrawingArea * area, cairo_t * cr, int width, int height,
+			     gpointer) {
+    const char * spec =
+	(const char *)g_object_get_data(G_OBJECT(area), "ipe-dialog-image-spec");
+    std::string s = spec ? spec : "";
+    size_t sep = s.find('|');
+    size_t sep2 = sep == std::string::npos ? std::string::npos : s.find('|', sep + 1);
+    std::string kind = sep == std::string::npos ? s : s.substr(0, sep);
+    std::string value =
+	sep == std::string::npos ? std::string() : s.substr(sep + 1, sep2 - sep - 1);
+    double zoom = sep2 == std::string::npos
+		      ? 1.0
+		      : std::clamp(previewNumber(s.substr(sep2 + 1), 1.0), 0.1, 100.0);
+
+    cairo_set_source_rgb(cr, 1.0, 1.0, 0.86);
+    cairo_rectangle(cr, 0.5, 0.5, width - 1.0, height - 1.0);
+    cairo_fill_preserve(cr);
+    cairo_set_source_rgb(cr, 0.62, 0.62, 0.50);
+    cairo_set_line_width(cr, 1.0);
+    cairo_stroke(cr);
+
+    double left = 18.0, top = 16.0, right = width - 18.0, bottom = height - 16.0;
+    double cx = 0.5 * (left + right);
+    double cy = 0.5 * (top + bottom);
+
+    if (kind == "imagefile") {
+	cairo_surface_t * image = cairo_image_surface_create_from_png(value.c_str());
+	if (cairo_surface_status(image) == CAIRO_STATUS_SUCCESS) {
+	    double iw = cairo_image_surface_get_width(image);
+	    double ih = cairo_image_surface_get_height(image);
+	    double scale = std::min((right - left) / (iw / zoom), (bottom - top) / (ih / zoom));
+	    scale = std::min(1.0, scale) / zoom;
+	    double x = cx - 0.5 * iw * scale;
+	    double y = cy - 0.5 * ih * scale;
+	    cairo_save(cr);
+	    cairo_translate(cr, x, y);
+	    cairo_scale(cr, scale, scale);
+	    cairo_set_source_surface(cr, image, 0.0, 0.0);
+	    cairo_paint(cr);
+	    cairo_restore(cr);
+	    cairo_surface_destroy(image);
+	    return;
+	}
+	cairo_surface_destroy(image);
+    }
+    const char * message =
+	(kind == "imagefile" || value.empty()) ? "Preview unavailable" : value.c_str();
+    cairo_select_font_face(cr, "sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size(cr, 12.0);
+    cairo_set_source_rgb(cr, 0.35, 0.35, 0.35);
+    cairo_text_extents_t ext;
+    cairo_text_extents(cr, message, &ext);
+    cairo_move_to(cr, cx - ext.width / 2.0 - ext.x_bearing, cy - ext.height / 2.0 - ext.y_bearing);
+    cairo_show_text(cr, message);
+}
+
 void PDialog::button_response_cb(GtkButton * button, PDialog * dlg) {
     int response = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "response"));
     gtk_dialog_response(GTK_DIALOG(dlg->hDialog), response);
@@ -159,6 +226,11 @@ void PDialog::setMapped(lua_State * L, int idx) {
 				 m.text.c_str(), -1);
 	break;
     case EInput: gtk_editable_set_text(GTK_EDITABLE(w), m.text.c_str()); break;
+    case EImage:
+	g_object_set_data_full(G_OBJECT(w), "ipe-dialog-image-spec",
+			       g_strdup(m.text.c_str()), g_free);
+	gtk_widget_queue_draw(w);
+	break;
     case EList: {
 	GtkSingleSelection * s =
 	    GTK_SINGLE_SELECTION(gtk_list_view_get_model(GTK_LIST_VIEW(w)));
@@ -396,6 +468,14 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		widget = gtk_entry_new();
 		gtk_widget_set_hexpand(widget, TRUE);
 		hexpand = true;
+		break;
+	    case EImage:
+		widget = gtk_drawing_area_new();
+		gtk_widget_set_size_request(widget, m.minWidth, m.minHeight);
+		g_object_set_data_full(G_OBJECT(widget), "ipe-dialog-image-spec",
+				       g_strdup(m.text.c_str()), g_free);
+		gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(widget), drawImagePreview,
+					nullptr, nullptr);
 		break;
 	    case ETextEdit:
 #ifdef IPE_SPELLCHECK

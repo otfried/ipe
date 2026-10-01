@@ -898,9 +898,6 @@ function MODEL:register(t)
     self.ui:setAttributes(self.doc:sheets(), self.attributes)
     self:resetGridSize()
   end
-  if config.platform == "vscode" then
-    self.ui.js("fireChange", t.label)
-  end
 end
 
 function MODEL:creation(label, obj)

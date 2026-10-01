@@ -114,6 +114,7 @@ bool Thumbnail::saveRender(TargetFormat fm, const char * dst, const Page * page,
 	ht = int(iLayout->paper().height() * zoom);
     } else {
 	Rect bbox = page->pageBBox(iDoc->cascade());
+	if (bbox.isEmpty()) return false;
 	if (fm != EPNG) {
 	    // make sure integer coordinates remain integer
 	    bbox.addPoint(Vector{floor(bbox.left()), ceil(bbox.top())});

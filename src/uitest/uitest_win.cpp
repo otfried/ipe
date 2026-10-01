@@ -73,7 +73,7 @@ private:
 
 const wchar_t AppUi::className[] = L"uitestWindowClass";
 
-AppUi::AppUi() { L = 0; }
+AppUi::AppUi() { L = nullptr; }
 
 AppUi::~AppUi() { fprintf(stderr, "AppUi::~AppUi()\n"); }
 
@@ -112,7 +112,7 @@ LRESULT CALLBACK AppUi::wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 	HMENU hSubMenu = CreatePopupMenu();
 	for (int i = 0; i < int(NUM_ACTIONS); ++i)
 	    AppendMenuA(hSubMenu, MF_STRING, IDBASE + i, actions[i]);
-	AppendMenuA(hMenu, MF_STRING | MF_POPUP, UINT(hSubMenu), "&File");
+	AppendMenuA(hMenu, MF_STRING | MF_POPUP, UINT_PTR(hSubMenu), "&File");
 
 	SetMenu(hwnd, hMenu);
     } break;

@@ -76,6 +76,32 @@ static std::string wideToUtf8(const wchar_t * wbuf) {
     return std::string(multi.data());
 }
 
+static void fillRect(HDC dc, const RECT & r, COLORREF color) {
+    HBRUSH b = CreateSolidBrush(color);
+    FillRect(dc, &r, b);
+    DeleteObject(b);
+}
+
+static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
+    size_t sep = spec.find('|');
+    std::string kind = sep == std::string::npos ? spec : spec.substr(0, sep);
+    std::string value = sep == std::string::npos
+				    ? std::string()
+				    : spec.substr(sep + 1, spec.find('|', sep + 1) - sep - 1);
+
+    fillRect(dc, rc, RGB(255, 255, 220));
+    HBRUSH frame = CreateSolidBrush(RGB(160, 160, 130));
+    FrameRect(dc, &rc, frame);
+    DeleteObject(frame);
+
+    RECT body = rc;
+    InflateRect(&body, -18, -16);
+    (void)kind;
+    SetBkMode(dc, TRANSPARENT);
+    DrawTextA(dc, kind == "imagefile" || value.empty() ? "Preview unavailable" : value.c_str(),
+              -1, &body, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+}
+
 void buildFlags(std::vector<short> & t, DWORD flags) {
     union {
 	DWORD dw;
@@ -157,6 +183,7 @@ void PDialog::setMapped(lua_State * L, int idx) {
     case ETextEdit:
     case EInput:
     case ELabel: setWindowText(h, m.text.c_str()); break;
+    case EImage: InvalidateRect(h, nullptr, TRUE); break;
     case EList:
 	if (!lua_isnumber(L, 3)) {
 	    ListBox_ResetContent(h);
@@ -383,6 +410,16 @@ BOOL CALLBACK PDialog::dialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
     case WM_SIZE:
 	if (d) return d->handleResize();
 	return FALSE;
+    case WM_DRAWITEM:
+	if (d && wParam >= IDBASE && wParam < IDBASE + d->iElements.size()) {
+	    SElement & m = d->iElements[wParam - IDBASE];
+	    if (m.type == EImage) {
+		DRAWITEMSTRUCT * dis = (DRAWITEMSTRUCT *)lParam;
+		drawImagePreview(dis->hDC, dis->rcItem, m.text);
+		return TRUE;
+	    }
+	}
+	return FALSE;
     case WM_DESTROY:
 	// Remove the subclasses from text edits
 	for (int i = 0; i < int(d->iElements.size()); ++i) {
@@ -421,6 +458,11 @@ void PDialog::buildElements(std::vector<short> & t) {
 	    buildFlags(t, flags | SS_LEFT);
 	    buildDimensions(t, m, id);
 	    buildControl(t, 0x0082, m.text.c_str()); // static text
+	    break;
+	case EImage:
+	    buildFlags(t, flags | SS_OWNERDRAW);
+	    buildDimensions(t, m, id);
+	    buildControl(t, 0x0082, nullptr); // static frame
 	    break;
 	case EInput:
 	    buildFlags(t, flags | ES_LEFT | WS_TABSTOP | WS_BORDER | ES_AUTOHSCROLL);

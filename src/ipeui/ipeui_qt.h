@@ -86,6 +86,29 @@ private:
 
 // --------------------------------------------------------------------
 
+class DialogImage : public QWidget {
+    Q_OBJECT
+public:
+    DialogImage(int width, int height, QWidget * parent = nullptr)
+	: QWidget(parent) {
+	setMinimumSize(width, height);
+	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    }
+
+    void setSpec(const std::string & spec) {
+	iSpec = QString::fromUtf8(spec.c_str());
+	update();
+    }
+
+protected:
+    void paintEvent(QPaintEvent *) override;
+
+private:
+    QString iSpec;
+};
+
+// --------------------------------------------------------------------
+
 class PTimer : public QObject, public Timer {
     Q_OBJECT
 public:

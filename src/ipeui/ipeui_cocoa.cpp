@@ -35,6 +35,10 @@
 
 #include "ipeuilayout_cocoa.h"
 
+#include <algorithm>
+#include <cstdio>
+#include <sstream>
+
 #define COLORICONSIZE 12
 
 inline const char * N2C(NSString * aStr) { return aStr.UTF8String; }
@@ -218,6 +222,94 @@ private:
 
 // --------------------------------------------------------------------
 
+static double previewNumber(const std::string & value, double fallback) {
+    std::istringstream stream(value);
+    double v;
+    if (stream >> v) return v;
+    return fallback;
+}
+
+@interface IpeDialogImage : NSView
+
+- (instancetype)initWithWidth:(int)width height:(int)height spec:(const std::string &)spec;
+- (void)setSpec:(const std::string &)spec;
+
+@end
+
+@implementation IpeDialogImage {
+    std::string iSpec;
+    int iWidth;
+    int iHeight;
+}
+
+- (instancetype)initWithWidth:(int)width height:(int)height spec:(const std::string &)spec {
+    self = [super initWithFrame:NSMakeRect(0., 0., width, height)];
+    if (self) {
+	iWidth = width;
+	iHeight = height;
+	iSpec = spec;
+    }
+    return self;
+}
+
+- (BOOL)isFlipped { return YES; }
+
+- (NSSize)intrinsicContentSize { return NSMakeSize(iWidth, iHeight); }
+
+- (void)setSpec:(const std::string &)spec {
+    iSpec = spec;
+    [self setNeedsDisplay:YES];
+}
+
+- (void)drawRect:(NSRect)dirtyRect {
+    (void)dirtyRect;
+    NSRect bounds = [self bounds];
+    [[NSColor colorWithCalibratedRed:1.0 green:1.0 blue:0.86 alpha:1.0] setFill];
+    NSRectFill(bounds);
+    [[NSColor colorWithCalibratedRed:0.62 green:0.62 blue:0.50 alpha:1.0] setStroke];
+    NSFrameRect(bounds);
+
+    size_t sep = iSpec.find('|');
+    size_t sep2 = sep == std::string::npos ? std::string::npos : iSpec.find('|', sep + 1);
+    std::string kind = sep == std::string::npos ? iSpec : iSpec.substr(0, sep);
+    std::string value = sep == std::string::npos
+				    ? std::string()
+				    : iSpec.substr(sep + 1, sep2 - sep - 1);
+    double zoom = sep2 == std::string::npos
+		      ? 1.0
+		      : std::clamp(previewNumber(iSpec.substr(sep2 + 1), 1.0), 0.1, 100.0);
+    NSRect body = NSInsetRect(bounds, 18., 16.);
+
+    if (kind == "imagefile") {
+        NSImage * image = [[NSImage alloc] initWithContentsOfFile:S2N(value)];
+        if (image) {
+            NSSize size = image.size;
+            size.width /= zoom;
+            size.height /= zoom;
+            double scale = std::min(body.size.width / size.width,
+                                    body.size.height / size.height);
+            scale = std::min(1.0, scale);
+            NSSize scaled = NSMakeSize(size.width * scale, size.height * scale);
+            NSRect target = NSMakeRect(NSMidX(body) - scaled.width / 2.,
+                                       NSMidY(body) - scaled.height / 2.,
+                                       scaled.width, scaled.height);
+            [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
+            [image drawInRect:target];
+            return;
+        }
+    }
+    NSDictionary * attrs = @{
+	NSFontAttributeName : [NSFont systemFontOfSize:12.],
+	NSForegroundColorAttributeName : [NSColor secondaryLabelColor]
+    };
+    NSString * message = (kind == "imagefile" || value.empty()) ? @"Preview unavailable" : S2N(value);
+    [message drawInRect:body withAttributes:attrs];
+}
+
+@end
+
+// --------------------------------------------------------------------
+
 PDialog::PDialog(lua_State * L0, WINID parent, const char * caption,
 		 const char * language)
     : Dialog(L0, parent, caption, language) {
@@ -257,6 +349,7 @@ void PDialog::setMapped(lua_State * L, int idx) {
     case ELabel:
     case EInput: [((NSTextField *)ctrl) setStringValue:S2N(m.text)]; break;
     case ETextEdit: setTextView((NSTextView *)ctrl, m.text); break;
+    case EImage: [(IpeDialogImage *)ctrl setSpec:m.text]; break;
     case ECheckBox: [((NSButton *)ctrl) setState:m.value]; break;
     case EList:
 	// listbox gets items directly from items array
@@ -289,7 +382,8 @@ void PDialog::retrieveValues() {
 }
 
 void PDialog::enableItem(int idx, bool value) {
-    if (iElements[idx].type != ETextEdit) [((NSControl *)iViews[idx]) setEnabled:value];
+    if (iElements[idx].type != ETextEdit && iElements[idx].type != EImage)
+	[((NSControl *)iViews[idx]) setEnabled:value];
 }
 
 void PDialog::fillComboBox(NSPopUpButton * cb, int idx) {
@@ -386,6 +480,10 @@ void PDialog::layoutControls() {
 	layout(w, cols[m.col], "l=l");
 	layout(w, cols[m.col + m.colspan - 1], "r=r");
 	if (m.type == EInput || m.type == ETextEdit) layout(w, nil, "w>0", 100);
+	if (m.type == EImage) {
+	    layout(w, nil, "w>0", m.minWidth);
+	    layout(w, nil, "h>0", m.minHeight);
+	}
 	// does it have stretch?
 	BOOL rowStretch = NO;
 	for (int r = m.row; r < m.row + m.rowspan; ++r)
@@ -479,6 +577,11 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		[t setStringValue:S2N(m.text)];
 		if (m.flags & ESelectAll) [t selectText:content];
 		ctrl = t;
+	    } break;
+	    case EImage: {
+		view = [[IpeDialogImage alloc] initWithWidth:m.minWidth
+						      height:m.minHeight
+							spec:m.text];
 	    } break;
 	    case ETextEdit: {
 		scroll = [[NSScrollView alloc] initWithFrame:NSZeroRect];
