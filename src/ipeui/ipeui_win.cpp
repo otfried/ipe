@@ -35,6 +35,9 @@
 #include <windowsx.h>
 // must be before this
 #include <gdiplus.h>
+// need IMF_SPELLCHECKING, only defined for RichEdit 8 (Windows 8+)
+#define _RICHEDIT_VER 0x0800
+#include <richedit.h>
 
 #include <algorithm>
 #include <sstream>
@@ -169,6 +172,17 @@ void buildControl(std::vector<short> & t, short what, const char * s) {
     t.push_back(0);     // creation data
 }
 
+// control identified by class name (e.g. L"RICHEDIT50W") rather than atom
+void buildControlClass(std::vector<short> & t, const wchar_t * cls, const char * s) {
+    while (*cls) t.push_back(*cls++);
+    t.push_back(0);
+    if (s)
+	buildString(t, s);
+    else
+	t.push_back(0); // text
+    t.push_back(0);     // creation data
+}
+
 // --------------------------------------------------------------------
 
 class PDialog : public Dialog {
@@ -284,6 +298,10 @@ BOOL PDialog::initDialog() {
 		result = FALSE; // we set the focus ourselves
 	    }
 	    if (m.flags & ELogFile) markupLog(h, m.text);
+	    if (m.type == ETextEdit && !(m.flags & ELogFile)) {
+		LRESULT opts = SendMessage(h, EM_GETLANGOPTIONS, 0, 0);
+		SendMessage(h, EM_SETLANGOPTIONS, 0, opts | IMF_SPELLCHECKING);
+	    }
 	    break;
 	case EList:
 	    for (int j = 0; j < int(m.items.size()); ++j)
@@ -513,7 +531,7 @@ void PDialog::buildElements(std::vector<short> & t) {
 	    if (m.flags & EReadOnly) flags |= ES_READONLY;
 	    buildFlags(t, flags);
 	    buildDimensions(t, m, id);
-	    buildControl(t, 0x0081); // edit
+	    buildControlClass(t, L"RICHEDIT50W", nullptr); // for spell checking
 	    break;
 	case EList:
 	    buildFlags(t, flags | WS_TABSTOP | WS_VSCROLL | WS_BORDER);

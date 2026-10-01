@@ -197,6 +197,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     luaL_openlibs(L);
     luaopen_ipeui(L);
 
+    // for richtext widget
+    LoadLibraryA("Msftedit.dll");
+
     AppUi::init(hInstance);
 
     AppUi * ui = AppUi::create(hInstance, L);

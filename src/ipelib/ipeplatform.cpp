@@ -98,13 +98,6 @@ static Platform::DebugHandler debugHandler = nullptr;
 #ifdef WIN32
 static ULONG_PTR gdiplusToken = 0;
 _locale_t ipeLocale;
-// Windows 7 does not have these functions, so we load them dynamically.
-typedef _locale_t (*LPCreateLocale)(int category, const char * locale);
-static LPCreateLocale p_create_locale = nullptr;
-typedef void (*LPFreeLocale)(_locale_t locale);
-static LPFreeLocale p_free_locale = nullptr;
-typedef double (*LPStrtodL)(const char * s, char ** fin, _locale_t locale);
-static LPStrtodL p_strtod_l = nullptr;
 #else
 locale_t ipeLocale;
 #endif
@@ -310,7 +303,7 @@ static void debugHandlerImpl(const char * msg) {
 static void shutdownIpelib() {
 #ifdef WIN32
     Gdiplus::GdiplusShutdown(gdiplusToken);
-    if (p_create_locale != nullptr && p_free_locale != nullptr) p_free_locale(ipeLocale);
+    _free_locale(ipeLocale);
 #else
     freelocale(ipeLocale);
 #endif
@@ -335,15 +328,11 @@ void Platform::initLib(int version) {
     debugHandler = debugHandlerImpl;
     setupFolders();
 #ifdef WIN32
-    HMODULE hDll = LoadLibraryA("msvcrt.dll");
-    if (hDll) {
-	p_create_locale = (LPCreateLocale)GetProcAddress(hDll, "_create_locale");
-	p_free_locale = (LPFreeLocale)GetProcAddress(hDll, "_free_locale");
-	p_strtod_l = (LPStrtodL)GetProcAddress(hDll, "_strtod_l");
-    }
-    if (p_create_locale != nullptr) ipeLocale = p_create_locale(LC_NUMERIC, "C");
+    ipeLocale = _create_locale(LC_NUMERIC, "C");
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, nullptr);
+    // registers the RICHEDIT50W window class, used for spell-checked text edits
+    LoadLibraryA("Msftedit.dll");
 #else
     ipeLocale = newlocale(LC_NUMERIC_MASK, "C", nullptr);
 #endif
@@ -767,10 +756,7 @@ String Platform::createTarball(String tex) {
 
 static double ipestrtod(const char * s, char ** fin) {
 #ifdef WIN32
-    if (p_create_locale != nullptr && p_strtod_l != nullptr)
-	return p_strtod_l(s, fin, ipeLocale);
-    else
-	return strtod(s, fin);
+    return _strtod_l(s, fin, ipeLocale);
 #else
     return strtod_l(s, fin, ipeLocale);
 #endif
