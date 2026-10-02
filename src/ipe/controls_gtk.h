@@ -158,8 +158,14 @@ private:
 			 gpointer data);
     static void setup_cb(GtkListItemFactory *, GtkListItem * item, gpointer data);
     static void bind_cb(GtkListItemFactory *, GtkListItem * item, gpointer data);
+    static GdkContentProvider * drag_prepare_cb(GtkDragSource * source, double x,
+					       double y, gpointer data);
+    static gboolean drop_cb(GtkDropTarget * target, const GValue * value, double x,
+			    double y, gpointer data);
     void showContextMenu(int x, int y);
     void appendItem(GdkPixbuf * pixbuf, const String & text, int page, bool marked);
+    void moveItems(std::vector<guint> positions, guint dst);
+    guint positionOfPage(int page) const;
 
 private:
     Document * iDoc;
@@ -167,6 +173,7 @@ private:
     GtkWidget * iGridView;
     GListStore * iStore;
     GtkSelectionModel * iSelection;
+    int iThumbWidth;
 };
 
 // --------------------------------------------------------------------

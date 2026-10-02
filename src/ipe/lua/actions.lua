@@ -1068,6 +1068,7 @@ function action_about_ipelets(win)
   d:add("text", "text", { read_only=true }, 1, 1)
   d:set("text", s)
   d:setStretch("row", 1, 1)
+  d:setStretch("column", 1, 1)
   d:addButton("ok", "Ok", "accept")
   d:execute(prefs.latexlog_size)
 end
@@ -1087,6 +1088,8 @@ function MODEL:action_preferences()
   s = s .. "For further details, please read the manual."
   d:add("text", "text", { read_only=true }, 1, 1)
   d:set("text", s)
+  d:setStretch("row", 1, 1)
+  d:setStretch("column", 1, 1)
   d:addButton("ok", "Ok", "accept")
   d:execute(prefs.latexlog_size)
 end

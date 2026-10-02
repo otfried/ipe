@@ -482,6 +482,7 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		widget = gtk_text_view_new();
 #endif
 		gtk_text_view_set_editable(GTK_TEXT_VIEW(widget), !(m.flags & EReadOnly));
+		gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(widget), GTK_WRAP_WORD_CHAR);
 		gtk_text_view_set_top_margin(GTK_TEXT_VIEW(widget), 4);
 		gtk_text_view_set_bottom_margin(GTK_TEXT_VIEW(widget), 4);
 		gtk_text_view_set_left_margin(GTK_TEXT_VIEW(widget), 4);
@@ -537,6 +538,9 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	}
 	if (m.row >= 0) {
 	    if (!placed) placed = widget;
+	    // without stretch, widgets only get their natural (often tiny)
+	    // size; enforce the requested minimum regardless of stretch
+	    gtk_widget_set_size_request(placed, m.minWidth, m.minHeight);
 	    for (int c = m.col; c < m.col + m.colspan; ++c)
 		if (c < int(iColStretch.size()) && iColStretch[c] != 0) hexpand = true;
 	    for (int r = m.row; r < m.row + m.rowspan; ++r)
@@ -570,7 +574,7 @@ void PDialog::takeDown(int result) {
     gtk_window_close(GTK_WINDOW(hDialog));
     hDialog = nullptr;
 
-    lua_pushboolean(L, result > 0);
+    lua_pushboolean(L, result == GTK_RESPONSE_ACCEPT);
     resumeLuaThread(L, 1);
     luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
 }
@@ -917,6 +921,11 @@ static void message_response_cb(GtkDialog * dialog, int response, gpointer data)
     delete context;
 }
 
+static void messagebox_button_cb(GtkButton * button, GtkWidget * dialog) {
+    int response = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "response"));
+    gtk_dialog_response(GTK_DIALOG(dialog), response);
+}
+
 static int ipeui_messageBoxAsync(lua_State * L) {
     GtkWindow * parent = GTK_WINDOW(check_winid(L, 1));
     static const char * const options[] = {"none",     "warning",  "information",
@@ -974,11 +983,26 @@ static int ipeui_messageBoxAsync(lua_State * L) {
 
     const char * const * names = buttonsets[buttons];
     int defaultIndex = (buttons == 0) ? 0 : ((buttons == 2 || buttons == 4) ? 2 : 1);
+    // build our own button row (with margins), instead of relying on
+    // GtkDialog's native action area, whose padding is theme-dependent
+    GtkWidget * action_area = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    gtk_widget_set_halign(action_area, GTK_ALIGN_END);
+    gtk_widget_set_margin_start(action_area, 12);
+    gtk_widget_set_margin_end(action_area, 12);
+    gtk_widget_set_margin_bottom(action_area, 12);
+    gtk_box_append(GTK_BOX(content), action_area);
+    GtkWidget * defaultButton = nullptr;
     for (int i = 0; names[i]; ++i) {
-	GtkWidget * button = gtk_dialog_add_button(GTK_DIALOG(dialog), names[i], i);
-	if (i == defaultIndex) gtk_widget_add_css_class(button, "suggested-action");
+	GtkWidget * button = gtk_button_new_with_mnemonic(names[i]);
+	gtk_box_append(GTK_BOX(action_area), button);
+	g_object_set_data(G_OBJECT(button), "response", GINT_TO_POINTER(i));
+	g_signal_connect(button, "clicked", G_CALLBACK(messagebox_button_cb), dialog);
+	if (i == defaultIndex) {
+	    gtk_widget_add_css_class(button, "suggested-action");
+	    defaultButton = button;
+	}
     }
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), defaultIndex);
+    if (defaultButton) gtk_window_set_default_widget(GTK_WINDOW(dialog), defaultButton);
 
     lua_pushthread(L);
     auto * context = new MessageBoxContext{L, luaL_ref(L, LUA_REGISTRYINDEX), buttons};

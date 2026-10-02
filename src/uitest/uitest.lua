@@ -83,12 +83,24 @@ function dialog1()
   print("combo is", d:get("combo"))
 end
 
+function dialog2() 
+  local d = ipeui.Dialog(win, "Ipe Preferences")
+  local s = "Ipe preferences are changed by creating a Lua source file."
+  d:add("text", "text", { read_only=true }, 1, 1)
+  d:set("text", s)
+  d:setStretch("row", 1, 1)
+  d:setStretch("column", 1, 1)
+  d:addButton("ok", "Ok", "accept")
+  d:execute({600, 300})
+end
+
 function showMenuInner(x, y)
   print("Show menu", x, y)
   local m = ipeui.Menu(appui)
   m:add("open", "Open")
   m:add("save", "Save")
-  m:add("dialog 1", "Show dialog")
+  m:add("dialog 1", "Show dialog 1")
+  m:add("dialog 2", "Show dialog 2")
   m:add("messagebox", "MessageBox...")
   m:add("submenu1", "Submenu 1", { "alpha", "beta", "gamma" })
   m:add("submenu2", "Submenu 2", { "alpha", "beta", "gamma" },
@@ -126,6 +138,8 @@ local timtab = { elapse = function (t) print("Timer", t) end }
 function actionInner(cmd)
   if cmd == "dialog 1" then
     dialog1()
+  elseif cmd == "dialog 2" then
+    dialog2()
   elseif cmd == "messagebox" then
     local r = ipeui.messageBox(appui, "warning", "Testing 123", "TEST 1 2 3",
 			       "savediscardcancel")

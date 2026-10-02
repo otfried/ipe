@@ -67,8 +67,17 @@ GdkTexture * textureFromPixbuf(GdkPixbuf * pixbuf) {
     return gdk_texture_new_for_pixbuf(pixbuf);
 }
 
+static gboolean idle_unparent_cb(gpointer data) {
+    gtk_widget_unparent(GTK_WIDGET(data));
+    return G_SOURCE_REMOVE;
+}
+
+// GtkPopoverMenu closes (emitting "closed") *before* a clicked row's GAction
+// "activate" signal fires - GTK defers that to an idle callback. Unparenting
+// synchronously here would tear the popover down before that idle runs, so
+// the action would never fire; queue our own idle after GTK's instead.
 static void on_popover_closed(GtkPopover * popover, gpointer) {
-    gtk_widget_unparent(GTK_WIDGET(popover));
+    g_idle_add(idle_unparent_cb, popover);
 }
 
 void popupPointingAt(GtkWidget * popover, GtkWidget * parent, GtkWidget * relativeTo,
@@ -392,7 +401,8 @@ void PageSorter::appendItem(GdkPixbuf * pixbuf, const String & text, int page,
 }
 
 PageSorter::PageSorter(Document * doc, int pno, int width)
-    : iDoc(doc) {
+    : iDoc(doc)
+    , iThumbWidth(width) {
     iStore = g_list_store_new(G_TYPE_OBJECT);
 
     Thumbnail r(iDoc, width);
@@ -456,13 +466,17 @@ PageSorter::PageSorter(Document * doc, int pno, int width)
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(iScroller), GTK_POLICY_AUTOMATIC,
 				   GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(iScroller), iGridView);
+    // without this, the box packing it into the dialog gives it only its
+    // natural (tiny) size, instead of filling and following dialog resizes
+    gtk_widget_set_hexpand(iScroller, TRUE);
+    gtk_widget_set_vexpand(iScroller, TRUE);
 }
 
 PageSorter::~PageSorter() {
     // iSelection owns iStore; iGridView (owned by iScroller) owns iSelection
 }
 
-void PageSorter::setup_cb(GtkListItemFactory *, GtkListItem * item, gpointer) {
+void PageSorter::setup_cb(GtkListItemFactory *, GtkListItem * item, gpointer data) {
     GtkWidget * box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     GtkWidget * image = gtk_image_new();
     GtkWidget * label = gtk_label_new(nullptr);
@@ -472,10 +486,24 @@ void PageSorter::setup_cb(GtkListItemFactory *, GtkListItem * item, gpointer) {
     gtk_box_append(GTK_BOX(box), label);
     g_object_set_data(G_OBJECT(box), "ipe-image", image);
     g_object_set_data(G_OBJECT(box), "ipe-label", label);
+    g_object_set_data(G_OBJECT(box), "ipe-sorter", data);
+
+    // drag source: lets the user pick up a page and drop it elsewhere to
+    // reorder, similar to the HTML/JS version's Sortable-based drag
+    GtkDragSource * dragSource = gtk_drag_source_new();
+    gtk_drag_source_set_actions(dragSource, GDK_ACTION_MOVE);
+    g_signal_connect(dragSource, "prepare", G_CALLBACK(drag_prepare_cb), nullptr);
+    gtk_widget_add_controller(box, GTK_EVENT_CONTROLLER(dragSource));
+
+    GtkDropTarget * dropTarget = gtk_drop_target_new(G_TYPE_STRING, GDK_ACTION_MOVE);
+    g_signal_connect(dropTarget, "drop", G_CALLBACK(drop_cb), nullptr);
+    gtk_widget_add_controller(box, GTK_EVENT_CONTROLLER(dropTarget));
+
     gtk_list_item_set_child(item, box);
 }
 
-void PageSorter::bind_cb(GtkListItemFactory *, GtkListItem * item, gpointer) {
+void PageSorter::bind_cb(GtkListItemFactory *, GtkListItem * item, gpointer data) {
+    PageSorter * self = (PageSorter *)data;
     GObject * obj = G_OBJECT(gtk_list_item_get_item(item));
     GtkWidget * box = gtk_list_item_get_child(item);
     GtkWidget * image = GTK_WIDGET(g_object_get_data(G_OBJECT(box), "ipe-image"));
@@ -483,9 +511,17 @@ void PageSorter::bind_cb(GtkListItemFactory *, GtkListItem * item, gpointer) {
     GdkPixbuf * pixbuf = GDK_PIXBUF(g_object_get_data(obj, "ipe-pixbuf"));
     const char * text = (const char *)g_object_get_data(obj, "ipe-text");
     bool marked = GPOINTER_TO_INT(g_object_get_data(obj, "ipe-marked"));
+    // GtkListView doesn't reliably re-bind a row just because its position
+    // shifted (only when the bound item itself changes), so caching the
+    // position here would go stale after a reorder; cache the stable page
+    // number instead, and look the position up fresh when needed
+    g_object_set_data(G_OBJECT(box), "ipe-page", g_object_get_data(obj, "ipe-page"));
     GdkTexture * texture = textureFromPixbuf(pixbuf);
     gtk_image_set_from_paintable(GTK_IMAGE(image), GDK_PAINTABLE(texture));
     g_object_unref(texture);
+    // GtkImage doesn't reliably use the paintable's own size as its natural
+    // size, so force the intended thumbnail width explicitly
+    gtk_image_set_pixel_size(GTK_IMAGE(image), self->iThumbWidth);
     gtk_label_set_text(GTK_LABEL(label), marked ? (String("\u2713 ") + text).z() : text);
 }
 
@@ -496,6 +532,17 @@ int PageSorter::pageAt(int r) const {
     int page = GPOINTER_TO_INT(g_object_get_data(obj, "ipe-page"));
     g_object_unref(obj);
     return page;
+}
+
+guint PageSorter::positionOfPage(int page) const {
+    guint n = g_list_model_get_n_items(G_LIST_MODEL(iStore));
+    for (guint i = 0; i < n; ++i) {
+	GObject * obj = G_OBJECT(g_list_model_get_item(G_LIST_MODEL(iStore), i));
+	int p = GPOINTER_TO_INT(g_object_get_data(obj, "ipe-page"));
+	g_object_unref(obj);
+	if (p == page) return i;
+    }
+    return 0; // shouldn't happen
 }
 
 void PageSorter::deletePages() {
@@ -514,11 +561,86 @@ void PageSorter::markPages(bool mark) {
 	if (!gtk_selection_model_is_selected(iSelection, i)) continue;
 	GObject * obj = G_OBJECT(g_list_model_get_item(G_LIST_MODEL(iStore), i));
 	int page = GPOINTER_TO_INT(g_object_get_data(obj, "ipe-page"));
+	GdkPixbuf * pixbuf = GDK_PIXBUF(g_object_get_data(obj, "ipe-pixbuf"));
+	String text = (const char *)g_object_get_data(obj, "ipe-text");
 	iMarks[page] = mark;
-	g_object_set_data(obj, "ipe-marked", GINT_TO_POINTER(mark ? 1 : 0));
+	// GtkGridView skips rebinding a row when the spliced-in object is the
+	// same pointer as before, so splice in a genuinely new item instead
+	// of mutating this one in place
+	GObject * newObj = ps_item_new(GDK_PIXBUF(g_object_ref(pixbuf)), text, page, mark);
+	gpointer item = newObj;
+	g_list_store_splice(iStore, i, 1, &item, 1);
+	g_object_unref(newObj);
 	g_object_unref(obj);
-	g_list_model_items_changed(G_LIST_MODEL(iStore), i, 1, 1);
     }
+}
+
+void PageSorter::moveItems(std::vector<guint> positions, guint dst) {
+    if (positions.empty()) return;
+    std::sort(positions.begin(), positions.end());
+    // dropping a selection onto one of its own members is a no-op
+    if (std::binary_search(positions.begin(), positions.end(), dst)) return;
+
+    guint before = 0;
+    for (guint p : positions)
+	if (p < dst) ++before;
+
+    // remove from highest to lowest index so earlier indices stay valid,
+    // then reverse to restore the original (ascending) relative order
+    std::vector<GObject *> objs;
+    for (auto it = positions.rbegin(); it != positions.rend(); ++it) {
+	objs.push_back(G_OBJECT(g_list_model_get_item(G_LIST_MODEL(iStore), *it)));
+	g_list_store_remove(iStore, *it);
+    }
+    std::reverse(objs.begin(), objs.end());
+
+    guint insertAt = dst - before;
+    for (GObject * obj : objs) {
+	g_list_store_insert(iStore, insertAt++, obj);
+	g_object_unref(obj);
+    }
+}
+
+GdkContentProvider * PageSorter::drag_prepare_cb(GtkDragSource * source, double, double,
+						 gpointer) {
+    GtkWidget * box = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(source));
+    PageSorter * self = (PageSorter *)g_object_get_data(G_OBJECT(box), "ipe-sorter");
+    int page = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(box), "ipe-page"));
+    guint pos = self->positionOfPage(page);
+
+    // if the dragged row is part of a multi-selection, take the whole
+    // (ordered) selection along; otherwise just this one row
+    GString * s = g_string_new(nullptr);
+    if (gtk_selection_model_is_selected(self->iSelection, pos)) {
+	guint n = g_list_model_get_n_items(G_LIST_MODEL(self->iStore));
+	for (guint i = 0; i < n; ++i) {
+	    if (!gtk_selection_model_is_selected(self->iSelection, i)) continue;
+	    if (s->len) g_string_append_c(s, ',');
+	    g_string_append_printf(s, "%u", i);
+	}
+    } else {
+	g_string_append_printf(s, "%u", pos);
+    }
+    GdkContentProvider * provider = gdk_content_provider_new_typed(G_TYPE_STRING, s->str);
+    g_string_free(s, TRUE);
+    return provider;
+}
+
+gboolean PageSorter::drop_cb(GtkDropTarget * target, const GValue * value, double,
+			    double, gpointer) {
+    GtkWidget * box = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(target));
+    PageSorter * self = (PageSorter *)g_object_get_data(G_OBJECT(box), "ipe-sorter");
+    int page = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(box), "ipe-page"));
+    guint dstPos = self->positionOfPage(page);
+
+    std::vector<guint> positions;
+    gchar ** parts = g_strsplit(g_value_get_string(value), ",", -1);
+    for (int i = 0; parts[i]; ++i)
+	positions.push_back((guint)g_ascii_strtoull(parts[i], nullptr, 10));
+    g_strfreev(parts);
+
+    self->moveItems(positions, dstPos);
+    return TRUE;
 }
 
 static void action_delete_cb(GSimpleAction *, GVariant *, gpointer data) {
@@ -542,7 +664,6 @@ void PageSorter::showContextMenu(int x, int y) {
     };
     g_action_map_add_action_entries(G_ACTION_MAP(group), entries, G_N_ELEMENTS(entries),
 				    this);
-    gtk_widget_insert_action_group(iGridView, "sorter", G_ACTION_GROUP(group));
 
     GMenu * menu = g_menu_new();
     g_menu_append(menu, "Delete", "sorter.delete");
@@ -550,6 +671,9 @@ void PageSorter::showContextMenu(int x, int y) {
     g_menu_append(menu, "Unmark", "sorter.unmark");
 
     GtkWidget * popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
+    // insert directly on the popover: it isn't a descendant of iGridView
+    // until popupPointingAt() parents it, so actions wouldn't be found yet
+    gtk_widget_insert_action_group(popover, "sorter", G_ACTION_GROUP(group));
     g_object_unref(menu);
     g_object_unref(group);
     popupPointingAt(popover, iGridView, iGridView, x, y);

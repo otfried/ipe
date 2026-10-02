@@ -867,6 +867,10 @@ static const char * const aboutText =
     "Ipe is released under the GNU Public License.\n\n"
     "See http://ipe.otfried.org for further information.";
 
+static void about_ok_cb(GtkButton *, gpointer data) {
+    gtk_dialog_response(GTK_DIALOG(data), GTK_RESPONSE_OK);
+}
+
 void AppUi::aboutIpe() {
     std::vector<char> buf(strlen(aboutText) + 100);
     sprintf(buf.data(), aboutText, IPELIB_VERSION / 10000, (IPELIB_VERSION / 100) % 100,
@@ -878,6 +882,7 @@ void AppUi::aboutIpe() {
     gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(iWindow));
 
+    GtkWidget * content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
     GtkWidget * label = gtk_label_new(nullptr);
     gtk_label_set_markup(GTK_LABEL(label), buf.data());
     gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
@@ -885,8 +890,21 @@ void AppUi::aboutIpe() {
     gtk_widget_set_margin_end(label, 20);
     gtk_widget_set_margin_top(label, 20);
     gtk_widget_set_margin_bottom(label, 20);
-    gtk_box_append(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), label);
-    gtk_dialog_add_button(GTK_DIALOG(dialog), "_OK", GTK_RESPONSE_OK);
+    gtk_box_append(GTK_BOX(content), label);
+
+    // build our own button row (with margins), instead of relying on
+    // GtkDialog's native action area, whose padding is theme-dependent
+    GtkWidget * action_area = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_widget_set_halign(action_area, GTK_ALIGN_END);
+    gtk_widget_set_margin_start(action_area, 12);
+    gtk_widget_set_margin_end(action_area, 12);
+    gtk_widget_set_margin_bottom(action_area, 12);
+    gtk_box_append(GTK_BOX(content), action_area);
+    GtkWidget * ok = gtk_button_new_with_mnemonic("_OK");
+    gtk_widget_add_css_class(ok, "suggested-action");
+    g_signal_connect(ok, "clicked", G_CALLBACK(about_ok_cb), dialog);
+    gtk_box_append(GTK_BOX(action_area), ok);
+    gtk_window_set_default_widget(GTK_WINDOW(dialog), ok);
 
     g_signal_connect(dialog, "response", G_CALLBACK(about_response_cb), nullptr);
     gtk_window_present(GTK_WINDOW(dialog));
@@ -998,12 +1016,18 @@ void pagesorter_response_cb(GtkDialog *, int response, gpointer data) {
 }
 } // namespace
 
+static void pagesorter_button_cb(GtkButton * button, GtkWidget * dialog) {
+    int response = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "response"));
+    gtk_dialog_response(GTK_DIALOG(dialog), response);
+}
+
 int AppUi::pageSorter(lua_State * L, Document * doc, int pno, int width, int height,
 		      int thumbWidth) {
-    GtkWidget * dialog =
-	gtk_dialog_new_with_buttons(pno >= 0 ? "Ipe View Sorter" : "Ipe Page Sorter",
-				    GTK_WINDOW(iWindow), GTK_DIALOG_MODAL, "_Cancel",
-				    GTK_RESPONSE_CANCEL, "_OK", GTK_RESPONSE_OK, nullptr);
+    GtkWidget * dialog = gtk_dialog_new();
+    gtk_window_set_title(GTK_WINDOW(dialog), pno >= 0 ? "Ipe View Sorter"
+						       : "Ipe Page Sorter");
+    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(iWindow));
     gtk_window_set_default_size(GTK_WINDOW(dialog), width, height);
 
     PageSorterCtx * ctx = new PageSorterCtx();
@@ -1014,7 +1038,31 @@ int AppUi::pageSorter(lua_State * L, Document * doc, int pno, int width, int hei
     ctx->sorter = new PageSorter(doc, pno, thumbWidth);
 
     GtkWidget * content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-    gtk_box_append(GTK_BOX(content), ctx->sorter->window());
+    GtkWidget * sorterWindow = ctx->sorter->window();
+    gtk_widget_set_margin_start(sorterWindow, 12);
+    gtk_widget_set_margin_end(sorterWindow, 12);
+    gtk_widget_set_margin_top(sorterWindow, 12);
+    gtk_widget_set_margin_bottom(sorterWindow, 12);
+    gtk_box_append(GTK_BOX(content), sorterWindow);
+
+    // build our own button row (with margins), instead of relying on
+    // GtkDialog's native action area, whose padding is theme-dependent
+    GtkWidget * action_area = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    gtk_widget_set_halign(action_area, GTK_ALIGN_END);
+    gtk_widget_set_margin_start(action_area, 12);
+    gtk_widget_set_margin_end(action_area, 12);
+    gtk_widget_set_margin_bottom(action_area, 12);
+    gtk_box_append(GTK_BOX(content), action_area);
+    GtkWidget * cancel = gtk_button_new_with_mnemonic("_Cancel");
+    g_object_set_data(G_OBJECT(cancel), "response", GINT_TO_POINTER(GTK_RESPONSE_CANCEL));
+    g_signal_connect(cancel, "clicked", G_CALLBACK(pagesorter_button_cb), dialog);
+    gtk_box_append(GTK_BOX(action_area), cancel);
+    GtkWidget * ok = gtk_button_new_with_mnemonic("_OK");
+    gtk_widget_add_css_class(ok, "suggested-action");
+    g_object_set_data(G_OBJECT(ok), "response", GINT_TO_POINTER(GTK_RESPONSE_OK));
+    g_signal_connect(ok, "clicked", G_CALLBACK(pagesorter_button_cb), dialog);
+    gtk_box_append(GTK_BOX(action_area), ok);
+    gtk_window_set_default_widget(GTK_WINDOW(dialog), ok);
 
     g_signal_connect(dialog, "response", G_CALLBACK(pagesorter_response_cb), ctx);
     gtk_window_present(GTK_WINDOW(dialog));
