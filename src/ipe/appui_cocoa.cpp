@@ -1511,7 +1511,7 @@ int AppUi::setClipboard(lua_State * L) {
 
 // --------------------------------------------------------------------
 
-bool AppUi::waitDialog(const char * cmd, const char * label) {
+bool AppUi::waitDialog(lua_State *, const char * cmd, const char * label) {
     NSPanel * panel =
 	[[NSPanel alloc] initWithContentRect:NSMakeRect(400., 800., 200, 100)
 				   styleMask:NSTitledWindowMask
