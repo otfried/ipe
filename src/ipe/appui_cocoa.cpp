@@ -1535,10 +1535,11 @@ bool AppUi::waitDialog(const char * cmd, const char * label) {
       (void)std::system(cmd);
       // must run on the main thread, inside the modal run loop mode, or
       // runModalForWindow: won't notice until some other event wakes it up
-      [NSApp performSelectorOnMainThread:@selector(abortModal)
-			       withObject:nil
-			    waitUntilDone:NO
-				    modes:@[ NSModalPanelRunLoopMode, NSDefaultRunLoopMode ]];
+      [NSApp
+	  performSelectorOnMainThread:@selector(abortModal)
+			   withObject:nil
+			waitUntilDone:NO
+				modes:@[ NSModalPanelRunLoopMode, NSDefaultRunLoopMode ]];
     };
     [NSApp runModalForWindow:panel];
     [panel close];

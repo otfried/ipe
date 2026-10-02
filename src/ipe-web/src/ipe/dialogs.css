@@ -3,6 +3,11 @@ div#contents {
 	padding: 0;
 	text-align: center;
 	display: grid;
+	/* bounds the grid to its (flex-shrunk, capped) parent, so stretched
+	   rows/columns shrink and scroll internally instead of growing the
+	   whole dialog past the viewport */
+	height: 100%;
+	min-height: 0;
 }
 textarea.dialog-element {
 	resize: vertical;
@@ -10,6 +15,12 @@ textarea.dialog-element {
 }
 select.dialog-element {
 	height: 30px;
+}
+canvas.dialog-element {
+	/* without this, the canvas's intrinsic pixel size stops the grid
+	   track from shrinking it, so it overflows into neighbor cells */
+	min-width: 0;
+	min-height: 0;
 }
 div.dialog-buttons {
 	display: flex;
@@ -31,11 +42,18 @@ button.dialog-element {
 	padding: 3px;
 	display: flex;
 	flex-direction: column;
-	row-gap: 10px;
+	row-gap: 2px;
+	/* without this, the list keeps growing to fit its items instead of
+	   scrolling within its grid cell */
+	min-height: 0;
+	overflow-y: auto;
+	/* hard cap at ~16 lines, so a long list can't grow the dialog
+	   past the viewport and force a scrollbar on the whole dialog */
+	max-height: calc(16 * 1.6em + 15 * 2px + 6px);
 }
 
 .dialog-list-item {
-	padding: 6px 1em;
+	padding: 2px 1em;
 	text-align: left;
 }
 

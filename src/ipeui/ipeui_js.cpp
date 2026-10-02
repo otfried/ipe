@@ -64,8 +64,7 @@ private:
 // --------------------------------------------------------------------
 
 static const char * typenames[] = {
-    "button", "textedit", "list", "label", "combo", "checkbox", "input",
-    "image",
+    "button", "textedit", "list", "label", "combo", "checkbox", "input", "image",
 };
 
 val PDialog::element(const SElement & m) {

@@ -138,24 +138,24 @@ static void about_response_cb(GtkDialog * d, int, gpointer) {
 }
 
 static gboolean canvas_drop_cb(GtkDropTarget *, const GValue * value, double, double,
-                   gpointer data) {
+			       gpointer data) {
     AppUi * app = static_cast<AppUi *>(data);
     auto * files = (GdkFileList *)g_value_get_boxed(value);
     for (GSList * entry = gdk_file_list_get_files(files); entry; entry = entry->next) {
-        char * path = g_file_get_path(G_FILE(entry->data));
-        if (!path) continue;
-        GdkPixbufFormat * format = gdk_pixbuf_get_file_info(path, nullptr, nullptr);
-        char * name = format ? gdk_pixbuf_format_get_name(format) : nullptr;
-        bool supported = name && (!strcmp(name, "png") || !strcmp(name, "jpeg"));
-        String fformat = name;
-        String fname = path;
-        g_free(name);
-        g_free(path);
-        if (supported) {
-            ipeDebug("Dropped image file: %s", fname.z());
-            app->handleDroppedImage(fname, fformat);
-            return TRUE;
-        }
+	char * path = g_file_get_path(G_FILE(entry->data));
+	if (!path) continue;
+	GdkPixbufFormat * format = gdk_pixbuf_get_file_info(path, nullptr, nullptr);
+	char * name = format ? gdk_pixbuf_format_get_name(format) : nullptr;
+	bool supported = name && (!strcmp(name, "png") || !strcmp(name, "jpeg"));
+	String fformat = name;
+	String fname = path;
+	g_free(name);
+	g_free(path);
+	if (supported) {
+	    ipeDebug("Dropped image file: %s", fname.z());
+	    app->handleDroppedImage(fname, fformat);
+	    return TRUE;
+	}
     }
     return FALSE;
 }

@@ -231,7 +231,9 @@ static double previewNumber(const std::string & value, double fallback) {
 
 @interface IpeDialogImage : NSView
 
-- (instancetype)initWithWidth:(int)width height:(int)height spec:(const std::string &)spec;
+- (instancetype)initWithWidth:(int)width
+		       height:(int)height
+			 spec:(const std::string &)spec;
 - (void)setSpec:(const std::string &)spec;
 
 @end
@@ -242,7 +244,9 @@ static double previewNumber(const std::string & value, double fallback) {
     int iHeight;
 }
 
-- (instancetype)initWithWidth:(int)width height:(int)height spec:(const std::string &)spec {
+- (instancetype)initWithWidth:(int)width
+		       height:(int)height
+			 spec:(const std::string &)spec {
     self = [super initWithFrame:NSMakeRect(0., 0., width, height)];
     if (self) {
 	iWidth = width;
@@ -252,9 +256,13 @@ static double previewNumber(const std::string & value, double fallback) {
     return self;
 }
 
-- (BOOL)isFlipped { return YES; }
+- (BOOL)isFlipped {
+    return YES;
+}
 
-- (NSSize)intrinsicContentSize { return NSMakeSize(iWidth, iHeight); }
+- (NSSize)intrinsicContentSize {
+    return NSMakeSize(iWidth, iHeight);
+}
 
 - (void)setSpec:(const std::string &)spec {
     iSpec = spec;
@@ -272,37 +280,39 @@ static double previewNumber(const std::string & value, double fallback) {
     size_t sep = iSpec.find('|');
     size_t sep2 = sep == std::string::npos ? std::string::npos : iSpec.find('|', sep + 1);
     std::string kind = sep == std::string::npos ? iSpec : iSpec.substr(0, sep);
-    std::string value = sep == std::string::npos
-				    ? std::string()
-				    : iSpec.substr(sep + 1, sep2 - sep - 1);
-    double zoom = sep2 == std::string::npos
-		      ? 1.0
-		      : std::clamp(previewNumber(iSpec.substr(sep2 + 1), 1.0), 0.1, 100.0);
+    std::string value =
+	sep == std::string::npos ? std::string() : iSpec.substr(sep + 1, sep2 - sep - 1);
+    double zoom =
+	sep2 == std::string::npos
+	    ? 1.0
+	    : std::clamp(previewNumber(iSpec.substr(sep2 + 1), 1.0), 0.1, 100.0);
     NSRect body = NSInsetRect(bounds, 18., 16.);
 
     if (kind == "imagefile") {
-        NSImage * image = [[NSImage alloc] initWithContentsOfFile:S2N(value)];
-        if (image) {
-            NSSize size = image.size;
-            size.width /= zoom;
-            size.height /= zoom;
-            double scale = std::min(body.size.width / size.width,
-                                    body.size.height / size.height);
-            scale = std::min(1.0, scale);
-            NSSize scaled = NSMakeSize(size.width * scale, size.height * scale);
-            NSRect target = NSMakeRect(NSMidX(body) - scaled.width / 2.,
-                                       NSMidY(body) - scaled.height / 2.,
-                                       scaled.width, scaled.height);
-            [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationHigh];
-            [image drawInRect:target];
-            return;
-        }
+	NSImage * image = [[NSImage alloc] initWithContentsOfFile:S2N(value)];
+	if (image) {
+	    NSSize size = image.size;
+	    size.width /= zoom;
+	    size.height /= zoom;
+	    double scale =
+		std::min(body.size.width / size.width, body.size.height / size.height);
+	    scale = std::min(1.0, scale);
+	    NSSize scaled = NSMakeSize(size.width * scale, size.height * scale);
+	    NSRect target = NSMakeRect(NSMidX(body) - scaled.width / 2.,
+				       NSMidY(body) - scaled.height / 2., scaled.width,
+				       scaled.height);
+	    [[NSGraphicsContext currentContext]
+		setImageInterpolation:NSImageInterpolationHigh];
+	    [image drawInRect:target];
+	    return;
+	}
     }
     NSDictionary * attrs = @{
 	NSFontAttributeName : [NSFont systemFontOfSize:12.],
 	NSForegroundColorAttributeName : [NSColor secondaryLabelColor]
     };
-    NSString * message = (kind == "imagefile" || value.empty()) ? @"Preview unavailable" : S2N(value);
+    NSString * message =
+	(kind == "imagefile" || value.empty()) ? @"Preview unavailable" : S2N(value);
     [message drawInRect:body withAttributes:attrs];
 }
 
@@ -636,6 +646,8 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	    [view setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
 	    [scroll setDocumentView:view];
 	    scroll.hasVerticalScroller = YES;
+	    // NSScrollView has no border by default, unlike other elements
+	    scroll.borderType = NSBezelBorder;
 	    layout(scroll, nil, "h>0", 100.0);
 	    layout(scroll, nil, "w>0", 160.0);
 	}

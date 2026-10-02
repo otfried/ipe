@@ -81,6 +81,9 @@ public:
 
 private:
     static void itemResponse(GtkWidget * item, PDialog * dlg);
+    static void comboResponse(GObject * object, GParamSpec * pspec, PDialog * dlg);
+    static void listResponse(GtkSelectionModel * model, guint position, guint nitems,
+			     PDialog * dlg);
     static void response_cb(GtkDialog * dialog, int response, PDialog * dlg);
     static void button_response_cb(GtkButton * button, PDialog * dlg);
     static gboolean key_press_cb(GtkEventControllerKey * controller, guint keyval,
@@ -139,7 +142,8 @@ static void drawImagePreview(GtkDrawingArea * area, cairo_t * cr, int width, int
 	if (cairo_surface_status(image) == CAIRO_STATUS_SUCCESS) {
 	    double iw = cairo_image_surface_get_width(image);
 	    double ih = cairo_image_surface_get_height(image);
-	    double scale = std::min((right - left) / (iw / zoom), (bottom - top) / (ih / zoom));
+	    double scale =
+		std::min((right - left) / (iw / zoom), (bottom - top) / (ih / zoom));
 	    scale = std::min(1.0, scale) / zoom;
 	    double x = cx - 0.5 * iw * scale;
 	    double y = cy - 0.5 * ih * scale;
@@ -161,7 +165,8 @@ static void drawImagePreview(GtkDrawingArea * area, cairo_t * cr, int width, int
     cairo_set_source_rgb(cr, 0.35, 0.35, 0.35);
     cairo_text_extents_t ext;
     cairo_text_extents(cr, message, &ext);
-    cairo_move_to(cr, cx - ext.width / 2.0 - ext.x_bearing, cy - ext.height / 2.0 - ext.y_bearing);
+    cairo_move_to(cr, cx - ext.width / 2.0 - ext.x_bearing,
+		  cy - ext.height / 2.0 - ext.y_bearing);
     cairo_show_text(cr, message);
 }
 
@@ -190,6 +195,10 @@ static void list_item_setup(GtkListItemFactory *, GtkListItem * item, gpointer) 
     GtkWidget * label = gtk_label_new(nullptr);
     gtk_label_set_xalign(GTK_LABEL(label), 0.0);
     gtk_widget_set_halign(label, GTK_ALIGN_FILL);
+    gtk_widget_set_margin_start(label, 6);
+    gtk_widget_set_margin_end(label, 6);
+    gtk_widget_set_margin_top(label, 2);
+    gtk_widget_set_margin_bottom(label, 2);
     gtk_list_item_set_child(item, label);
 }
 
@@ -213,6 +222,15 @@ void PDialog::itemResponse(GtkWidget * item, PDialog * dlg) {
 	    return;
 	}
     }
+}
+
+void PDialog::comboResponse(GObject * object, GParamSpec *, PDialog * dlg) {
+    itemResponse(GTK_WIDGET(object), dlg);
+}
+
+void PDialog::listResponse(GtkSelectionModel * model, guint, guint, PDialog * dlg) {
+    int idx = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(model), "ipe-index"));
+    dlg->callLua(dlg->iElements[idx].lua_method);
 }
 
 void PDialog::setMapped(lua_State * L, int idx) {
@@ -401,16 +419,12 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
     gtk_widget_set_halign(action_area, GTK_ALIGN_END);
     gtk_widget_set_margin_start(action_area, 12);
     gtk_widget_set_margin_end(action_area, 12);
+    gtk_widget_set_margin_bottom(action_area, 12);
     gtk_box_append(GTK_BOX(content), action_area);
 
-    bool hasCustomButton = false;
     int numButtons = 0;
     for (int i = 0; i < int(iElements.size()); ++i) {
-	SElement & m = iElements[i];
-	if (m.row < 0) {
-	    numButtons++;
-	    if (m.lua_method != LUA_NOREF) hasCustomButton = true;
-	}
+	if (iElements[i].row < 0) numButtons++;
     }
 
     for (int i = 0; i < int(iElements.size()); ++i) {
@@ -420,33 +434,21 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	bool hexpand = false;
 	bool vexpand = false;
 	if (m.row < 0) {
-	    if (hasCustomButton) {
-		widget = gtk_button_new_with_mnemonic(gtkMnemonic(m.text).c_str());
-		gtk_box_append(GTK_BOX(action_area), widget);
-		if (m.flags & EAccept) {
-		    g_object_set_data(G_OBJECT(widget), "response",
-				      GINT_TO_POINTER(GTK_RESPONSE_ACCEPT));
-		    g_signal_connect(widget, "clicked", G_CALLBACK(button_response_cb),
-				     this);
-		} else if (m.flags & EReject) {
-		    g_object_set_data(G_OBJECT(widget), "response",
-				      GINT_TO_POINTER(GTK_RESPONSE_REJECT));
-		    g_signal_connect(widget, "clicked", G_CALLBACK(button_response_cb),
-				     this);
-		} else if (m.lua_method != LUA_NOREF) {
-		    g_signal_connect(widget, "clicked", G_CALLBACK(itemResponse), this);
-		}
-	    } else {
-		gint response = GTK_RESPONSE_NONE;
-		if (m.flags & EAccept)
-		    response = GTK_RESPONSE_ACCEPT;
-		else if (m.flags & EReject)
-		    response = GTK_RESPONSE_REJECT;
-		std::string name = gtkMnemonic(m.text);
-		widget =
-		    gtk_dialog_add_button(GTK_DIALOG(hDialog), name.c_str(), response);
-		if (numButtons == 1) gtk_widget_add_css_class(widget, "suggested-action");
+	    // always use our own action area, so padding is consistent across themes
+	    widget = gtk_button_new_with_mnemonic(gtkMnemonic(m.text).c_str());
+	    gtk_box_append(GTK_BOX(action_area), widget);
+	    if (m.flags & EAccept) {
+		g_object_set_data(G_OBJECT(widget), "response",
+				  GINT_TO_POINTER(GTK_RESPONSE_ACCEPT));
+		g_signal_connect(widget, "clicked", G_CALLBACK(button_response_cb), this);
+	    } else if (m.flags & EReject) {
+		g_object_set_data(G_OBJECT(widget), "response",
+				  GINT_TO_POINTER(GTK_RESPONSE_REJECT));
+		g_signal_connect(widget, "clicked", G_CALLBACK(button_response_cb), this);
+	    } else if (m.lua_method != LUA_NOREF) {
+		g_signal_connect(widget, "clicked", G_CALLBACK(itemResponse), this);
 	    }
+	    if (numButtons == 1) gtk_widget_add_css_class(widget, "suggested-action");
 	} else {
 	    switch (m.type) {
 	    case ELabel:
@@ -464,18 +466,14 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		if (m.lua_method != LUA_NOREF)
 		    g_signal_connect(widget, "toggled", G_CALLBACK(itemResponse), this);
 		break;
-	    case EInput:
-		widget = gtk_entry_new();
-		gtk_widget_set_hexpand(widget, TRUE);
-		hexpand = true;
-		break;
+	    case EInput: widget = gtk_entry_new(); break;
 	    case EImage:
 		widget = gtk_drawing_area_new();
 		gtk_widget_set_size_request(widget, m.minWidth, m.minHeight);
 		g_object_set_data_full(G_OBJECT(widget), "ipe-dialog-image-spec",
 				       g_strdup(m.text.c_str()), g_free);
 		gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(widget), drawImagePreview,
-					nullptr, nullptr);
+					       nullptr, nullptr);
 		break;
 	    case ETextEdit:
 #ifdef IPE_SPELLCHECK
@@ -501,7 +499,6 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 					 m.text.c_str(), -1);
 		placed = gtk_frame_new(nullptr);
 		gtk_frame_set_child(GTK_FRAME(placed), addScrollBar(widget));
-		hexpand = vexpand = true;
 		break;
 	    case ECombo: {
 		GtkStringList * strings = gtk_string_list_new(nullptr);
@@ -510,7 +507,9 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		widget = gtk_drop_down_new(G_LIST_MODEL(strings), nullptr);
 		gtk_drop_down_set_selected(GTK_DROP_DOWN(widget), m.value);
 		gtk_widget_set_valign(widget, GTK_ALIGN_START);
-		hexpand = true;
+		if (m.lua_method != LUA_NOREF)
+		    g_signal_connect(widget, "notify::selected",
+				     G_CALLBACK(comboResponse), this);
 	    } break;
 	    case EList: {
 		GtkStringList * strings = gtk_string_list_new(nullptr);
@@ -519,19 +518,29 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		GtkSingleSelection * selection =
 		    gtk_single_selection_new(G_LIST_MODEL(strings));
 		gtk_single_selection_set_selected(selection, m.value);
+		if (m.lua_method != LUA_NOREF) {
+		    g_object_set_data(G_OBJECT(selection), "ipe-index",
+				      GINT_TO_POINTER(i));
+		    g_signal_connect(selection, "selection-changed",
+				     G_CALLBACK(listResponse), this);
+		}
 		GtkListItemFactory * factory = gtk_signal_list_item_factory_new();
 		g_signal_connect(factory, "setup", G_CALLBACK(list_item_setup), nullptr);
 		g_signal_connect(factory, "bind", G_CALLBACK(list_item_bind), nullptr);
 		widget = gtk_list_view_new(GTK_SELECTION_MODEL(selection),
 					   GTK_LIST_ITEM_FACTORY(factory));
-		placed = addScrollBar(widget);
-		hexpand = vexpand = true;
+		placed = gtk_frame_new(nullptr);
+		gtk_frame_set_child(GTK_FRAME(placed), addScrollBar(widget));
 	    } break;
 	    default: break;
 	    }
 	}
 	if (m.row >= 0) {
 	    if (!placed) placed = widget;
+	    for (int c = m.col; c < m.col + m.colspan; ++c)
+		if (c < int(iColStretch.size()) && iColStretch[c] != 0) hexpand = true;
+	    for (int r = m.row; r < m.row + m.rowspan; ++r)
+		if (r < int(iRowStretch.size()) && iRowStretch[r] != 0) vexpand = true;
 	    gtk_widget_set_hexpand(placed, hexpand);
 	    gtk_widget_set_vexpand(placed, vexpand);
 	    gtk_grid_attach(GTK_GRID(grid), placed, m.col, m.row, m.colspan, m.rowspan);
@@ -890,17 +899,19 @@ struct MessageBoxContext {
 };
 
 static void message_response_cb(GtkDialog * dialog, int response, gpointer data) {
+    static const int ok[] = {1};
+    static const int okcancel[] = {-1, 1};
+    static const int yesnocancel[] = {-1, 0, 1};
+    static const int discardcancel[] = {-1, 0};
+    static const int savediscardcancel[] = {-1, 0, 1};
+    static const int * const results[] = {ok, okcancel, yesnocancel,
+						  discardcancel, savediscardcancel};
+
     auto * context = static_cast<MessageBoxContext *>(data);
-    int buttons = context->buttons;
-    int positive = (buttons == 0) ? 0 : ((buttons == 2 || buttons == 4) ? 2 : 1);
-    int value = -1;
-    if (response == positive)
-	value = 1;
-    else if (response > 0)
-	value = 0;
+    int result = results[context->buttons][response];
     gtk_window_destroy(GTK_WINDOW(dialog));
 
-    lua_pushinteger(context->lua, value);
+    lua_pushinteger(context->lua, result);
     resumeLuaThread(context->lua, 1);
     luaL_unref(context->lua, LUA_REGISTRYINDEX, context->threadRef);
     delete context;

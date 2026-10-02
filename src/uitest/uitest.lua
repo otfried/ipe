@@ -34,10 +34,17 @@ local showingImage = true
 function toggleImage(d)
   showingImage = not showingImage
   if showingImage then
-    d:set("image", "imagefile|../../artwork/ipe.iconset/icon_64x64.png|1.0")
+    d:set("image", "imagefile|../../artwork/ipe.iconset/icon_64x64.png|1.3")
   else
     d:set("image", "text|No image loaded|1.0")
   end
+end
+
+function listAction(d)
+  listItem = d:get("list")
+  comboItem = d:get("combo")
+  d:set("label1", "Text " .. listItem .. " - " .. comboItem)
+  print("listAction: ", listItem, comboItem)
 end
 
 function dialog1()
@@ -52,21 +59,22 @@ function dialog1()
   d:add("textedit", "text", {read_only=false}, 4, 1, 1, 2)
   d:set("textedit", text)
   d:set("ignore-escape", "textedit", text)
-  d:add("list", "list", {"red", "green", "blue", "violet", "yellow"}, 5, 1)
+  d:add("list", "list", {"red", "green", "blue", "violet", "yellow", action=listAction}, 5, 1)
   -- d:setEnabled("list", false)
   d:set("list", 4)
-  d:add("combo", "combo", {"red", "green", "blue", "violet", "yellow"}, 5, 2)
-  d:add("image", "image", {value="imagefile|../../artwork/ipe.iconset/icon_64x64.png|0.5",
-			   width=200, height=50}, 6, 1, 1, 2)
+  d:add("combo", "combo", {"red", "green", "blue", "violet", "yellow", action=listAction}, 5, 2)
+  d:add("image", "image", {value="imagefile|../../artwork/ipe.iconset/icon_64x64.png|1.0",
+			   width=200, height=150}, 6, 1, 1, 2)
   d:setStretch("row", 4, 1)
   d:setStretch("row", 5, 1)
+  -- d:setStretch("row", 6, 1)
   d:setStretch("column", 1, 1)
   d:set("combo", 3)
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:addButton("help", "&Help", help)
   d:addButton("toggle", "&Toggle image", toggleImage)
-  local r = d:execute({800, 600})
+  local r = d:execute({800, 700})
   print("Dialog returns", r)
   print("check1 is", d:get("check1"))
   print("input is", d:get("input"))

@@ -132,15 +132,16 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
 	    double y = 0.5 * (body.top + body.bottom) - 0.5 * h;
 	    Gdiplus::Graphics graphics(dc);
 	    graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
-	    graphics.DrawImage(&bitmap, (Gdiplus::REAL)x, (Gdiplus::REAL)y, (Gdiplus::REAL)w,
-			       (Gdiplus::REAL)h);
+	    graphics.DrawImage(&bitmap, (Gdiplus::REAL)x, (Gdiplus::REAL)y,
+			       (Gdiplus::REAL)w, (Gdiplus::REAL)h);
 	    return;
 	}
     }
 
     SetBkMode(dc, TRANSPARENT);
-    DrawTextA(dc, kind == "imagefile" || value.empty() ? "Preview unavailable" : value.c_str(),
-              -1, &body, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawTextA(
+	dc, kind == "imagefile" || value.empty() ? "Preview unavailable" : value.c_str(),
+	-1, &body, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 void buildFlags(std::vector<short> & t, DWORD flags) {
@@ -419,6 +420,8 @@ BOOL PDialog::dlgCommand(WPARAM wParam, LPARAM lParam) {
 	retrieveValues();
 	EndDialog(hDialog, FALSE);
 	return TRUE;
+    } else if (m.type == EList && HIWORD(wParam) != LBN_SELCHANGE) {
+	// ignore other list notifications, such as focus changes
     } else if (m.lua_method != LUA_NOREF)
 	callLua(m.lua_method);
     return FALSE;
@@ -534,7 +537,7 @@ void PDialog::buildElements(std::vector<short> & t) {
 	    buildControlClass(t, L"RICHEDIT50W", nullptr); // for spell checking
 	    break;
 	case EList:
-	    buildFlags(t, flags | WS_TABSTOP | WS_VSCROLL | WS_BORDER);
+	    buildFlags(t, flags | WS_TABSTOP | WS_VSCROLL | WS_BORDER | LBS_NOTIFY);
 	    buildDimensions(t, m, id);
 	    buildControl(t, 0x0083); // list box
 	    break;
@@ -600,11 +603,16 @@ void PDialog::computeDimensions(int & w, int & h) {
 	if (m.row < 0) { // button row
 	    buttonWidth += m.minWidth + PAD;
 	} else {
-	    int wd = m.minWidth / m.colspan;
+	    // for EImage, minWidth/minHeight are a pixel size, not dialog units
+	    int pixelW = m.minWidth;
+	    int pixelH = m.minHeight;
+	    int dluW = (m.type == EImage) ? pixelW * 4 / iBaseX : pixelW;
+	    int dluH = (m.type == EImage) ? pixelH * 8 / iBaseY : pixelH;
+	    int wd = dluW / m.colspan;
 	    for (int j = m.col; j < m.col + m.colspan; ++j) {
 		if (wd > minWidth[j]) minWidth[j] = wd;
 	    }
-	    int ht = m.minHeight / m.rowspan;
+	    int ht = dluH / m.rowspan;
 	    for (int j = m.row; j < m.row + m.rowspan; ++j) {
 		if (ht > minHeight[j]) minHeight[j] = ht;
 	    }

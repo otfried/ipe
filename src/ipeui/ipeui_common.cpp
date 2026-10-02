@@ -120,9 +120,9 @@ int Dialog::addButton(lua_State * L) {
 }
 
 int Dialog::add(lua_State * L) {
-    static const char * const typenames[] = {"button", "text",     "list",
-					     "label",  "combo",    "checkbox",
-					     "input",  "image",    nullptr};
+    static const char * const typenames[] = {"button", "text",  "list",
+					     "label",  "combo", "checkbox",
+					     "input",  "image", nullptr};
 
     SElement m;
     m.name = checkstring(L, 2);
@@ -586,8 +586,8 @@ void Timer::callLua() {
 	lua_pop(L, 3); // pop weak table, table, nil
 	return;
     }
-    lua_remove(L, -3);    // remove weak table
-    lua_rotate(L, -2, 1); // flip method and table
+    lua_remove(L, -3);         // remove weak table
+    lua_rotate(L, -2, 1);      // flip method and table
     protectedLuaCall(L, 1, 0); // call method
 }
 

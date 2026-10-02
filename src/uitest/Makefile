@@ -15,6 +15,7 @@ all: $(TARGET)
 win_sources = uitest_win.cpp
 gtk_sources = uitest_gtk.cpp
 cocoa_sources = uitest_cocoa.cpp
+qt_sources = uitest_qt.cpp
 
 ifdef WIN32
 # To show Lua console output, do not compile as GUI only

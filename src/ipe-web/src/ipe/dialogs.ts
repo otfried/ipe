@@ -78,7 +78,10 @@ function setListItems(el1: HTMLDivElement, w: ElementOptions): void {
 		el2.innerHTML = w.items![i];
 		el2.id = `dialog-element-${w.name}-item-${i}`;
 		if (i === w.value) el2.classList.add("selected");
-		el2.addEventListener("click", () => updateListSelection(w, i));
+		el2.addEventListener("click", () => {
+			updateListSelection(w, i);
+			el1.dispatchEvent(new Event("change"));
+		});
 		el1.appendChild(el2);
 	}
 }
@@ -113,6 +116,7 @@ export function retrieveValues(options: DialogOptions) {
 
 export function setElement(ipe: Ipe, w: ElementOptions): void {
 	const el = document.getElementById(`dialog-element-${w.name}`);
+	console.log(`Setting element: ${w.name} of type ${w.type}`, el);
 	if (el == null) return;
 	switch (w.type) {
 		case "image":
@@ -133,6 +137,9 @@ export function setElement(ipe: Ipe, w: ElementOptions): void {
 		case "list":
 			setListItems(el as HTMLDivElement, w);
 			break;
+		case "label":
+			(el as HTMLSpanElement).innerText = w.text;
+			break;
 		default:
 			console.error("Setting element not yet implemented: ", w);
 			break;
@@ -142,6 +149,23 @@ export function setElement(ipe: Ipe, w: ElementOptions): void {
 function previewNumber(value: string, fallback: number): number {
 	const n = Number.parseFloat(value);
 	return Number.isFinite(n) ? n : fallback;
+}
+
+// keep the canvas's backing-store resolution in sync with its rendered
+// (grid-stretched) size, and redraw whenever that size changes
+function observeImageCanvas(ipe: Ipe, canvas: HTMLCanvasElement): void {
+	const observer = new ResizeObserver(() => {
+		const rect = canvas.getBoundingClientRect();
+		const width = Math.max(1, Math.round(rect.width));
+		const height = Math.max(1, Math.round(rect.height));
+		console.log(`Resizing canvas from ${canvas.width}x${canvas.height} to ${width}x${height}`);
+		if (canvas.width === width && canvas.height === height) return;
+		canvas.width = width;
+		canvas.height = height;
+		console.log(`Redrawing canvas with spec: ${canvas.dataset.previewSpec ?? ""}`);
+		drawImagePreview(ipe, canvas, canvas.dataset.previewSpec ?? "");
+	});
+	observer.observe(canvas);
 }
 
 function drawImagePreview(
@@ -154,6 +178,11 @@ function drawImagePreview(
 	const ctx = canvas.getContext("2d");
 	if (ctx == null) return;
 	canvas.dataset.previewSpec = spec;
+	// identical specs can be redrawn at different canvas sizes (e.g. after a
+	// resize), so the async image load below must not rely on spec equality
+	// to detect staleness - use a fresh token for every call instead
+	const token = `${Number(canvas.dataset.previewToken ?? "0") + 1}`;
+	canvas.dataset.previewToken = token;
 	const w = canvas.width;
 	const h = canvas.height;
 	ctx.clearRect(0, 0, w, h);
@@ -191,7 +220,7 @@ function drawImagePreview(
 		const image = new Image();
 		image.addEventListener("load", () => {
 			URL.revokeObjectURL(objectUrl);
-			if (canvas.dataset.previewSpec !== spec) return;
+			if (canvas.dataset.previewToken !== token) return;
 			const logicalWidth = image.width / zoom;
 			const logicalHeight = image.height / zoom;
 			const scale = Math.min(
@@ -205,6 +234,7 @@ function drawImagePreview(
 		});
 		image.addEventListener("error", () => {
 			URL.revokeObjectURL(objectUrl);
+			if (canvas.dataset.previewToken !== token) return;
 			showText();
 		});
 		image.src = objectUrl;
@@ -227,11 +257,21 @@ export function setupElements(
 		colt += `${cols + 1}fr `;
 	}
 	contents.style.gridTemplateColumns = colt;
-	let rowt = "";
-	for (const rows of options.rowstretch) {
-		if (rows > 0) rowt += `${rows}fr `;
-		else rowt += "30px ";
+	// non-stretched rows are fixed-size, but must be at least as tall
+	// as any image placed in them (image is the only element with a
+	// meaningful pixel height)
+	const rowMinHeight = options.rowstretch.map(() => 30);
+	for (const w of options.elements) {
+		if (w.type !== "image" || w.row < 0) continue;
+		const perRow = Math.ceil(w.height / w.rowspan);
+		for (let r = w.row; r < w.row + w.rowspan; ++r)
+			rowMinHeight[r] = Math.max(rowMinHeight[r], perRow);
 	}
+	let rowt = "";
+	options.rowstretch.forEach((rows, i) => {
+		if (rows > 0) rowt += `${rows}fr `;
+		else rowt += `${rowMinHeight[i]}px `;
+	});
 	contents.style.gridTemplateRows = rowt;
 	contents.style.columnGap = "20px";
 	contents.style.rowGap = "6px";
@@ -241,6 +281,7 @@ export function setupElements(
 			case "label":
 				el = document.createElement("span");
 				el.innerText = w.text.replace("&", "");
+				el.id = `dialog-element-${w.name}`;
 				break;
 			case "checkbox": {
 				const el1 = document.createElement("input");
@@ -285,6 +326,7 @@ export function setupElements(
 				el1.width = w.width;
 				el1.height = w.height;
 				drawImagePreview(ipe, el1, w.text);
+				observeImageCanvas(ipe, el1);
 				el = el1;
 				break;
 			}
@@ -317,13 +359,13 @@ export function setupElements(
 		switch (w.type) {
 			case "textedit":
 			case "list":
+			case "image":
 				el.style.justifySelf = "stretch";
 				el.style.alignSelf = "stretch";
 				break;
 			case "input":
 			case "button":
 			case "combo":
-			case "image":
 				el.style.justifySelf = "stretch";
 				el.style.alignSelf = "center";
 				break;

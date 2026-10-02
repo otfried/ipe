@@ -56,8 +56,8 @@
 #include <QTextStream>
 #include <QThread>
 #include <QTimer>
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 #include <sstream>
 
 #ifdef IPE_SPELLCHECK
@@ -152,8 +152,8 @@ static double previewNumber(const QString & value, double fallback) {
 void DialogImage::paintEvent(QPaintEvent *) {
     QString kind = iSpec.section(QLatin1Char('|'), 0, 0);
     QString value = iSpec.section(QLatin1Char('|'), 1, 1);
-    double zoom = std::clamp(previewNumber(iSpec.section(QLatin1Char('|'), 2, 2), 1.0),
-				     0.1, 100.0);
+    double zoom =
+	std::clamp(previewNumber(iSpec.section(QLatin1Char('|'), 2, 2), 1.0), 0.1, 100.0);
 
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -165,24 +165,24 @@ void DialogImage::paintEvent(QPaintEvent *) {
 
     QRectF body = r.adjusted(18, 16, -18, -16);
     if (kind == QLatin1String("imagefile")) {
-        QImage image(value);
-        if (!image.isNull()) {
-            QSizeF scaled(image.width() / zoom, image.height() / zoom);
-            double fit = std::min(body.width() / scaled.width(),
-                                  body.height() / scaled.height());
-            if (fit < 1.0) scaled *= fit;
-            QRectF target(QPointF(body.center().x() - scaled.width() / 2.0,
-                                  body.center().y() - scaled.height() / 2.0),
-                          scaled);
-            painter.drawImage(target, image);
-            return;
-        }
+	QImage image(value);
+	if (!image.isNull()) {
+	    QSizeF scaled(image.width() / zoom, image.height() / zoom);
+	    double fit =
+		std::min(body.width() / scaled.width(), body.height() / scaled.height());
+	    if (fit < 1.0) scaled *= fit;
+	    QRectF target(QPointF(body.center().x() - scaled.width() / 2.0,
+				  body.center().y() - scaled.height() / 2.0),
+			  scaled);
+	    painter.drawImage(target, image);
+	    return;
+	}
     }
     painter.setPen(QColor(60, 60, 60));
     painter.drawText(body, Qt::AlignCenter,
-                     (kind == QLatin1String("imagefile") || value.isEmpty())
-                         ? QStringLiteral("Preview unavailable")
-                         : value);
+		     (kind == QLatin1String("imagefile") || value.isEmpty())
+			 ? QStringLiteral("Preview unavailable")
+			 : value);
 }
 
 void LatexHighlighter::applyFormat(const QString & text, QRegularExpression & exp,
@@ -335,9 +335,7 @@ void PDialog::setMapped(lua_State * L, int idx) {
     case EInput:
 	(qobject_cast<QLineEdit *>(w))->setText(QString::fromUtf8(m.text.c_str()));
 	break;
-    case EImage:
-	(qobject_cast<DialogImage *>(w))->setSpec(m.text);
-	break;
+    case EImage: (qobject_cast<DialogImage *>(w))->setSpec(m.text); break;
     case EList: {
 	QListWidget * l = qobject_cast<QListWidget *>(w);
 	if (!lua_isnumber(L, 3)) {
@@ -377,6 +375,7 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	    iButtonArea->addWidget(b);
 	} else {
 	    QWidget * w = nullptr;
+	    Qt::Alignment alignment; // default: fill the cell
 	    switch (m.type) {
 	    case ELabel:
 		w = new QLabel(QString::fromUtf8(m.text.c_str()), qDialog);
@@ -439,6 +438,17 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	    case EImage: {
 		DialogImage * image = new DialogImage(m.minWidth, m.minHeight, qDialog);
 		image->setSpec(m.text);
+		bool hstretch = false;
+		for (int c = m.col; c < m.col + m.colspan; ++c)
+		    if (c < int(iColStretch.size()) && iColStretch[c] != 0)
+			hstretch = true;
+		bool vstretch = false;
+		for (int r = m.row; r < m.row + m.rowspan; ++r)
+		    if (r < int(iRowStretch.size()) && iRowStretch[r] != 0)
+			vstretch = true;
+		image->setSizePolicy(
+		    hstretch ? QSizePolicy::Expanding : QSizePolicy::Fixed,
+		    vstretch ? QSizePolicy::Expanding : QSizePolicy::Fixed);
 		w = image;
 	    } break;
 	    case ECombo: {
@@ -452,23 +462,23 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 			[this, method = m.lua_method](int index) { callLua(method); });
 		}
 		w = b;
+		alignment = Qt::AlignTop;
 	    } break;
 	    case EList: {
 		QListWidget * l = new QListWidget(qDialog);
 		for (int k = 0; k < int(m.items.size()); ++k)
 		    l->addItem(QString::fromUtf8(m.items[k].c_str()));
 		if (m.lua_method != LUA_NOREF) {
-		    QObject::connect(l, &QListWidget::itemActivated,
-				     [this, method = m.lua_method](QListWidgetItem *) {
-					 callLua(method);
-				     });
+		    QObject::connect(
+			l, &QListWidget::currentRowChanged,
+			[this, method = m.lua_method](int) { callLua(method); });
 		}
 		w = l;
 	    } break;
 	    default: break;
 	    }
 	    iWidgets.push_back(w);
-	    gridlayout()->addWidget(w, m.row, m.col, m.rowspan, m.colspan);
+	    gridlayout()->addWidget(w, m.row, m.col, m.rowspan, m.colspan, alignment);
 	    if (m.flags & EFocused) w->setFocus(Qt::OtherFocusReason);
 	    if (m.flags & EDisabled) w->setEnabled(false);
 	}
