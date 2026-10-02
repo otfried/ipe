@@ -232,7 +232,7 @@ class IpeVSCodeBridge {
 		});
 	}
 
-	async getClipboard(_allowBitmap: boolean): Promise<string> {
+	async getClipboard(): Promise<string> {
 		return new Promise<string>((resolve) => {
 			this._pendingGetClipboard = resolve;
 			vscode.postMessage({
