@@ -158,11 +158,15 @@ function observeImageCanvas(ipe: Ipe, canvas: HTMLCanvasElement): void {
 		const rect = canvas.getBoundingClientRect();
 		const width = Math.max(1, Math.round(rect.width));
 		const height = Math.max(1, Math.round(rect.height));
-		console.log(`Resizing canvas from ${canvas.width}x${canvas.height} to ${width}x${height}`);
+		console.log(
+			`Resizing canvas from ${canvas.width}x${canvas.height} to ${width}x${height}`,
+		);
 		if (canvas.width === width && canvas.height === height) return;
 		canvas.width = width;
 		canvas.height = height;
-		console.log(`Redrawing canvas with spec: ${canvas.dataset.previewSpec ?? ""}`);
+		console.log(
+			`Redrawing canvas with spec: ${canvas.dataset.previewSpec ?? ""}`,
+		);
 		drawImagePreview(ipe, canvas, canvas.dataset.previewSpec ?? "");
 	});
 	observer.observe(canvas);

@@ -159,7 +159,7 @@ private:
     static void setup_cb(GtkListItemFactory *, GtkListItem * item, gpointer data);
     static void bind_cb(GtkListItemFactory *, GtkListItem * item, gpointer data);
     static GdkContentProvider * drag_prepare_cb(GtkDragSource * source, double x,
-					       double y, gpointer data);
+						double y, gpointer data);
     static gboolean drop_cb(GtkDropTarget * target, const GValue * value, double x,
 			    double y, gpointer data);
     void showContextMenu(int x, int y);

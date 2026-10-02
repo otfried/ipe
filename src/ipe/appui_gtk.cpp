@@ -1024,8 +1024,8 @@ static void pagesorter_button_cb(GtkButton * button, GtkWidget * dialog) {
 int AppUi::pageSorter(lua_State * L, Document * doc, int pno, int width, int height,
 		      int thumbWidth) {
     GtkWidget * dialog = gtk_dialog_new();
-    gtk_window_set_title(GTK_WINDOW(dialog), pno >= 0 ? "Ipe View Sorter"
-						       : "Ipe Page Sorter");
+    gtk_window_set_title(GTK_WINDOW(dialog),
+			 pno >= 0 ? "Ipe View Sorter" : "Ipe Page Sorter");
     gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
     gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(iWindow));
     gtk_window_set_default_size(GTK_WINDOW(dialog), width, height);

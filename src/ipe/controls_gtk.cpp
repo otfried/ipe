@@ -567,7 +567,8 @@ void PageSorter::markPages(bool mark) {
 	// GtkGridView skips rebinding a row when the spliced-in object is the
 	// same pointer as before, so splice in a genuinely new item instead
 	// of mutating this one in place
-	GObject * newObj = ps_item_new(GDK_PIXBUF(g_object_ref(pixbuf)), text, page, mark);
+	GObject * newObj =
+	    ps_item_new(GDK_PIXBUF(g_object_ref(pixbuf)), text, page, mark);
 	gpointer item = newObj;
 	g_list_store_splice(iStore, i, 1, &item, 1);
 	g_object_unref(newObj);
@@ -626,8 +627,8 @@ GdkContentProvider * PageSorter::drag_prepare_cb(GtkDragSource * source, double,
     return provider;
 }
 
-gboolean PageSorter::drop_cb(GtkDropTarget * target, const GValue * value, double,
-			    double, gpointer) {
+gboolean PageSorter::drop_cb(GtkDropTarget * target, const GValue * value, double, double,
+			     gpointer) {
     GtkWidget * box = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(target));
     PageSorter * self = (PageSorter *)g_object_get_data(G_OBJECT(box), "ipe-sorter");
     int page = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(box), "ipe-page"));

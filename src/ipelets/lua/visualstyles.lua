@@ -140,7 +140,7 @@ end
 
 local visual_preview_width = 300
 local visual_preview_height = 130
-local visual_preview_scale = 4
+local visual_preview_scale = 8
 local visual_preview_serial = 0
 
 local function visual_number(value, fallback)
@@ -384,18 +384,16 @@ local function sheets_visual_edit(model)
 
   local d = ipeui.Dialog(model.ui:win(), "Visual stylesheet editor")
   d:add("category_label", "label", { label="Category" }, 1, 1)
-  d:add("category", "combo", cats, 1, 2, 1, 3)
-  d:add("items", "list", first_names, 2, 1, 7, 2)
-  d:add("name_label", "label", { label="Name" }, 2, 3)
-  d:add("name", "input", { select_all=true }, 2, 4)
-  d:add("value_label", "label", { label="Value" }, 3, 3)
-  d:add("value", "input", {}, 3, 4)
-  d:add("help", "label", { label="" }, 5, 3, 1, 2)
-  d:add("preview_label", "label", { label="Preview" }, 6, 3)
+  d:add("category", "combo", cats, 1, 2, 1, 5)
+  d:add("items", "list", first_names, 2, 1, 5, 3)
+  d:add("name_label", "label", { label="Name" }, 2, 4)
+  d:add("name", "input", { select_all=true }, 2, 5, 1, 2)
+  d:add("value_label", "label", { label="Value" }, 3, 4)
+  d:add("value", "input", {}, 3, 5, 1, 2)
+  d:add("help", "label", { label="" }, 4, 4, 1, 3)
+  d:add("preview_label", "label", { label="Preview" }, 6, 4)
   d:add("preview", "image", { width=visual_preview_width,
-                               height=visual_preview_height }, 7, 3, 2, 2)
-  d:add("apply", "button", { label="Apply / Preview",
-    action=function (d) visual_apply_current(d, dd, st) end }, 9, 3)
+                               height=visual_preview_height }, 6, 5, 1, 2)
   d:add("add", "button", { label="Add",
     action=function (d)
       local c = visual_style_categories[st.cat]
@@ -415,7 +413,7 @@ local function sheets_visual_edit(model)
       }
       st.current = #entries
       visual_set_fields(d, dd, st)
-    end }, 9, 4)
+    end }, 7, 3)
   d:add("delete", "button", { label="Delete",
     action=function (d)
       local entries = st.data[st.cat]
@@ -424,12 +422,15 @@ local function sheets_visual_edit(model)
         st.current = math.min(st.current, #entries)
         visual_set_fields(d, dd, st)
       end
-    end }, 10, 3)
+    end }, 7, 4)
+  d:add("apply", "button", { label="Apply / Preview",
+    action=function (d) visual_apply_current(d, dd, st) end }, 7, 5)
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
-  d:setStretch("row", 2, 1)
-  d:setStretch("column", 2, 1)
-  d:setStretch("column", 4, 2)
+  d:setStretch("row", 5, 1)
+  d:setStretch("column", 2, 4)
+  d:setStretch("column", 5, 1)
+  d:setStretch("column", 6, 4)
   visual_set_fields(d, dd, st)
 
   if not d:execute({ 680, 520 }) then return end

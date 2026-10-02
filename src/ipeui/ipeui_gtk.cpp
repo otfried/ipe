@@ -908,8 +908,8 @@ static void message_response_cb(GtkDialog * dialog, int response, gpointer data)
     static const int yesnocancel[] = {-1, 0, 1};
     static const int discardcancel[] = {-1, 0};
     static const int savediscardcancel[] = {-1, 0, 1};
-    static const int * const results[] = {ok, okcancel, yesnocancel,
-						  discardcancel, savediscardcancel};
+    static const int * const results[] = {ok, okcancel, yesnocancel, discardcancel,
+					  savediscardcancel};
 
     auto * context = static_cast<MessageBoxContext *>(data);
     int result = results[context->buttons][response];
