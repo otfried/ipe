@@ -142,10 +142,14 @@ extern NSSize thumbnail_size; // in ipeselector_cocoa.cpp
 
 - (void)ipeAccept {
     [NSApp stopModalWithCode:1];
+    NSWindow * panel = [NSApp modalWindow];
+    if (panel) [panel close];
 }
 
 - (void)ipeReject {
     [NSApp stopModalWithCode:0];
+    NSWindow * panel = [NSApp modalWindow];
+    if (panel) [panel close];
 }
 
 - (void)ipeDelete {
