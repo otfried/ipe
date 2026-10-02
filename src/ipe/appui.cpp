@@ -243,6 +243,8 @@ void AppUiBase::buildMenus() {
     addSubItem("spiro", "splinetype|spiro");
     endSubMenu();
 
+    addItem(EPropertiesMenu, "Properties menu", "properties_popup");
+
     addItem(EModeMenu, "Select objects (with Shift: non-destructive)", "mode_select");
     addItem(EModeMenu, "Translate objects (with Shift: horizontal/vertical)",
 	    "mode_translate");

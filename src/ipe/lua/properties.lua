@@ -36,6 +36,15 @@ local function color_icon(sheets, name)
   return 0.0, 0.0, 0.0
 end
 
+function MODEL:saction_properties_popup()
+  local sel = self:selection()
+  if #sel > 1 then
+    self:multiPopup(sel)
+  else
+    self:singlePopup(self:page():primarySelection())
+  end
+end
+
 function MODEL:propertiesPopup()
   self:updateCloseSelection()
   local sel = self:selection()

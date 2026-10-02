@@ -154,6 +154,7 @@ shortcuts = {
   page_sorter = nil,
   jump_view = "Shift+J",
   jump_page = "J",
+  properties_popup = "Shift+F10",
   ipelet_1_goodies = nil, -- Mirror horizontal
   ipelet_2_goodies = nil, -- Mirror vertical
   ipelet_3_goodies = nil, -- Mirror at x-axis
