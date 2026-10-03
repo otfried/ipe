@@ -242,12 +242,14 @@ bool Reveal::writeSlides(Stream & out, String svg) {
 
     for (int pageNo = iFromPage; pageNo <= iToPage; ++pageNo) {
 	const Page * page = iDoc->page(pageNo);
+	if (page->countViews() > 1)
+	    out << "<section>\n";
 	for (int view = 0; view < page->countViews(); ++view) {
 	    out << "<section>\n"
 		<< "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 "
 		<< iWidth << " " << iHeight << "\">\n"
 		<< "<g transform=\"matrix(1 0 0 -1 "
-		<< offset.x << " " << offset.y << ")\">\n";
+		<< -offset.x << " " << offset.y << ")\">\n";
 
 	    Attribute bg = page->backgroundSymbol(iDoc->cascade());
 	    const Symbol * background = iDoc->cascade()->findSymbol(bg);
@@ -267,6 +269,8 @@ bool Reveal::writeSlides(Stream & out, String svg) {
 	    }
 	    out << "</g></svg>\n</section>\n";
 	}
+	if (page->countViews() > 1)
+	    out << "</section>\n";
     }
     out << "\n</div>\n</div>\n";
     return true;
