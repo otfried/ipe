@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>[TITLE]</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@6/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@6/dist/theme/white.css" />
+</head>
+<body>
+
+[IPE]
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@6/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/MorphSVGPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/DrawSVGPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/MotionPathPlugin.min.js"></script>
+<script>
+  // Cairo emits fill/stroke as "rgb(R%, G%, B%)", which GSAP's color
+  // interpolator mishandles (visible wobble even between identical colors).
+  // Rewrite every fill/stroke in the defs to #RRGGBB before anything tweens.
+  function cairoColorToHex(value) {
+    const m = /^rgb\(\s*([\d.]+)%\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*\)$/i.exec(value);
+    if (!m) return null;
+    const toHex = pct => Math.round(parseFloat(pct) / 100 * 255).toString(16).padStart(2, '0');
+    return `#${toHex(m[1])}${toHex(m[2])}${toHex(m[3])}`;
+  }
+
+  function convertCairoColors(root) {
+    root.querySelectorAll('[fill], [stroke]').forEach(el => {
+      ['fill', 'stroke'].forEach(attr => {
+        const hex = cairoColorToHex(el.getAttribute(attr) ?? '');
+        if (hex) el.setAttribute(attr, hex);
+      });
+    });
+  }
+
+  // Map identity key -> {use, target} for every <use> in `slide`. Objects
+  // declaring data-ipe-id are matched across slides by that id (so they can
+  // morph/translate); untagged objects fall back to their own id, which
+  // only ever matches itself — so they're never paired for a morph, only
+  // ever detected as appeared/removed when present on just one of the slides.
+  function collectObjects(slide) {
+    const map = new Map();
+    slide.querySelectorAll('svg use[href]').forEach(use => {
+      const target = document.getElementById(use.getAttribute('href').slice(1));
+      if (!target) return;
+      const key = target.dataset.ipeId ?? target.id;
+      map.set(key, { use, target });
+    });
+    return map;
+  }
+
+  // Parse "a,b,c,d,e,f" from data-ipe-matrix (SVG matrix() convention:
+  // x' = a*x + c*y + e, y' = b*x + d*y + f); null if not declared/invalid.
+  function parseMatrix(el) {
+    const raw = el?.dataset.ipeMatrix;
+    if (!raw) return null;
+    const m = raw.split(',').map(Number);
+    return m.length === 6 && m.every(Number.isFinite) ? m : null;
+  }
+
+  function invertMatrix([a, b, c, d, e, f]) {
+    const det = a * d - b * c;
+    return [
+      d / det, -b / det,
+      -c / det, a / det,
+      (c * f - d * e) / det, (b * e - a * f) / det
+    ];
+  }
+
+  // m1 * m2
+  function multiplyMatrix([a1, b1, c1, d1, e1, f1], [a2, b2, c2, d2, e2, f2]) {
+    return [
+      a1 * a2 + c1 * b2, b1 * a2 + d1 * b2,
+      a1 * c2 + c1 * d2, b1 * c2 + d1 * d2,
+      a1 * e2 + c1 * f2 + e1, b1 * e2 + d1 * f2 + f1
+    ];
+  }
+
+  // Object has no counterpart on the previous slide: fade the real <use> in
+  // place rather than letting it pop in.
+  function fadeIn(use) {
+    gsap.from(use, { opacity: 0, duration: 0.5, ease: 'power1.out' });
+  }
+
+  // Object has no counterpart on the arriving slide. With transition: 'none'
+  // the previous slide's DOM may already be hidden by the time slidechanged
+  // fires, so fading it there wouldn't render; instead clone it into the
+  // current (visible) slide — same trick used for morphs — and fade it out.
+  // Appended to the slide's flip group.
+  function fadeOutRemoved(prevTarget, currentSlide) {
+    const clone = prevTarget.cloneNode(true);
+    clone.removeAttribute('id');
+    currentSlide.querySelector('svg > g').appendChild(clone);
+    gsap.to(clone, {
+      opacity: 0, duration: 0.5, ease: 'power1.in',
+      onComplete: () => clone.remove()
+    });
+  }
+
+  // For each object in the arriving slide, look up its logical identity
+  // (data-ipe-id on the referenced def) and compare against the slide we
+  // just came from — regardless of whether that was the next or previous
+  // page in document order:
+  //   no previous counterpart   -> fade in
+  //   previous counterpart,
+  //     different def           -> morph (path) or translate (data-ipe-position)
+  //     same def                -> unchanged, do nothing
+  // Anything left over in the previous slide with no counterpart here has
+  // been removed, and is faded out via a clone (see fadeOutRemoved).
+
+  // TODO: DrawSVG plugin can draw a path object from one end to the other,
+  // like drawing a line on paper
+  // MotionPath can move an element along a given path.  The user would have to
+  // specify the path to be used.
+
+  function runTransitions(currentSlide, previousSlide) {
+    if (!previousSlide) return;
+
+    const prevObjs = collectObjects(previousSlide);
+    const currObjs = collectObjects(currentSlide);
+
+    currObjs.forEach(({ use, target: toEl }, ipeId) => {
+      const prev = prevObjs.get(ipeId);
+      if (!prev) { fadeIn(use); return; }
+      if (prev.target.id === toEl.id) return;
+
+      const toId = toEl.id;
+
+      // General affine case: the destination's baked content already equals
+      // canonical-shape * toMatrix. Wrapping it and setting the wrapper to
+      // fromMatrix * inverse(toMatrix) reproduces exactly how it looked on
+      // the previous slide; animating that back to identity lands it on its
+      // native, already-correct final position/rotation/scale. Works for any
+      // element type (path, group, text) since it never touches the shape.
+      const fromMat = parseMatrix(prev.target);
+      const toMat   = parseMatrix(toEl);
+      if (fromMat && toMat) {
+        const rel = multiplyMatrix(fromMat, invertMatrix(toMat));
+        const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        use.parentNode.insertBefore(wrapper, use);
+        wrapper.appendChild(use);
+        gsap.fromTo(wrapper,
+          { transform: `matrix(${rel.join(',')})` },
+          { transform: 'matrix(1,0,0,1,0,0)', duration: 0.8, ease: 'power1.inOut',
+            onComplete: () => {
+              wrapper.parentNode.insertBefore(use, wrapper);
+              wrapper.remove();
+            }
+          });
+        return;
+      }
+
+      const clone = prev.target.cloneNode(true);
+      clone.removeAttribute('id');
+      use.style.opacity = '0';
+      use.parentNode.insertBefore(clone, use);
+
+      gsap.to(clone, {
+        duration: 0.8,
+        ease: 'power1.inOut',
+        morphSVG: `#${toId}`,
+        fill: toEl.getAttribute('fill'),
+        stroke: toEl.getAttribute('stroke'),
+        onComplete: () => {
+          clone.remove();
+          use.style.opacity = '1';
+        }
+      });
+    });
+
+    prevObjs.forEach((prev, ipeId) => {
+      if (!currObjs.has(ipeId)) fadeOutRemoved(prev.target, currentSlide);
+    });
+  }
+
+  convertCairoColors(document.getElementById('ipe-definitions'));
+
+  gsap.registerPlugin(MorphSVGPlugin, DrawSVGPlugin, MotionPathPlugin);
+  Reveal.initialize({
+    hash: true,
+    transition: 'none',
+    slideNumber: true,
+    showSlideNumber: 'all'
+  });
+
+  Reveal.on('slidechanged', event => {
+    // Suppress animations while browsing the overview grid. Two cases:
+    //  - arrow keys move the grid highlight: slidechanged fires while
+    //    Reveal.isOverview() is still true.
+    //  - clicking a slide to select it: reveal.js fires 'overviewhidden'
+    //    before the resulting slidechanged, so isOverview() is already false
+    //    by then; overviewJustClosed bridges that gap (cleared again below).
+    if (Reveal.isOverview() || overviewJustClosed) {
+      overviewJustClosed = false;
+      return;
+    }
+    runTransitions(event.currentSlide, event.previousSlide);
+  });
+
+  // The setTimeout(0) clears the flag if overview was closed without
+  // actually picking a different slide (no slidechanged follows), so it
+  // can't suppress some unrelated, later navigation.
+  let overviewJustClosed = false;
+  Reveal.on('overviewhidden', () => {
+    overviewJustClosed = true;
+    setTimeout(() => { overviewJustClosed = false; }, 0);
+  });
+</script>
+</body>
+</html>

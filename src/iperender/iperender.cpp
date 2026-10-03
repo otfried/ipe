@@ -29,6 +29,7 @@
 */
 
 #include "ipedoc.h"
+#include "ipereveal.h"
 #include "ipethumbs.h"
 
 #include <cstdio>
@@ -37,6 +38,7 @@
 
 using ipe::Document;
 using ipe::Page;
+using ipe::Reveal;
 using ipe::Thumbnail;
 
 // --------------------------------------------------------------------
@@ -80,6 +82,38 @@ static int renderPage(Thumbnail::TargetFormat fm, const char * src, const char *
 
 // --------------------------------------------------------------------
 
+static int renderReveal(const char * src, const char * dst, const char * pageSpec) {
+    Document * doc = Document::loadWithErrorReport(src);
+
+    if (!doc) return 1;
+
+    int fromPage = 0;
+    int toPage = doc->countPages() - 1;
+
+    if (pageSpec) {
+	fromPage = toPage = doc->findPage(pageSpec);
+	if (fromPage < 0) {
+	    fprintf(stderr, "Incorrect -page specification.\n");
+	    delete doc;
+	    return 1;
+	}
+    }
+
+    if (doc->runLatex(src)) {
+	delete doc;
+	return 1;
+    }
+
+    Reveal reveal(doc, fromPage, toPage);
+    if (!reveal.createPresentation(dst))
+	fprintf(stderr, "Failure to create presentation.\n");
+
+    delete doc;
+    return 0;
+}
+
+// --------------------------------------------------------------------
+
 static void usage() {
     fprintf(stderr, "Usage: iperender [ -png ");
 #ifdef CAIRO_HAS_PS_SURFACE
@@ -112,11 +146,14 @@ int main(int argc, char * argv[]) {
     // ensure at least three arguments (handles -help as well :-)
     if (argc < 4) usage();
 
+    bool renderHtml = false;
     Thumbnail::TargetFormat fm = Thumbnail::EPNG;
     if (!strcmp(argv[1], "-png")) fm = Thumbnail::EPNG;
 #ifdef CAIRO_HAS_PS_SURFACE
     else if (!strcmp(argv[1], "-eps"))
 	fm = Thumbnail::EPS;
+    else if (!strcmp(argv[1], "-html"))
+	renderHtml = true;
 #endif
 #ifdef CAIRO_HAS_PDF_SURFACE
     else if (!strcmp(argv[1], "-pdf"))
@@ -168,8 +205,11 @@ int main(int argc, char * argv[]) {
     const char * src = argv[i];
     const char * dst = argv[i + 1];
 
-    return renderPage(fm, src, dst, page, view, dpi / 72.0, tolerance, transparent,
-		      nocrop);
+    if (renderHtml)
+	return renderReveal(src, dst, page);
+    else
+	return renderPage(fm, src, dst, page, view, dpi / 72.0, tolerance, transparent,
+			  nocrop);
 }
 
 // --------------------------------------------------------------------

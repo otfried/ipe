@@ -53,6 +53,7 @@ public:
     virtual Object * clone() const;
 
     virtual Text * asText();
+    virtual const Text * asText() const;
 
     virtual Type type() const;
 

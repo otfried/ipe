@@ -185,6 +185,9 @@ Object * Text::clone() const { return new Text(*this); }
 //! Return pointer to this object.
 Text * Text::asText() { return this; }
 
+//! Return pointer to this object.
+const Text * Text::asText() const { return this; }
+
 Object::Type Text::type() const { return EText; }
 
 // --------------------------------------------------------------------

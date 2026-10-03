@@ -246,6 +246,9 @@ const Group * Object::asGroup() const { return nullptr; }
 //! Return pointer to this object if it is an Text, nullptr otherwise.
 Text * Object::asText() { return nullptr; }
 
+//! Return pointer to this object if it is an Text, nullptr otherwise.
+const Text * Object::asText() const { return nullptr; }
+
 //! Return pointer to this object if it is an Path, nullptr otherwise.
 Path * Object::asPath() { return nullptr; }
 

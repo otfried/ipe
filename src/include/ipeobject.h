@@ -66,6 +66,7 @@ public:
     virtual Group * asGroup();
     virtual const Group * asGroup() const;
     virtual Text * asText();
+    virtual const Text * asText() const;
     virtual Path * asPath();
     virtual Image * asImage();
     virtual Reference * asReference();

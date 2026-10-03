@@ -21,8 +21,9 @@ all: $(TARGET)
 
 sources	= \
 	ipecairopainter.cpp \
-	ipefonts.cpp	\
-	ipethumbs.cpp
+	ipefonts.cpp \
+	ipethumbs.cpp \
+	ipereveal.cpp
 
 ifdef IPEWASM
 $(TARGET): $(objects)
