@@ -240,7 +240,10 @@ class IpePanel {
 						this.handleError(message);
 						return;
 					case "manual":
-						vscode.env.openExternal(vscode.Uri.parse(message.url));
+						await vscode.commands.executeCommand(
+							"simpleBrowser.show",
+							message.url,
+						);
 						return;
 					case "runLatex":
 						await this.handleRunLatex(message.engine, message.texfile);
@@ -275,6 +278,9 @@ class IpePanel {
 						return;
 					case "fetchStyleSheet":
 						this.fetchStyleSheet(message.name);
+						return;
+					case "showPresentation":
+						this.handleShowPresentation(decodeBytes(message.data));
 						return;
 				}
 			},
@@ -536,5 +542,20 @@ class IpePanel {
 			path: null,
 			content: null,
 		});
+	}
+
+	private handleShowPresentation(data: Uint8Array) {
+		console.log("Showing presentation", data.length);
+		const panel = vscode.window.createWebviewPanel(
+			"ipe.presentation",
+			"Ipe Presentation",
+			vscode.ViewColumn.Beside,
+			{
+				enableScripts: true,
+				retainContextWhenHidden: true,
+			},
+		);
+
+		panel.webview.html = new TextDecoder().decode(data);
 	}
 }

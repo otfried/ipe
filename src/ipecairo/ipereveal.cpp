@@ -272,22 +272,16 @@ bool Reveal::writeSlides(Stream & out, String svg) {
     return true;
 }
 
-bool Reveal::createPresentation(const char * destination) {
+bool Reveal::createPresentation(const char * destination, String htmlTemplate) {
     String svg = createSVG();
 
-#ifdef IPEWASM
-    String reveal = Platform::readFile("/opt/ipe/reveal/reveal.html");
-#else
-    String reveal = Platform::readFile("ipecairo/reveal.html");
-#endif
-
-    std::string_view sv{reveal.data(), size_t(reveal.size())};
+    std::string_view sv{htmlTemplate.data(), size_t(htmlTemplate.size())};
     size_t titleIndex = sv.find("[TITLE]");
     size_t ipeIndex = sv.find("[IPE]");
     if (titleIndex == std::string_view::npos || ipeIndex == std::string_view::npos)
 	return false;
 
-    ipeDebug("Template has %d bytes, inserting at %d", reveal.size(), ipeIndex);
+    ipeDebug("Template has %d bytes, inserting at %d", htmlTemplate.size(), ipeIndex);
 
     std::FILE * file = Platform::fopen(destination, "wb");
     if (!file) return false;

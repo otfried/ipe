@@ -1028,9 +1028,10 @@ function PARAGRAPHTOOL:compute()
 end
 
 function MODEL:createParagraph()
-  local run = coroutine.create(self.createText)
-  coroutine.resume(run, self, "paragraph", self.create_text.position, self.create_text.width)
+  local t = self.create_text
   self.create_text = nil
+  local run = coroutine.create(self.createText)
+  coroutine.resume(run, self, "paragraph", t.position, t.width)
 end
 
 function PARAGRAPHTOOL:mouseButton(button, modifiers, press)

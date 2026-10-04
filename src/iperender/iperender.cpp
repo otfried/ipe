@@ -104,8 +104,11 @@ static int renderReveal(const char * src, const char * dst, const char * pageSpe
 	return 1;
     }
 
+    ipe::String htmlTemplate = "<html><head><title>[TITLE]</title></head>"
+	"<body>[IPE]</body></html>";
+
     Reveal reveal(doc, fromPage, toPage);
-    if (!reveal.createPresentation(dst))
+    if (!reveal.createPresentation(dst, htmlTemplate))
 	fprintf(stderr, "Failure to create presentation.\n");
 
     delete doc;

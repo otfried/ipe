@@ -353,6 +353,14 @@ class IpeVSCodeBridge {
 			this._pendingFetchStyleSheet = null;
 		}
 	}
+
+	async showPresentation(fname: string) {
+		const data = this.ipe.FS.readFile(fname);
+		vscode.postMessage({
+			command: "showPresentation",
+			data: encodeBytes(data),
+		});
+	}
 }
 
 instantiateIpe({

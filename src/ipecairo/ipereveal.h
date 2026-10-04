@@ -48,7 +48,7 @@ public:
     int width() const { return iWidth; }
     int height() const { return iHeight; }
 
-    bool createPresentation(const char * destination);
+    bool createPresentation(const char * destination, String htmlTemplate);
 
 private:
     String createSVG();

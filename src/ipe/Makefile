@@ -95,16 +95,7 @@ app:
 	$(INSTALL_DIR) $(RESOURCEDIR)/icons
 	$(INSTALL_SCRIPTS) ../../scripts/* $(RESOURCEDIR)/scripts
 	$(INSTALL_FILES) lua/*.lua $(RESOURCEDIR)/lua
-	$(INSTALL_FILES) ../../styles/basic.isy $(RESOURCEDIR)/styles
-	$(INSTALL_FILES) ../../styles/colors.isy $(RESOURCEDIR)/styles
-	$(INSTALL_FILES) ../../styles/beamer.isy $(RESOURCEDIR)/styles
-	$(INSTALL_FILES) ../../styles/presentation.isy $(RESOURCEDIR)/styles
-	$(INSTALL_FILES) ../../styles/decorations.isy $(RESOURCEDIR)/styles
-	$(INSTALL_FILES) ../../styles/note-paper.isy $(RESOURCEDIR)/styles
-	$(INSTALL_FILES) ../../styles/tikz-shapes.isy $(RESOURCEDIR)/styles
-	$(INSTALL_FILES) ../../styles/imperial.isy $(RESOURCEDIR)/styles
-	$(INSTALL_FILES) ../../styles/right-to-left.isy $(RESOURCEDIR)/styles
-	$(INSTALL_FILES) ../../styles/arabic.isy $(RESOURCEDIR)/styles
+	$(INSTALL_FILES) ../../styles/* $(RESOURCEDIR)/styles
 	$(INSTALL_FILES) Info.plist $(BUNDLEDIR)
 	$(INSTALL_FILES) $(BUILDDIR)/ipe.icns $(RESOURCEDIR)
 	$(INSTALL_FILES) ../../artwork/icons.ipe $(RESOURCEDIR)/icons
@@ -132,7 +123,7 @@ install: $(TARGET)
 	$(INSTALL_SCRIPTS) ../../scripts/* $(INSTALL_ROOT)$(IPESCRIPTDIR)
 	$(INSTALL_FILES) ../../man/*.1 $(INSTALL_ROOT)$(IPEMANDIR) 
 	$(INSTALL_FILES) lua/*.lua $(INSTALL_ROOT)$(IPELUADIR)
-	$(INSTALL_FILES) ../../styles/*.isy $(INSTALL_ROOT)$(IPESTYLEDIR)
+	$(INSTALL_FILES) ../../styles/* $(INSTALL_ROOT)$(IPESTYLEDIR)
 	$(INSTALL_FILES) ../../artwork/icons.ipe $(INSTALL_ROOT)$(IPEICONDIR)
 	$(INSTALL_FILES) ../../artwork/ipe_logo.ipe $(INSTALL_ROOT)$(IPEICONDIR)
 	$(INSTALL_FILES) ../../artwork/ipe.iconset/icon_128x128.png $(INSTALL_ROOT)$(IPEICONDIR)

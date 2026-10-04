@@ -937,18 +937,29 @@ function MODEL:action_vscode_export_eps()
 end
 
 function MODEL:action_export_reveal()
-  local fname = "/tmp/ipe-presentation.html"
-  if self.file_name and (self.file_name:sub(-4) == ".ipe" or
-			 self.file_name:sub(-4) == ".pdf") then
-    fname = self.file_name:sub(1, -5) .. ".html"
+  local fname = ipe.folder("latex", "presentation.html")
+  if config.platform == "htmljs" then
+    if self.file_name and (self.file_name:sub(-4) == ".ipe" or
+			   self.file_name:sub(-4) == ".pdf") then
+      fname = self.file_name:sub(1, -5) .. ".html"
+    end
+    if fname:sub(1, 20) == "/home/ipe/documents/" then
+      fname = "/home/ipe/presentations/" .. fname:sub(21)
+    end
   end
-  if fname:sub(1, 20) == "/home/ipe/documents/" then
-    fname = "/home/ipe/presentations/" .. fname:sub(21)
-  end
-  local result = self.ui:createPresentation(self.doc, fname)
+  local f = io.open(prefs.html_template, "r")
+  htmlTemplate = f:read("*all")
+  f:close()
+  local result = self.ui:createPresentation(self.doc, fname, htmlTemplate)
   print("Created presentation: ", result, fname)
   if (result) then
-    self.ui.js("showPresentation", fname)
+    if config.toolkit == "htmljs" then
+      self.ui.js("showPresentation", fname)
+    elseif ipeui.startBrowser then
+      ipeui.startBrowser(fname)
+    else
+      os.execute(prefs.browser:format(fname))
+    end
   end
 end
 

@@ -251,7 +251,7 @@ export class IpeUi {
 		) {
 			console.log(`Exporting file with action: ${action}`);
 			window.ipeBridge?.exportFile(action.split("_")[1]);
-		} else if (action === "export_reveal") {
+		} else if (action === "export_reveal" && this.platform === "web") {
 			// prepare target
 			this._presentationWindow = window.open("about:blank", "_blank");
 			this.ipe._action(this.ipe.stringToNewUTF8(action));
@@ -1229,18 +1229,22 @@ export class IpeUi {
 	}
 
 	showPresentation(fname: string): void {
-		const data = this.ipe.FS.readFile(fname);
-		const blob = new Blob([data.buffer], { type: "text/html" });
-		const objectUrl = URL.createObjectURL(blob);
-		// window.open is only reliably allowed when called synchronously inside a
-		// user-gesture handler (a click). If building the HTML string involves any
-		// await (e.g. reading from the Emscripten FS, running layout), the delay
-		// can cause the browser to block it as a popup.
-		// workaround: open the target directly from the user-gesture handler,
-		// then set the location here.
-		// window.open(objectUrl, "_blank");
-		if (this._presentationWindow) {
-			this._presentationWindow.location.href = objectUrl;
+		if (this.platform === "vscode") {
+			window.ipeBridge?.showPresentation(fname);
+		} else {
+			const data = this.ipe.FS.readFile(fname);
+			const blob = new Blob([data.buffer], { type: "text/html" });
+			const objectUrl = URL.createObjectURL(blob);
+			// window.open is only reliably allowed when called synchronously inside a
+			// user-gesture handler (a click). If building the HTML string involves any
+			// await (in our case calling the Lua action), the delay can cause the
+			// browser to block it as a popup.
+			// workaround: open the target directly from the user-gesture handler,
+			// then set the location here.
+			// window.open(objectUrl, "_blank");
+			if (this._presentationWindow) {
+				this._presentationWindow.location.href = objectUrl;
+			}
 		}
 	}
 }

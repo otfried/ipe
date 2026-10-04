@@ -333,7 +333,7 @@ prefs.join_threshold = 1e-6
 -- the check box "section: use title" is checked automatically.
 prefs.automatic_use_title = false
 
--- How to start browser to show Ipe manual:
+-- How to start browser to show Ipe manual or HTML/JS presentation:
 -- (not used with Windows or Cocoa toolkit)
 
 prefs.browser = "xdg-open %s"
@@ -469,6 +469,14 @@ end
 
 ----------------------------------------------------------------------
 
+-- Template for creating HTML/JS presentations,
+-- normally using revealjs.com and gsap.com.
+if config.toolkit == "htmljs" then
+  prefs.html_template = "/opt/ipe/styles/reveal.htmljs"
+else
+  prefs.html_template = ipe.folder("styles", "reveal.htmljs")
+end
+  
 if config.toolkit == "gtk" then
   prefs.visual_css = [[
 .bookmark-marked {
