@@ -89,6 +89,7 @@ export class IpeUi {
 	private _actionCompletedCallback: (() => void) | null = null;
 	externalConfiguration = "";
 	private internalConfiguration = "";
+	private _presentationWindow: Window | null = null;
 
 	constructor(
 		ipe: Ipe,
@@ -250,6 +251,10 @@ export class IpeUi {
 		) {
 			console.log(`Exporting file with action: ${action}`);
 			window.ipeBridge?.exportFile(action.split("_")[1]);
+		} else if (action === "export_reveal") {
+			// prepare target
+			this._presentationWindow = window.open("about:blank", "_blank");
+			this.ipe._action(this.ipe.stringToNewUTF8(action));
 		} else {
 			if (action in this.actionState) {
 				this.setActionState(action, !this.actionState[action]);
@@ -1223,10 +1228,19 @@ export class IpeUi {
 		this.resume(await window.ipeBridge?.fetchStyleSheet(name), threadRef);
 	}
 
-	showPresentation(): void {
-		const data = this.ipe.FS.readFile(`/tmp/presentation.html`);
+	showPresentation(fname: string): void {
+		const data = this.ipe.FS.readFile(fname);
 		const blob = new Blob([data.buffer], { type: "text/html" });
 		const objectUrl = URL.createObjectURL(blob);
-		window.open(objectUrl, "_blank");
+		// window.open is only reliably allowed when called synchronously inside a
+		// user-gesture handler (a click). If building the HTML string involves any
+		// await (e.g. reading from the Emscripten FS, running layout), the delay
+		// can cause the browser to block it as a popup.
+		// workaround: open the target directly from the user-gesture handler,
+		// then set the location here.
+		// window.open(objectUrl, "_blank");
+		if (this._presentationWindow) {
+			this._presentationWindow.location.href = objectUrl;
+		}
 	}
 }

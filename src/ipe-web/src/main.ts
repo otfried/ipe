@@ -38,6 +38,7 @@ instantiateIpe({
 			}
 		};
 		create("documents");
+		create("presentations");
 		create("images");
 		create("styles");
 		create("ipelets");

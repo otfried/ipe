@@ -269,7 +269,13 @@ export class Modal {
 		this.header.innerText = "Manage your files";
 		this.body.style.display = "none";
 		this.file_manager.style.display = "flex";
-		for (const d of ["documents", "images", "styles", "ipelets"])
+		for (const d of [
+			"documents",
+			"presentations",
+			"images",
+			"styles",
+			"ipelets",
+		])
 			this._populateFileManager(d as Directory);
 		this.show();
 	}

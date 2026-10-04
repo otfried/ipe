@@ -34,8 +34,8 @@
 
 #include "ipelua.h"
 
-#include "ipethumbs.h"
 #include "ipereveal.h"
+#include "ipethumbs.h"
 
 #include <cstdio>
 #include <cstdlib>

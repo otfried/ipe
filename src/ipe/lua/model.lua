@@ -566,7 +566,6 @@ function MODEL:latexErrorBox(log)
 end
 
 function MODEL:runLatex()
-  print("runLatex: ", self)
   self.ui:type3Font() -- reset flag in canvas
   self.type3_font = false
   local success, errmsg, result, log

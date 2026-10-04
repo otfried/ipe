@@ -34,8 +34,8 @@
 
 #include "ipegroup.h"
 
-#include <cairo.h>
 #include <cairo-svg.h>
+#include <cairo.h>
 
 #include <cstring>
 
@@ -130,7 +130,6 @@ bool Reveal::writeSlides(Stream & out, String svg) {
     size_t endDefs = sv.find("</defs>");
     size_t pageSet = sv.find("<pageSet>");
     size_t endPageSet = sv.find("</pageSet>");
-    ipeDebug("startDefs = %d, endDefs = %d, endPageSet = %d", startDefs, endDefs, endPageSet);
     if (pageSet == std::string_view::npos || endPageSet == std::string_view::npos)
 	return false;
 
@@ -160,7 +159,8 @@ bool Reveal::writeSlides(Stream & out, String svg) {
 	size_t start = p;
 	size_t finTag = sv.find("/>", start);
 	size_t fin = sv.find("</page>", start);
-	if (finTag == std::string_view::npos || fin == std::string_view::npos) return false;
+	if (finTag == std::string_view::npos || fin == std::string_view::npos)
+	    return false;
 	p = finTag + 2;
 	skipSpace();
 	bool isPath = p == fin && !strncmp(&sv[start], "<path ", 6);
@@ -195,13 +195,8 @@ bool Reveal::writeSlides(Stream & out, String svg) {
 		out.putXmlString(obj->getCustom().string());
 		out << "\"";
 		Matrix m = obj->matrix();
-		out << " data-ipe-matrix=\""
-		    << m.a[0] << ","
-		    << m.a[1] << ","
-		    << m.a[2] << ","
-		    << m.a[3] << ","
-		    << m.a[4] << ","
-		    << m.a[5] << "\"";
+		out << " data-ipe-matrix=\"" << m.a[0] << "," << m.a[1] << "," << m.a[2]
+		    << "," << m.a[3] << "," << m.a[4] << "," << m.a[5] << "\"";
 	    }
 	    out << ">\n";
 	    out.putRaw(&sv[o.start], o.fin - o.start);
@@ -241,19 +236,18 @@ bool Reveal::writeSlides(Stream & out, String svg) {
     Vector offset = iLayout->paper().topLeft();
 
     auto showObject = [&](int pageNo, int view, int objNo) {
-    	out << "<use href=\"#ipe-" << pageNo << "-" << objNo << "-" << view << "\" />\n";
+	out << "<use href=\"#ipe-" << pageNo << "-" << objNo << "-" << view << "\" />\n";
     };
 
     for (int pageNo = iFromPage; pageNo <= iToPage; ++pageNo) {
 	const Page * page = iDoc->page(pageNo);
-	if (page->countViews() > 1)
-	    out << "<section>\n";
+	if (page->countViews() > 1) out << "<section>\n";
 	for (int view = 0; view < page->countViews(); ++view) {
 	    out << "<section>\n"
-		<< "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 "
-		<< iWidth << " " << iHeight << "\">\n"
-		<< "<g transform=\"matrix(1 0 0 -1 "
-		<< -offset.x << " " << offset.y << ")\">\n";
+		<< "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 " << iWidth << " "
+		<< iHeight << "\">\n"
+		<< "<g transform=\"matrix(1 0 0 -1 " << -offset.x << " " << offset.y
+		<< ")\">\n";
 
 	    Attribute bg = page->backgroundSymbol(iDoc->cascade());
 	    const Symbol * background = iDoc->cascade()->findSymbol(bg);
@@ -261,8 +255,7 @@ bool Reveal::writeSlides(Stream & out, String svg) {
 		showObject(pageNo, view, -2);
 
 	    const Text * title = page->titleText(variant);
-	    if (title)
-		showObject(pageNo, view, -1);
+	    if (title) showObject(pageNo, view, -1);
 
 	    for (int i = 0; i < page->count(); ++i) {
 		if (page->objectVisible(view, i)) {
@@ -273,8 +266,7 @@ bool Reveal::writeSlides(Stream & out, String svg) {
 	    }
 	    out << "</g></svg>\n</section>\n";
 	}
-	if (page->countViews() > 1)
-	    out << "</section>\n";
+	if (page->countViews() > 1) out << "</section>\n";
     }
     out << "\n</div>\n</div>\n";
     return true;
@@ -292,12 +284,11 @@ bool Reveal::createPresentation(const char * destination) {
     std::string_view sv{reveal.data(), size_t(reveal.size())};
     size_t titleIndex = sv.find("[TITLE]");
     size_t ipeIndex = sv.find("[IPE]");
-    if (titleIndex == std::string_view::npos ||
-	ipeIndex == std::string_view::npos)
+    if (titleIndex == std::string_view::npos || ipeIndex == std::string_view::npos)
 	return false;
 
     ipeDebug("Template has %d bytes, inserting at %d", reveal.size(), ipeIndex);
-    
+
     std::FILE * file = Platform::fopen(destination, "wb");
     if (!file) return false;
     FileStream out(file);
@@ -310,9 +301,8 @@ bool Reveal::createPresentation(const char * destination) {
 	out << iDoc->properties().iTitle;
 
     out.putRaw(sv.data() + titleIndex + 7, ipeIndex - titleIndex - 7);
-    
-    if (!writeSlides(out, svg))
-	return false;
+
+    if (!writeSlides(out, svg)) return false;
 
     out.putRaw(sv.data() + ipeIndex + 5, sv.size() - ipeIndex - 5);
 

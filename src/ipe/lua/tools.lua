@@ -1027,13 +1027,28 @@ function PARAGRAPHTOOL:compute()
   self.shape = boxshape(self.v[1], self.v[2])
 end
 
+function MODEL:createParagraph()
+  local run = coroutine.create(self.createText)
+  coroutine.resume(run, self, "paragraph", self.create_text.position, self.create_text.width)
+  self.create_text = nil
+end
+
 function PARAGRAPHTOOL:mouseButton(button, modifiers, press)
   if not press then return end
   self:compute()
   self.model.ui:finishTool()
   local pos = V(math.min(self.v[1].x, self.v[2].x), self.v[1].y)
   local wid = math.abs(self.v[2].x - self.v[1].x)
-  self.model:createText("paragraph", pos, wid)
+  -- the tool handler is not allowed to yield, so postpone
+  -- until the event loop runs
+  self.model.create_text = {
+    timer = ipeui.Timer(self.model, "createParagraph"),
+    position = pos,
+    width = wid
+  }
+  self.model.create_text.timer:setSingleShot(true)
+  self.model.create_text.timer:setInterval(0) -- next iteration of event loop
+  self.model.create_text.timer:start()
 end
 
 function PARAGRAPHTOOL:mouseMove()
