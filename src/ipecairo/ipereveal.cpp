@@ -128,20 +128,23 @@ bool Reveal::writeSlides(Stream & out, String svg) {
 
     size_t startDefs = sv.find("<defs>");
     size_t endDefs = sv.find("</defs>");
+    size_t pageSet = sv.find("<pageSet>");
     size_t endPageSet = sv.find("</pageSet>");
-    if (startDefs == std::string_view::npos ||
-	endDefs == std::string_view::npos ||
-	endPageSet == std::string_view::npos)
+    ipeDebug("startDefs = %d, endDefs = %d, endPageSet = %d", startDefs, endDefs, endPageSet);
+    if (pageSet == std::string_view::npos || endPageSet == std::string_view::npos)
 	return false;
 
-    size_t p = endDefs + 7;
+    size_t p;
     auto skipSpace = [&]() {
 	while (p < endPageSet && std::isspace(sv[p])) ++p;
     };
 
-    skipSpace();
-    if (strncmp(&sv[p], "<pageSet>", 9)) return false;
-    p += 9;
+    if (startDefs != std::string_view::npos) {
+	p = endDefs + 7;
+	skipSpace();
+	if (p != pageSet) return false;
+    }
+    p = pageSet + 9;
     skipSpace();
 
     struct SObject {
@@ -167,7 +170,8 @@ bool Reveal::writeSlides(Stream & out, String svg) {
     }
 
     out.putCString("<div style=\"display: none;\">\n<svg><defs id=\"ipe-definitions\">");
-    out.putRaw(sv.data() + startDefs + 6, endDefs - startDefs - 6);
+    if (startDefs != std::string_view::npos)
+	out.putRaw(sv.data() + startDefs + 6, endDefs - startDefs - 6);
 
     size_t count = 0;
     auto handleObject = [&](int pageNo, int view, int objNo, const Object * obj) {
@@ -278,8 +282,12 @@ bool Reveal::writeSlides(Stream & out, String svg) {
 
 bool Reveal::createPresentation(const char * destination) {
     String svg = createSVG();
-    
+
+#ifdef IPEWASM
+    String reveal = Platform::readFile("/opt/ipe/reveal/reveal.html");
+#else
     String reveal = Platform::readFile("ipecairo/reveal.html");
+#endif
 
     std::string_view sv{reveal.data(), size_t(reveal.size())};
     size_t titleIndex = sv.find("[TITLE]");
@@ -287,6 +295,8 @@ bool Reveal::createPresentation(const char * destination) {
     if (titleIndex == std::string_view::npos ||
 	ipeIndex == std::string_view::npos)
 	return false;
+
+    ipeDebug("Template has %d bytes, inserting at %d", reveal.size(), ipeIndex);
     
     std::FILE * file = Platform::fopen(destination, "wb");
     if (!file) return false;
@@ -307,6 +317,7 @@ bool Reveal::createPresentation(const char * destination) {
     out.putRaw(sv.data() + ipeIndex + 5, sv.size() - ipeIndex - 5);
 
     out.close();
+    fclose(file);
     return true;
 }
 

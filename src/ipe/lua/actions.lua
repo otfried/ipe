@@ -936,6 +936,13 @@ function MODEL:action_vscode_export_eps()
 		     true, false) -- transparent, nocrop
 end
 
+function MODEL:action_export_reveal()
+  local result = self.ui:createPresentation(self.doc, "/tmp/presentation.html")
+  if (result) then
+    self.ui.js("showPresentation")
+  end
+end
+
 function MODEL:action_insert_image()
   if not self.insert_image_dir and self.file_name then
     self.insert_image_dir = self.file_name:match(prefs.dir_pattern)

@@ -1222,4 +1222,11 @@ export class IpeUi {
 	async fetchStyleSheet(name: string, threadRef: number) {
 		this.resume(await window.ipeBridge?.fetchStyleSheet(name), threadRef);
 	}
+
+	showPresentation(): void {
+		const data = this.ipe.FS.readFile(`/tmp/presentation.html`);
+		const blob = new Blob([data.buffer], { type: "text/html" });
+		const objectUrl = URL.createObjectURL(blob);
+		window.open(objectUrl, "_blank");
+	}
 }

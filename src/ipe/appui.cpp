@@ -139,6 +139,7 @@ void AppUiBase::buildMenus() {
     addItem(EFileMenu, "Open", "open");
     addItem(EFileMenu, "Save", "save");
 #ifdef IPEUI_JS
+    addItem(EFileMenu, "Show as presentation", "export_reveal");
     addItem(EFileMenu, "Download", "download");
 #endif
     addItem(EFileMenu, "Save as", "save_as");

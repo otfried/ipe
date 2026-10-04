@@ -35,6 +35,7 @@
 #include "ipelua.h"
 
 #include "ipethumbs.h"
+#include "ipereveal.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -667,6 +668,15 @@ static int appui_renderPage(lua_State * L) {
     return 0;
 }
 
+static int appui_createPresentation(lua_State * L) {
+    // AppUiBase **ui = check_appui(L, 1);  // not used
+    Document ** doc = check_document(L, 2);
+    const char * dst = luaL_checkstring(L, 3);
+    Reveal reveal(*doc, 0, (*doc)->countPages() - 1);
+    lua_pushboolean(L, reveal.createPresentation(dst));
+    return 1;
+}
+
 // --------------------------------------------------------------------
 
 static int appui_waitDialog(lua_State * L) {
@@ -734,6 +744,7 @@ static const struct luaL_Reg appui_methods[] = {
     {"setRecentFiles", appui_setRecentFiles},
     {"showTool", appui_showTool},
     {"renderPage", appui_renderPage},
+    {"createPresentation", appui_createPresentation},
 #ifdef IPEUI_JS
     {"js", appui_jsCall},
 #endif
