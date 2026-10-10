@@ -690,6 +690,30 @@ void Stream::putXmlString(String s) {
     }
 }
 
+//! Save a string with Json escaping
+void Stream::putJsonString(String s) {
+    for (int i = 0; i < s.size(); ++i) {
+	char ch = s[i];
+	switch (ch) {
+	case '"': *this << "\\\""; break;
+	case '\\': *this << "\\\\"; break;
+	case '\b': *this << "\\b"; break;
+	case '\f': *this << "\\f"; break;
+	case '\n': *this << "\\n"; break;
+	case '\r': *this << "\\r"; break;
+	case '\t': *this << "\\t"; break;
+	default:
+	    if (0 <= ch && ch < 0x20) {
+		*this << "\\u00";
+		putHexByte(ch);
+		*this << "x";
+	    } else {
+		*this << ch; // UTF-8 multibyte sequences pass through unchanged
+	    }
+	}
+    }
+}
+
 // --------------------------------------------------------------------
 
 /*! \class ipe::StringStream

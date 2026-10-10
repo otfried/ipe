@@ -23,7 +23,8 @@ sources	= \
 	ipecairopainter.cpp \
 	ipefonts.cpp \
 	ipethumbs.cpp \
-	ipereveal.cpp
+	ipereveal.cpp \
+	ipetojson.cpp
 
 ifdef IPEWASM
 $(TARGET): $(objects)

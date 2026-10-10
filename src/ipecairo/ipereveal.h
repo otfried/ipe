@@ -41,18 +41,18 @@ namespace ipe {
 
 class Reveal {
 public:
-    enum TargetFormat { ESVG, EPNG, EPS, EPDF };
-
     Reveal(const Document * doc, int fromPage, int toPage);
 
     int width() const { return iWidth; }
     int height() const { return iHeight; }
 
     bool createPresentation(const char * destination, String htmlTemplate);
+    bool createJson(const char * destination, bool onlyMarked);
 
 private:
     String createSVG();
     bool writeSlides(Stream & out, String svg);
+    void createJsonView(Stream & out, int pageNo, int view, bool & sep);
 
 private:
     const Document * iDoc;

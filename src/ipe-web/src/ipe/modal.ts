@@ -14,7 +14,12 @@ import "./modal.css";
 import Sortable from "sortablejs";
 import type { PopupMenu, PopupMenuResults } from "./popup-menu";
 
-type Directory = "documents" | "images" | "styles" | "ipelets";
+type Directory =
+	| "documents"
+	| "images"
+	| "styles"
+	| "ipelets"
+	| "presentations";
 
 interface FileType {
 	dir: Directory;
@@ -30,6 +35,12 @@ const knownFileTypes: { [ext: string]: FileType } = {
 	svg: { dir: "images", mimeType: "image/svg+xml" },
 	isy: { dir: "styles", mimeType: "application/xml" },
 	lua: { dir: "ipelets", mimeType: "text/plain" },
+	html: { dir: "presentations", mimeType: "text/html" },
+	pptx: {
+		dir: "presentations",
+		mimeType:
+			"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+	},
 };
 
 type ResumeCallback = (result: ResumeResult, threadRef: number) => void;
@@ -58,8 +69,9 @@ export interface PageSelectorItem {
 function dirFromOptions(options: FileDialogOptions): Directory {
 	const f = options.filters[0];
 	if (f.includes("*.ipe")) return "documents";
-	if (f.includes("*.isy")) return "styles";
+	if (f.includes("*.isy") || f === "reveal.htmljs") return "styles";
 	if (f.includes("*.lua")) return "ipelets";
+	if (f.includes("*.html") || f.includes("*.pptx")) return "presentations";
 	return "images";
 }
 

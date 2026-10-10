@@ -90,6 +90,13 @@ export class IpeUi {
 	externalConfiguration = "";
 	private internalConfiguration = "";
 	private _presentationWindow: Window | null = null;
+	_createSlides:
+		| ((
+				jsonData: string,
+				textConversion: string,
+				titleConversion: string,
+		  ) => Promise<Uint8Array>)
+		| null = null;
 
 	constructor(
 		ipe: Ipe,
@@ -708,6 +715,7 @@ export class IpeUi {
 					"tablet_hints",
 					"undo",
 					"redo",
+					"export_pptx",
 				].includes(name)
 			)
 				return;
@@ -1245,6 +1253,26 @@ export class IpeUi {
 			if (this._presentationWindow) {
 				this._presentationWindow.location.href = objectUrl;
 			}
+		}
+	}
+
+	async createSlides(
+		jsonFn: string,
+		outFn: string,
+		textConversion: string,
+		titleConversion: string,
+	): Promise<void> {
+		if (this._createSlides) {
+			const jsonData = window.ipeui.ipe.FS.readFile(jsonFn, {
+				encoding: "utf8",
+			});
+			const data = await this._createSlides(
+				jsonData,
+				textConversion,
+				titleConversion,
+			);
+			window.ipeui.ipe.FS.writeFile(outFn, data);
+			window.ipeui.modal.fileManager();
 		}
 	}
 }

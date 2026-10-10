@@ -69,7 +69,6 @@ String Reveal::createSVG() {
 	&stream_writer, (void *)&svgWriter, iWidth, iHeight);
 
     cairo_t * cc = cairo_create(surface);
-    // cairo_translate(cc, -offset.x, -offset.y);
 
     cairo_set_tolerance(cc, tolerance);
 

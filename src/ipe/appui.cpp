@@ -154,6 +154,9 @@ void AppUiBase::buildMenus() {
     addItem(EFileMenu, "Export as PNG", "export_png");
     addItem(EFileMenu, "Export as EPS", "export_eps");
     addItem(EFileMenu, "Export as SVG", "export_svg");
+#ifdef IPEUI_JS
+    addItem(EFileMenu, "Export as PPTX", "export_pptx");
+#endif
     addItem(EFileMenu);
     addItem(EFileMenu, "Insert image", "insert_image");
     addItem(EFileMenu);

@@ -91,13 +91,14 @@ private:
 
 class Base64Stream : public Stream {
 public:
-    Base64Stream(Stream & stream);
+    Base64Stream(Stream & stream, bool noLineBreaks = false);
     virtual void putChar(char ch);
     virtual void close();
 
 private:
     Stream & iStream;
     uint8_t iCh[3];
+    int iNoLineBreaks;
     int iN;
     int iCol;
 };

@@ -25,6 +25,8 @@
   },
   "dependencies": {
     "@melloware/coloris": "^0.24.0",
-    "sortablejs": "^1.15.3"
+    "sortablejs": "^1.15.3",
+    "jszip": "^3.10.2",
+    "pptxgenjs": "^4.0.1"
   }
 }

@@ -2,12 +2,27 @@ import instantiateIpe from "./ipe/ipe.js";
 import { IpeUi } from "./ipe/ipeui";
 import "./ipe/index.css";
 import { buildInfo } from "./gitversion";
+import type { IpeDocument, TextConversion } from "./write-pptx";
 
 declare global {
 	interface Window {
 		ipeBridge: any; // bridge between webview and the host environment
 		ipeui: IpeUi; // used in WASM for calls into JS
 	}
+}
+
+async function createSlides(
+	jsonData: string,
+	textConversion: string,
+	titleConversion: string,
+): Promise<Uint8Array> {
+	const doc: IpeDocument = JSON.parse(jsonData);
+	const { createPptx } = await import("./write-pptx");
+	return await createPptx(
+		doc,
+		textConversion as TextConversion,
+		titleConversion as TextConversion,
+	);
 }
 
 instantiateIpe({
@@ -22,6 +37,8 @@ instantiateIpe({
 		"IPEJSLATEX=1",
 		"IPEDEBUG=1",
 	]);
+
+	ipeui._createSlides = createSlides;
 
 	ipe.FS.mkdir("/home/ipe", 0o777);
 	ipe.FS.mkdir("/tmp/pages", 0o777);

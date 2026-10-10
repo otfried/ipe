@@ -82,7 +82,8 @@ static int renderPage(Thumbnail::TargetFormat fm, const char * src, const char *
 
 // --------------------------------------------------------------------
 
-static int renderReveal(const char * src, const char * dst, const char * pageSpec) {
+static int renderReveal(const char * src, const char * dst, const char * pageSpec,
+			bool toJson) {
     Document * doc = Document::loadWithErrorReport(src);
 
     if (!doc) return 1;
@@ -105,11 +106,16 @@ static int renderReveal(const char * src, const char * dst, const char * pageSpe
     }
 
     ipe::String htmlTemplate = "<html><head><title>[TITLE]</title></head>"
-	"<body>[IPE]</body></html>";
+			       "<body>[IPE]</body></html>";
 
     Reveal reveal(doc, fromPage, toPage);
-    if (!reveal.createPresentation(dst, htmlTemplate))
-	fprintf(stderr, "Failure to create presentation.\n");
+    if (toJson) {
+	if (!reveal.createJson(dst, true))
+	    fprintf(stderr, "Failure to create json file.\n");
+    } else {
+	if (!reveal.createPresentation(dst, htmlTemplate))
+	    fprintf(stderr, "Failure to create presentation.\n");
+    }
 
     delete doc;
     return 0;
@@ -127,7 +133,9 @@ static void usage() {
 #endif
 #ifdef CAIRO_HAS_SVG_SURFACE
     fprintf(stderr, "| -svg ");
+    fprintf(stderr, "| -html ");
 #endif
+    fprintf(stderr, "| -json ");
     fprintf(stderr, "] "
 		    "[ -page <page> ] [ -view <view> ] [ -resolution <dpi> ] "
 		    "[ -transparent ] [ -nocrop ] "
@@ -150,6 +158,7 @@ int main(int argc, char * argv[]) {
     if (argc < 4) usage();
 
     bool renderHtml = false;
+    bool renderJson = false;
     Thumbnail::TargetFormat fm = Thumbnail::EPNG;
     if (!strcmp(argv[1], "-png")) fm = Thumbnail::EPNG;
 #ifdef CAIRO_HAS_PS_SURFACE
@@ -166,6 +175,8 @@ int main(int argc, char * argv[]) {
     else if (!strcmp(argv[1], "-svg"))
 	fm = Thumbnail::ESVG;
 #endif
+    else if (!strcmp(argv[1], "-json"))
+	renderJson = true;
     else
 	usage();
 
@@ -208,8 +219,8 @@ int main(int argc, char * argv[]) {
     const char * src = argv[i];
     const char * dst = argv[i + 1];
 
-    if (renderHtml)
-	return renderReveal(src, dst, page);
+    if (renderHtml || renderJson)
+	return renderReveal(src, dst, page, renderJson);
     else
 	return renderPage(fm, src, dst, page, view, dpi / 72.0, tolerance, transparent,
 			  nocrop);
