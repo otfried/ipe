@@ -5,6 +5,11 @@ Ipe 7.3.1
  * New Ipe Editions: Ipe Web, Ipe VS Code extension (for all platforms
    on which VS Code or VSCodium exist), and GTK-4 edition on Linux.
 
+ * Save Ipe presentations as HTML presentations based on reveal.js and
+   GSAP, supporting animation of geometric objects.
+
+ * Export to PPTX in Ipe Web.
+
  * Support for variants of Ipe documents: keep German and English
    versions of your slides in the same document, or make both a
    short conference and a long seminar talk.
