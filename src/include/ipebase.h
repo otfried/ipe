@@ -287,6 +287,7 @@ public:
     Stream & operator<<(double d);
     void putHexByte(char b);
     void putXmlString(String s);
+    void putJsonString(String s);
 };
 
 /*! \class ipe::TellStream

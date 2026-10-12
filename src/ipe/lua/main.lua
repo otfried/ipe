@@ -232,6 +232,7 @@ end
 filter_png = { "Images (*.png)", "*.png" }
 filter_eps = { "Postscript files (*.eps)", "*.eps" }
 filter_svg = { "SVG files (*.svg)", "*.svg" }
+filter_pptx = { "PPTX files (*.pptx)", "*.pptx" }
 
 ----------------------------------------------------------------------
 -- This function is called to launch a file on MacOS X

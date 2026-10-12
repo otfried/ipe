@@ -55,7 +55,7 @@ extern bool dctDecode(Buffer dctData, Buffer pixelData);
 
 // --------------------------------------------------------------------
 
-static void cairoMatrix(cairo_matrix_t & cm, const Matrix & m) {
+void CairoPainter::cairoMatrix(cairo_matrix_t & cm, const Matrix & m) {
     cm.xx = m.a[0];
     cm.yx = m.a[1];
     cm.xy = m.a[2];
@@ -64,7 +64,7 @@ static void cairoMatrix(cairo_matrix_t & cm, const Matrix & m) {
     cm.y0 = m.a[5];
 }
 
-static void cairoTransform(cairo_t * cr, const Matrix & m) {
+void CairoPainter::cairoTransform(cairo_t * cr, const Matrix & m) {
     cairo_matrix_t cm;
     cairoMatrix(cm, m);
     cairo_transform(cr, &cm);
@@ -215,8 +215,8 @@ static bool applyPngPrediction(Buffer & data, int width, int height, int compone
     return true;
 }
 
-static void drawImage(cairo_t * cr, const PdfDict * d, const PdfResourceBase * r,
-		      double opacity, bool filterBest) {
+void CairoPainter::drawImage(cairo_t * cr, const PdfDict * d, const PdfResourceBase * r,
+			     double opacity, bool filterBest) {
     // ipeDebug("Image: %s", d->dictRepr().z());
     int width = d->getInteger("Width");
     int height = d->getInteger("Height");

@@ -963,6 +963,58 @@ function MODEL:action_export_reveal()
   end
 end
 
+function MODEL:action_export_pptx()
+  if not self.file_name then
+    self:warning("Export failed", "Document does not have a filename")
+    return
+  end
+  local f
+  if self.file_name:sub(1, 20) == "/home/ipe/documents/" then
+    f = "/home/ipe/presentations/" .. self.file_name:sub(21, -5) .. ".pptx"
+  else
+    f = "/home/ipe/presentations/unknown.pptx"
+  end
+  local d = ipeui.Dialog(self.ui:win(), "Ipe: Export PPTX")
+  d:add("label0", "label", { label="Exporting to" }, 1, 1)
+  d:add("fname", "label", { label=f }, 1, 2)
+  d:add("label1", "label", { label="Export text as graphics?" }, 2, 1)
+  d:add("textconversion", "combo", {
+	  "All text as graphics",
+	  "If text contains LaTeX",
+	  "Labels and math",
+	  "Math",
+	  "Preserve all text as text"
+    }, 2, 2)
+  d:add("label2", "label", { label="Export page titles as graphics?" }, 3, 1)
+  d:add("titleconversion", "combo", {
+	  "All titles as graphics",
+	  "If title contains LaTeX",
+	  "Preserve all titles as text"
+  }, 3, 2)
+  d:add("label3", "label", { label="Which views?" }, 4, 1)
+  d:add("views", "combo", {
+	  "All views",
+	  "Only marked views on marked pages",
+			  }, 4, 2)
+  d:set("textconversion", 2)
+  d:set("titleconversion", 2)
+  d:addButton("ok", "&Ok", "accept")
+  d:addButton("cancel", "&Cancel", "reject")
+  if not d:execute(prefs.latexlog_size) then return end
+  local onlyMarkedViews = d:get("views") == 2
+  local textConversions = {"all", "latex", "label", "math", "none"}
+  local textConversion = textConversions[d:get("textconversion")]
+  local titleConversions = {"all", "latex", "none"}
+  local titleConversion = titleConversions[d:get("titleconversion")]
+  print("Creating Json", f, textConversion, titleConversion, onlyMarkedViews)
+  local jsonName = "/tmp/document.json"
+  if not self.ui:createJson(self.doc, jsonName, onlyMarkedViews) then
+    self:warning("Export failed", "Could not write Json")
+    return
+  end
+  self.ui.js("createSlides", jsonName, f, textConversion, titleConversion)
+end
+
 function MODEL:action_insert_image()
   if not self.insert_image_dir and self.file_name then
     self.insert_image_dir = self.file_name:match(prefs.dir_pattern)

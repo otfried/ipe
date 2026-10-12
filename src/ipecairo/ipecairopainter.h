@@ -72,9 +72,10 @@ protected:
     virtual void doDrawBitmap(Bitmap bitmap) override;
     virtual void doDrawText(const Text * text) override;
 
-private:
+    virtual void drawGlyphs(std::vector<cairo_glyph_t> & glyphs);
+
+protected:
     const PdfDict * findResource(String kind, String name);
-    void drawGlyphs(std::vector<cairo_glyph_t> & glyphs);
     void collectGlyphs(String s, std::vector<cairo_glyph_t> & glyphs, Vector & textPos);
     void execute(const PdfDict * stream, const PdfDict * resources,
 		 bool applyMatrix = true);
@@ -113,11 +114,16 @@ private:
     void opQ();
     void opre();
     void opn();
-    void opStrokeFill(bool close, bool fill, bool stroke, bool eofill);
+    virtual void opStrokeFill(bool close, bool fill, bool stroke, bool eofill);
     void opsh();
     void createPattern();
 
-private:
+    static void cairoMatrix(cairo_matrix_t & cm, const Matrix & m);
+    static void cairoTransform(cairo_t * cr, const Matrix & m);
+    static void drawImage(cairo_t * cr, const PdfDict * d, const PdfResourceBase * r,
+			  double opacity, bool filterBest);
+
+protected:
     Fonts * iFonts;
     cairo_t * iCairo;
 

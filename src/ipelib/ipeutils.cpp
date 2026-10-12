@@ -231,8 +231,9 @@ inline void base64encode(uint32_t w, char * p) {
     p[0] = base64letter[w % 64];
 }
 
-Base64Stream::Base64Stream(Stream & stream)
-    : iStream(stream) {
+Base64Stream::Base64Stream(Stream & stream, bool noLineBreaks)
+    : iStream(stream)
+    , iNoLineBreaks{noLineBreaks} {
     iN = 0;
     iCol = 0;
 }
@@ -247,7 +248,7 @@ void Base64Stream::putChar(char ch) {
 	iStream.putCString(buf);
 	iCol += 4;
 	if (iCol > 70) {
-	    iStream.putChar('\n');
+	    if (!iNoLineBreaks) iStream.putChar('\n');
 	    iCol = 0;
 	}
 	iN = 0;
@@ -263,7 +264,7 @@ void Base64Stream::close() {
 	for (int k = iN + 1; k < 4; ++k) buf[k] = '=';
 	iStream.putCString(buf);
     }
-    iStream.putCString("\n");
+    if (!iNoLineBreaks) iStream.putCString("\n");
     iStream.close();
 }
 
