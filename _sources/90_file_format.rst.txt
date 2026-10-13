@@ -694,6 +694,10 @@ The ``<path>`` element
   element.  If the element is not filled, then the gradient pattern is
   ignored.  If ``gradient`` is set, then ``tiling`` is ignored.
 
+``stroke-gradient`` (optional)
+  A gradient pattern to be used to stroke the element.  If the element
+  is not stroked, then the gradient pattern is ignored.  
+  
 
 The contents of the ``<path>`` element is a sequence of path
 construction operators. The entire shape will be stroked and/or filled
@@ -941,6 +945,11 @@ is 1.0.
 ``color`` (required)
   Color at this color stop (three
   numbers). Symbolic names are not allowed.
+
+``opacity`` (optional)
+  Opacity at this color stop (a single number between 0 (fully
+  transparent) and 1 (fully opaque)).  If this attribute is missing,
+  the stop is opaque.
 
 
 The ``<tiling>`` element

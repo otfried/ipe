@@ -598,6 +598,9 @@ not filled, then the tiling pattern is ignored.</p>
 element.  If the element is not filled, then the gradient pattern is
 ignored.  If <code class="docutils literal notranslate"><span class="pre">gradient</span></code> is set, then <code class="docutils literal notranslate"><span class="pre">tiling</span></code> is ignored.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">stroke-gradient</span></code> (optional)</dt><dd><p>A gradient pattern to be used to stroke the element.  If the element
+is not stroked, then the gradient pattern is ignored.</p>
+</dd>
 </dl>
 <p>The contents of the <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> element is a sequence of path
 construction operators. The entire shape will be stroked and/or filled
@@ -791,6 +794,10 @@ is 1.0.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">color</span></code> (required)</dt><dd><p>Color at this color stop (three
 numbers). Symbolic names are not allowed.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">opacity</span></code> (optional)</dt><dd><p>Opacity at this color stop (a single number between 0 (fully
+transparent) and 1 (fully opaque)).  If this attribute is missing,
+the stop is opaque.</p>
 </dd>
 </dl>
 </div>
