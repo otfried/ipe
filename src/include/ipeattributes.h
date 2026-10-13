@@ -102,6 +102,7 @@ enum Property {
     EPropStrokeOpacity,
     EPropTiling,
     EPropGradient,
+    EPropStrokeGradient,
     EPropHorizontalAlignment,
     EPropVerticalAlignment,
     EPropLineJoin,
@@ -207,6 +208,8 @@ struct Gradient {
 	double offset;
 	//! The color at this offset.
 	Color color;
+	//! The opacity at this offset.
+	double opacity;
     };
     //! There are two types of gradients, along an axis or between two circles.
     enum TType { EAxial = 2, ERadial = 3 };
@@ -521,15 +524,16 @@ public:
     TSplineType iSplineType;
     //! Allowed transformations.
     TTransformations iTransformations;
-    TLineJoin iLineJoin;      //!< Line join style.
-    TLineCap iLineCap;        //!< Line cap style.
-    TFillRule iFillRule;      //!< Shape fill rule.
-    Attribute iOpacity;       //!< Opacity.
-    Attribute iStrokeOpacity; //!< Stroke opacity.
-    Attribute iTiling;        //!< Tiling pattern.
-    Attribute iGradient;      //!< Gradient pattern.
-    Attribute iMarkShape;     //!< Shape of Mark to create.
-    Attribute iVariant;       //!< Variant to display and to use for new text
+    TLineJoin iLineJoin;       //!< Line join style.
+    TLineCap iLineCap;         //!< Line cap style.
+    TFillRule iFillRule;       //!< Shape fill rule.
+    Attribute iOpacity;        //!< Opacity.
+    Attribute iStrokeOpacity;  //!< Stroke opacity.
+    Attribute iTiling;         //!< Tiling pattern.
+    Attribute iGradient;       //!< Gradient pattern.
+    Attribute iStrokeGradient; //!< Stroke gradient pattern.
+    Attribute iMarkShape;      //!< Shape of Mark to create.
+    Attribute iVariant;        //!< Variant to display and to use for new text
 };
 
 // --------------------------------------------------------------------

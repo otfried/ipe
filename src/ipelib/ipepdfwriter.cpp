@@ -47,7 +47,8 @@ typedef std::vector<Bitmap>::const_iterator BmIter;
 
 PdfPainter::PdfPainter(const Cascade * style, Stream & stream)
     : Painter(style)
-    , iStream(stream) {
+    , iStream(stream)
+    , iPathStream(iPathString) {
     State state;
     state.iStroke = Color(0, 0, 0);
     state.iFill = Color(0, 0, 0);
@@ -63,17 +64,21 @@ PdfPainter::PdfPainter(const Cascade * style, Stream & stream)
 
 void PdfPainter::doNewPath() { drawAttributes(); }
 
-void PdfPainter::doMoveTo(const Vector & v) { iStream << v << " m\n"; }
+// The path is buffered because a soft mask may require painting it twice.
+void PdfPainter::doMoveTo(const Vector & v) { iPathStream << v << " m\n"; }
 
-void PdfPainter::doLineTo(const Vector & v) { iStream << v << " l\n"; }
+void PdfPainter::doLineTo(const Vector & v) { iPathStream << v << " l\n"; }
 
 void PdfPainter::doCurveTo(const Vector & v1, const Vector & v2, const Vector & v3) {
-    iStream << v1 << " " << v2 << " " << v3 << " c\n";
+    iPathStream << v1 << " " << v2 << " " << v3 << " c\n";
 }
 
-void PdfPainter::doClosePath() { iStream << "h "; }
+void PdfPainter::doClosePath() { iPathStream << "h "; }
 
-void PdfPainter::doAddClipPath() { iStream << "W* n "; }
+void PdfPainter::doAddClipPath() {
+    iStream << iPathString << "W* n ";
+    iPathString.erase();
+}
 
 void PdfPainter::doPush() {
     State state = iActiveState.back();
@@ -113,11 +118,18 @@ void PdfPainter::drawAttributes() {
 	sa.iLineJoin = s.iLineJoin;
 	iStream << s.iLineJoin - 1 << " j\n";
     }
-    if (s.iStroke != sa.iStroke) {
+    int strokePat =
+	s.iStrokeGradient.isNormal() ? -1 : gradientPattern(s.iStrokeGradient);
+    if (strokePat >= 0) {
+	iStream << "/Pattern CS /GP" << strokePat << " SCN\n";
+    } else if (s.iStroke != sa.iStroke) {
 	sa.iStroke = s.iStroke;
 	drawColor(iStream, s.iStroke, "G", "RG");
     }
-    if (s.iFill != sa.iFill || !s.iTiling.isNormal()) {
+    int fillPat = s.iGradient.isNormal() ? -1 : gradientPattern(s.iGradient);
+    if (fillPat >= 0) {
+	iStream << "/Pattern cs /GP" << fillPat << " scn\n";
+    } else if (s.iFill != sa.iFill || !s.iTiling.isNormal()) {
 	sa.iFill = s.iFill;
 	if (!s.iTiling.isNormal()) {
 	    iStream << "/PCS cs\n";
@@ -127,6 +139,29 @@ void PdfPainter::drawAttributes() {
 	    drawColor(iStream, s.iFill, "g", "rg");
     }
     drawOpacity(true);
+    iStrokeUse = strokePat;
+    iFillUse = fillPat;
+}
+
+static bool gradientHasAlpha(const Gradient * g) {
+    for (const auto & stop : g->iStops)
+	if (stop.opacity < 1.0) return true;
+    return false;
+}
+
+// Shading patterns are positioned relative to the page (or form), not the CTM,
+// so every (gradient, matrix) combination needs its own pattern object.
+int PdfPainter::gradientPattern(Attribute grad) {
+    const Gradient * g = iCascade->findGradient(grad);
+    if (!g) return -1;
+    GradientUse use{grad.index(), matrix() * g->iMatrix, gradientHasAlpha(g)};
+    for (int i = 0; i < size(iGradientUses); ++i) {
+	if (iGradientUses[i].gradient == use.gradient
+	    && iGradientUses[i].matrix == use.matrix)
+	    return i;
+    }
+    iGradientUses.push_back(use);
+    return size(iGradientUses) - 1;
 }
 
 static const char * opacityName(Fixed alpha) {
@@ -148,31 +183,40 @@ void PdfPainter::drawOpacity(bool withStroke) {
     }
 }
 
-// If gradient fill is set, then StrokeAndFill does NOT stroke!
 void PdfPainter::doDrawPath(TPathMode mode) {
     bool eofill = (fillRule() == EEvenOddRule);
+    bool doFill = (mode >= EStrokedAndFilled);
+    bool doStroke = (mode <= EStrokedAndFilled);
+    // gradient with per-stop opacity needs a soft mask (/SM<n>)
+    int fillMask =
+	(doFill && iFillUse >= 0 && iGradientUses[iFillUse].alpha) ? iFillUse : -1;
+    int strokeMask = (doStroke && iStrokeUse >= 0 && iGradientUses[iStrokeUse].alpha)
+			 ? iStrokeUse
+			 : -1;
 
-    // if (!mode)
-    // iStream << "n\n"; // no op path
-
-    const Gradient * g = nullptr;
-    Attribute grad = iState.back().iGradient;
-    if (!grad.isNormal()) g = iCascade->findGradient(grad);
-
-    if (g) {
-	if (mode == EStrokedOnly)
-	    iStream << "S\n";
-	else
-	    iStream << (eofill ? "q W* n " : "q W n ") << matrix() * g->iMatrix
-		    << " cm /Grad" << grad.index() << " sh Q\n";
-    } else {
+    if (fillMask < 0 && strokeMask < 0) {
+	iStream << iPathString;
 	if (mode == EFilledOnly)
 	    iStream << (eofill ? "f*\n" : "f\n");
 	else if (mode == EStrokedOnly)
 	    iStream << "S\n";
 	else
 	    iStream << (eofill ? "B*\n" : "B\n"); // fill and then stroke
+    } else {
+	// a soft mask applies to a whole painting operation, so paint separately
+	if (doFill) {
+	    iStream << "q ";
+	    if (fillMask >= 0) iStream << "/SM" << fillMask << " gs ";
+	    iStream << iPathString << (eofill ? "f*\n" : "f\n") << "Q\n";
+	}
+	if (doStroke) {
+	    iStream << "q ";
+	    if (strokeMask >= 0) iStream << "/SM" << strokeMask << " gs ";
+	    iStream << iPathString << "S\n"
+		    << "Q\n";
+	}
     }
+    iPathString.erase();
 }
 
 void PdfPainter::doDrawBitmap(Bitmap bitmap) {
@@ -242,8 +286,6 @@ PdfWriter::PdfWriter(TellStream & stream, const Document * doc,
     iCompressLevel = compression;
     iObjNum = 7;        // 0 - 6 are reserved
     iXmlStreamNum = -1; // no XML stream yet
-    iExtGState = -1;
-    iPatternNum = -1;
     iBookmarks = -1;
     iDests = -1;
 
@@ -272,21 +314,17 @@ PdfWriter::PdfWriter(TellStream & stream, const Document * doc,
     embedLatexResource(5, "Pattern");
     embedLatexResource(6, "ColorSpace");
 
-    // embed all extgstate objects
+    // collect all opacity extgstate entries, they go inline into /ExtGState
     AttributeSeq os;
     iDoc->cascade()->allNames(EOpacity, os);
-    if (os.size() > 0) {
-	iExtGState = startObject();
-	iStream << "<<\n";
-	for (const auto & obj : os) {
-	    Attribute alpha = iDoc->cascade()->find(EOpacity, obj);
-	    assert(alpha.isNumber());
-	    iStream << opacityName(alpha.number()) << " << /CA " << alpha.number()
-		    << " /ca " << alpha.number() << " >>\n";
-	    iStream << opacityName(alpha.number()) << "s << /CA " << alpha.number()
-		    << " >>\n";
-	}
-	iStream << ">> endobj\n";
+    StringStream opacityStream(iOpacityStates);
+    for (const auto & obj : os) {
+	Attribute alpha = iDoc->cascade()->find(EOpacity, obj);
+	assert(alpha.isNumber());
+	opacityStream << opacityName(alpha.number()) << " << /CA " << alpha.number()
+		      << " /ca " << alpha.number() << " >>\n";
+	opacityStream << opacityName(alpha.number()) << "s << /CA " << alpha.number()
+		      << " >>\n";
     }
 
     // embed all gradients
@@ -294,59 +332,12 @@ PdfWriter::PdfWriter(TellStream & stream, const Document * doc,
     iDoc->cascade()->allNames(EGradient, gs);
     for (const auto & grad : gs) {
 	const Gradient * g = iDoc->cascade()->findGradient(grad);
-	int num = startObject();
-	iStream << "<<\n"
-		<< " /ShadingType " << int(g->iType) << "\n"
-		<< " /ColorSpace /DeviceRGB\n";
-	if (g->iType == Gradient::EAxial)
-	    iStream << " /Coords [" << g->iV[0] << " " << g->iV[1] << "]\n";
-	else
-	    iStream << " /Coords [" << g->iV[0] << " " << g->iRadius[0] << " " << g->iV[1]
-		    << " " << g->iRadius[1] << "]\n";
-
-	iStream << " /Extend [" << (g->iExtend ? "true true]\n" : "false false]\n");
-
-	if (g->iStops.size() == 2) {
-	    iStream << " /Function << /FunctionType 2 /Domain [ 0 1 ] /N 1\n"
-		    << "     /C0 [";
-	    g->iStops[0].color.saveRGB(iStream);
-	    iStream << "]\n"
-		    << "     /C1 [";
-	    g->iStops[1].color.saveRGB(iStream);
-	    iStream << "] >>\n";
-	} else {
-	    // need to stitch
-	    iStream << " /Function <<\n"
-		    << "  /FunctionType 3 /Domain [ 0 1 ]\n"
-		    << "  /Bounds [";
-	    int count = 0;
-	    for (int i = 1; i < size(g->iStops) - 1; ++i) {
-		if (g->iStops[i].offset > g->iStops[i - 1].offset) {
-		    iStream << g->iStops[i].offset << " ";
-		    ++count;
-		}
-	    }
-	    iStream << "]\n  /Encode [";
-	    for (int i = 0; i <= count; ++i) iStream << "0.0 1.0 ";
-	    iStream << "]\n  /Functions [\n";
-	    for (int i = 1; i < size(g->iStops); ++i) {
-		if (g->iStops[i].offset > g->iStops[i - 1].offset) {
-		    iStream << "   << /FunctionType 2 /Domain [ 0 1 ] /N 1 /C0 [";
-		    g->iStops[i - 1].color.saveRGB(iStream);
-		    iStream << "] /C1 [";
-		    g->iStops[i].color.saveRGB(iStream);
-		    iStream << "] >>\n";
-		}
-	    }
-	    iStream << "] >>\n";
-	}
-	iStream << ">> endobj\n";
-	iGradients[grad.index()] = num;
+	iGradients[grad.index()] = embedShading(g, false);
+	if (gradientHasAlpha(g)) iAlphaGradients[grad.index()] = embedShading(g, true);
     }
 
     // embed all tilings
     AttributeSeq ts;
-    std::map<int, int> patterns;
     iDoc->cascade()->allNames(ETiling, ts);
     if (ts.size() > 0) {
 	for (const auto & tiling : ts) {
@@ -367,17 +358,8 @@ PdfWriter::PdfWriter(TellStream & stream, const Document * doc,
 	    StringStream ss(s);
 	    ss << "0 0 100 " << t->iWidth << " re f\n";
 	    createStream(s.data(), s.size(), false);
-	    patterns[tiling.index()] = num;
+	    iTilings[tiling.index()] = num;
 	}
-
-	// create pattern dictionary
-	iPatternNum = startObject();
-	iStream << "<<\n";
-	for (const auto & pattern : ts) {
-	    iStream << "/Pat" << pattern.index() << " " << patterns[pattern.index()]
-		    << " 0 R\n";
-	}
-	iStream << ">> endobj\n";
     }
 
     // embed all symbols with xform attribute
@@ -395,16 +377,18 @@ PdfWriter::PdfWriter(TellStream & stream, const Document * doc,
 		BitmapFinder bm;
 		sym->iObject->accept(bm);
 		embedBitmaps(bm);
+		String s;
+		StringStream ss(s);
+		PdfPainter painter(iDoc->cascade(), ss);
+		sym->iObject->draw(painter);
+		std::vector<GradientObjs> gradObjs =
+		    embedGradientPatterns(painter.gradientUses());
 		int num = startObject();
 		iStream << "<<\n";
 		iStream << "/Type /XObject\n";
 		iStream << "/Subtype /Form\n";
 		iStream << "/BBox [" << bbox << "]\n";
-		createResources(bm);
-		String s;
-		StringStream ss(s);
-		PdfPainter painter(iDoc->cascade(), ss);
-		sym->iObject->draw(painter);
+		createResources(bm, gradObjs);
 		createStream(s.data(), s.size(), false);
 		iSymbols[sysi.index()] = num;
 	    }
@@ -429,6 +413,96 @@ int PdfWriter::startObject(int objnum) {
 
 bool PdfWriter::hasResource(String kind) const noexcept {
     return iResources && iResources->resourcesOfKind(kind);
+}
+
+//! Write a shading object, either with the colors or (alpha) with the stop opacities.
+int PdfWriter::embedShading(const Gradient * g, bool alpha) {
+    auto stopValue = [&](const Gradient::Stop & stop) {
+	if (alpha)
+	    iStream << stop.opacity;
+	else
+	    stop.color.saveRGB(iStream);
+    };
+    int num = startObject();
+    iStream << "<<\n"
+	    << " /ShadingType " << int(g->iType) << "\n"
+	    << (alpha ? " /ColorSpace /DeviceGray\n" : " /ColorSpace /DeviceRGB\n");
+    if (g->iType == Gradient::EAxial)
+	iStream << " /Coords [" << g->iV[0] << " " << g->iV[1] << "]\n";
+    else
+	iStream << " /Coords [" << g->iV[0] << " " << g->iRadius[0] << " " << g->iV[1]
+		<< " " << g->iRadius[1] << "]\n";
+
+    iStream << " /Extend [" << (g->iExtend ? "true true]\n" : "false false]\n");
+
+    if (g->iStops.size() == 2) {
+	iStream << " /Function << /FunctionType 2 /Domain [ 0 1 ] /N 1\n"
+		<< "     /C0 [";
+	stopValue(g->iStops[0]);
+	iStream << "]\n"
+		<< "     /C1 [";
+	stopValue(g->iStops[1]);
+	iStream << "] >>\n";
+    } else {
+	// need to stitch
+	iStream << " /Function <<\n"
+		<< "  /FunctionType 3 /Domain [ 0 1 ]\n"
+		<< "  /Bounds [";
+	int count = 0;
+	for (int i = 1; i < size(g->iStops) - 1; ++i) {
+	    if (g->iStops[i].offset > g->iStops[i - 1].offset) {
+		iStream << g->iStops[i].offset << " ";
+		++count;
+	    }
+	}
+	iStream << "]\n  /Encode [";
+	for (int i = 0; i <= count; ++i) iStream << "0.0 1.0 ";
+	iStream << "]\n  /Functions [\n";
+	for (int i = 1; i < size(g->iStops); ++i) {
+	    if (g->iStops[i].offset > g->iStops[i - 1].offset) {
+		iStream << "   << /FunctionType 2 /Domain [ 0 1 ] /N 1 /C0 [";
+		stopValue(g->iStops[i - 1]);
+		iStream << "] /C1 [";
+		stopValue(g->iStops[i]);
+		iStream << "] >>\n";
+	    }
+	}
+	iStream << "] >>\n";
+    }
+    iStream << ">> endobj\n";
+    return num;
+}
+
+//! Write a shading pattern (and soft mask, if needed) per gradient use.
+std::vector<PdfWriter::GradientObjs>
+PdfWriter::embedGradientPatterns(const std::vector<PdfPainter::GradientUse> & uses) {
+    std::vector<GradientObjs> objs;
+    for (const auto & use : uses) {
+	GradientObjs o;
+	o.pattern = startObject();
+	iStream << "<< /PatternType 2 /Shading " << iGradients[use.gradient]
+		<< " 0 R /Matrix [" << use.matrix << "] >> endobj\n";
+	o.smask = -1;
+	if (use.alpha) {
+	    // luminosity of the gray alpha shading, in the same coordinates as the
+	    // pattern
+	    String s;
+	    StringStream ss(s);
+	    ss << use.matrix << " cm /Sh sh\n";
+	    int form = startObject();
+	    iStream << "<<\n/Type /XObject\n/Subtype /Form\n"
+		    << "/BBox [-20000 -20000 20000 20000]\n"
+		    << "/Group << /S /Transparency /CS /DeviceGray >>\n"
+		    << "/Resources << /Shading << /Sh " << iAlphaGradients[use.gradient]
+		    << " 0 R >> >>\n";
+	    createStream(s.data(), s.size(), false);
+	    o.smask = startObject();
+	    iStream << "<< /Type /ExtGState /SMask << /Type /Mask /S /Luminosity /G "
+		    << form << " 0 R >> >> endobj\n";
+	}
+	objs.push_back(o);
+    }
+    return objs;
 }
 
 /*! Write all PDF resources to the PDF file, and record their object
@@ -626,7 +700,8 @@ void PdfWriter::embedBitmaps(const BitmapFinder & bm) {
     }
 }
 
-void PdfWriter::createResources(const BitmapFinder & bm) {
+void PdfWriter::createResources(const BitmapFinder & bm,
+				const std::vector<GradientObjs> & gradObjs) {
     // These are only the resources needed by Ipe drawing directly.
     // Resources used from inside text objects (e.g. by tikz)
     // are stored inside the XObject resources.
@@ -639,23 +714,31 @@ void PdfWriter::createResources(const BitmapFinder & bm) {
     if (iResources) iStream << "/Text";
     if (!bm.iBitmaps.empty()) iStream << "/ImageB/ImageC";
     iStream << "]\n";
-    // Shading
-    if (iGradients.size()) {
-	iStream << "  /Shading <<";
-	for (std::map<int, int>::const_iterator it = iGradients.begin();
-	     it != iGradients.end(); ++it)
-	    iStream << " /Grad" << it->first << " " << it->second << " 0 R";
-	iStream << " >>\n";
-    }
     // ExtGState
-    if (iExtGState >= 0) iStream << "  /ExtGState " << iExtGState << " 0 R\n";
+    bool hasMask = false;
+    for (const auto & o : gradObjs)
+	if (o.smask >= 0) hasMask = true;
+    if (!iOpacityStates.empty() || hasMask) {
+	iStream << "  /ExtGState <<\n" << iOpacityStates;
+	for (int i = 0; i < size(gradObjs); ++i)
+	    if (gradObjs[i].smask >= 0)
+		iStream << "/SM" << i << " " << gradObjs[i].smask << " 0 R\n";
+	iStream << ">>\n";
+    }
     // ColorSpace
-    if (iPatternNum >= 0) {
+    if (!iTilings.empty()) {
 	iStream << "  /ColorSpace << /PCS [/Pattern /DeviceRGB] ";
 	iStream << ">>\n";
     }
     // Pattern
-    if (iPatternNum >= 0) iStream << "  /Pattern " << iPatternNum << " 0 R\n";
+    if (!iTilings.empty() || !gradObjs.empty()) {
+	iStream << "  /Pattern <<";
+	for (const auto & t : iTilings)
+	    iStream << " /Pat" << t.first << " " << t.second << " 0 R";
+	for (int i = 0; i < size(gradObjs); ++i)
+	    iStream << " /GP" << i << " " << gradObjs[i].pattern << " 0 R";
+	iStream << " >>\n";
+    }
     // XObject
     // TODO: Is "hasResource" here used correctly?
     // From Tikz xobject resources seem to go into the Ipe xform.
@@ -680,7 +763,8 @@ void PdfWriter::createResources(const BitmapFinder & bm) {
 
 // --------------------------------------------------------------------
 
-void PdfWriter::paintView(Stream & stream, int pno, int view) {
+std::vector<PdfPainter::GradientUse> PdfWriter::paintView(Stream & stream, int pno,
+							  int view) {
     const Page * page = iDoc->page(pno);
     PdfPainter painter(iDoc->cascade(), stream);
     const auto viewMap = page->viewMap(view, iDoc->cascade());
@@ -709,6 +793,7 @@ void PdfWriter::paintView(Stream & stream, int pno, int view) {
 	    painter.popMatrix();
 	}
     }
+    return painter.gradientUses();
 }
 
 //! create contents and page stream for this page view.
@@ -726,12 +811,14 @@ void PdfWriter::createPageView(int pno, int view) {
     // create page stream
     String pagedata;
     StringStream sstream(pagedata);
+    std::vector<PdfPainter::GradientUse> gradientUses;
     if (iCompressLevel > 0) {
 	DeflateStream dfStream(sstream, iCompressLevel);
-	paintView(dfStream, pno, view);
+	gradientUses = paintView(dfStream, pno, view);
 	dfStream.close();
     } else
-	paintView(sstream, pno, view);
+	gradientUses = paintView(sstream, pno, view);
+    std::vector<GradientObjs> gradObjs = embedGradientPatterns(gradientUses);
 
     int firstLink = -1;
     int lastLink = -1;
@@ -794,7 +881,7 @@ void PdfWriter::createPageView(int pno, int view) {
     }
     iStream << "/Contents " << contentsobj << " 0 R\n";
     // iStream << "/Rotate 0\n";
-    createResources(bm);
+    createResources(bm, gradObjs);
     if (!page->effect(view).isNormal()) {
 	const Effect * effect = iDoc->cascade()->findEffect(page->effect(view));
 	if (effect) effect->pageDictionary(iStream);

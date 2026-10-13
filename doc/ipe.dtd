@@ -141,6 +141,7 @@
 	  fill CDATA #IMPLIED
 	  tiling CDATA "normal"
 	  gradient CDATA "normal"
+	  stroke-gradient CDATA "normal"
 	  dash CDATA #IMPLIED
 	  pen CDATA "normal"
 	  opacity CDATA "normal"
@@ -207,7 +208,8 @@
 <!ELEMENT stop EMPTY>
 <!ATTLIST stop
 	  offset CDATA #REQUIRED
-	  color CDATA #REQUIRED>
+	  color CDATA #REQUIRED
+	  opacity CDATA #IMPLIED>
 
 <!ELEMENT tiling EMPTY>
 <!ATTLIST tiling

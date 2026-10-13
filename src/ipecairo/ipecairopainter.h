@@ -117,6 +117,7 @@ protected:
     virtual void opStrokeFill(bool close, bool fill, bool stroke, bool eofill);
     void opsh();
     void createPattern();
+    void setGradientPattern(const Gradient * g, double opacity);
 
     static void cairoMatrix(cairo_matrix_t & cm, const Matrix & m);
     static void cairoTransform(cairo_t * cr, const Matrix & m);

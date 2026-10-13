@@ -64,6 +64,7 @@ public:
     void setStrokeOpacity(Attribute opaq);
     void setTiling(Attribute a);
     void setGradient(Attribute a);
+    void setStrokeGradient(Attribute a);
 
     //! Return opacity of the opject.
     inline Attribute opacity() const { return iOpacity; }
@@ -73,6 +74,8 @@ public:
     inline Attribute tiling() const { return iTiling; }
     //! Return gradient fill.
     inline Attribute gradient() const { return iGradient; }
+    //! Return gradient stroke.
+    inline Attribute strokeGradient() const { return iStrokeGradient; }
     inline TPathMode pathMode() const;
     inline Attribute stroke() const;
     inline Attribute fill() const;
@@ -150,6 +153,7 @@ private:
     Attribute iStrokeOpacity;
     Attribute iTiling;
     Attribute iGradient;
+    Attribute iStrokeGradient;
 
     Attribute iFArrowShape;
     Attribute iRArrowShape;

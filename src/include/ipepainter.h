@@ -59,6 +59,7 @@ public:
 	Fixed iStrokeOpacity;
 	Attribute iTiling;
 	Attribute iGradient;
+	Attribute iStrokeGradient;
     };
 
 public:
@@ -105,6 +106,7 @@ public:
     void setStrokeOpacity(Attribute opaq);
     void setTiling(Attribute til);
     void setGradient(Attribute grad);
+    void setStrokeGradient(Attribute grad);
 
     //! Return style sheet cascade.
     inline const Cascade * cascade() const { return iCascade; }
@@ -139,6 +141,8 @@ public:
     inline Attribute tiling() const { return iState.back().iTiling; }
     //! Return current gradient fill.
     inline Attribute gradient() const { return iState.back().iGradient; }
+    //! Return current gradient stroke.
+    inline Attribute strokeGradient() const { return iState.back().iStrokeGradient; }
 
     //! Return full current graphics state.
     inline const State & state() const { return iState.back(); }

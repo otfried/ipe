@@ -56,6 +56,14 @@ public:
     static void drawColor(Stream & stream, Color color, const char * gray,
 			  const char * rgb);
 
+    //! A shading pattern needed by the content stream, named /GP<index>.
+    struct GradientUse {
+	int gradient; //!< Attribute index of the gradient
+	Matrix matrix;
+	bool alpha; //!< Some stop has opacity < 1, needs soft mask /SM<index>
+    };
+    const std::vector<GradientUse> & gradientUses() const { return iGradientUses; }
+
 protected:
     virtual void doPush();
     virtual void doPop();
@@ -73,9 +81,17 @@ protected:
 protected:
     void drawAttributes();
     void drawOpacity(bool withStroke);
+    int gradientPattern(Attribute grad);
 
 protected:
     Stream & iStream;
+    std::vector<GradientUse> iGradientUses;
+    // path construction operators are collected here until the path is painted
+    String iPathString;
+    StringStream iPathStream;
+    // index into iGradientUses of the current fill/stroke gradient, or -1
+    int iFillUse = -1;
+    int iStrokeUse = -1;
     // iActiveState records the attribute settings that have been
     // recorded in the PDF output, to avoid repeating them
     // over and over again.
@@ -99,14 +115,24 @@ public:
     void createTrailer();
 
 private:
+    //! PDF objects for one use of a gradient: shading pattern and soft-mask ExtGState.
+    struct GradientObjs {
+	int pattern;
+	int smask; //!< -1 if the gradient has no per-stop opacity
+    };
+
     int startObject(int objnum = -1);
     int pageObjectNumber(int page);
     void createStream(const char * data, int size, bool preCompressed);
     void writeString(String text);
     void embedBitmap(Bitmap bitmap);
-    void paintView(Stream & stream, int pno, int view);
+    std::vector<PdfPainter::GradientUse> paintView(Stream & stream, int pno, int view);
     void embedBitmaps(const BitmapFinder & bm);
-    void createResources(const BitmapFinder & bm);
+    void createResources(const BitmapFinder & bm,
+			 const std::vector<GradientObjs> & gradObjs);
+    std::vector<GradientObjs>
+    embedGradientPatterns(const std::vector<PdfPainter::GradientUse> & uses);
+    int embedShading(const Gradient * g, bool alpha);
     void embedResources();
     void embedResource(String kind);
     void embedIpeXForm(const PdfDict * d);
@@ -128,10 +154,10 @@ private:
     int iDests;
     //! Compression level (0..9).
     int iCompressLevel;
-    //! Obj id of GState with opacity definitions.
-    int iExtGState;
-    //! Obj id of dictionary with pattern definitions.
-    int iPatternNum;
+    //! Entries of the /ExtGState resource for opacities.
+    String iOpacityStates;
+    //! Object numbers of tiling patterns, indexed by attribute name
+    std::map<int, int> iTilings;
     // Export only those pages
     int iFromPage;
     int iToPage;
@@ -147,6 +173,8 @@ private:
 
     //! Object numbers of gradients, indexed by attribute name
     std::map<int, int> iGradients;
+    //! Object numbers of gray shadings for stop opacities, indexed by attribute name
+    std::map<int, int> iAlphaGradients;
     //! Object numbers of symbols, indexed by attribute name
     std::map<int, int> iSymbols;
     struct PON {

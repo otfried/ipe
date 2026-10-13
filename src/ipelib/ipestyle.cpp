@@ -495,9 +495,13 @@ void StyleSheet::saveAsXml(Stream & stream, bool saveBitmaps) const {
 	if (g.iExtend) stream << " extend=\"yes\"";
 	if (!g.iMatrix.isIdentity()) stream << " matrix=\"" << g.iMatrix << "\"";
 	stream << ">\n";
-	for (int i = 0; i < size(g.iStops); ++i)
+	for (int i = 0; i < size(g.iStops); ++i) {
 	    stream << " <stop offset=\"" << g.iStops[i].offset << "\" color=\""
-		   << g.iStops[i].color << "\"/>\n";
+		   << g.iStops[i].color << "\"";
+	    if (g.iStops[i].opacity != 1.0)
+		stream << " opacity=\"" << g.iStops[i].opacity << "\"";
+	    stream << "/>\n";
+	}
 	stream << "</gradient>\n";
     }
 

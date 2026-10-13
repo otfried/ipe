@@ -589,6 +589,8 @@ bool ImlParser::parseStyle(StyleSheet & sheet) {
 		Gradient::Stop st;
 		st.color = Color(att["color"]);
 		st.offset = Lex(att["offset"]).getDouble();
+		st.opacity = 1;
+		if (att.has("opacity", str)) st.opacity = Lex(str).getDouble();
 		s.iStops.push_back(st);
 		tag = parseToTag();
 	    }

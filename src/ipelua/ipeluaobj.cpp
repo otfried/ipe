@@ -232,6 +232,7 @@ Attribute ipelua::check_property(Property prop, lua_State * L, int i) {
     case EPropOpacity:
     case EPropStrokeOpacity:
     case EPropGradient:
+    case EPropStrokeGradient:
     case EPropDecoration:
     case EPropTiling: // symbolic string only
     case EPropVariant: return Attribute(true, luaL_checklstring(L, i, nullptr));
@@ -296,6 +297,7 @@ void ipelua::check_allattributes(lua_State * L, int i, AllAttributes & all) {
     get_attribute(L, i, EPropStrokeOpacity, "strokeopacity", all.iStrokeOpacity);
     get_attribute(L, i, EPropTiling, "tiling", all.iTiling);
     get_attribute(L, i, EPropGradient, "gradient", all.iGradient);
+    get_attribute(L, i, EPropGradient, "strokegradient", all.iStrokeGradient);
     get_attribute(L, i, EPropVariant, "variant", all.iVariant);
 
     int t;

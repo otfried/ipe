@@ -321,6 +321,8 @@ function MODEL:properties_path(obj, m)
     local gradient = obj:get("gradient")
     m:add("tiling", "Tiling pattern: " .. tiling, tilingL, nil, tiling)
     m:add("gradient", "Gradient: " .. gradient, gradientL, nil, gradient)
+    local strokeGradient = obj:get("strokegradient")
+    m:add("strokegradient", "Stroke gradient: " .. strokeGradient, gradientL, nil, strokeGradient)
   end
   self:insertOpacity(m, obj)
 
@@ -466,6 +468,7 @@ function MODEL:multiAttributes(m, tm)
     m:add("fillrule", "Fill rule", fillrule)
     m:add("tiling", "Tiling pattern", tilings)
     m:add("gradient", "Gradient", gradients)
+    m:add("strokegradient", "Stroke gradient", gradients)
   end
 
   if tm.text then

@@ -76,6 +76,7 @@ const char * const property_names[] = {"pen",
 				       "strokeopacity",
 				       "tiling",
 				       "gradient",
+				       "strokegradient",
 				       "horizontalalignment",
 				       "verticalalignment",
 				       "linejoin",
@@ -500,6 +501,7 @@ AllAttributes::AllAttributes() {
     iStrokeOpacity = Attribute::OPAQUE();
     iTiling = Attribute::NORMAL();
     iGradient = Attribute::NORMAL();
+    iStrokeGradient = Attribute::NORMAL();
     iMarkShape = Attribute::NORMAL();
     iVariant = Attribute::UNDEFINED();
 }

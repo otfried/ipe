@@ -103,12 +103,14 @@ Path::Path(const XmlAttributes & attr)
 	iStrokeOpacity = iOpacity;
 
     iGradient = Attribute::NORMAL();
+    iStrokeGradient = Attribute::NORMAL();
     iTiling = Attribute::NORMAL();
 
     if (attr.has("gradient", str))
 	iGradient = Attribute(true, str);
     else if (attr.has("tiling", str))
 	iTiling = Attribute(true, str);
+    if (attr.has("stroke-gradient", str)) iStrokeGradient = Attribute(true, str);
 
     iPathMode = (stroked ? (filled ? EStrokedAndFilled : EStrokedOnly) : EFilledOnly);
 
@@ -167,6 +169,7 @@ void Path::init(const AllAttributes & attr, bool withArrows) {
 	iGradient = attr.iGradient;
     else
 	iGradient = Attribute::NORMAL();
+    iStrokeGradient = attr.iStrokeGradient;
     iLineCap = attr.iLineCap;
     iLineJoin = attr.iLineJoin;
     iFillRule = attr.iFillRule;
@@ -311,6 +314,8 @@ void Path::saveAsXml(Stream & stream, String layer) const {
     if (filled && !iTiling.isNormal()) stream << " tiling=\"" << iTiling.string() << "\"";
     if (filled && !iGradient.isNormal())
 	stream << " gradient=\"" << iGradient.string() << "\"";
+    if (stroked && !iStrokeGradient.isNormal())
+	stream << " stroke-gradient=\"" << iStrokeGradient.string() << "\"";
     stream << ">\n";
     iShape.save(stream);
     stream << "</path>\n";
@@ -405,6 +410,7 @@ void Path::draw(Painter & painter) const {
 	painter.setPen(iPen);
 	painter.setLineCap(lineCap());
 	painter.setLineJoin(lineJoin());
+	painter.setStrokeGradient(iStrokeGradient);
     }
     if (iPathMode >= EStrokedAndFilled) {
 	painter.setFill(iFill);
@@ -421,12 +427,6 @@ void Path::draw(Painter & painter) const {
 	painter.newPath();
 	iShape.draw(painter);
 	painter.drawPath(iPathMode);
-    }
-    if (iPathMode == EStrokedAndFilled && !iGradient.isNormal()) {
-	// need to stroke separately
-	painter.newPath();
-	iShape.draw(painter);
-	painter.drawPath(EStrokedOnly);
     }
     if ((iHasFArrow && iFArrowOk) || (iHasRArrow && iRArrowOk)) {
 	// Draw arrows
@@ -531,6 +531,9 @@ void Path::setGradient(Attribute grad) {
     iTiling = Attribute::NORMAL();
 }
 
+//! Set gradient stroke of the object.
+void Path::setStrokeGradient(Attribute grad) { iStrokeGradient = grad; }
+
 //! Set opacity of the object.
 void Path::setOpacity(Attribute opaq) { iOpacity = opaq; }
 
@@ -581,6 +584,7 @@ void Path::checkStyle(const Cascade * sheet, AttributeSeq & seq) const {
     checkSymbol(EOpacity, iStrokeOpacity, sheet, seq);
     if (!iTiling.isNormal()) checkSymbol(ETiling, iTiling, sheet, seq);
     if (!iGradient.isNormal()) checkSymbol(EGradient, iGradient, sheet, seq);
+    if (!iStrokeGradient.isNormal()) checkSymbol(EGradient, iStrokeGradient, sheet, seq);
 }
 
 bool Path::setAttribute(Property prop, Attribute value) {
@@ -624,6 +628,12 @@ bool Path::setAttribute(Property prop, Attribute value) {
     case EPropGradient:
 	if (value != gradient()) {
 	    setGradient(value);
+	    return true;
+	}
+	break;
+    case EPropStrokeGradient:
+	if (value != strokeGradient()) {
+	    setStrokeGradient(value);
 	    return true;
 	}
 	break;
@@ -714,6 +724,7 @@ Attribute Path::getAttribute(Property prop) const noexcept {
     case EPropStrokeOpacity: return strokeOpacity();
     case EPropTiling: return tiling();
     case EPropGradient: return gradient();
+    case EPropStrokeGradient: return strokeGradient();
     case EPropFArrow: return Attribute::Boolean(iHasFArrow);
     case EPropRArrow: return Attribute::Boolean(iHasRArrow);
     case EPropFArrowSize: return iFArrowSize;

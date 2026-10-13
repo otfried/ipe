@@ -14,6 +14,9 @@ Ipe 7.3.1
    versions of your slides in the same document, or make both a
    short conference and a long seminar talk.
 
+ * Gradients can now also be used for stroking, and can modulate
+   transparency.
+
  * Visual style sheet editor contributed by Dmitriy Morozov. Thanks!
 
  * Easily add a style sheet by selecting it by name.

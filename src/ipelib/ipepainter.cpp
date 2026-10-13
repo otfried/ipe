@@ -93,6 +93,7 @@ Painter::Painter(const Cascade * style) {
     state.iStrokeOpacity = Fixed(1);
     state.iTiling = Attribute::NORMAL();
     state.iGradient = Attribute::NORMAL();
+    state.iStrokeGradient = Attribute::NORMAL();
     iState.push_back(state);
     iMatrix.push_back(Matrix()); // identity
     iAttributeMap = nullptr;
@@ -361,6 +362,12 @@ void Painter::setGradient(Attribute grad) {
     assert(!iInPath);
     iState.back().iGradient = grad;
     if (!grad.isNormal()) iState.back().iTiling = Attribute::NORMAL();
+}
+
+//! Set gradient stroke.
+void Painter::setStrokeGradient(Attribute grad) {
+    assert(!iInPath);
+    iState.back().iStrokeGradient = grad;
 }
 
 //! Set symbol stroke color, resolving symbolic color.
