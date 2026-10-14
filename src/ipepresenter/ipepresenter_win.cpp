@@ -93,6 +93,7 @@ private:
     void zoomMain(int delta);
     void timerElapsed();
     void handlePdfViewMessage(int param, const Vector & pos);
+    void setLaser(bool on, const Vector & devPos = Vector::ZERO);
     virtual void showType3Warning(const char * s) override;
     virtual void browseLaunch(bool launch, String dest) override;
 
@@ -116,6 +117,7 @@ private:
     PdfView * iScreen;
 
     int iMainPercentage;
+    bool iLaserMode = false;
 
     // for fullscreen mode
     bool iFullScreen;
@@ -166,6 +168,7 @@ void AppUi::initUi() {
     AppendMenuA(hSubMenu, MF_STRING, EShowPresentation, "Show &Presentation\tF5");
     AppendMenuA(hSubMenu, MF_STRING, EFullScreen, "Full &Screen\tF11");
     AppendMenuA(hSubMenu, MF_STRING, EBlackout, "Blackout\tB");
+    AppendMenuA(hSubMenu, MF_STRING, ELaserPointer, "Laser pointer\tCtrl+L");
     AppendMenuA(hSubMenu, MF_STRING, EZoomIn, "Larger\tCtrl++");
     AppendMenuA(hSubMenu, MF_STRING, EZoomOut, "Smaller\tCtrl+-");
     AppendMenuA(hMenuBar, MF_STRING | MF_POPUP, UINT_PTR(hSubMenu), "&View");
@@ -268,6 +271,22 @@ void AppUi::handlePdfViewMessage(int param, const Vector & pos) {
     // ignore all messages before PDF file loaded
     if (!iPdf) return;
     int screen = param & 0xf0;
+    if (screen == 0) {
+	switch (param & 0x0f) {
+	case 1:
+	case 2:
+	    if (iLaserMode) {
+		setLaser(true, pos);
+		return;
+	    }
+	    break;
+	case 3:
+	    if (iLaserMode) setLaser(true, pos);
+	    return;
+	case 4: setLaser(false); return;
+	}
+    }
+    if ((param & 0x0f) > 2) return;
     // left button press on current view or screen view
     if ((param & 0x0f) == 1 && (screen == 0 || screen == 0x20)) {
 	PdfView * source = (screen == 0x20) ? iScreen : iCurrent;
@@ -283,6 +302,12 @@ void AppUi::handlePdfViewMessage(int param, const Vector & pos) {
     case 1: cmd(ENextView); break;
     case 2: cmd(EPreviousView); break;
     }
+}
+
+void AppUi::setLaser(bool on, const Vector & devPos) {
+    Vector pos = iCurrent->devToUser(devPos);
+    iCurrent->setLaser(on, pos);
+    iScreen->setLaser(on, pos);
 }
 
 void AppUi::toggleFullScreen() {
@@ -397,6 +422,10 @@ void AppUi::cmd(int cmd) {
     case EBlackout:
 	iScreen->setBlackout(!iScreen->blackout());
 	iScreen->updatePdf();
+	break;
+    case ELaserPointer:
+	iLaserMode = !iLaserMode;
+	if (!iLaserMode) setLaser(false);
 	break;
     case EZoomIn: zoomMain(+1); break;
     case EZoomOut:
@@ -606,6 +635,8 @@ LRESULT CALLBACK AppUi::wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 								   : MF_UNCHECKED);
 	    CheckMenuItem(ui->hMenuBar, EFullScreen,
 			  ui->iFullScreen ? MF_CHECKED : MF_UNCHECKED);
+	    CheckMenuItem(ui->hMenuBar, ELaserPointer,
+			  ui->iLaserMode ? MF_CHECKED : MF_UNCHECKED);
 	}
 	break;
     case WM_COMMAND:
@@ -726,6 +757,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{FVIRTKEY, VK_F11, AppUi::EFullScreen},
 	{FVIRTKEY, VK_F5, AppUi::EShowPresentation},
 	{FVIRTKEY, 'B', AppUi::EBlackout},
+	{FVIRTKEY | FCONTROL, 'L', AppUi::ELaserPointer},
     };
     HACCEL hAccel = CreateAcceleratorTable(accel, sizeof(accel) / sizeof(ACCEL));
 

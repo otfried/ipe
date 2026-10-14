@@ -40,6 +40,16 @@
 
 class PdfView;
 
+@class IpePdfView;
+
+// Optional methods of the window delegate
+@protocol IpePdfViewDelegate <NSObject>
+// kind: 0 = button pressed, 1 = dragged, 2 = released; return YES if handled
+- (BOOL)pdfView:(IpePdfView *)view
+     laserEvent:(int)kind
+     atLocation:(NSArray<NSNumber *> *)pos;
+@end
+
 @interface IpePdfView : NSView
 
 @property PdfView * pdfView;
@@ -55,12 +65,16 @@ public:
 
     void drawRect(NSRect rect);
 
+    void setLaser(bool on, const ipe::Vector & pos = ipe::Vector::ZERO);
+
 private:
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);
 
 private:
     IpePdfView * iView;
+    bool iLaserOn = false;
+    ipe::Vector iLaserPos; // in user coordinates
 };
 
 // --------------------------------------------------------------------

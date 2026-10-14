@@ -103,6 +103,12 @@
                     <action selector="blackout:" target="-1" id="blackout-action"/>
                   </connections>
                 </menuItem>
+                <menuItem title="Laser pointer" keyEquivalent="l" id="laser-pointer">
+                  <modifierMask key="keyEquivalentModifierMask" command="NO"/>
+                  <connections>
+                    <action selector="laserPointer:" target="-1" id="laser-pointer-action"/>
+                  </connections>
+                </menuItem>
               </items>
             </menu>
           </menuItem>

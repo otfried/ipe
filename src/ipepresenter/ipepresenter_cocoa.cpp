@@ -86,6 +86,7 @@ public:
     void setTime();
     void timerElapsed();
     void selectPage();
+    void setLaser(bool on, const ipe::Vector & pos = ipe::Vector::ZERO);
     virtual void showType3Warning(const char * s) override;
     virtual void browseLaunch(bool launch, String dest) override;
 
@@ -93,6 +94,7 @@ public:
     int iTime;
     bool iCountDown;
     bool iCountTime;
+    bool iLaserMode = false;
 
     NSWindow * iWindow;
     NSWindow * iScreenWindow;
@@ -226,6 +228,11 @@ void AppUi::setTime() {
     [iClock setStringValue:[NSString stringWithFormat:@"%d:%02d:%02d", iTime / 3600,
 						      (iTime / 60) % 60, iTime % 60]];
     [iRightSide adjustSubviews];
+}
+
+void AppUi::setLaser(bool on, const ipe::Vector & pos) {
+    iCurrent.pdfView->setLaser(on, pos);
+    iScreen.pdfView->setLaser(on, pos);
 }
 
 void AppUi::timerElapsed() {
@@ -385,7 +392,23 @@ static const char * const about_text =
 	item.state = ui->iCountTime ? NSOnState : NSOffState;
     } else if (item.action == @selector(blackout:)) {
 	item.state = ui->iScreen.pdfView->blackout() ? NSOnState : NSOffState;
+    } else if (item.action == @selector(laserPointer:)) {
+	item.state = ui->iLaserMode ? NSOnState : NSOffState;
     }
+    return YES;
+}
+
+- (BOOL)pdfView:(IpePdfView *)view
+     laserEvent:(int)kind
+     atLocation:(NSArray<NSNumber *> *)pos {
+    if (view != ui->iCurrent) return NO;
+    ipe::Vector p([pos[0] doubleValue], [pos[1] doubleValue]);
+    if (kind == 2) {
+	ui->setLaser(false);
+	return YES;
+    }
+    if (!ui->iLaserMode) return NO;
+    ui->setLaser(true, p);
     return YES;
 }
 
@@ -436,6 +459,11 @@ static const char * const about_text =
 - (void)blackout:(id)sender {
     ui->iScreen.pdfView->setBlackout(!ui->iScreen.pdfView->blackout());
     ui->iScreen.pdfView->updatePdf();
+}
+
+- (void)laserPointer:(id)sender {
+    ui->iLaserMode = !ui->iLaserMode;
+    if (!ui->iLaserMode) ui->setLaser(false);
 }
 
 - (void)setTime:(id)sender {

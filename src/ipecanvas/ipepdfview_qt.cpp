@@ -72,12 +72,39 @@ void PdfView::paintEvent(QPaintEvent * ev) {
     QImage bits(cairo_image_surface_get_data(iSurface), iWidth, iHeight,
 		QImage::Format_RGB32);
     qPainter.drawImage(r, bits, source);
+
+    if (iLaserOn) {
+	Vector d = userToDev(iLaserPos);
+	// radius relative to view height, so the spot looks the same on every screen
+	double radius = std::max(6.0, height() / 50.0);
+	QPointF center(d.x, d.y);
+	QRadialGradient glow(center, 2.0 * radius);
+	glow.setColorAt(0.0, QColor(255, 0, 0, 255));
+	glow.setColorAt(0.5, QColor(255, 0, 0, 255));
+	glow.setColorAt(1.0, QColor(255, 0, 0, 0));
+	qPainter.setRenderHint(QPainter::Antialiasing);
+	qPainter.setPen(Qt::NoPen);
+	qPainter.setBrush(glow);
+	qPainter.drawEllipse(center, 2.0 * radius, 2.0 * radius);
+    }
     qPainter.end();
+}
+
+void PdfView::setLaser(bool on, const Vector & pos) {
+    iLaserOn = on;
+    iLaserPos = pos;
+    QWidget::update();
 }
 
 void PdfView::mousePressEvent(QMouseEvent * ev) {
     Vector v = devToUser(Vector(ev->position().x(), ev->position().y()));
     emit mouseButton(ev->button() != Qt::LeftButton ? 1 : 0, v);
 }
+
+void PdfView::mouseMoveEvent(QMouseEvent * ev) {
+    emit mouseMoved(devToUser(Vector(ev->position().x(), ev->position().y())));
+}
+
+void PdfView::mouseReleaseEvent(QMouseEvent *) { emit mouseReleased(); }
 
 // --------------------------------------------------------------------

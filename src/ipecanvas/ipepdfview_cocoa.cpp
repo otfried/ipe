@@ -36,6 +36,8 @@
 #include <cairo-quartz.h>
 #include <cairo.h>
 
+#include <algorithm>
+
 using namespace ipe;
 
 // --------------------------------------------------------------------
@@ -92,9 +94,28 @@ void PdfView::drawRect(NSRect rect) {
 	}
 	cairo_paint(cr);
     }
+    if (iLaserOn) {
+	Vector d = userToDev(iLaserPos);
+	// radius relative to view height, so the spot looks the same on every screen
+	double radius = std::max(6.0, iHeight / 50.0);
+	cairo_pattern_t * glow =
+	    cairo_pattern_create_radial(d.x, d.y, 0.0, d.x, d.y, 2.0 * radius);
+	cairo_pattern_add_color_stop_rgba(glow, 0.0, 1.0, 0.0, 0.0, 1.0);
+	cairo_pattern_add_color_stop_rgba(glow, 0.5, 1.0, 0.0, 0.0, 1.0);
+	cairo_pattern_add_color_stop_rgba(glow, 1.0, 1.0, 0.0, 0.0, 0.0);
+	cairo_set_source(cr, glow);
+	cairo_paint(cr);
+	cairo_pattern_destroy(glow);
+    }
     cairo_destroy(cr);
     cairo_surface_finish(surface);
     cairo_surface_destroy(surface);
+}
+
+void PdfView::setLaser(bool on, const Vector & pos) {
+    iLaserOn = on;
+    iLaserPos = pos;
+    invalidate();
 }
 
 // --------------------------------------------------------------------
@@ -118,29 +139,62 @@ void PdfView::drawRect(NSRect rect) {
     self.pdfView->drawRect(rect);
 }
 
+- (NSArray<NSNumber *> *)userLocation:(NSEvent *)event {
+    NSPoint pw = [event locationInWindow];
+    NSPoint p = [self convertPoint:pw fromView:nil];
+    NSSize s = [self bounds].size;
+    // flip y-axis
+    p.y = s.height - 1 - p.y;
+    Vector q = self.pdfView->devToUser(Vector(p.x, p.y));
+    return @[ [NSNumber numberWithDouble:q.x], [NSNumber numberWithDouble:q.y] ];
+}
+
+- (BOOL)sendLaserEvent:(int)kind forEvent:(NSEvent *)event {
+    id<IpePdfViewDelegate> obj = (id<IpePdfViewDelegate>)self.window.delegate;
+    if (![obj respondsToSelector:@selector(pdfView:laserEvent:atLocation:)]) return NO;
+    return [obj pdfView:self laserEvent:kind atLocation:[self userLocation:event]];
+}
+
 - (void)mouseDown:(NSEvent *)event {
+    if ([self sendLaserEvent:0 forEvent:event]) return;
     id obj = self.window.delegate;
     if ([obj respondsToSelector:@selector(pdfViewMouseButton:atLocation:)]) {
-	NSPoint pw = [event locationInWindow];
-	NSPoint p = [self convertPoint:pw fromView:nil];
-	NSSize s = [self bounds].size;
-	// flip y-axis
-	p.y = s.height - 1 - p.y;
-	Vector q = self.pdfView->devToUser(Vector(p.x, p.y));
-	NSArray<NSNumber *> * qq =
-	    @[ [NSNumber numberWithDouble:q.x], [NSNumber numberWithDouble:q.y] ];
 	[obj performSelector:@selector(pdfViewMouseButton:atLocation:)
 		  withObject:event
-		  withObject:qq];
+		  withObject:[self userLocation:event]];
     }
+}
+
+- (void)mouseDragged:(NSEvent *)event {
+    [self sendLaserEvent:1 forEvent:event];
+}
+
+- (void)mouseUp:(NSEvent *)event {
+    [self sendLaserEvent:2 forEvent:event];
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
     [self mouseDown:event];
 }
 
+- (void)rightMouseDragged:(NSEvent *)event {
+    [self mouseDragged:event];
+}
+
+- (void)rightMouseUp:(NSEvent *)event {
+    [self mouseUp:event];
+}
+
 - (void)otherMouseDown:(NSEvent *)event {
     [self mouseDown:event];
+}
+
+- (void)otherMouseDragged:(NSEvent *)event {
+    [self mouseDragged:event];
+}
+
+- (void)otherMouseUp:(NSEvent *)event {
+    [self mouseUp:event];
 }
 
 - (void)keyDown:(NSEvent *)event {

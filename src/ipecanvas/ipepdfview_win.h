@@ -48,6 +48,8 @@ public:
 
     HWND windowId() const { return hwnd; }
 
+    void setLaser(bool on, const Vector & pos = Vector::ZERO);
+
 private:
     void wndPaint();
     void updateSize();
@@ -64,6 +66,8 @@ private:
     HWND hwnd;
     HWND target;
     int screen;
+    bool iLaserOn = false;
+    Vector iLaserPos; // in user coordinates
 };
 } // namespace ipe
 

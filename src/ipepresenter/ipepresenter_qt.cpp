@@ -170,7 +170,12 @@ MainWindow::MainWindow(BeamerView * bv, Qt::WindowFlags f)
     iBlackoutAction->setCheckable(true);
     iViewMenu->addAction(iBlackoutAction);
 
+    iLaserAction = new IpeAction(ELaserPointer, "Laser pointer", "L", this);
+    iLaserAction->setCheckable(true);
+    iViewMenu->addAction(iLaserAction);
+
     connect(iViewMenu, &QMenu::aboutToShow, [this]() {
+	iLaserAction->setChecked(iLaserMode);
 	iShowPresentationAction->setChecked(iScreen->isVisible());
 	iFullScreenAction->setChecked((iScreen->windowState() & Qt::WindowFullScreen)
 				      != 0);
@@ -215,7 +220,16 @@ MainWindow::MainWindow(BeamerView * bv, Qt::WindowFlags f)
 	    [this]() { fitBox(mediaBox(-1), iCurrent); });
     connect(iNext, &PdfView::sizeChanged, [this]() { fitBox(mediaBox(-2), iNext); });
 
+    connect(iCurrent, &PdfView::mouseMoved, [this](const Vector & pos) {
+	if (iLaserMode) setLaser(true, pos);
+    });
+    connect(iCurrent, &PdfView::mouseReleased, [this]() { setLaser(false); });
+
     connect(iCurrent, &PdfView::mouseButton, [this](int button, const Vector & pos) {
+	if (iLaserMode) {
+	    setLaser(true, pos);
+	    return;
+	}
 	const PdfDict * action = findLink(pos);
 	if (action) {
 	    interpretAction(action);
@@ -249,6 +263,10 @@ void MainWindow::cmd(int c) {
     case EBlackout:
 	iScreen->pdfView()->setBlackout(!iScreen->pdfView()->blackout());
 	iScreen->pdfView()->updatePdf();
+	break;
+    case ELaserPointer:
+	iLaserMode = !iLaserMode;
+	if (!iLaserMode) setLaser(false);
 	break;
 	//
     case EToggleTimeCounting: iClock->toggleCounting(); break;
@@ -325,6 +343,11 @@ void MainWindow::setView() {
 
     setWindowTitle(QIpe(currentLabel()));
     iNotes->setPlainText(QIpe(iAnnotations[iPdfPageNo]));
+}
+
+void MainWindow::setLaser(bool on, const Vector & pos) {
+    iCurrent->setLaser(on, pos);
+    iScreen->pdfView()->setLaser(on, pos);
 }
 
 void MainWindow::selectPage() {

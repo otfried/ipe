@@ -48,14 +48,24 @@ public:
     virtual void invalidate();
     virtual void invalidate(int x, int y, int w, int h);
 
+    void setLaser(bool on, const Vector & pos = Vector::ZERO);
+
 signals:
     void sizeChanged();
     void mouseButton(int, Vector);
+    void mouseMoved(Vector);
+    void mouseReleased();
 
 protected:
     virtual void paintEvent(QPaintEvent * ev);
     virtual void mousePressEvent(QMouseEvent * ev);
+    virtual void mouseMoveEvent(QMouseEvent * ev);
+    virtual void mouseReleaseEvent(QMouseEvent * ev);
     virtual QSize sizeHint() const;
+
+private:
+    bool iLaserOn = false;
+    Vector iLaserPos; // in user coordinates
 };
 
 } // namespace ipe

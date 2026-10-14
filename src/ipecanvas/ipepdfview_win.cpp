@@ -87,12 +87,31 @@ void PdfView::wndPaint() {
     cairo_translate(cr, -x0, -y0);
     cairo_set_source_surface(cr, iSurface, 0.0, 0.0);
     cairo_paint(cr);
+    if (iLaserOn) {
+	Vector d = userToDev(iLaserPos);
+	// radius relative to view height, so the spot looks the same on every screen
+	double radius = std::max(6.0, iHeight / 50.0);
+	cairo_pattern_t * glow =
+	    cairo_pattern_create_radial(d.x, d.y, 0.0, d.x, d.y, 2.0 * radius);
+	cairo_pattern_add_color_stop_rgba(glow, 0.0, 1.0, 0.0, 0.0, 1.0);
+	cairo_pattern_add_color_stop_rgba(glow, 0.5, 1.0, 0.0, 0.0, 1.0);
+	cairo_pattern_add_color_stop_rgba(glow, 1.0, 1.0, 0.0, 0.0, 0.0);
+	cairo_set_source(cr, glow);
+	cairo_paint(cr);
+	cairo_pattern_destroy(glow);
+    }
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
     BitBlt(hdc, x0, y0, w, h, bitsDC, 0, 0, SRCCOPY);
     DeleteDC(bitsDC);
     DeleteObject(bits);
     EndPaint(hwnd, &ps);
+}
+
+void PdfView::setLaser(bool on, const Vector & pos) {
+    iLaserOn = on;
+    iLaserPos = pos;
+    invalidate();
 }
 
 // --------------------------------------------------------------------
@@ -120,12 +139,26 @@ LRESULT CALLBACK PdfView::wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 	}
 	break;
     case WM_LBUTTONDOWN:
+	SetCapture(hwnd);
 	if (view) PostMessage(view->target, 0x8000, view->screen + 1, lParam);
 	break;
     case WM_RBUTTONDOWN:
     case WM_MBUTTONDOWN:
+	SetCapture(hwnd);
+	if (view) PostMessage(view->target, 0x8000, view->screen + 2, lParam);
+	break;
     case WM_XBUTTONDOWN:
 	if (view) PostMessage(view->target, 0x8000, view->screen + 2, lParam);
+	break;
+    case WM_MOUSEMOVE:
+	if (view && (wParam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON)))
+	    PostMessage(view->target, 0x8000, view->screen + 3, lParam);
+	break;
+    case WM_LBUTTONUP:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONUP:
+	if (GetCapture() == hwnd) ReleaseCapture();
+	if (view) PostMessage(view->target, 0x8000, view->screen + 4, lParam);
 	break;
     case WM_CLOSE: return 0; // do NOT allow default procedure to close
     case WM_DESTROY:

@@ -86,6 +86,7 @@ private:
     void selectPage();
     void showType3Warning(const char * s);
     void browseLaunch(bool launch, String dest);
+    void setLaser(bool on, const Vector & pos = Vector::ZERO);
 
 private:
     QMenu * iViewMenu;
@@ -95,6 +96,8 @@ private:
     IpeAction * iShowPresentationAction;
     IpeAction * iFullScreenAction;
     IpeAction * iBlackoutAction;
+    IpeAction * iLaserAction;
+    bool iLaserMode = false;
     PdfView * iCurrent;
     PdfView * iNext;
     BeamerView * iScreen;
