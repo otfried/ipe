@@ -27,6 +27,9 @@ Ipe 7.3.1
    add images to your document by simply dragging them into the
    canvas.
 
+ * The ordering of attributes in selectors and context-menus can now
+   be set in the preferences (#520).
+
  * Implement the XDG Base Directory Specification on Linux, so your
    local files are no longer in `~/.ipe`.  Check "Show configuration"
    in the Help menu if you are unsure where they should go (#513).

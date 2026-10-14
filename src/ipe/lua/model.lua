@@ -92,6 +92,10 @@ function MODEL:init(fname)
     self.ui:showTool(dock, vis)
   end
 
+  for kind, seq in pairs(prefs.order_attributes) do
+    self.ui:setPreferredOrder(kind, seq)
+  end
+
   -- on vscode, host is responsible for backup
   if config.toolkit ~= "htmljs" and prefs.autosave_interval then
     self.timer = ipeui.Timer(self, "autosave")

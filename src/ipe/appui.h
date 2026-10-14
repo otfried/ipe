@@ -136,6 +136,8 @@ public:
     virtual void setupSymbolicNames(const Cascade * sheet);
     void setGridAngleSize(Attribute abs_grid, Attribute abs_angle);
     void setAttributes(const AllAttributes & all, Cascade * sheet);
+    void setPreferredOrder(Kind kind, const std::vector<String> & values);
+    void reorderAttributes(Kind kind, AttributeSeq & seq);
 
     void wrapCall(String method, int nArgs);
     void luaShowPathStylePopup(Vector v);
@@ -236,6 +238,7 @@ protected:
     Cascade * iCascade;
     AllAttributes iAll; // current settings in UI
     std::vector<String> iComboContents[EUiView];
+    std::vector<String> iPreferredOrder[EVariant + 1];
 
     CanvasBase * iCanvas;
 

@@ -36,6 +36,23 @@ local function color_icon(sheets, name)
   return 0.0, 0.0, 0.0
 end
 
+local function reorder_attributes(kind, values)
+  local prefer = prefs.order_attributes[kind]
+  if not prefer or #prefer == 0 then return values end
+  local result = {}
+  for _, s in ipairs(prefer) do
+    if indexOf(s, values) then
+      result[#result + 1] = s
+    end
+  end
+  for _, s in ipairs(values) do
+    if not indexOf(s, result) then
+      result[#result + 1] = s
+    end
+  end
+  return result
+end
+
 function MODEL:saction_properties_popup()
   local sel = self:selection()
   if #sel > 1 then
@@ -248,11 +265,11 @@ end
 
 function MODEL:properties_path(obj, m)
   local sheet = self.doc:sheets()
-  local colors = sheet:allNames("color")
+  local colors = reorder_attributes("color", sheet:allNames("color"))
   local pathmodes = { "stroke only", "stroke && fill", "fill only" }
   local pathmodeL = { "stroked", "strokedfilled", "filled" }
-  local penL = sheet:allNames("pen")
-  local dashstyleL = sheet:allNames("dashstyle")
+  local penL = reorder_attributes("pen", sheet:allNames("pen"))
+  local dashstyleL = reorder_attributes("dashstyle", sheet:allNames("dashstyle"))
   local arrowsizeL = sheet:allNames("arrowsize")
   local arrowshapeL = symbolNames(sheet, "arrow/", "(spx)")
   local tilingL = sheet:allNames("tiling")
@@ -338,10 +355,10 @@ end
 function MODEL:properties_text(obj, m)
   local sheet = self.doc:sheets()
   local minipage = obj:get("minipage")
-  local colors = sheet:allNames("color")
-  local textsizeL = sheet:allNames("textsize")
-  local textstyleL = sheet:allNames("textstyle")
-  local labelstyleL = sheet:allNames("labelstyle")
+  local colors = reorder_attributes("color", sheet:allNames("color"))
+  local textsizeL = reorder_attributes("textsize", sheet:allNames("textsize"))
+  local textstyleL = reorder_attributes("textstyle", sheet:allNames("textstyle"))
+  local labelstyleL = reorder_attributes("labelstyle", sheet:allNames("labelstyle"))
   m:add("comment", "Text object")
   self:insertBasic(m, obj)
   local t = minipage and "minipage" or "label"
@@ -389,9 +406,9 @@ end
 
 function MODEL:properties_reference(obj, m)
   local sheet = self.doc:sheets()
-  local colors = sheet:allNames("color")
-  local sizes = sheet:allNames("symbolsize")
-  local pens = sheet:allNames("pen")
+  local colors = reorder_attributes("color", sheet:allNames("color"))
+  local sizes = reorder_attributes("symbolsize", sheet:allNames("symbolsize"))
+  local pens = reorder_attributes("pen", sheet:allNames("pen"))
   m:add("comment", "Reference object")
   m:add("comment", "Symbol name: " .. obj:symbol())
   self:insertBasic(m, obj)
@@ -423,15 +440,15 @@ function MODEL:multiAttributes(m, tm)
   m:add("transformations", "Transformations", transformations)
 
   local sheet = self.doc:sheets()
-  local colors = sheet:allNames("color")
-  local sizes = sheet:allNames("symbolsize")
-  local pens = sheet:allNames("pen")
+  local colors = reorder_attributes("color", sheet:allNames("color"))
+  local sizes = reorder_attributes("symbolsize", sheet:allNames("symbolsize"))
+  local pens = reorder_attributes("pen", sheet:allNames("pen"))
   local opacity = sheet:allNames("opacity")
   local pathmodes = { "stroke only", "stroke && fill", "fill only" }
   local pathmode = { "stroked", "strokedfilled", "filled" }
-  local dashstyle = sheet:allNames("dashstyle")
-  local arrowsizes = sheet:allNames("arrowsize")
-  local arrowshapes = symbolNames(sheet, "arrow/", "(spx)")
+  local dashstyle = reorder_attributes("dashstyle", sheet:allNames("dashstyle"))
+  local arrowsizes = reorder_attributes("arrowsize", sheet:allNames("arrowsize"))
+  local arrowshapes = reorder_attributes("arrows", symbolNames(sheet, "arrow/", "(spx)"))
   local tilings = sheet:allNames("tiling")
   table.insert(tilings, 1, "normal")
   local gradients = sheet:allNames("gradient")
@@ -439,8 +456,8 @@ function MODEL:multiAttributes(m, tm)
   local linecap = { "normal", "butt", "round", "square", }
   local linejoin = { "normal", "miter", "round", "bevel", }
   local fillrule = { "normal", "wind", "evenodd", }
-  local textsize = sheet:allNames("textsize")
-  local textstyle = sheet:allNames("textstyle")
+  local textsize = reorder_attributes("textsize", sheet:allNames("textsize"))
+  local textstyle = reorder_attributes("textstyle", sheet:allNames("textstyle"))
 
   if tm.path or tm.text or tm.reference then
     m:add("stroke", "Stroke color", colors, nil,

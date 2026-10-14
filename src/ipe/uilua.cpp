@@ -476,6 +476,22 @@ static int appui_setupSymbolicNames(lua_State * L) {
     return 0;
 }
 
+static int appui_setPreferredOrder(lua_State * L) {
+    AppUiBase ** ui = check_appui(L, 1);
+    Kind kind = Kind(luaL_checkoption(L, 2, nullptr, kind_names));
+    luaL_argcheck(L, lua_istable(L, 3), 3, "argument is not a table");
+    int no = lua_rawlen(L, 3);
+    std::vector<String> values;
+    for (int i = 1; i <= no; ++i) {
+	lua_rawgeti(L, 3, i);
+	luaL_argcheck(L, lua_isstring(L, -1), 3, "element is not a string");
+	values.push_back(lua_tostring(L, -1));
+	lua_pop(L, 1);
+    }
+    (*ui)->setPreferredOrder(kind, values);
+    return 0;
+}
+
 static int appui_setAttributes(lua_State * L) {
     AppUiBase ** ui = check_appui(L, 1);
     Cascade * sheets = check_cascade(L, 2)->cascade;
@@ -746,6 +762,7 @@ static const struct luaL_Reg appui_methods[] = {
     {"explain", appui_explain},
     {"setWindowTitle", appui_setWindowTitle},
     {"setupSymbolicNames", appui_setupSymbolicNames},
+    {"setPreferredOrder", appui_setPreferredOrder},
     {"setAttributes", appui_setAttributes},
     {"setGridAngleSize", appui_setGridAngleSize},
     {"setLayers", appui_setLayers},

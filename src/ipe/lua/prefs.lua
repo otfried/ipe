@@ -280,6 +280,15 @@ prefs.initial_attributes = {
   variant = "undefined",
 }
 
+-- Ordering of attribute values in UI
+prefs.order_attributes = {
+  color = { "black", "white", "darkred", "darkblue", "darkgreen",
+	    "yellow", "orange", "gold", "lightblue" },
+  dashstyle = { "normal", "dashed", "dotted" },
+  textsize = { "tiny", "script", "footnote", "small",
+	       "normal", "large", "Large", "LARGE", "huge", "Huge" },
+}
+
 -- Resolution settings
 
 -- When you select "normal size" in Ipe, this is the pixels

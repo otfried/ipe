@@ -632,6 +632,28 @@ void AppUiBase::luaLayerOrderChanged(std::vector<String> & order) {
 
 // --------------------------------------------------------------------
 
+void AppUiBase::setPreferredOrder(Kind kind, const std::vector<String> & values) {
+    iPreferredOrder[kind] = values;
+}
+
+void AppUiBase::reorderAttributes(Kind kind, AttributeSeq & seq) {
+    AttributeSeq result;
+    const auto & prefer = iPreferredOrder[kind];
+    for (const String & s : prefer) {
+	AttributeSeq::iterator it = std::find_if(seq.begin(), seq.end(), [&s](const Attribute & att) {
+	    return att.string() == s;
+	});
+	if (it != seq.end())
+	    result.push_back(*it);
+    }
+    for (const auto & att : seq) {
+	String s = att.string();
+	if (std::find(prefer.begin(), prefer.end(), s) == prefer.end())
+	    result.push_back(att);
+    }
+    std::swap(result, seq);
+}
+
 static String stripMark(Attribute mark) {
     String s = mark.string();
     if (s.left(5) == "mark/") {
@@ -658,6 +680,7 @@ void AppUiBase::showInCombo(const Cascade * sheet, Kind kind, int sel,
 	addCombo(sel, IPEABSOLUTE);
 	iComboContents[sel].push_back(IPEABSOLUTE);
     }
+    reorderAttributes(kind, seq);
     for (const auto & att : seq) {
 	String s = att.string();
 	addCombo(sel, s);
@@ -668,6 +691,7 @@ void AppUiBase::showInCombo(const Cascade * sheet, Kind kind, int sel,
 void AppUiBase::showMarksInCombo(const Cascade * sheet) {
     AttributeSeq seq;
     sheet->allNames(ESymbol, seq);
+    reorderAttributes(ESymbol, seq);
     for (const auto & att : seq) {
 	String s = stripMark(att);
 	if (!s.empty()) {
@@ -682,6 +706,7 @@ void AppUiBase::setupSymbolicNames(const Cascade * sheet) {
     for (int i = 0; i < EUiView; ++i) iComboContents[i].clear();
     AttributeSeq seq, absColor;
     sheet->allNames(EColor, seq);
+    reorderAttributes(EColor, seq);
     for (const auto & att : seq) absColor.push_back(sheet->find(EColor, att));
     addComboColors(seq, absColor);
     showInCombo(sheet, EPen, EUiPen);
