@@ -100,24 +100,30 @@ and for all, and to set the snap distance to a very small value like 3
 or 4.</p>
 <p>The features that you can make “magnetic” are the following:</p>
 <span class="target" id="index-10"></span><dl class="simple" id="index-11">
-<dt>vertices</dt><dd><p>are vertices of polygonal objects, control points of
-multiplicity three of splines, centers of circles and ellipses,
-centers and end points of circular arcs, and mark positions.</p>
+<dt>vertices</dt><dd><p>are visible vertices of polygonal paths and splines, the
+end points of circular arcs, and mark positions.</p>
 </dd>
 </dl>
 <span class="target" id="index-12"></span><dl class="simple" id="index-13">
+<dt>control points</dt><dd><p>are important points of objects that are not visible vertices.
+This includes control points of splines, centers of circles,
+ellipses, and arcs, as well as midpoints of segments and
+arcs, and the corners of images.</p>
+</dd>
+</dl>
+<span class="target" id="index-14"></span><dl class="simple" id="index-15">
 <dt>boundaries</dt><dd><p>are the object boundaries of polygonal objects,
 splines and splinegons, circles and ellipses, and circular arcs.</p>
 </dd>
 </dl>
-<span class="target" id="index-14"></span><dl class="simple" id="index-15">
+<span class="target" id="index-16"></span><dl class="simple" id="index-17">
 <dt>intersections</dt><dd><p>are the intersection points between the
 boundaries of path objects.</p>
 </dd>
 </dl>
-<span class="target" id="custom-grid-snapping"></span><span class="target" id="index-16"></span></div>
-<div class="section" id="index-17">
-<span id="id5"></span><h2>Custom grid snapping<a class="headerlink" href="#index-17" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="custom-grid-snapping"></span><span class="target" id="index-18"></span></div>
+<div class="section" id="index-19">
+<span id="id5"></span><h2>Custom grid snapping<a class="headerlink" href="#index-19" title="Permalink to this headline">¶</a></h2>
 <p>Sometimes you need a special grid, for instance a triangular grid, or
 a grid for making perspective drawings.  Since Ipe cannot offer every
 possible grid under the sun, it instead offers you snapping to custom
@@ -128,9 +134,9 @@ points between the objects in the <em>GRID</em> layer.  It does not
 matter if the layer is visible or not.</p>
 <p>The <em>grid maker</em> ipelet offers a few ready-made grids to be used as
 custom grids.</p>
-<span class="target" id="angular-snapping"></span><span class="target" id="index-18"></span><span class="target" id="index-19"></span><span class="target" id="index-20"></span><span class="target" id="index-21"></span></div>
-<div class="section" id="index-22">
-<span id="id6"></span><h2>Angular snapping<a class="headerlink" href="#index-22" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="angular-snapping"></span><span class="target" id="index-20"></span><span class="target" id="index-21"></span><span class="target" id="index-22"></span><span class="target" id="index-23"></span></div>
+<div class="section" id="index-24">
+<span id="id6"></span><h2>Angular snapping<a class="headerlink" href="#index-24" title="Permalink to this headline">¶</a></h2>
 <p>When <em>angular snapping</em> is enabled, the mouse position is restricted
 to lie on a set of lines through the <em>origin</em> of your current <em>axis
 system</em>. The lines are the lines whose angle with the <em>base direction</em>
@@ -141,7 +147,7 @@ snap lines indicated in the figure below. (In the figure the base
 direction—indicated with the arrow—is assumed horizontal.)</p>
 <img alt="_images/snaplines.svg" class="align-center" src="_images/snaplines.svg" /><p>For a snap angle of 180 degrees, snapping is to a single line through
 the current origin.</p>
-<p id="index-23">In order to use angular snapping, it is important to set the axis
+<p id="index-25">In order to use angular snapping, it is important to set the axis
 system correctly. To set the origin, move the mouse to the correct
 position, and press the <kbd class="kbd docutils literal notranslate">F1</kbd>-key. Note that angular snapping is
 <em>disabled</em> while setting the origin. This way you can set a new
@@ -161,7 +167,7 @@ horizontal), use <kbd class="kbd docutils literal notranslate">Ctrl+F2</kbd>.</p
 polygonal object.  The origin is set to an endpoint of the edge, and
 the base direction is aligned with it. This is useful to make objects
 parallel to a given edge.</p>
-<p id="index-24">For drawing rectilinear or c-oriented polygons, the origin should be
+<p id="index-26">For drawing rectilinear or c-oriented polygons, the origin should be
 set to the previous vertex at every step. This can be done by pressing
 <kbd class="kbd docutils literal notranslate">F1</kbd> every time you click the left mouse button, but that would
 not be very convenient. Therefore, Ipe offers a second angular snap
@@ -197,8 +203,8 @@ to a <em>one-dimensional</em> subspace of the canvas. Therefore, they are
 incompatible with the modes that try to snap to a zero-dimensional
 subspace, namely vertex snapping, intersection snapping, and grid
 snapping. Consequently, when one of the angular snapping modes is
-<em>on</em>, vertex snapping, intersection snapping, and grid snapping
-are ineffective.</p>
+<em>on</em>, vertex snapping, control point snapping, intersection snapping,
+and grid snapping are ineffective.</p>
 <p>On the other hand, it is reasonable to snap to boundaries while in an
 angular snapping mode, and this function is actually implemented
 correctly. When both angular and boundary snapping are <em>on</em>, Ipe
@@ -212,10 +218,10 @@ Ipe computes the intersection point between the snap lines defined by
 the two origins and snaps there. It the snap lines are parallel or
 coincide, automatic angular snapping is used.</p>
 <p>When no angular snapping mode is active, Ipe has three
-priorities. First, Ipe checks whether the closest vertex or
-intersection point is close enough. If that is not the case, the
-closest boundary edge is determined. If even that is too far away, Ipe
-uses grid snapping (assuming all these modes are enabled).</p>
+priorities. First, Ipe checks whether the closest vertex, control
+point, or intersection point is close enough. If that is not the case,
+the closest boundary edge is determined. If even that is too far away,
+Ipe uses grid snapping (assuming all these modes are enabled).</p>
 <p>Note that this can actually mean that snapping is <em>not</em> to the
 <em>closest</em> point on an object. Especially for intersections of two
 straight edges, the closest point can never be the intersection point,
@@ -227,7 +233,7 @@ as in the figure below!</p>
 snapping modes, especially angular snapping. Here are some examples
 showing what can be done with angular snapping.</p>
 <div class="section" id="example-1">
-<span id="index-25"></span><h3>Example 1:<a class="headerlink" href="#example-1" title="Permalink to this headline">¶</a></h3>
+<span id="index-27"></span><h3>Example 1:<a class="headerlink" href="#example-1" title="Permalink to this headline">¶</a></h3>
 <p>We are given segments <span class="math notranslate nohighlight">\(s_1\)</span>, <span class="math notranslate nohighlight">\(s_2\)</span>, and <span class="math notranslate nohighlight">\(e\)</span>, and we
 want to add the dashed vertical extensions through <span class="math notranslate nohighlight">\(p\)</span> and
 <span class="math notranslate nohighlight">\(q\)</span>.</p>
@@ -277,7 +283,7 @@ placed with boundary snapping.</p></li>
 </ol>
 </div>
 <div class="section" id="example-4">
-<span id="index-26"></span><h3>Example 4:<a class="headerlink" href="#example-4" title="Permalink to this headline">¶</a></h3>
+<span id="index-28"></span><h3>Example 4:<a class="headerlink" href="#example-4" title="Permalink to this headline">¶</a></h3>
 <p>We want to draw a line through <span class="math notranslate nohighlight">\(p\)</span>, tangent to <span class="math notranslate nohighlight">\(C\)</span> in
 <span class="math notranslate nohighlight">\(q\)</span>.</p>
 <img alt="_images/example4.svg" class="align-center" src="_images/example4.svg" /><ol class="arabic simple">
@@ -311,7 +317,7 @@ and group.</p></li>
 </ol>
 </div>
 <div class="section" id="example-6">
-<span id="index-27"></span><h3>Example 6:<a class="headerlink" href="#example-6" title="Permalink to this headline">¶</a></h3>
+<span id="index-29"></span><h3>Example 6:<a class="headerlink" href="#example-6" title="Permalink to this headline">¶</a></h3>
 <p>We want to draw a <span class="math notranslate nohighlight">\(c\)</span>-oriented polygon, where the angles between
 successive segments are multiples of <span class="math notranslate nohighlight">\(30^{\circ}\)</span>.
 The automatic angular snapping mode makes this pretty easy, but there is a
@@ -345,8 +351,8 @@ it is trivial to place <span class="math notranslate nohighlight">\(r\)</span>.<
 <li><a class="reference internal" href="#">Snapping</a><ul>
 <li><a class="reference internal" href="#index-8">Grid snapping</a></li>
 <li><a class="reference internal" href="#index-9">Context snapping</a></li>
-<li><a class="reference internal" href="#index-17">Custom grid snapping</a></li>
-<li><a class="reference internal" href="#index-22">Angular snapping</a></li>
+<li><a class="reference internal" href="#index-19">Custom grid snapping</a></li>
+<li><a class="reference internal" href="#index-24">Angular snapping</a></li>
 <li><a class="reference internal" href="#interaction-of-the-snapping-modes">Interaction of the snapping modes</a></li>
 <li><a class="reference internal" href="#examples">Examples</a><ul>
 <li><a class="reference internal" href="#example-1">Example 1:</a></li>
