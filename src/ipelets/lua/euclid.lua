@@ -31,10 +31,14 @@
 label = "Euclidean Geometry"
 
 about = [[
-Create the incircle or the three excircles of a triangle.
+Create the incircle, three excircles, or the Steiner inellipse or
+circumellipse of a triangle.
 
 Original Ipe 6 version by Jari Lappalainen, this ipelet is now part of
 Ipe.
+
+Updated by https://github.com/Otcavo to include Steiner ellipses
+and a collinearity guard
 ]]
 
 function incorrect(model)
@@ -61,6 +65,13 @@ function collect_vertices(model)
   local a = m * shape[1][1][1]
   local b = m * shape[1][1][2]
   local c = m * shape[1][2][2]
+
+  -- Collinearity guard
+  if (a - b):len() < 1e-9 or math.abs(ipe.LineThrough(a, b):side(c)) < 1e-9 then
+    incorrect(model)
+    return
+  end
+
   return a, b, c
 end
 
@@ -130,9 +141,78 @@ function create_excircles(model)
   model:creation("create excircles of triangles", group)
 end
 
+function steiner_ellipse(a, b, c, circum)
+
+  -- Make the transformation: imagine a circle around an equilateral 
+  -- triangle being projected onto our triangle and then project our 
+  -- circle in the same way
+
+  local u = b - a
+  local v = (1/math.sqrt(3)) * (2 * c - a - b)
+  local M = ipe.Matrix(u.x, u.y, v.x, v.y, a.x, a.y)
+
+  -- This is:
+  --
+  --     | u.x  v.x  a.x |
+  -- M = | u.y  v.y  a.y |   sends (0,0), (1,0), (1/2, root(3)/2) to a, b, c
+  --     |  0    0    1  |
+  --
+  -- M[0, 0, 1]			=[a.x , a.y, 1]				      = [a.x, a.y, 1]
+  -- M[1, 0, 1]			=[u.x + a.x, u.y + a.y, 1]		      = [b.x, b.y, 1]
+  -- M[1/2, root(3)/2, 1]	=[u.x/2 + v.x * root(3)/2 + a.x,
+  --				  u.y/2 + v.y * root(3)/2 + a.y, 1]    
+  --				=[a.x/2 + b.x/2 + c.x - a.x/2 - b.x/2,
+  --				  a.y/2 + b.y/2 + c.y - a.y/2 - b.y/2, 1]     = [c.x, c.y, 1]
+
+  -- https://en.wikipedia.org/wiki/Equilateral_triangle
+  -- radius of inscribed is sqrt(3)t/6, where t is the length of a side
+  -- and t/sqrt(3) for circumscribed
+
+  local r
+  if circum then
+	r = 1/math.sqrt(3)
+  else
+	r = math.sqrt(3)/6
+  end
+
+  local C = ipe.Matrix(r, 0, 0, r, 1/2, math.sqrt(3)/6)
+
+  -- This is:
+  --
+  --     | r     0   1/2       |
+  -- C = | 0     r   root(3)/6 |
+  --     | 0     0   1         |
+  --
+  -- An Ipe circle for context: local circle = { type="ellipse"; C }
+  
+  -- We can do local ellipse = { type="ellipse"; M * C }
+  -- that projects our circle in the same way as the triangle.
+  
+  return M * C
+end
+
+function create_steiner_ellipse(model, circum)
+
+  -- get our points
+
+  local a, b, c = collect_vertices(model)
+  if not a then return end
+
+  local ellipse = { type="ellipse"; steiner_ellipse(a, b, c, circum) } 
+  local obj = ipe.Path(model.attributes, { ellipse } )
+  if circum then
+  	model:creation("create the Steiner circumellipse of a triangle", obj)
+  else
+	model:creation("create the Steiner inellipse of a triangle", obj)
+  end
+end
+
 methods = {
   { label="Incircle of triangle", run = create_incircle },
   { label="Excircles of triangle", run = create_excircles },
+  { label="Steiner inellipse of triangle",
+    run = function(model) create_steiner_ellipse(model, false) end },
+  { label="Steiner circumellipse of triangle",
+    run = function(model) create_steiner_ellipse(model, true) end },
 }
-
 ----------------------------------------------------------------------
