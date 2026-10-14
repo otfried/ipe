@@ -79,9 +79,17 @@ The features that you can make "magnetic" are the following:
 .. index:: snapping to vertices
 
 vertices
-  are vertices of polygonal objects, control points of
-  multiplicity three of splines, centers of circles and ellipses,
-  centers and end points of circular arcs, and mark positions.
+  are visible vertices of polygonal paths and splines, the
+  end points of circular arcs, and mark positions.
+
+.. index:: control point snapping
+.. index:: snapping to control point
+
+control points
+  are important points of objects that are not visible vertices.
+  This includes control points of splines, centers of circles,
+  ellipses, and arcs, as well as midpoints of segments and
+  arcs, and the corners of images.
 
 .. index:: snapping to boundaries  
 .. index:: boundary snapping
@@ -226,8 +234,8 @@ to a *one-dimensional* subspace of the canvas. Therefore, they are
 incompatible with the modes that try to snap to a zero-dimensional
 subspace, namely vertex snapping, intersection snapping, and grid
 snapping. Consequently, when one of the angular snapping modes is
-*on*, vertex snapping, intersection snapping, and grid snapping
-are ineffective.
+*on*, vertex snapping, control point snapping, intersection snapping,
+and grid snapping are ineffective.
 
 On the other hand, it is reasonable to snap to boundaries while in an
 angular snapping mode, and this function is actually implemented
@@ -244,10 +252,10 @@ the two origins and snaps there. It the snap lines are parallel or
 coincide, automatic angular snapping is used.
 
 When no angular snapping mode is active, Ipe has three
-priorities. First, Ipe checks whether the closest vertex or
-intersection point is close enough. If that is not the case, the
-closest boundary edge is determined. If even that is too far away, Ipe
-uses grid snapping (assuming all these modes are enabled).
+priorities. First, Ipe checks whether the closest vertex, control
+point, or intersection point is close enough. If that is not the case,
+the closest boundary edge is determined. If even that is too far away,
+Ipe uses grid snapping (assuming all these modes are enabled).
 
 Note that this can actually mean that snapping is *not* to the
 *closest* point on an object. Especially for intersections of two
