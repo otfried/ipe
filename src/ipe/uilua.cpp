@@ -699,7 +699,9 @@ static int appui_createPresentation(lua_State * L) {
     Document ** doc = check_document(L, 2);
     const char * dst = luaL_checkstring(L, 3);
     const char * htmlTemplate = luaL_checkstring(L, 4);
-    Reveal reveal(*doc, 0, (*doc)->countPages() - 1);
+    int fromPage = luaL_checknumber(L, 5);
+    int toPage = luaL_checknumber(L, 6);
+    Reveal reveal(*doc, fromPage - 1, toPage - 1);
     lua_pushboolean(L, reveal.createPresentation(dst, htmlTemplate));
     return 1;
 }

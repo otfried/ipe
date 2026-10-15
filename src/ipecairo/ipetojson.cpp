@@ -377,7 +377,7 @@ void Reveal::createJsonView(Stream & out, int pageNo, int view, bool & sep) {
 
     const auto viewMap = page->viewMap(view, iDoc->cascade());
     painter.setAttributeMap(&viewMap);
-    std::vector<Matrix> layerMatrices = page->layerMatrices(view);
+    // std::vector<Matrix> layerMatrices = page->layerMatrices(view);
     painter.pushMatrix();
 
     Attribute bg = page->backgroundSymbol(iDoc->cascade());
@@ -392,10 +392,10 @@ void Reveal::createJsonView(Stream & out, int pageNo, int view, bool & sep) {
 	    auto obj = page->object(i);
 	    if (!obj->displayInVariant(variant)) continue;
 	    if (obj->type() == Object::EText) {}
-	    painter.pushMatrix();
-	    painter.transform(layerMatrices[page->layerOf(i)]);
+	    // painter.pushMatrix();
+	    // painter.transform(layerMatrices[page->layerOf(i)]);
 	    obj->draw(painter);
-	    painter.popMatrix();
+	    // painter.popMatrix();
 	}
     }
     painter.popMatrix();

@@ -34,6 +34,16 @@
     });
   }
 
+  // data-ipe-id="path:xxx"/"slide:xxx" guides exist only to drive entrance
+  // animations and shouldn't be visible themselves; hide every <use> that
+  // references one.
+  function hideMotionGuides(root) {
+    root.querySelectorAll('svg use[href]').forEach(use => {
+      const target = document.getElementById(use.getAttribute('href').slice(1));
+      if (/^(path|slide):/.test(target?.dataset.ipeId ?? '')) use.style.display = 'none';
+    });
+  }
+
   // Map identity key -> {use, target} for every <use> in `slide`. Objects
   // declaring data-ipe-id are matched across slides by that id (so they can
   // morph/translate); untagged objects fall back to their own id, which
@@ -77,10 +87,65 @@
     ];
   }
 
+  // True no-op: fromMatrix and toMatrix place the object identically, even
+  // though the two defs have different ids. Feeding GSAP a fromTo where both
+  // endpoints are the exact same matrix string is a degenerate tween that
+  // can end up writing transform="null"; skip it rather than animate nothing.
+  function isIdentityMatrix([a, b, c, d, e, f], eps = 1e-6) {
+    return Math.abs(a - 1) < eps && Math.abs(b) < eps && Math.abs(c) < eps &&
+           Math.abs(d - 1) < eps && Math.abs(e) < eps && Math.abs(f) < eps;
+  }
+
   // Object has no counterpart on the previous slide: fade the real <use> in
   // place rather than letting it pop in.
   function fadeIn(use) {
     gsap.from(use, { opacity: 0, duration: 0.5, ease: 'power1.out' });
+  }
+
+  // data-ipe-id="path:xxx" or "slide:xxx" on a (single-path) def designates
+  // a motion guide for object xxx — "path:" animates with rotation
+  // (appearAlongPath), "slide:" is position-only (appearViaSlide).
+  function motionGuideFor(objs, ipeId, prefix) {
+    return objs.get(`${prefix}:${ipeId}`)?.target ?? null;
+  }
+
+  // Appear already positioned at the guide path's start point, then follow
+  // it to the path's end — which should coincide with use's own, already-
+  // correct static position. immediateRender places it at the start
+  // synchronously so it never flashes at its natural resting spot first.
+  function appearAlongPath(use, pathEl) {
+    const rawPath = MotionPathPlugin.getRawPath(pathEl);
+    const end = MotionPathPlugin.getPositionOnPath(rawPath, 1, true);
+    const state = { progress: 0 };
+    gsap.to(state, {
+      progress: 1,
+      duration: 1,
+      ease: 'power1.inOut',
+      immediateRender: true,
+      onUpdate: () => {
+        const pos = MotionPathPlugin.getPositionOnPath(rawPath, state.progress, true);
+        gsap.set(use, {
+          x: pos.x - end.x,
+          y: pos.y - end.y,
+          rotation: pos.angle - end.angle,
+          transformOrigin: '50% 50%'
+        });
+      }
+    });
+  }
+
+  // Position-only variant (no rotation tracking): just follow the path's
+  // x/y, landing on use's own correct static position via the same
+  // offsetX/offsetY cancellation trick.
+  function appearViaSlide(use, pathEl) {
+    const rawPath = MotionPathPlugin.getRawPath(pathEl);
+    const end = MotionPathPlugin.getPositionOnPath(rawPath, 1);
+    gsap.to(use, {
+      motionPath: { path: pathEl, start: 0, end: 1, offsetX: -end.x, offsetY: -end.y },
+      duration: 1,
+      ease: 'power1.inOut',
+      immediateRender: true
+    });
   }
 
   // Object has no counterpart on the arriving slide. With transition: 'none'
@@ -98,10 +163,43 @@
     });
   }
 
+  // data-ipe-id="draw:xxx": draws itself in via DrawSVGPlugin, start to end,
+  // instead of fading in. DrawSVGPlugin needs getTotalLength() on the real
+  // path, but the def lives inside the hidden (display:none) container,
+  // where that returns a degenerate/zero length — so clone it into the
+  // current (visible) slide, same trick used for morphs, animate the
+  // clone, then swap back to the real (now fully-drawn) use when done.
+  function appearViaDraw(use, pathEl, currentSlide) {
+    const clone = pathEl.cloneNode(true);
+    clone.removeAttribute('id');
+    use.style.opacity = '0';
+    currentSlide.querySelector('svg > g').appendChild(clone);
+    gsap.fromTo(clone,
+      { drawSVG: '0%' },
+      { drawSVG: '100%', duration: 1, ease: 'power1.inOut', immediateRender: true,
+        onComplete: () => {
+          clone.remove();
+          use.style.opacity = '1';
+        }
+      });
+  }
+
+  // Whether currentSlide comes after previousSlide in document order — true
+  // for forward navigation (including jumps), false for backward. 
+  function isForwardMove(currentSlide, previousSlide) {
+    return !!(previousSlide.compareDocumentPosition(currentSlide) & Node.DOCUMENT_POSITION_FOLLOWING);
+  }
+
+  // Page-to-page moves (different outer <section>) skip identity matching
+  // entirely and always do a plain crossfade, even if two objects on
+  // unrelated pages happen to share a data-ipe-id.
+  //
   // For each object in the arriving slide, look up its logical identity
   // (data-ipe-id on the referenced def) and compare against the slide we
   // just came from — regardless of whether that was the next or previous
   // page in document order:
+  //   has motion guide          -> appear along the guide
+  //   has draw: prefix          -> appear as if it is being drawn
   //   no previous counterpart   -> fade in
   //   previous counterpart,
   //     different def           -> morph (path) or translate (data-ipe-position)
@@ -109,20 +207,38 @@
   // Anything left over in the previous slide with no counterpart here has
   // been removed, and is faded out via a clone (see fadeOutRemoved).
 
-  // TODO: DrawSVG plugin can draw a path object from one end to the other,
-  // like drawing a line on paper
-  // MotionPath can move an element along a given path.  The user would have to
-  // specify the path to be used.
-
   function runTransitions(currentSlide, previousSlide) {
     if (!previousSlide) return;
 
     const prevObjs = collectObjects(previousSlide);
     const currObjs = collectObjects(currentSlide);
 
+    const samePage = currentSlide.closest('.slides > section') === previousSlide.closest('.slides > section');
+    if (!samePage) {
+      currObjs.forEach(({ use }) => fadeIn(use));
+      prevObjs.forEach(prev => fadeOutRemoved(prev.target, currentSlide));
+      return;
+    }
+
     currObjs.forEach(({ use, target: toEl }, ipeId) => {
+      if (ipeId.startsWith("path:") || ipeId.startsWith("slide:")) return;
+
+      if (isForwardMove(currentSlide, previousSlide)) {
+        const rotateGuide = motionGuideFor(currObjs, ipeId, 'path');
+        if (rotateGuide) { appearAlongPath(use, rotateGuide); return; }
+        const slideGuide = motionGuideFor(currObjs, ipeId, 'slide');
+        if (slideGuide) { appearViaSlide(use, slideGuide); return; }
+      }
+
       const prev = prevObjs.get(ipeId);
-      if (!prev) { fadeIn(use); return; }
+
+      if (!prev && isForwardMove(currentSlide, previousSlide) && ipeId.startsWith('draw:')) 
+      { appearViaDraw(use, toEl, currentSlide); return; }
+
+      if (!prev) {
+        fadeIn(use);
+        return;
+      }
       if (prev.target.id === toEl.id) return;
 
       const toId = toEl.id;
@@ -137,7 +253,13 @@
       const toMat   = parseMatrix(toEl);
       if (fromMat && toMat) {
         const rel = multiplyMatrix(fromMat, invertMatrix(toMat));
+        if (isIdentityMatrix(rel)) return;  // placed identically; nothing to animate
         const wrapper = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        // Pre-seed the attribute: GSAP's first internal read of a <g> with no
+        // existing transform briefly writes a literal "null" before
+        // correcting itself (harmless, but a noisy console error) — having a
+        // valid starting value already in place avoids that probe entirely.
+        wrapper.setAttribute('transform', 'matrix(1,0,0,1,0,0)');
         use.parentNode.insertBefore(wrapper, use);
         wrapper.appendChild(use);
         gsap.fromTo(wrapper,
@@ -162,6 +284,9 @@
         morphSVG: `#${toId}`,
         fill: toEl.getAttribute('fill'),
         stroke: toEl.getAttribute('stroke'),
+        fillOpacity: toEl.getAttribute('fill-opacity') ?? 1,
+        strokeOpacity: toEl.getAttribute('stroke-opacity') ?? 1,
+        strokeWidth: toEl.getAttribute('stroke-width') ?? 1,
         onComplete: () => {
           clone.remove();
           use.style.opacity = '1';
@@ -170,11 +295,15 @@
     });
 
     prevObjs.forEach((prev, ipeId) => {
+      if (ipeId.startsWith("path:") || ipeId.startsWith("slide:"))
+	return;
       if (!currObjs.has(ipeId)) fadeOutRemoved(prev.target, currentSlide);
     });
   }
 
   convertCairoColors(document.getElementById('ipe-definitions'));
+
+  hideMotionGuides(document);
 
   gsap.registerPlugin(MorphSVGPlugin, DrawSVGPlugin, MotionPathPlugin);
   Reveal.initialize({

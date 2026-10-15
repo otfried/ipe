@@ -769,7 +769,7 @@ std::vector<PdfPainter::GradientUse> PdfWriter::paintView(Stream & stream, int p
     PdfPainter painter(iDoc->cascade(), stream);
     const auto viewMap = page->viewMap(view, iDoc->cascade());
     painter.setAttributeMap(&viewMap);
-    std::vector<Matrix> layerMatrices = page->layerMatrices(view);
+    // std::vector<Matrix> layerMatrices = page->layerMatrices(view);
 
     Attribute bg = page->backgroundSymbol(iDoc->cascade());
     const Symbol * background = iDoc->cascade()->findSymbol(bg);
@@ -787,10 +787,10 @@ std::vector<PdfPainter::GradientUse> PdfWriter::paintView(Stream & stream, int p
 	if (page->objectVisible(view, i)) {
 	    auto obj = page->object(i);
 	    if (!obj->displayInVariant(iVariant)) continue;
-	    painter.pushMatrix();
-	    painter.transform(layerMatrices[page->layerOf(i)]);
+	    // painter.pushMatrix();
+	    // painter.transform(layerMatrices[page->layerOf(i)]);
 	    obj->draw(painter);
-	    painter.popMatrix();
+	    // painter.popMatrix();
 	}
     }
     return painter.gradientUses();
@@ -882,10 +882,12 @@ void PdfWriter::createPageView(int pno, int view) {
     iStream << "/Contents " << contentsobj << " 0 R\n";
     // iStream << "/Rotate 0\n";
     createResources(bm, gradObjs);
+    /*
     if (!page->effect(view).isNormal()) {
 	const Effect * effect = iDoc->cascade()->findEffect(page->effect(view));
 	if (effect) effect->pageDictionary(iStream);
     }
+    */
     const Layout * layout = iDoc->cascade()->findLayout();
     iStream << "/MediaBox [ " << layout->paper() << "]\n";
 

@@ -90,6 +90,9 @@ public:
     void setCustom(Attribute value);
     Attribute getCustom() const noexcept;
 
+    void setAnimate(Attribute value);
+    Attribute getAnimate() const noexcept;
+
     bool displayInVariant(Attribute visibleVariant) const noexcept;
 
     //! Save the object in XML format.
@@ -145,6 +148,7 @@ protected:
 protected:
     Matrix iMatrix;
     Attribute iCustom;
+    Attribute iAnimate;
     Attribute iVariant;
     TPinned iPinned : 8;
     TTransformations iTransformations : 8;

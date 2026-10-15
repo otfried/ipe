@@ -75,14 +75,14 @@ Buffer Thumbnail::render(const Page * page, int view) {
     CairoPainter painter(iDoc->cascade(), iFonts.get(), cc, iZoom, true, false);
     const auto viewMap = page->viewMap(view, iDoc->cascade());
     painter.setAttributeMap(&viewMap);
-    std::vector<Matrix> layerMatrices = page->layerMatrices(view);
+    // std::vector<Matrix> layerMatrices = page->layerMatrices(view);
     painter.pushMatrix();
     for (int i = 0; i < page->count(); ++i) {
 	if (page->objectVisible(view, i)) {
-	    painter.pushMatrix();
-	    painter.transform(layerMatrices[page->layerOf(i)]);
+	    // painter.pushMatrix();
+	    // painter.transform(layerMatrices[page->layerOf(i)]);
 	    page->object(i)->draw(painter);
-	    painter.popMatrix();
+	    // painter.popMatrix();
 	}
     }
     painter.popMatrix();
@@ -161,7 +161,7 @@ bool Thumbnail::saveRender(TargetFormat fm, const char * dst, const Page * page,
     CairoPainter painter(iDoc->cascade(), iFonts.get(), cc, zoom, true, true);
     const auto viewMap = page->viewMap(view, iDoc->cascade());
     painter.setAttributeMap(&viewMap);
-    std::vector<Matrix> layerMatrices = page->layerMatrices(view);
+    // std::vector<Matrix> layerMatrices = page->layerMatrices(view);
     painter.pushMatrix();
 
     Attribute variant = iDoc->variant();
@@ -179,10 +179,10 @@ bool Thumbnail::saveRender(TargetFormat fm, const char * dst, const Page * page,
 	if (page->objectVisible(view, i)) {
 	    auto obj = page->object(i);
 	    if (!obj->displayInVariant(variant)) continue;
-	    painter.pushMatrix();
-	    painter.transform(layerMatrices[page->layerOf(i)]);
+	    // painter.pushMatrix();
+	    // painter.transform(layerMatrices[page->layerOf(i)]);
 	    obj->draw(painter);
-	    painter.popMatrix();
+	    // painter.popMatrix();
 	}
     }
 

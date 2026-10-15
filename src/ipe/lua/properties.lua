@@ -95,6 +95,7 @@ function MODEL:singlePopup(prim)
   local m = ipeui.Menu(self.ui:win())
   self["properties_" .. obj:type()](self, obj, m)
   m:add("action_custom", "Custom: " .. obj:getCustom())
+  m:add("action_animate", "Animate: " .. obj:getAnimate())
   if prefs.tablet_menu then
     m:add("action_cut", "Cut")
     m:add("action_copy", "Copy")

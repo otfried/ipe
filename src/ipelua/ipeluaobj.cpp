@@ -476,6 +476,20 @@ static int object_set_custom(lua_State * L) {
     return 0;
 }
 
+static int object_get_animate(lua_State * L) {
+    SObject * s = check_object(L, 1);
+    Attribute value = s->obj->getAnimate();
+    push_attribute(L, value);
+    return 1;
+}
+
+static int object_set_animate(lua_State * L) {
+    SObject * s = check_object(L, 1);
+    const char * value = luaL_checklstring(L, 2, nullptr);
+    s->obj->setAnimate(Attribute(false, value));
+    return 0;
+}
+
 static int object_position(lua_State * L) {
     Object * obj = check_object(L, 1)->obj;
     luaL_argcheck(L, obj->type() == Object::EText || obj->type() == Object::EReference, 1,
@@ -878,6 +892,8 @@ static const struct luaL_Reg object_methods[] = {{"__tostring", object_tostring}
 						 {"get", object_get},
 						 {"setCustom", object_set_custom},
 						 {"getCustom", object_get_custom},
+						 {"setAnimate", object_set_animate},
+						 {"getAnimate", object_get_animate},
 						 {"xml", object_xml},
 						 {"clone", object_clone},
 						 {"matrix", object_matrix},

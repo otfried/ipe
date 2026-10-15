@@ -346,7 +346,7 @@ void CanvasBase::drawObjects(cairo_t * cc) {
     painter.setDimmed(iDimmed);
     const auto viewMap = iPage->viewMap(iView, iCascade);
     painter.setAttributeMap(&viewMap);
-    std::vector<Matrix> layerMatrices = iPage->layerMatrices(iView);
+    // std::vector<Matrix> layerMatrices = iPage->layerMatrices(iView);
     painter.pushMatrix();
 
     const Symbol * background = iCascade->findSymbol(iPage->backgroundSymbol(iCascade));
@@ -365,10 +365,10 @@ void CanvasBase::drawObjects(cairo_t * cc) {
 	if (!iPage->objectVisible(iView, i)) continue;
 	auto obj = iPage->object(i);
 	if (!obj->displayInVariant(iVisibleVariant)) continue;
-	painter.pushMatrix();
-	painter.transform(layerMatrices[iPage->layerOf(i)]);
+	// painter.pushMatrix();
+	// painter.transform(layerMatrices[iPage->layerOf(i)]);
 	obj->draw(painter);
-	painter.popMatrix();
+	// painter.popMatrix();
     }
     painter.popMatrix();
     if (painter.type3Font()) iType3Font = true;

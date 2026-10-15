@@ -138,6 +138,7 @@ void AppUiBase::buildMenus() {
     addItem(EFileMenu, "New", "new");
     addItem(EFileMenu, "Open", "open");
     addItem(EFileMenu, "Save", "save");
+    addItem(EFileMenu, "Show page as presentation", "export_reveal_page");
     addItem(EFileMenu, "Show as presentation", "export_reveal");
 #ifdef IPEUI_JS
     addItem(EFileMenu, "Download", "download");
@@ -640,11 +641,10 @@ void AppUiBase::reorderAttributes(Kind kind, AttributeSeq & seq) {
     AttributeSeq result;
     const auto & prefer = iPreferredOrder[kind];
     for (const String & s : prefer) {
-	AttributeSeq::iterator it = std::find_if(seq.begin(), seq.end(), [&s](const Attribute & att) {
-	    return att.string() == s;
-	});
-	if (it != seq.end())
-	    result.push_back(*it);
+	AttributeSeq::iterator it =
+	    std::find_if(seq.begin(), seq.end(),
+			 [&s](const Attribute & att) { return att.string() == s; });
+	if (it != seq.end()) result.push_back(*it);
     }
     for (const auto & att : seq) {
 	String s = att.string();

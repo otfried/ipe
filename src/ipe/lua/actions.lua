@@ -936,7 +936,7 @@ function MODEL:action_vscode_export_eps()
 		     true, false) -- transparent, nocrop
 end
 
-function MODEL:action_export_reveal()
+function MODEL:export_reveal(fromPage, toPage)
   local fname = ipe.folder("latex", "presentation.html")
   if config.platform == "htmljs" then
     if self.file_name and (self.file_name:sub(-4) == ".ipe" or
@@ -950,7 +950,7 @@ function MODEL:action_export_reveal()
   local f = io.open(prefs.html_template, "r")
   htmlTemplate = f:read("*all")
   f:close()
-  local result = self.ui:createPresentation(self.doc, fname, htmlTemplate)
+  local result = self.ui:createPresentation(self.doc, fname, htmlTemplate, fromPage, toPage)
   print("Created presentation: ", result, fname)
   if (result) then
     if config.toolkit == "htmljs" then
@@ -961,6 +961,14 @@ function MODEL:action_export_reveal()
       os.execute(prefs.browser:format(fname))
     end
   end
+end
+
+function MODEL:action_export_reveal()
+  self:export_reveal(1, #self.doc)
+end
+
+function MODEL:action_export_reveal_page()
+  self:export_reveal(self.pno, self.pno)
 end
 
 function MODEL:action_export_pptx()
@@ -1812,9 +1820,9 @@ function MODEL:action_edit_view()
   local effect0 = p:effect(self.vno)
   local name0 = p:viewName(self.vno)
   local map0 = p:viewMap(self.vno)
-  local tfm0 = p:layerMatrices(self.vno)
-  local list = self.doc:sheets():allNames("effect")
-  table.insert(list, 1, "normal")
+  -- local tfm0 = p:layerMatrices(self.vno)
+  -- local list = self.doc:sheets():allNames("effect")
+  -- table.insert(list, 1, "normal")
   local d = ipeui.Dialog(self.ui:win(), "Edit view")
   local label = "View " .. self.vno .. " of " .. p:countViews()
   d:add("label", "label", { label=label }, 1, 1, 2, 1)
@@ -1822,18 +1830,18 @@ function MODEL:action_edit_view()
   d:add("name", "input", {}, -1, 2)
   d:add("map-label", "label", { label="Attribute map" }, 0, 1)
   d:add("map", "text", {}, -1, 2)
-  d:add("tfm-label", "label", { label="Transformations" }, 0, 1)
-  d:add("tfm", "text", {}, -1, 2)
-  d:add("effect-label", "label", { label="Effect" }, 0, 1)
-  d:add("combo", "combo", list, -1, 2)
+  -- d:add("tfm-label", "label", { label="Transformations" }, 0, 1)
+  -- d:add("tfm", "text", {}, -1, 2)
+  -- d:add("effect-label", "label", { label="Effect" }, 0, 1)
+  -- d:add("combo", "combo", list, -1, 2)
   d:setStretch("row", 4, 1)
-  d:setStretch("row", 5, 1)  
+  -- d:setStretch("row", 5, 1)  
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:set("name", name0)
   d:set("map", attribute_map(map0))
-  d:set("tfm", layer_matrices(tfm0))
-  d:set("combo", indexOf(effect0, list))
+  -- d:set("tfm", layer_matrices(tfm0))
+  -- d:set("combo", indexOf(effect0, list))
   if not d:execute() then return end
   local name1 = d:get("name")
   local effect1 = list[d:get("combo")]
@@ -1843,27 +1851,27 @@ function MODEL:action_edit_view()
 	      pno = self.pno,
 	      vno = self.vno,
 	      name0 = name0,
-	      effect0 = effect0,
+	      -- effect0 = effect0,
 	      map0 = map0,
-	      tfm0 = tfm0,
+	      -- tfm0 = tfm0,
 	      name1 = name1,
-	      effect1 = effect1,
+	      -- effect1 = effect1,
 	      map1 = map1,
-	      tfm1 = tfm1,
+	      -- tfm1 = tfm1,
 	    }
   t.undo = function (t, doc)
     local p = doc[t.pno]
-    p:setEffect(t.vno, t.effect0)
+    -- p:setEffect(t.vno, t.effect0)
     p:setViewName(t.vno, t.name0)
     p:setViewMap(t.vno, t.map0)
-    p:setLayerMatrices(t.vno, t.tfm0)
+    -- p:setLayerMatrices(t.vno, t.tfm0)
   end
   t.redo = function (t, doc)
     local p = doc[t.pno]
-    p:setEffect(t.vno, t.effect1)
+    -- p:setEffect(t.vno, t.effect1)
     p:setViewName(t.vno, t.name1)
     p:setViewMap(t.vno, t.map1)
-    p:setLayerMatrices(t.vno, t.tfm1)
+    -- p:setLayerMatrices(t.vno, t.tfm1)
   end
   self:register(t)
 end
@@ -3095,6 +3103,31 @@ function MODEL:saction_custom()
 	   end
   t.redo = function (t, doc)
              doc[t.pno][t.primary]:setCustom(t.custom)
+           end
+  self:register(t)
+end
+
+----------------------------------------------------------------------
+
+function MODEL:saction_animate()
+  local p = self:page()
+  local prim = p:primarySelection()
+  local obj = p[prim]
+  local animate = self:getString("Enter animate value", nil, obj:getAnimate())
+  if not animate then return end
+  if animate:match("^%s*$") then animate = "undefined" end
+  local t = { label="set animate",
+	      pno=self.pno,
+	      vno=self.vno,
+	      primary=prim,
+	      original=obj:getAnimate(),
+	      animate=animate,
+	    }
+  t.undo = function (t, doc)
+             doc[t.pno][t.primary]:setAnimate(t.original)
+	   end
+  t.redo = function (t, doc)
+             doc[t.pno][t.primary]:setAnimate(t.animate)
            end
   self:register(t)
 end

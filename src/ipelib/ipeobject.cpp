@@ -181,6 +181,8 @@ Object::Object(const XmlAttributes & attr) {
     }
     iCustom = Attribute::UNDEFINED();
     if (attr.has("custom", str) && !str.empty()) iCustom = Attribute(false, str);
+    iAnimate = Attribute::UNDEFINED();
+    if (attr.has("animate", str) && !str.empty()) iAnimate = Attribute(false, str);
     iVariant = Attribute::UNDEFINED();
     if (attr.has("variant", str)) iVariant = Attribute(true, str);
 }
@@ -191,6 +193,7 @@ Object::Object(const AllAttributes & attr) {
     iPinned = attr.iPinned;
     iTransformations = attr.iTransformations;
     iCustom = Attribute::UNDEFINED();
+    iAnimate = Attribute::UNDEFINED();
     iVariant = Attribute::UNDEFINED();
 }
 
@@ -199,6 +202,7 @@ Object::Object() {
     iPinned = ENoPin;
     iTransformations = ETransformationsAffine;
     iCustom = Attribute::UNDEFINED();
+    iAnimate = Attribute::UNDEFINED();
     iVariant = Attribute::UNDEFINED();
 }
 
@@ -208,6 +212,7 @@ Object::Object(const Object & rhs) {
     iPinned = rhs.iPinned;
     iTransformations = rhs.iTransformations;
     iCustom = rhs.iCustom;
+    iAnimate = rhs.iAnimate;
     iVariant = rhs.iVariant;
 }
 
@@ -233,6 +238,8 @@ void Object::saveAttributesAsXml(Stream & stream, String layer) const {
 	stream << " transformations=\"rigid\"";
     if (iCustom != Attribute::UNDEFINED())
 	stream << " custom=\"" << iCustom.string() << "\"";
+    if (iAnimate != Attribute::UNDEFINED())
+	stream << " animate=\"" << iAnimate.string() << "\"";
     if (iVariant != Attribute::UNDEFINED())
 	stream << " variant=\"" << iVariant.string() << "\"";
 }
@@ -336,6 +343,15 @@ void Object::setCustom(Attribute value) {
 
 //! Return value of the 'custom' attribute
 Attribute Object::getCustom() const noexcept { return iCustom; }
+
+//! Set the 'animate' attribute (used in HTML/JS animations)
+void Object::setAnimate(Attribute value) {
+    assert(value.isString());
+    iAnimate = value;
+}
+
+//! Return value of the 'animate' attribute
+Attribute Object::getAnimate() const noexcept { return iAnimate; }
 
 //! Should this object be displayed when 'visibleVariant' is selected
 bool Object::displayInVariant(Attribute visibleVariant) const noexcept {

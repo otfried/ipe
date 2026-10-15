@@ -82,11 +82,12 @@ String Reveal::createSVG() {
 
     for (int pageNo = iFromPage; pageNo <= iToPage; ++pageNo) {
 	const Page * page = iDoc->page(pageNo);
+	if (page->findLayer("NOPDF") >= 0) continue;
 
 	for (int view = 0; view < page->countViews(); ++view) {
 	    const auto viewMap = page->viewMap(view, iDoc->cascade());
 	    painter.setAttributeMap(&viewMap);
-	    std::vector<Matrix> layerMatrices = page->layerMatrices(view);
+	    // std::vector<Matrix> layerMatrices = page->layerMatrices(view);
 	    painter.pushMatrix();
 
 	    Attribute bg = page->backgroundSymbol(iDoc->cascade());
@@ -106,10 +107,10 @@ String Reveal::createSVG() {
 		if (page->objectVisible(view, i)) {
 		    auto obj = page->object(i);
 		    if (!obj->displayInVariant(variant)) continue;
-		    painter.pushMatrix();
-		    painter.transform(layerMatrices[page->layerOf(i)]);
+		    // painter.pushMatrix();
+		    // painter.transform(layerMatrices[page->layerOf(i)]);
 		    obj->draw(painter);
-		    painter.popMatrix();
+		    // painter.popMatrix();
 		    flushCairo();
 		}
 	    }
@@ -181,17 +182,17 @@ bool Reveal::writeSlides(Stream & out, String svg) {
 	    return false;
 	} else if (obj && o.path) {
 	    out << "<path id=\"ipe-" << pageNo << "-" << objNo << "-" << view << "\"";
-	    if (!obj->getCustom().isUndefined()) {
+	    if (!obj->getAnimate().isUndefined()) {
 		out << " data-ipe-id=\"";
-		out.putXmlString(obj->getCustom().string());
+		out.putXmlString(obj->getAnimate().string());
 		out << "\"";
 	    }
 	    out.putRaw(&sv[o.start + 5], o.fin - o.start - 5);
 	} else {
 	    out << "<g id=\"ipe-" << pageNo << "-" << objNo << "-" << view << "\"";
-	    if (obj && !obj->getCustom().isUndefined()) {
+	    if (obj && !obj->getAnimate().isUndefined()) {
 		out << " data-ipe-id=\"";
-		out.putXmlString(obj->getCustom().string());
+		out.putXmlString(obj->getAnimate().string());
 		out << "\"";
 		Matrix m = obj->matrix();
 		out << " data-ipe-matrix=\"" << m.a[0] << "," << m.a[1] << "," << m.a[2]
@@ -207,6 +208,7 @@ bool Reveal::writeSlides(Stream & out, String svg) {
     Attribute variant = iDoc->variant();
     for (int pageNo = iFromPage; pageNo <= iToPage; ++pageNo) {
 	const Page * page = iDoc->page(pageNo);
+	if (page->findLayer("NOPDF") >= 0) continue;
 	for (int view = 0; view < page->countViews(); ++view) {
 	    // TODO layer matrix in view for position computation?
 	    Attribute bg = page->backgroundSymbol(iDoc->cascade());
@@ -240,6 +242,7 @@ bool Reveal::writeSlides(Stream & out, String svg) {
 
     for (int pageNo = iFromPage; pageNo <= iToPage; ++pageNo) {
 	const Page * page = iDoc->page(pageNo);
+	if (page->findLayer("NOPDF") >= 0) continue;
 	if (page->countViews() > 1) out << "<section>\n";
 	for (int view = 0; view < page->countViews(); ++view) {
 	    out << "<section>\n"
