@@ -42,6 +42,7 @@ V = ipe.Vector
 current_symbol = nil
 current_group = nil
 current_element = nil
+local symbol_preview_serial = 0
 
 ----------------------------------------------------------------------
 
@@ -88,6 +89,37 @@ end
 
 ----------------------------------------------------------------------
 
+-- Take a symbol 'name' and draw it in an invisible Ipe document,
+-- then turn it into a PNG, based on visualstyles.lua
+function symbol_preview(model, name)
+  -- draw every symbol about 100 pixels across, however big it is
+  local box = ipe.Rect()
+  model.doc:sheets():find("symbol", name):addToBBox(box, ipe.Matrix(), false)
+  local pixels_per_point = 200 / math.max(box:width(), box:height(), 1)
+  local shrink_factor = 2
+  -- invisible document to make pictures on
+  local doc = ipe.Document()
+  -- Give it our style sheets, so it knows the symbol,
+  -- and place the symbol on its first page
+  doc:replaceSheets(model.doc:sheets():clone())
+  local p = doc[1]
+  p:insert(nil, ipe.Reference(model.attributes, name, ipe.Vector(0, 0)),
+           1, "alpha")
+
+  -- Number the PNGs and draw this one
+  symbol_preview_serial = symbol_preview_serial + 1
+  local png = ipe.folder("latex", string.format("symbol-preview-%d.png",
+                                                symbol_preview_serial))
+  model.ui:renderPage(doc, 1, 1, "png", png,
+        pixels_per_point, true, false)
+
+  -- return the image location for the picture box ("imagefile|<path>|<shrink>")
+  -- and the PNG's path so it can be deleted later
+  return string.format("imagefile|%s|%g", png, shrink_factor), png
+end
+
+----------------------------------------------------------------------
+
 function select_symbol(model)
   local s = model.doc:sheets():allNames("symbol")
   local symbolsByGroup = {}
@@ -113,26 +145,55 @@ function select_symbol(model)
   end
   table.sort(groups)
   local d = ipeui.Dialog(model.ui:win(), "Use symbol")
+
+  local png_files = {}
+
+  local function show_preview(d)
+    -- show the picture of the selected symbol, in whichever group
+    local g = groups[current_group]
+    -- the selected symbol
+    local selected = symbolsByGroup[g][d:get("select")]
+    local name = (g ~= "") and (g .. "/" .. selected) or selected
+    local image_location, png = symbol_preview(model, name)
+    png_files[#png_files + 1] = png
+    d:set("preview", image_location)
+  end
+
   groups.action = function (d)
-    		    local g = d:get("group")
+            local g = d:get("group")
 		    if g ~= current_group then
 		       current_group = g
 		       local syms = symbolsByGroup[groups[g]]
 		       d:set("select", syms)
+			   show_preview(d)
 		    end
 		  end
+
   d:add("label", "label", { label = "Select symbol" }, 1, 1, 1, 3)
   d:add("group", "combo", groups, 2, 1, 1, 3)
-  if current_group == nil then current_group = 1 end
+  if current_group == nil or current_group > #groups then current_group = 1 end
   d:set("group", current_group)
-  d:add("select", "combo", symbolsByGroup[groups[current_group]], 3, 1, 1, 3)
-  if current_element then
+
+  local symbols = symbolsByGroup[groups[current_group]]
+  symbols.action = show_preview
+  d:add("select", "combo", symbols, 3, 1, 1, 3)
+
+  d:add("preview", "image",
+        { width=120, height=120, value="unavailable|No preview yet" },
+        1, 4, 3, 1)
+
+  if current_element and current_element <= #symbols then
     d:set("select", current_element)
   end
+
+  show_preview(d)
+
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("column", 1, 1)
-  if not d:execute() then return end
+  local ok = d:execute()
+  for _, f in ipairs(png_files) do _G.os.remove(f) end
+  if not ok then return end
   current_element = d:get("select")
   local g = groups[current_group]
   local sym = symbolsByGroup[g][current_element]
