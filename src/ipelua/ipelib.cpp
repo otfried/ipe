@@ -719,6 +719,8 @@ static int get_folder(lua_State * L) {
     IpeFolder ft = IpeFolder(luaL_checkoption(L, 1, nullptr, folder_names));
     const char * name = nullptr;
     if (lua_isstring(L, 2)) name = lua_tostring(L, 2);
+    // Make the cache folder if it doesn't exist
+    if (ft == FolderLatex) Platform::mkdirTree(Platform::folder(FolderLatex));
     push_string(L, Platform::folder(ft, name));
     return 1;
 }

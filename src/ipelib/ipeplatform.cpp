@@ -582,7 +582,7 @@ String Platform::howToRunLatex(LatexType engine, String docname) noexcept {
     if (online) {
 #if defined(__APPLE__) && defined(IPEBUNDLE)
 	s += "\"";
-	s += folder(FolderLua, "../MacOS/ipecurl");
+	s += folder(FolderLua, "../../MacOS/ipecurl");
 	s += "\" ";
 #else
 	s += "ipecurl ";
