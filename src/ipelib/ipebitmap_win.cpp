@@ -87,19 +87,20 @@ bool dctDecode(Buffer dctData, Buffer pixelData) {
 // --------------------------------------------------------------------
 // The graphics file formats supported by GDI+ are
 // BMP, GIF, JPEG, PNG, TIFF.
-Bitmap Bitmap::readPNG(const char * fname, Vector & dotsPerInch, const char *& errmsg) {
+const char * Bitmap::readPNGInfo(const char * fname, int & w, int & h, uint32_t & flags,
+				 Buffer & pixels, Vector & dotsPerInch) {
     // load without color correction
     Gdiplus::Bitmap * bitmap = Gdiplus::Bitmap::FromFile(String(fname).w().data(), FALSE);
     if (bitmap->GetLastStatus() != Gdiplus::Ok) {
 	delete bitmap;
-	return Bitmap();
+	return "GDI+ Status not OK";
     }
 
     dotsPerInch =
 	Vector(bitmap->GetHorizontalResolution(), bitmap->GetVerticalResolution());
-
-    int w = bitmap->GetWidth();
-    int h = bitmap->GetHeight();
+    w = bitmap->GetWidth();
+    h = bitmap->GetHeight();
+    flags = Bitmap::ENative;
 
     Buffer pixelData(4 * w * h);
     Gdiplus::BitmapData * bitmapData = new Gdiplus::BitmapData;
@@ -114,13 +115,13 @@ Bitmap Bitmap::readPNG(const char * fname, Vector & dotsPerInch, const char *& e
 		     Gdiplus::ImageLockModeRead | Gdiplus::ImageLockModeUserInputBuf,
 		     PixelFormat32bppARGB, bitmapData);
 
-    Bitmap bm(w, h, Bitmap::ENative, pixelData);
+    // TODO check whether we need to do the processing of analyze() here
 
     bitmap->UnlockBits(bitmapData);
     delete bitmapData;
     delete bitmap;
 
-    return bm;
+    return nullptr;
 }
 
 // --------------------------------------------------------------------

@@ -30,6 +30,8 @@
 
 #include "ipebitmap.h"
 #include "ipeutils.h"
+
+#include <filesystem>
 #include <zlib.h>
 
 using namespace ipe;
@@ -212,7 +214,8 @@ void Bitmap::unpack(Buffer alphaChannel) {
     iImp->iData = pixels;
 }
 
-//! Determine if bitmap has alpha channel, colorkey, rgb values (does nothing for JPG).
+//! Determine if bitmap has alpha channel, colorkey, rgb values (does nothing for
+//! JPG).
 void Bitmap::analyze() {
     iImp->iColorKey = -1;
     iImp->iFlags &= EDCT | ERGB; // clear all other flags, we recompute them
@@ -308,10 +311,14 @@ void Bitmap::saveAsXml(Stream & stream, int id, int pdfObjNum) const {
     if (pdfObjNum >= 0) {
 	stream << " pdfObject=\"" << pdfObjNum;
 	if (hasAlpha()) stream << " " << pdfObjNum - 1;
-	stream << "\"/>\n";
-    } else {
+	stream << "\"";
+    }
+
+    if (isExternal()) {
+	stream << " path=\"" << externalPath() << "\"/>\n";
+    } else if (pdfObjNum < 0) {
 	// save data
-	auto data = embed();
+	auto data = getEmbedData();
 	stream << " length=\"" << data.first.size() << "\"";
 	if (hasAlpha()) stream << " alphaLength=\"" << data.second.size() << "\"";
 	stream << " encoding=\"base64\">\n";
@@ -323,6 +330,8 @@ void Bitmap::saveAsXml(Stream & stream, int id, int pdfObjNum) const {
 	}
 	b64.close();
 	stream << "</bitmap>\n";
+    } else {
+	stream << "/>";
     }
 }
 
@@ -350,7 +359,7 @@ void Bitmap::computeChecksum() { iImp->iChecksum = iImp->iData.checksum(); }
 /*! For Jpeg images, this is simply the bitmap data.  For other
   images, rgb/grayscale data and alpha channel are split and deflated
   separately. */
-std::pair<Buffer, Buffer> Bitmap::embed() const {
+std::pair<Buffer, Buffer> Bitmap::getEmbedData() const {
     if (isJpeg()) return std::make_pair(iImp->iData, Buffer());
     int npixels = width() * height();
     uint32_t * src = (uint32_t *)iImp->iData.data();
@@ -663,6 +672,86 @@ Bitmap Bitmap::readJpeg(const char * fname, Vector & dotsPerInch, const char *& 
 
     String a = Platform::readFile(fname);
     return Bitmap(width, height, flags, Buffer(a.data(), a.size()));
+}
+
+//! Read PNG image from file.
+/*! Returns the image as a Bitmap.
+  Sets \a dotsPerInch if the image file contains a resolution,
+  otherwise sets it to (0,0).
+  If reading the file fails, returns a null Bitmap,
+  and sets the error message \a errmsg.
+*/
+Bitmap Bitmap::readPNG(const char * fname, Vector & dotsPerInch, const char *& errmsg) {
+    int width;
+    int height;
+    uint32_t flags;
+    Buffer pixels;
+    errmsg = readPNGData(fname, width, height, flags, pixels, dotsPerInch);
+
+    if (!errmsg) {
+	return Bitmap(width, height, flags, pixels);
+    } else {
+	return Bitmap();
+    }
+}
+
+// --------------------------------------------------------------------
+
+Bitmap Bitmap::readExternal(String pathAttr, const XmlAttributes & attr,
+			    const char *& errmsg) {
+    Bitmap ret;
+    ret.init(attr);
+    ret.iImp->iPath = Lex(pathAttr).nextToken();
+    String path(Platform::realPath(ret.iImp->iPath));
+    Vector dotsPerInch;
+
+    errmsg = nullptr;
+    const char * errjpg = nullptr;
+    const char * errpng = readPNGData(path.z(), ret.iImp->iWidth, ret.iImp->iHeight,
+				      ret.iImp->iFlags, ret.iImp->iData, dotsPerInch);
+    if (errpng) {
+	FILE * file = Platform::fopen(path.z(), "rb");
+	if (!file) {
+	    errmsg = "Error opening file";
+	} else {
+	    errjpg = readJpegInfo(file, ret.iImp->iWidth, ret.iImp->iHeight, dotsPerInch,
+				  ret.iImp->iFlags);
+	    fclose(file);
+	    if (errjpg) {
+		errmsg = "Could not parse image file as PNG or JPEG";
+	    } else {
+		String a = Platform::readFile(path);
+		ret.iImp->iData = Buffer(a.data(), a.size());
+	    }
+	}
+    }
+
+    if (!errmsg) {
+	assert(ret.iImp->iWidth > 0 && ret.iImp->iHeight > 0);
+	assert(ret.iImp->iData.size() > 0);
+	ret.unpack(Buffer());
+	ret.computeChecksum();
+	ret.analyze();
+	ret.iImp->iFlags |= Bitmap::EExternal;
+	return ret;
+    } else {
+	ipeDebug(
+	    "Could not load linked image at '%s' in '%s', resolved to '%s':\n%s\n%s\n%s",
+	    pathAttr.z(), Platform::currentDirectory().z(), path.z(), errmsg, errpng,
+	    errjpg);
+	Bitmap eret;
+	eret.init(attr);
+	eret.iImp->iPath = ret.iImp->iPath;
+	eret.iImp->iFlags = Bitmap::EExternal;
+	return eret;
+    }
+}
+
+void Bitmap::changeExternalPathRelativeBase(String new_base) {
+    new_base = Platform::realPath(new_base);
+    String old_path = Platform::realPath(externalPath());
+    setExternalPath(
+	std::filesystem::proximate(old_path.s(), new_base.s()).generic_string());
 }
 
 // --------------------------------------------------------------------
