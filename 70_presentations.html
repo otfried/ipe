@@ -48,37 +48,229 @@
             
   <div class="section" id="presentations">
 <h1>Presentations<a class="headerlink" href="#presentations" title="Permalink to this headline">¶</a></h1>
-<p>An Ipe presentation is an Ipe PDF document that is presented using a
-PDF viewer and a video projector.  Ipe has a number of features that
-make it easier to make such presentations.</p>
-<p>Ipe comes with the presentation tool IpePresenter.  It shows the
-current slide in one window (which you can make full screen on the
-external display), while showing the current slide, the next slide,
-notes for the current page, as well as a timer on your own display.
-IpePresenter not only works for Ipe presentations, but also for
-presentations made with beamer.  It easily fits on and runs from a
-USB-stick, and does not require Latex on the computer where you give
-the presentation.</p>
-<p>The following sections explain Ipe features that are useful for making
-presentations.</p>
-<p>Ipe comes with a somewhat basic style sheet <code class="file docutils literal notranslate"><span class="pre">presentation.isy</span></code>
-for making presentations.  For a more sophisticated presentation style
-sheet, have a look at <a class="reference external" href="https://algo.uni-rostock.de/software/#c2508443">Jens’ webpage</a>.</p>
+<p>An Ipe presentation is an Ipe document with several pages (“slides”)
+that is presented using a video projector.</p>
+<p>The following sections explain a number of Ipe features that are
+useful for making such presentations.</p>
+<div class="section" id="pdf-or-html-js">
+<h2>PDF or HTML/JS?<a class="headerlink" href="#pdf-or-html-js" title="Permalink to this headline">¶</a></h2>
+<p>You have two choices for presenting Ipe presentations: PDF or HTML/JS</p>
+<p>The classic approach is to save the Ipe document in PDF format, and
+use any PDF viewer to present it.  One such viewer is the presentation
+tool IpePresenter that comes with Ipe.  It shows the current slide in
+one window (which you can make full screen on the external display),
+while showing the current slide, the next slide, notes for the current
+page, as well as a timer on your own display.  IpePresenter not only
+works for Ipe presentations, but also for presentations made with
+beamer.  It easily fits on and runs from a USB-stick, and does not
+require Latex on the computer where you give the presentation.</p>
+<p>The alternative approach is to save the Ipe document as an HTML/JS
+presentation.  This produces a single HTML-file, which you can open in
+any browser.  The HTML-file uses reveal.js and the animation library
+GSAP to implement navigation between slides, transitions, and
+animations.  Note that in the current version this HTML-presentation
+will not work offline, as it downloads the Javascript-libraries when
+you open it.  This presentation format supports various kinds of
+animations, see below.</p>
+</div>
 <div class="section" id="presentation-stylesheets">
 <h2>Presentation stylesheets<a class="headerlink" href="#presentation-stylesheets" title="Permalink to this headline">¶</a></h2>
 <p>A presentation <em>must</em> use a dedicated stylesheet.  Presentations must
 use much larger fonts than what is normal for a figure.  Don’t try to
 make use of the <code class="docutils literal notranslate"><span class="pre">LARGE</span></code> and <code class="docutils literal notranslate"><span class="pre">huge</span></code> textsizes, but use a stylesheet
 that properly defines <code class="docutils literal notranslate"><span class="pre">normal</span></code> to be a large textsize.</p>
-<p>Ipe comes with a style sheet <code class="file docutils literal notranslate"><span class="pre">presentation.isy</span></code> that can be used
-for presentations.  To create a new presentation, you can simply say:</p>
+<p>Ipe comes with a style sheet <cite>presentation</cite> that can be used for
+presentations.  To create an Ipe presentation, open “Style sheets”
+(Shift+Ctrl+S), select <cite>presentation</cite> and press “Add”.  Then select
+<cite>basic</cite> and press “Del”.  (<cite>presentation</cite> is meant to be used
+<em>instead</em> of <cite>basic</cite>, not in addition to it.)</p>
+<p>Note that <code class="file docutils literal notranslate"><span class="pre">presentation</span></code> has a rather simple look.  For a more
+sophisticated presentation style sheet, have a look at <a class="reference external" href="https://algo.uni-rostock.de/software/#c2508443">Jens’ webpage</a>.</p>
+<p>You will notice that in a presentation, only part of the “paper” is
+used for the contents.  This smaller area is called the <em>frame</em>.  The
+<em>Insert text box</em> function, for instance, creates text objects that
+fill exactly the width of the frame.</p>
+<p>You can set a title for each page using <span class="menuselection">Page ‣ Edit
+title &amp; sections</span>.  It will be shown in a uniform style (defined by
+the style sheet) outside the frame.</p>
+</div>
+<div class="section" id="views">
+<span id="id1"></span><h2>Views<a class="headerlink" href="#views" title="Permalink to this headline">¶</a></h2>
+<p>When making a presentation, one would often like to present a page
+incrementally. For instance, I would first like to show a polygon,
+then add its triangulation, and finally color the vertices.  <em>Views</em>
+make it possible to do this nicely.</p>
+<p>An Ipe document consists of several pages, each of which can consist
+of an arbitrary number of <em>views</em>.  When saving as PDF, each view
+generates a separate PDF page (if you only look at the result in a PDF
+viewer, you cannot tell whether two pages are actually two views of
+the same Ipe page or two different Ipe pages).  When saving as a
+HTML/JS presentation, the views of a single page become a <em>vertical</em>
+<em>stack</em> of slides in the deck.</p>
+<p>An Ipe page consists of a number of objects, a number of layers, and a
+number of views.  Each object belongs to exactly one layer.  A layer
+can be shown by any number of views—a view is really just a list of
+layers to be presented. In addition, a view keeps a record of the
+current active layer—this makes it easy to move around your views
+and edit them.</p>
+<p>Views can also give a different meaning to symbolic attributes, so
+that objects that appear in blue on one view will be red on the next
+one.  One can also change the dash pattern and pen width, and can even
+replace one symbol by a different one.</p>
+<div class="section" id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>To return to our polygon triangulation example, let’s create an empty
+page.  We draw a polygon into the default layer <em>alpha</em>.  Now use
+<span class="menuselection">Views ‣ New layer, new view</span>, and draw the
+triangulation into the new layer <em>beta</em>.  Note that the function not
+only created a new layer, but also a second view showing both <em>alpha</em>
+and <em>beta</em>.  Try moving back and forth between the two views (using
+the <kbd class="kbd docutils literal notranslate">PageUp</kbd> and <kbd class="kbd docutils literal notranslate">PageDown</kbd> keys). You’ll see changes in the
+layer list on the left: in view 1, layer <em>alpha</em> is selected and
+active, in view 2, both layers are selected and <em>beta</em> is active.
+Create a third layer and view, and mark the vertices.</p>
+<p>Save in PDF format, and voila, you have a lovely little presentation.
+The result is available <a class="reference external" href="https://github.com/otfried/ipe/raw/master/examples/polygon.pdf">here</a>.</p>
+</div>
+<div class="section" id="text-boxes">
+<h3>Text boxes<a class="headerlink" href="#text-boxes" title="Permalink to this headline">¶</a></h3>
+<p>In presentations, one often has slides with mostly text.  The
+<a class="reference internal" href="30_objects.html#text-objects"><span class="std std-ref">textbox</span></a> object is convenient for this, as one
+doesn’t need to use the mouse to create it.  To create a slide where
+several text items appear one by one, one only needs to press F10 to
+create a textbox, then <kbd class="kbd docutils literal notranslate">Shift+Ctrl+I</kbd> to make a new view, F10
+again for the next textbox, and so on.  Finally, one moves the
+textboxes vertically for the most pleasing effect (<em>Shift+Alt+Left
+Mouse</em> does a constrained vertical translation, or <em>Shift+Left Mouse</em>
+in <em>Translate</em> mode).</p>
+</div>
+</div>
+<div class="section" id="animations">
+<h2>Animations<a class="headerlink" href="#animations" title="Permalink to this headline">¶</a></h2>
+<p>If you save your presentation in HTML/JS format, then you can use
+animations for the transitions between different views of the same
+page.</p>
+<p>The basic idea is very simple: To animate an Ipe object, you give it a
+<em>name</em> by setting the <cite>animate</cite> attribute in the context menu.  When
+two consecutive views contain an object with the same <cite>animate</cite> name,
+then the object will be animated during the transition from the first
+view to the second.</p>
+<p>For path objects, the animation will completely “morph” the object
+from the first view into the second.  A triangle can smoothly turn
+into rectangle or even a circle, colors blend, opacity changes, line
+width grows or shrinks.</p>
+<p>For all other objects, such as groups, text, images, or references,
+the animation is limited to changing the transformation matrix of the
+object.  So the object will smoothly move from its original position
+to the new position, rotating and scaling along the way.</p>
+<p>If the object is a single open path, you can set the <cite>animate</cite> name to
+start with <cite>draw:</cite>, for instance <cite>draw:my-blue-path</cite>.  On the first
+view that includes the object, it will appear as if drawn, from
+starting point to end point.  (You can do that for other path objects
+as well, but the resulting animation is less predictable.)</p>
+<p>The most involved animation is to make an object (any object, be it
+path, group, or text) move along a given path.  For this to happen,
+you give the object an <cite>animate</cite> name, for instance <cite>myobject</cite>.  Then
+you draw a <em>guide</em> <em>path</em>: a second object consisting of a single open
+path, which you name <cite>slide:myobject</cite> or <cite>path:myobject</cite>.  When
+entering a view that contains the object <em>and</em> a corresponding guide
+path, it will follow the guide path to its target position.  With
+<cite>slide:</cite>, it will only translate, with <cite>path:</cite>, it will also rotate as
+the guide path turns.  Note that it doesn’t matter if the previous
+view contained an object with the same <cite>animate</cite> name - the guide path
+animation has priority.</p>
+<p>So you can have an object with name <cite>myobject</cite> in several consecutive
+views.  In transitions without a guide path it will morph or
+transform, in transitions with guide path it will follow the guide
+path.</p>
+<p>The guide path rotation is always around the center of the bounding
+box of the object (in its target position).  You will therefore obtain
+the best results if you draw the path such that it ends in that point
+(that is, in the center of the bounding box of the object in its
+target position).  Let the path start in the corresponding point of
+the initial position, and make sure that the tangent directions in the
+initial and final position are the same (from the object’s
+perspective).  So, for instance, if the object itself is oriented
+identically in the start and final position, then the tangent
+directions should also be the same.</p>
+</div>
+<div class="section" id="bookmarks">
+<h2>Bookmarks<a class="headerlink" href="#bookmarks" title="Permalink to this headline">¶</a></h2>
+<p>You can set a section title and a subsection title for each page of an
+Ipe document.  Theses titles will be shown in the <em>bookmarks list</em>
+(right-click on a toolbar to make it visible).  Double-clicking a
+title brings you directly to its page, making navigation of long
+documents much easier.  The titles are also exported to PDF, and are
+visible in the bookmarks view of PDF viewers.</p>
+<p>You can also use the section title of a page to refer to this page in
+<strong class="program">ipetoipe</strong> and <strong class="program">iperender</strong>.</p>
+</div>
+<div class="section" id="excluding-a-page-from-the-presentation">
+<h2>Excluding a page from the presentation<a class="headerlink" href="#excluding-a-page-from-the-presentation" title="Permalink to this headline">¶</a></h2>
+<p>If you add a layer with name <code class="docutils literal notranslate"><span class="pre">NOPDF</span></code> to a page (it does not need to
+be visible in any view of the page), then the page is not included in
+the presentation.  So while Ipe will show the page normally, viewing
+the document with a PDF reader (including IpePresenter) or as a
+HTML/JS presentation will not show that page.</p>
+</div>
+<div class="section" id="tricks-with-views">
+<h2>Tricks with views<a class="headerlink" href="#tricks-with-views" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="changing-symbolic-values-inside-a-view">
+<h3>Changing symbolic values inside a view<a class="headerlink" href="#changing-symbolic-values-inside-a-view" title="Permalink to this headline">¶</a></h3>
+<p>Imagine you have an object that is shown in dark orange on your
+current page, but on one specific view you want to highlight the
+object in purple.</p>
+<p>To achieve this, go to the view, and open <em>Edit view</em> from the
+<em>Views</em> menu.  In the attribute map field, write this line:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">color</span><span class="p">:</span><span class="n">darkorange</span><span class="o">=</span><span class="n">purple</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>You will notice that all objects on the page that had the
+<code class="docutils literal notranslate"><span class="pre">darkorange</span></code> color now show in purple.</p>
+<p>You can similarly map other attribute values, for instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">color</span><span class="p">:</span><span class="n">navy</span><span class="o">=</span><span class="n">red</span><span class="p">;</span>
+<span class="n">color</span><span class="p">:</span><span class="n">darkorange</span><span class="o">=</span><span class="n">purple</span><span class="p">;</span>
+<span class="n">symbolsize</span><span class="p">:</span><span class="n">large</span><span class="o">=</span><span class="n">tiny</span><span class="p">;</span>
+<span class="n">pen</span><span class="p">:</span><span class="n">ultrafat</span><span class="o">=</span><span class="n">normal</span><span class="p">;</span>
+<span class="n">dashstyle</span><span class="p">:</span><span class="n">dotted</span><span class="o">=</span><span class="n">dashed</span><span class="p">;</span>
+<span class="n">symbol</span><span class="p">:</span><span class="n">mark</span><span class="o">/</span><span class="n">disk</span><span class="p">(</span><span class="n">sx</span><span class="p">)</span><span class="o">=</span><span class="n">mark</span><span class="o">/</span><span class="n">box</span><span class="p">(</span><span class="n">sx</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The attribute kinds you are allowed to modify are “pen”, “symbolsize”,
+“arrowsize”, “opacity”, “color”, “dashstyle”, and “symbol”.  Both the
+original and the new attribute must be symbolic attributes defined in
+your style sheet.</p>
+<p>It’s probably not a good idea to remap common attributes in your
+document—this may quickly become confusing.  A better approach would
+be to create dedicated attribute values like <code class="docutils literal notranslate"><span class="pre">emphasis</span></code>, that
+map to some standard value in the stylesheet, and which you can then
+redefine in the views where you want to emphasize the object.</p>
+</div>
+<div class="section" id="controlling-the-pdf-bounding-box-of-a-view">
+<h3>Controlling the PDF bounding box of a view<a class="headerlink" href="#controlling-the-pdf-bounding-box-of-a-view" title="Permalink to this headline">¶</a></h3>
+<p>Note that all views of a page receive the same bounding box,
+containing all objects visible on some view, plus all objects in a
+layer named <code class="docutils literal notranslate"><span class="pre">BBOX</span></code> (even if that layer is not visible).  This can be
+used to force a larger bounding box without adding a white rectangle
+or the like.</p>
+<p>If you need independent bounding boxes for each view, create a layer
+named <code class="docutils literal notranslate"><span class="pre">VIEWBBOX</span></code>.  Any view in which this layer is visible will
+receive a bounding box computed for the objects visible in this view
+only.</p>
+</div>
+</div>
+<div class="section" id="making-your-own-presentation-style-sheet">
+<h2>Making your own presentation style sheet<a class="headerlink" href="#making-your-own-presentation-style-sheet" title="Permalink to this headline">¶</a></h2>
+<p>Instead of adding a presentation style sheet from Ipe, you can also
+create a new presentation from the command line by starting Ipe like
+this:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ipe -sheet presentation</span>
 </pre></div>
 </div>
-<p>Note that <code class="file docutils literal notranslate"><span class="pre">presentation.isy</span></code> is meant to be used <em>instead</em> of
-<code class="file docutils literal notranslate"><span class="pre">basic.isy</span></code> (not in addition to it).</p>
-<p>This presentation stylesheet enlarges all standard sizes by a factor
-2.8.  Note the use of the <code class="docutils literal notranslate"><span class="pre">&lt;textstretch&gt;</span></code> element to magnify text:</p>
+<p>Let’s have a look inside this presentation stylesheet, in case you
+want to roll your own.</p>
+<p>The style sheet enlarges all standard sizes by a factor 2.8.  Note the
+use of the <code class="docutils literal notranslate"><span class="pre">&lt;textstretch&gt;</span></code> element to magnify text:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">textstretch</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;normal&quot;</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;2.8&quot;</span><span class="o">/&gt;</span>
 <span class="o">&lt;</span><span class="n">textstretch</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;large&quot;</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;2.8&quot;</span><span class="o">/&gt;</span>
 </pre></div>
@@ -88,24 +280,17 @@ instance) is in fact used for <em>two</em> symbolic attributes, namely
 <code class="docutils literal notranslate"><span class="pre">textsize</span></code> (where <em>large</em> maps to <code class="docutils literal notranslate"><span class="pre">\large</span></code>) and <code class="docutils literal notranslate"><span class="pre">textstretch</span></code>
 (where it maps to no stretch in the standard style sheet).  By setting
 the text stretch, you can magnify fonts.</p>
-<p>In addition, the <code class="docutils literal notranslate"><span class="pre">&lt;layout&gt;</span></code> element in this stylesheet redefines the
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;layout&gt;</span></code> element in this stylesheet redefines the
 paper size to be of the correct proportions for a projector, and
-defines a smaller area of the paper as the <em>frame</em>.  The frame is the
-area that should be used for the contents. The <em>Insert text box</em>
-function, for instance, creates text objects that fill exactly the
-width of the frame.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">&lt;titlestyle&gt;</span></code> element defines the style of the page
-<em>title</em> outside the frame.  You can set the title for each page
-using <span class="menuselection">Page ‣ Edit title &amp; sections</span>.</p>
+defines the <em>frame</em>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">&lt;titlestyle&gt;</span></code> element defines the style of the page <em>title</em>,
+typically outside the frame.</p>
 <p>The LaTeX-preamble defined in the <code class="docutils literal notranslate"><span class="pre">&lt;preamble&gt;</span></code> element
 redefines the standard font shape to <code class="docutils literal notranslate"><span class="pre">cmss</span></code> (Computer Modern Sans
 Serif).  Many people find sans-serif fonts easier to read on a screen.
 In addition, it redefines the list environments to use less spacing,
 and the text styles to not justify paragraphs (the <code class="docutils literal notranslate"><span class="pre">&lt;textstyle&gt;</span></code>
 elements).</p>
-<p>If you wish to use the page transition effects of Acrobat Reader, you
-can define the effects in the stylesheet (using <code class="docutils literal notranslate"><span class="pre">&lt;effect&gt;</span></code>
-elements), and set them using <span class="menuselection">View ‣ Edit effect</span>.</p>
 <p id="pagenumberstyle">If you want to number the pages of the presentation, you’ll need to
 use the <code class="docutils literal notranslate"><span class="pre">&lt;pagenumberstyle&gt;</span></code> element.  It defines color, size,
 position, and alignment of the page number, and provides a template
@@ -143,148 +328,6 @@ not indicate different views at all:</p>
 <span class="na">valign=</span><span class="s">&quot;top&quot;</span><span class="nt">&gt;</span>\arabic{ipePage}/\arabic{ipePages}<span class="nt">&lt;/pagenumberstyle&gt;</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="views">
-<span id="id1"></span><h2>Views<a class="headerlink" href="#views" title="Permalink to this headline">¶</a></h2>
-<p>When making a PDF presentation for a PDF Viewer or for IpePresenter,
-one would often like to present a page incrementally. For instance, I
-would first like to show a polygon, then add its triangulation, and
-finally color the vertices.  <em>Views</em> make it possible to do this
-nicely.</p>
-<p>An Ipe document consists of several pages, each of which can consist
-of an arbitrary number of views.  When saving as PDF, each view
-generates a separate PDF page (if you only look at the result in a PDF
-viewer, you cannot tell whether two pages are actually two views of
-the same Ipe page or two different Ipe pages).</p>
-<p>An Ipe page consists of a number of objects, a number of layers, and a
-number of views.  Each object belongs to exactly one layer.  A layer
-can be shown by any number of views—a view is really just a list of
-layers to be presented. In addition, a view keeps a record of the
-current active layer—this makes it easy to move around your views
-and edit them.</p>
-<p>Views can also give a different meaning to symbolic attributes, so
-that objects that appear in blue on one view will be red on the next
-one.  One can also change the dash pattern and pen width, and can even
-replace one symbol by a different one.</p>
-<p>As a somewhat experimental feature, views can transform individual
-layers of the page.  This allows you to move around or rotate objects
-from view to view, without having to make copies of the objects.</p>
-<p>Finally, views can specify a graphic effect to be used by the PDF
-viewer when proceeding to the following PDF page.</p>
-<div class="section" id="example">
-<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
-<p>To return to our polygon triangulation example, let’s create an empty
-page.  We draw a polygon into the default layer <em>alpha</em>.  Now use
-<span class="menuselection">Views ‣ New layer, new view</span>, and draw the
-triangulation into the new layer <em>beta</em>.  Note that the function not
-only created a new layer, but also a second view showing both <em>alpha</em>
-and <em>beta</em>.  Try moving back and forth between the two views (using
-the <kbd class="kbd docutils literal notranslate">PageUp</kbd> and <kbd class="kbd docutils literal notranslate">PageDown</kbd> keys). You’ll see changes in the
-layer list on the left: in view 1, layer <em>alpha</em> is selected and
-active, in view 2, both layers are selected and <em>beta</em> is active.
-Create a third layer and view, and mark the vertices.</p>
-<p>Save in PDF format, and voila, you have a lovely little presentation.
-The result is available <a class="reference external" href="https://github.com/otfried/ipe/raw/master/examples/polygon.pdf">here</a>.</p>
-</div>
-<div class="section" id="text-boxes">
-<h3>Text boxes<a class="headerlink" href="#text-boxes" title="Permalink to this headline">¶</a></h3>
-<p>In presentations, one often has slides with mostly text.  The
-<a class="reference internal" href="30_objects.html#text-objects"><span class="std std-ref">textbox</span></a> object is convenient for this, as one
-doesn’t need to use the mouse to create it.  To create a slide where
-several text items appear one by one, one only needs to press F10 to
-create a textbox, then <kbd class="kbd docutils literal notranslate">Shift+Ctrl+I</kbd> to make a new view, F10
-again for the next textbox, and so on.  Finally, one moves the
-textboxes vertically for the most pleasing effect (<em>Shift+Alt+Left
-Mouse</em> does a constrained vertical translation, or <em>Shift+Left Mouse</em>
-in <em>Translate</em> mode).</p>
-</div>
-<div class="section" id="changing-symbolic-values-inside-a-view">
-<h3>Changing symbolic values inside a view<a class="headerlink" href="#changing-symbolic-values-inside-a-view" title="Permalink to this headline">¶</a></h3>
-<p>Imagine you have an object that is shown in dark orange on your
-current page, but on one specific view you want to highlight the
-object in purple.</p>
-<p>To achieve this, go to the view, and open <em>Edit view</em> from the
-<em>Views</em> menu.  In the attribute map field, write this line:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">color</span><span class="p">:</span><span class="n">darkorange</span><span class="o">=</span><span class="n">purple</span><span class="p">;</span>
-</pre></div>
-</div>
-<p>You will notice that all objects on the page that had the
-<code class="docutils literal notranslate"><span class="pre">darkorange</span></code> color now show in purple.</p>
-<p>You can similarly map other attribute values, for instance:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">color</span><span class="p">:</span><span class="n">navy</span><span class="o">=</span><span class="n">red</span><span class="p">;</span>
-<span class="n">color</span><span class="p">:</span><span class="n">darkorange</span><span class="o">=</span><span class="n">purple</span><span class="p">;</span>
-<span class="n">symbolsize</span><span class="p">:</span><span class="n">large</span><span class="o">=</span><span class="n">tiny</span><span class="p">;</span>
-<span class="n">pen</span><span class="p">:</span><span class="n">ultrafat</span><span class="o">=</span><span class="n">normal</span><span class="p">;</span>
-<span class="n">dashstyle</span><span class="p">:</span><span class="n">dotted</span><span class="o">=</span><span class="n">dashed</span><span class="p">;</span>
-<span class="n">symbol</span><span class="p">:</span><span class="n">mark</span><span class="o">/</span><span class="n">disk</span><span class="p">(</span><span class="n">sx</span><span class="p">)</span><span class="o">=</span><span class="n">mark</span><span class="o">/</span><span class="n">box</span><span class="p">(</span><span class="n">sx</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>The attribute kinds you are allowed to modify are “pen”, “symbolsize”,
-“arrowsize”, “opacity”, “color”, “dashstyle”, and “symbol”.  Both the
-original and the new attribute must be symbolic attributes defined in
-your style sheet.</p>
-<p>It’s probably not a good idea to remap common attributes in your
-document—this may quickly become confusing.  A better approach would
-be to create dedicated attribute values like <code class="docutils literal notranslate"><span class="pre">emphasis</span></code>, that
-map to some standard value in the stylesheet, and which you can then
-redefine in the views where you want to emphasize the object.</p>
-</div>
-<div class="section" id="transforming-objects-inside-a-view">
-<h3>Transforming objects inside a view<a class="headerlink" href="#transforming-objects-inside-a-view" title="Permalink to this headline">¶</a></h3>
-<p>The second large text field inside the <em>Edit view</em> dialog allows
-you to specify transformations for each layer of the page.  For
-instance, you could write these definitions:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">alpha</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">20</span> <span class="mi">100</span><span class="p">];</span>
-<span class="n">beta</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">0.8</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">];</span>
-</pre></div>
-</div>
-<p>This will translate all objects in layer alpha by the vector (20,
-100) (that is, 20 units to the right and 100 units upwards), while all
-objects in layer beta are scaled in the <em>y</em>-direction by factor 0.8.</p>
-<p>This is somewhat experimental—there is no good UI to figure out the
-right transformation matrices (you may want to draw a helper object,
-apply the transformation, and then use <em>Edit as XML</em> to look at
-the object’s matrix field).</p>
-<p>Also, Ipe still considers the objects to be at their original place,
-it just displays them elsewhere.  For instance, to modify an object
-you have to select it by clicking at its original location. (So, to
-modify an object, it is best is to go back to the original view where
-you made the object.)</p>
-<p>Currently, the layer transformation is not taken into account when
-computing the bounding box of a page, so make sure you have other
-objects creating a suitable bounding box.</p>
-</div>
-<div class="section" id="controlling-the-pdf-bounding-box-of-a-view">
-<h3>Controlling the PDF bounding box of a view<a class="headerlink" href="#controlling-the-pdf-bounding-box-of-a-view" title="Permalink to this headline">¶</a></h3>
-<p>Note that all views of a page receive the same bounding box,
-containing all objects visible on some view, plus all objects in a
-layer named <code class="docutils literal notranslate"><span class="pre">BBOX</span></code> (even if that layer is not visible).  This can be
-used to force a larger bounding box without adding a white rectangle
-or the like.</p>
-<p>If you need independent bounding boxes for each view, create a layer
-named <code class="docutils literal notranslate"><span class="pre">VIEWBBOX</span></code>.  Any view in which this layer is visible will
-receive a bounding box computed for the objects visible in this view
-only.</p>
-</div>
-</div>
-<div class="section" id="bookmarks">
-<h2>Bookmarks<a class="headerlink" href="#bookmarks" title="Permalink to this headline">¶</a></h2>
-<p>You can set a section title and a subsection title for each page of an
-Ipe document.  Theses titles will be shown in the <em>bookmarks list</em>
-(right-click on a toolbar to make it visible).  Double-clicking a
-title brings you directly to its page, making navigation of long
-documents much easier.  The titles are also exported to PDF, and are
-visible in the bookmarks view of PDF viewers.</p>
-<p>You can also use the section title of a page to refer to this page in
-<strong class="program">ipetoipe</strong> and <strong class="program">iperender</strong>.</p>
-</div>
-<div class="section" id="excluding-a-page-from-the-presentation">
-<h2>Excluding a page from the presentation<a class="headerlink" href="#excluding-a-page-from-the-presentation" title="Permalink to this headline">¶</a></h2>
-<p>If you add a layer with name <code class="docutils literal notranslate"><span class="pre">NOPDF</span></code> to a page (it does not need to
-be visible in any view of the page), then the page is not included in
-the PDF representation of the document.  So while Ipe will show the
-page normally, viewing the document with a PDF reader (including
-IpePresenter) will not show that page.</p>
 </div>
 <div class="section" id="gradient-patterns">
 <span id="id2"></span><h2>Gradient patterns<a class="headerlink" href="#gradient-patterns" title="Permalink to this headline">¶</a></h2>
@@ -425,17 +468,22 @@ large enough.</p>
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Presentations</a><ul>
+<li><a class="reference internal" href="#pdf-or-html-js">PDF or HTML/JS?</a></li>
 <li><a class="reference internal" href="#presentation-stylesheets">Presentation stylesheets</a></li>
 <li><a class="reference internal" href="#views">Views</a><ul>
 <li><a class="reference internal" href="#example">Example</a></li>
 <li><a class="reference internal" href="#text-boxes">Text boxes</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#animations">Animations</a></li>
+<li><a class="reference internal" href="#bookmarks">Bookmarks</a></li>
+<li><a class="reference internal" href="#excluding-a-page-from-the-presentation">Excluding a page from the presentation</a></li>
+<li><a class="reference internal" href="#tricks-with-views">Tricks with views</a><ul>
 <li><a class="reference internal" href="#changing-symbolic-values-inside-a-view">Changing symbolic values inside a view</a></li>
-<li><a class="reference internal" href="#transforming-objects-inside-a-view">Transforming objects inside a view</a></li>
 <li><a class="reference internal" href="#controlling-the-pdf-bounding-box-of-a-view">Controlling the PDF bounding box of a view</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#bookmarks">Bookmarks</a></li>
-<li><a class="reference internal" href="#excluding-a-page-from-the-presentation">Excluding a page from the presentation</a></li>
+<li><a class="reference internal" href="#making-your-own-presentation-style-sheet">Making your own presentation style sheet</a></li>
 <li><a class="reference internal" href="#gradient-patterns">Gradient patterns</a></li>
 <li><a class="reference internal" href="#prettier-bullet-points">Prettier bullet points</a></li>
 <li><a class="reference internal" href="#filming-from-the-canvas">Filming from the canvas</a></li>
