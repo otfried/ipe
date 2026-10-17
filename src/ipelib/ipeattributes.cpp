@@ -51,10 +51,11 @@
 // --------------------------------------------------------------------
 
 namespace ipe {
-const char * const kind_names[] = {
-    "pen",         "symbolsize", "arrowsize",  "color",    "dashstyle", "textsize",
-    "textstretch", "textstyle",  "labelstyle", "gridsize", "anglesize", "opacity",
-    "tiling",      "symbol",     "gradient",   "effect",   "variant",   nullptr};
+const char * const kind_names[] = {"pen",        "symbolsize", "arrowsize",   "color",
+				   "dashstyle",  "textsize",   "textstretch", "textstyle",
+				   "labelstyle", "gridsize",   "anglesize",   "opacity",
+				   "tiling",     "symbol",     "gradient",    "effect",
+				   "variant",    "pagestyle",  nullptr};
 
 const char * const property_names[] = {"pen",
 				       "symbolsize",
@@ -468,6 +469,15 @@ void AttributeMap::saveAsXml(Stream & stream) const {
 	const AttributeMapping & mapping = iMap[k];
 	stream << "<map kind=\"" << kind_names[mapping.kind] << "\" from=\""
 	       << mapping.from.string() << "\" to=\"" << mapping.to.string() << "\" />\n";
+    }
+}
+
+void AttributeMap::writeToLatex(Stream & stream) const {
+    for (int k = 0; k < size(iMap); ++k) {
+	const AttributeMapping & mapping = iMap[k];
+	if (mapping.kind == EColor)
+	    stream << "\\colorlet{" << mapping.from.string() << "}{"
+		   << mapping.to.string() << "}";
     }
 }
 

@@ -76,7 +76,7 @@ PdfResources * Latex::takeResources() {
 
 class ipe::TextCollectingVisitor : public Visitor {
 public:
-    TextCollectingVisitor(Latex::TextList * list);
+    TextCollectingVisitor(Latex::TextList * list, Attribute pageStyle);
     virtual void visitText(const Text * obj);
     virtual void visitGroup(const Group * obj);
     virtual void visitReference(const Reference * obj);
@@ -85,11 +85,13 @@ public:
     bool iTextFound;
 
 private:
+    Attribute iPageStyle;
     Latex::TextList * iList;
 };
 
-TextCollectingVisitor::TextCollectingVisitor(Latex::TextList * list)
-    : iList(list) {
+TextCollectingVisitor::TextCollectingVisitor(Latex::TextList * list, Attribute pageStyle)
+    : iPageStyle{pageStyle}
+    , iList{list} {
     // nothing
 }
 
@@ -97,6 +99,7 @@ void TextCollectingVisitor::visitText(const Text * obj) {
     Latex::SText s;
     s.iText = obj;
     s.iSize = obj->size();
+    s.iPageStyle = iPageStyle;
     iList->push_back(s);
     iTextFound = true;
 }
@@ -115,7 +118,7 @@ void TextCollectingVisitor::visitReference(const Reference *) {
 /*! Scan an object and insert all text objects into Latex's list.
   Returns total number of text objects found so far. */
 int Latex::scanObject(const Object * obj) {
-    TextCollectingVisitor visitor(&iTextObjects);
+    TextCollectingVisitor visitor(&iTextObjects, Attribute::NORMAL());
     obj->accept(visitor);
     return iTextObjects.size();
 }
@@ -124,7 +127,7 @@ int Latex::scanObject(const Object * obj) {
   Returns total number of text objects found so far. */
 int Latex::scanPage(Page * page) {
     page->applyTitleStyle(iCascade);
-    TextCollectingVisitor visitor(&iTextObjects);
+    TextCollectingVisitor visitor(&iTextObjects, page->style());
     const Text * title = page->titleText(iVariant);
     if (title) title->accept(visitor);
     for (int i = 0; i < page->count(); ++i) {
@@ -217,6 +220,16 @@ int Latex::createLatexSource(Stream & stream, String preamble) {
 	    stream << "\\definecolor{" << name << "}{rgb}{" << value.iRed << ","
 		   << value.iGreen << "," << value.iBlue << "}\n";
     }
+    AttributeSeq pageStyles;
+    iCascade->allNames(EPageStyle, pageStyles);
+    for (AttributeSeq::const_iterator it = pageStyles.begin(); it != pageStyles.end();
+	 ++it) {
+	const PageStyle * pageStyle = iCascade->findPageStyle(*it);
+	if (pageStyle == nullptr) continue;
+	stream << "\\def\\ipepagestyle" << it->string() << "{";
+	pageStyle->iMapping.writeToLatex(stream);
+	stream << "}";
+    }
     stream << "}\n";
     if (iXetex) {
 	stream << "\\def\\ipesetcolor#1#2#3{\\special{pdf:bc [#1 #2 #3]}}\n"
@@ -263,7 +276,14 @@ int Latex::createLatexSource(Stream & stream, String preamble) {
 		   << "bp}\\selectfont\n";
 	} else
 	    source << fsAttr.string() << "\n";
-	Color col = iCascade->find(EColor, text->stroke()).color();
+	const PageStyle * ps = iCascade->findPageStyle(it.iPageStyle);
+	if (ps) source << "\\ipepagestyle" << it.iPageStyle.string() << "{}";
+	Attribute stroke = text->stroke();
+	Color col = iCascade
+			->find(EColor, (ps && stroke.isSymbolic())
+					   ? ps->iMapping.map(EColor, stroke)
+					   : stroke)
+			.color();
 	source << "\\ipesetcolor{" << col.iRed.toDouble() << "}{" << col.iGreen.toDouble()
 	       << "}{" << col.iBlue.toDouble() << "}%\n";
 

@@ -70,6 +70,7 @@ private:
 	Attribute iSize;
 	Fixed iStretch;
 	String iSource;
+	Attribute iPageStyle;
     };
 
     typedef std::vector<SText> TextList;

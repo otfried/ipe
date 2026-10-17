@@ -226,6 +226,11 @@ The ``<page>`` element
   value is an empty string, then the contents of the ``title``
   attribute is used instead.
 
+``style`` (optional)
+  The name of a ``<pagestyle>`` element defined in one of the document's
+  style sheets.  The page style can specify a background symbol and attribute
+  mappings that apply to the page's views.
+
 ``subsection`` (optional)
   Title of document subsection starting
   with this page. If the attribute is not present, this page continues
@@ -718,6 +723,28 @@ The ``<ipestyle>`` element
 The contents of the ``<ipestyle>`` element is a series of style
 definition elements, in no particular order.  These elements are
 described below.
+
+
+The ``<pagestyle>`` element
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A page style can be selected for an individual page using the ``style``
+attribute of the ``<page>`` element. It defines the page's background symbol
+and attribute mappings that apply in all views of that page. Page-style
+mappings are combined with mappings defined by each view; page-style mappings
+take precedence when both map the same attribute.
+
+*Attributes*
+
+``name`` (required)
+  The symbolic name used by the ``style`` attribute of a ``<page>`` element.
+
+``background`` (optional)
+  The name of the symbol to draw as the page background. If omitted, the page
+  style does not select a background symbol.
+
+The contents of the ``<pagestyle>`` element is a sequence of ``<map>``
+elements, using the same attribute mapping format described for ``<view>``.
 
 
 The ``<symbol>`` element

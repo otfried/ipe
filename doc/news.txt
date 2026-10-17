@@ -19,6 +19,9 @@ Ipe 7.3.1
  * Gradients can now also be used for stroking, and can modulate
    transparency.
 
+ * Pages can now have an individual style, so you can switch color
+   schemes and backgrounds between pages of a presentation.
+
  * Visual style sheet editor contributed by Dmitriy Morozov. Thanks!
 
  * Easily add a style sheet by selecting it by name.

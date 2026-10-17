@@ -2032,6 +2032,7 @@ local function setTitleAndSections(page, data)
   for variant, s in pairs(data.variants) do
     page:setTitle(variant, s.title, s.skipped)
   end
+  page:setStyle(data.pagestyle)
 end
 
 function MODEL:action_edit_title()
@@ -2058,6 +2059,10 @@ function MODEL:action_edit_title()
 	  action=function (d) update_dialog(d, "subsection") end
 	} , -1, 2)
   d:add("subsection", "input", {}, 0, 2, 1, 3)
+  local pagestyles = self.doc:sheets():allNames("pagestyle")
+  table.insert(pagestyles, 1, "normal")
+  d:add("label5", "label", { label="Style:"}, 0, 1)
+  d:add("pagestyle", "combo", pagestyles, -1, 2)
   d:addButton("ok", "&Ok", "accept")
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("column", 2, 1)
@@ -2086,6 +2091,8 @@ function MODEL:action_edit_title()
     d:set("tsubsection", true)
     d:setEnabled("subsection", false)
   end
+  original.pagestyle = self:page():style()
+  d:set("pagestyle", indexOf(original.pagestyle, pagestyles))
   if not d:execute() then return end
   local final = { title = d:get("title") }
   if not d:get("tsection") then
@@ -2105,6 +2112,7 @@ function MODEL:action_edit_title()
       skipped = d:get("skip-" .. i)
     }
   end
+  final.pagestyle = pagestyles[d:get("pagestyle")]
   local t = { label="change title and sections of page " .. self.pno,
 	      pno = self.pno,
 	      vno = self.vno,

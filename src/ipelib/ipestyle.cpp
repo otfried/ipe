@@ -318,6 +318,7 @@ void StyleSheet::remove(Kind kind, Attribute sym) {
     case ESymbol: iSymbols.erase(sym.index()); break;
     case EGradient: iGradients.erase(sym.index()); break;
     case EEffect: iEffects.erase(sym.index()); break;
+    case EPageStyle: iPageStyles.erase(sym.index()); break;
     default: iMap.erase(sym.index() | (kind << SHIFT)); break;
     };
 }
@@ -349,6 +350,12 @@ void StyleSheet::allNames(Kind kind, AttributeSeq & seq) const {
     } else if (kind == EEffect) {
 	for (EffectMap::const_iterator it = iEffects.begin(); it != iEffects.end();
 	     ++it) {
+	    Attribute attr(true, it->first);
+	    if (std::find(seq.begin(), seq.end(), attr) == seq.end()) seq.push_back(attr);
+	}
+    } else if (kind == EPageStyle) {
+	for (PageStyleMap::const_iterator it = iPageStyles.begin();
+	     it != iPageStyles.end(); ++it) {
 	    Attribute attr(true, it->first);
 	    if (std::find(seq.begin(), seq.end(), attr) == seq.end()) seq.push_back(attr);
 	}

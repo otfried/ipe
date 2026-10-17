@@ -37,6 +37,7 @@
 	  title CDATA #IMPLIED
 	  section CDATA #IMPLIED
 	  subsection CDATA #IMPLIED
+	  style CDATA #IMPLIED
 	  marked (yes|no) "yes" >
 
 <!ELEMENT pagevariant EMPTY>
@@ -67,6 +68,11 @@
 	  kind (pen|symbolsize|arrowsize|opacity|color|dashstyle|symbol) #REQUIRED
 	  from CDATA #REQUIRED
 	  to   CDATA #REQUIRED >
+
+<!ELEMENT pagestyle (map*)>
+<!ATTLIST pagestyle
+	  name CDATA #REQUIRED
+	  background CDATA #IMPLIED >
 
 <!ELEMENT transform EMPTY>
 <!ATTLIST transform
@@ -153,7 +159,7 @@
 	  rarrow CDATA #IMPLIED >
 
 <!ELEMENT ipestyle ((bitmap|symbol|preamble|cmap|textstyle|layout|textpad|
-	  titlestyle|pagenumberstyle|pathstyle|gradient|tiling|effect|
+	  titlestyle|pagenumberstyle|pathstyle|gradient|tiling|effect|pagestyle|
 	  color|dashstyle|pen|textsize|textstretch|opacity|
 	  symbolsize|arrowsize|gridsize|anglesize|variant)*)>
 <!ATTLIST ipestyle name CDATA #IMPLIED>

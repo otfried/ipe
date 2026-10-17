@@ -527,6 +527,18 @@ static int page_setEffect(lua_State * L) {
     return 0;
 }
 
+static int page_style(lua_State * L) {
+    Page * p = check_page(L, 1)->page;
+    push_string(L, p->style().string());
+    return 1;
+}
+
+static int page_setStyle(lua_State * L) {
+    Page * p = check_page(L, 1)->page;
+    p->setStyle(Attribute(true, luaL_checkstring(L, 2)));
+    return 0;
+}
+
 static int page_active(lua_State * L) {
     Page * p = check_page(L, 1)->page;
     int n = check_viewno(L, 2, p);
@@ -756,6 +768,8 @@ static const struct luaL_Reg page_methods[] = {
     {"setLayerOf", page_setLayerOf},
     {"effect", page_effect},
     {"setEffect", page_setEffect},
+    {"style", page_style},
+    {"setStyle", page_setStyle},
     {"active", page_active},
     {"setActive", page_setActive},
     {"insertView", page_insertView},

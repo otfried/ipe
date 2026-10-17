@@ -491,6 +491,14 @@ p = ipe.Page()   -- create basic page with one layer and one view
 p1 = p:clone()   -- returns a copy of the page
 \endverbatim
 
+The following methods get and set the page style. The style name must be
+defined by a ``<pagestyle>`` element in a style sheet. Passing ``nil`` to
+``setStyle`` clears the page style.
+\verbatim
+name = p:style()       -- return the page style name
+p:setStyle(name)       -- use "normal" to reset
+\endverbatim
+
 The following methods act on the \b views of a page.  Note that views
 are indexed starting from 1, as usual in Lua.
 \verbatim

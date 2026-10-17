@@ -68,6 +68,7 @@ enum Kind {
     EGradient,
     EEffect,
     EVariant,
+    EPageStyle,
 };
 
 /*! \ingroup attr */
@@ -478,6 +479,7 @@ public:
     Attribute map(Kind kind, Attribute sym) const;
     void saveAsXml(Stream & stream) const;
     void add(const AttributeMapping & map);
+    void writeToLatex(Stream & stream) const;
 
 public:
     std::vector<AttributeMapping> iMap;
