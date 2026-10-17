@@ -92,6 +92,11 @@ div#modal-file-manager {
 	padding: 1em 2em;
 	row-gap: 4px;
 }
+div#modal-file-manager.drag-over,
+div#modal-file.drag-over {
+	outline: 3px solid dodgerblue;
+	outline-offset: -3px;
+}
 div.file-manager-directory {
 	display: flex;
 	flex-wrap: wrap;

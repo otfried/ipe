@@ -761,6 +761,13 @@ function MODEL:action_open()
   end
 end
 
+function MODEL:action_manage_files()
+  local s = ipeui.fileManager(self.ui:win(), self:isModified())
+  if s then
+    self:loadDocument(s)
+  end
+end
+
 function MODEL:action_revert()
   if self.file_name then
     self:loadDocument(self.file_name)

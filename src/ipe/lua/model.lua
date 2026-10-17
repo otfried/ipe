@@ -681,7 +681,9 @@ end
 
 -- returns error message if there was an error
 function MODEL:tryLoadDocument(fname)
+  print("Loading ", fname)
   local doc, err = ipe.Document(fname)
+  print("Result ", doc, err)
   if doc then
     self.doc = doc
     self.file_name = fname

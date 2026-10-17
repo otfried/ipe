@@ -406,6 +406,18 @@ static int ipeui_fileDialog(lua_State * L) {
     return 0;
 }
 
+static int ipeui_fileManager(lua_State * L) {
+    // void * parent = check_winid(L, 1);
+    if (lua_toboolean(L, 2)) {
+	jsUi().call<void>("fileManager");
+    } else {
+	lua_pushthread(L);
+	int threadRef = luaL_ref(L, LUA_REGISTRYINDEX);
+	jsUi().call<void>("fileManager", threadRef);
+    }
+    return 0;
+}
+
 // --------------------------------------------------------------------
 
 static int ipeui_messageBox(lua_State * L) {
@@ -457,6 +469,7 @@ static const struct luaL_Reg ipeui_functions[] = {
     {"Menu", menu_constructor},
     {"Timer", timer_constructor},
     {"fileDialogAsync", ipeui_fileDialog},
+    {"fileManagerAsync", ipeui_fileManager},
     {"messageBoxAsync", ipeui_messageBox},
     {"currentDateTime", ipeui_currentDateTime},
     {nullptr, nullptr}};
@@ -505,6 +518,9 @@ int luaopen_ipeui(lua_State * L) {
     addMethod(L, "fileDialog",
 	      "return function (...) ipeui.fileDialogAsync(...)"
 	      "return coroutine.yield(), 1 end");
+    addMethod(L, "fileManager",
+	      "return function (...) ipeui.fileManagerAsync(...)"
+	      "return coroutine.yield() end");
     lua_setglobal(L, "ipeui");
     luaopen_ipeui_common(L);
     addJSClasses();

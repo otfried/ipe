@@ -237,8 +237,6 @@ export class IpeUi {
 			this._showConfiguration();
 		} else if (action === "tablet_hints") {
 			this._tabletHints();
-		} else if (action === "manage_files") {
-			this.modal.fileManager();
 		} else if (action === "shift_key") {
 			this.setActionState("shift_key", !this.actionState.shift_key);
 			this.ipe._canvasSetAdditionalModifiers(
@@ -929,6 +927,11 @@ export class IpeUi {
 		}
 	}
 
+	// not used on vscode at all
+	async fileManager(threadRef?: number) {
+		this.modal.fileManager(threadRef ?? null);
+	}
+
 	download(): void {
 		if (this.filename != null)
 			this.modal.fileDownload("documents", this.filename);
@@ -1272,7 +1275,7 @@ export class IpeUi {
 				titleConversion,
 			);
 			window.ipeui.ipe.FS.writeFile(outFn, data);
-			window.ipeui.modal.fileManager();
+			window.ipeui.modal.fileManager(null);
 		}
 	}
 }

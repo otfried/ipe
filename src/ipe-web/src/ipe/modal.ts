@@ -86,11 +86,13 @@ export class Modal {
 	readonly file_error: HTMLDivElement;
 	inModal = false;
 	inFileDialog = false;
+	inFileManager = false;
 	inPageSelector = false;
 	dialogId: DialogId | null = null;
 	ctrlEnterHandler: (() => void) | null = null;
 	private readonly resumeCallback: ResumeCallback;
 	private threadRef: number | null = null;
+	private fileDialogType: FileDialogOptions["type"] | null = null;
 
 	constructor(ipe: Ipe, cb: ResumeCallback) {
 		this.ipe = ipe;
@@ -109,6 +111,43 @@ export class Modal {
 		get("file-manager-upload-button").addEventListener("click", () =>
 			this._fileUpload("file-manager-upload"),
 		);
+		this._setupFileDrop(this.file_manager, true);
+		this._setupFileDrop(this.file, false);
+	}
+
+	private _setupFileDrop(target: HTMLDivElement, manager: boolean) {
+		let dragDepth = 0;
+		const acceptsFiles = (event: DragEvent) =>
+			(manager || this.fileDialogType === "open") &&
+			event.dataTransfer?.types.includes("Files");
+		const clearDropFeedback = () => {
+			dragDepth = 0;
+			target.classList.remove("drag-over");
+		};
+		target.addEventListener("dragenter", (event) => {
+			if (!acceptsFiles(event)) return;
+			event.preventDefault();
+			dragDepth++;
+			target.classList.add("drag-over");
+		});
+		target.addEventListener("dragover", (event) => {
+			if (acceptsFiles(event) && event.dataTransfer) {
+				event.preventDefault();
+				event.dataTransfer.dropEffect = "copy";
+			}
+		});
+		target.addEventListener("dragleave", () => {
+			if (--dragDepth <= 0) clearDropFeedback();
+		});
+		target.addEventListener("drop", async (event) => {
+			event.preventDefault();
+			clearDropFeedback();
+			if (!acceptsFiles(event)) return;
+			const files = Array.from(event.dataTransfer?.files ?? []);
+			for (const file of manager ? files : files.slice(0, 1))
+				await this._uploadFile(file, manager);
+		});
+		window.addEventListener("dragend", clearDropFeedback);
 	}
 
 	show() {
@@ -117,7 +156,10 @@ export class Modal {
 	}
 
 	close(result: ResumeResult, threadRef?: number) {
-		if (result === CANCEL && (this.inFileDialog || this.inPageSelector))
+		if (
+			result === CANCEL &&
+			(this.inFileDialog || this.inPageSelector || this.inFileManager)
+		)
 			result = null;
 		this.ctrlEnterHandler = null;
 		this.file_error.style.display = "none";
@@ -127,7 +169,9 @@ export class Modal {
 		this.file_manager.style.display = "none";
 		this.inModal = false;
 		this.inFileDialog = false;
+		this.fileDialogType = null;
 		this.inPageSelector = false;
+		this.inFileManager = false;
 		if (this.dialogId) {
 			this.ipe._dialogResume(this.dialogId, result as DialogResult);
 			this.dialogId = null;
@@ -201,12 +245,13 @@ export class Modal {
 		for (const file of files) {
 			if ([".", ".."].includes(file)) continue;
 			const el = document.createElement("div");
-			if (cb) {
+			if (cb && !manager) {
 				el.innerText = file;
 				if (cb) el.addEventListener("click", () => cb(file));
 			} else {
 				const s1 = document.createElement("span");
 				s1.innerText = file;
+				if (cb) s1.addEventListener("click", () => cb(file));
 				el.appendChild(s1);
 				if (manager) {
 					const s2 = document.createElement("button");
@@ -233,6 +278,7 @@ export class Modal {
 
 	async fileDialog(options: FileDialogOptions, threadRef: number | null) {
 		const dir = dirFromOptions(options);
+		this.fileDialogType = options.type;
 		this.body.style.display = "none";
 		this.file.style.display = "flex";
 		const fileList = get("directory") as HTMLDivElement;
@@ -277,10 +323,11 @@ export class Modal {
 		this.file_error.style.display = "block";
 	}
 
-	async fileManager() {
+	async fileManager(threadRef: number | null) {
 		this.header.innerText = "Manage your files";
 		this.body.style.display = "none";
 		this.file_manager.style.display = "flex";
+		this.threadRef = threadRef;
 		for (const d of [
 			"documents",
 			"presentations",
@@ -289,13 +336,18 @@ export class Modal {
 			"ipelets",
 		])
 			this._populateFileManager(d as Directory);
+		this.inFileManager = true;
 		this.show();
 	}
 
 	private _populateFileManager(dir: Directory) {
 		const fileList = get(`directory-${dir}`) as HTMLDivElement;
 		removeChildren(fileList);
-		this._makeFileListing(fileList, dir, true);
+		const cb =
+			dir === "documents" && this.threadRef !== null
+				? (fn: string) => this.close(`/home/ipe/${dir}/${fn}`)
+				: undefined;
+		this._makeFileListing(fileList, dir, true, cb);
 	}
 
 	private _fileDelete(dir: Directory, file: string) {
@@ -322,7 +374,10 @@ export class Modal {
 	private async _fileUpload(id: string) {
 		const fs = get(id) as HTMLInputElement;
 		if (!fs.files?.length) return;
-		const selectedFile = fs.files[0];
+		await this._uploadFile(fs.files[0], id !== "upload");
+	}
+
+	private async _uploadFile(selectedFile: File, manager: boolean) {
 		const name = selectedFile.name;
 		const i = name.lastIndexOf(".");
 		if (i < 0 || knownFileTypes[name.substring(i + 1)] == null) {
@@ -333,10 +388,10 @@ export class Modal {
 		const path = `/home/ipe/${ft.dir}/${name}`;
 		const data = new Uint8Array(await selectedFile.arrayBuffer());
 		this.ipe.FS.writeFile(path, data);
-		if (id === "upload") {
-			this.close(path);
-		} else {
+		if (manager) {
 			this._populateFileManager(ft.dir);
+		} else {
+			this.close(path);
 		}
 	}
 
