@@ -302,9 +302,13 @@ function hexagonal_grid(model, num)
       segRect:add(s[2])
       if segRect:intersects(frameRect) then
         local a, b = pruneVertical(s[1], s[2], fs)
-            if (b - a):len() > 1e-9 then
-            -- Stop zero length pieces
-            t[#t + 1] = make_pruned_segment(model.attributes, a, b, fs)
+        -- Stop zero length pieces
+        if (b - a):len() > 1e-9 then
+            local seg = make_pruned_segment(model.attributes, a, b, fs)
+            local ends = seg:shape()[1][1]
+            if (ends[2] - ends[1]):len() > 1e-9 then
+                t[#t + 1] = seg
+            end
         end
       end
     end
