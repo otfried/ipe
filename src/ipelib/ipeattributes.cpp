@@ -149,6 +149,7 @@ Effect::Effect() {
     iTransitionTime = 1;
 }
 
+#if 0
 //! Write part of page dictionary.
 /*! Write part of page dictionary indicating effect,
   including the two keys /Dur and /Trans. */
@@ -189,6 +190,7 @@ void Effect::pageDictionary(Stream & stream) const {
 	stream << " >>\n";
     }
 }
+#endif
 
 // --------------------------------------------------------------------
 

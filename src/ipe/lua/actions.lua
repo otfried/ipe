@@ -3090,7 +3090,7 @@ function MODEL:saction_custom()
   local obj = p[prim]
   local custom = self:getString("Enter custom value", nil, obj:getCustom())
   if not custom then return end
-  if custom:match("^%s*$") then custom = "undefined" end
+  if custom:match("^%s*$") then custom = nil end
   local t = { label="set custom",
 	      pno=self.pno,
 	      vno=self.vno,
@@ -3115,7 +3115,7 @@ function MODEL:saction_animate()
   local obj = p[prim]
   local animate = self:getString("Enter animate value", nil, obj:getAnimate())
   if not animate then return end
-  if animate:match("^%s*$") then animate = "undefined" end
+  if animate:match("^%s*$") then animate = nil end
   local t = { label="set animate",
 	      pno=self.pno,
 	      vno=self.vno,

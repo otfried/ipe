@@ -471,8 +471,9 @@ static int object_get_custom(lua_State * L) {
 
 static int object_set_custom(lua_State * L) {
     SObject * s = check_object(L, 1);
-    const char * value = luaL_checklstring(L, 2, nullptr);
-    s->obj->setCustom(Attribute(false, value));
+    Attribute value = Attribute::UNDEFINED();
+    if (!lua_isnil(L, 2)) value = Attribute(false, luaL_checkstring(L, 2));
+    s->obj->setCustom(value);
     return 0;
 }
 
@@ -485,8 +486,9 @@ static int object_get_animate(lua_State * L) {
 
 static int object_set_animate(lua_State * L) {
     SObject * s = check_object(L, 1);
-    const char * value = luaL_checklstring(L, 2, nullptr);
-    s->obj->setAnimate(Attribute(false, value));
+    Attribute value = Attribute::UNDEFINED();
+    if (!lua_isnil(L, 2)) value = Attribute(false, luaL_checkstring(L, 2));
+    s->obj->setAnimate(value);
     return 0;
 }
 

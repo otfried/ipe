@@ -337,7 +337,7 @@ Attribute Object::getAttribute(Property prop) const noexcept {
 
 //! Set the 'custom' attribute (not used by Ipe, for users and ipelets)
 void Object::setCustom(Attribute value) {
-    assert(value.isString());
+    assert(value.isUndefined() || value.isString());
     iCustom = value;
 }
 
@@ -346,7 +346,7 @@ Attribute Object::getCustom() const noexcept { return iCustom; }
 
 //! Set the 'animate' attribute (used in HTML/JS animations)
 void Object::setAnimate(Attribute value) {
-    assert(value.isString());
+    assert(value.isUndefined() || value.isString());
     iAnimate = value;
 }
 

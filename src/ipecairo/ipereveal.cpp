@@ -274,8 +274,52 @@ bool Reveal::writeSlides(Stream & out, String svg) {
     return true;
 }
 
+static String trimTemplate(String htmlTemplate) {
+    String out;
+    int inComment = 0;
+    bool inSpace = false;
+    for (int i = 0; i < htmlTemplate.size(); ++i) {
+	const char ch = htmlTemplate[i];
+	if (inComment == 3) {
+	    if (ch == '\n') {
+		if (!inSpace) out += ch;
+		inComment = 0;
+	    }
+	} else if (inComment == 2) {
+	    if (ch == ' ') {
+		inComment = 3;
+	    } else {
+		out += "//";
+		out += ch;
+		inComment = 0;
+	    }
+	} else if (inComment == 1) {
+	    if (ch == '/') {
+		inComment = 2;
+	    } else {
+		out += '/';
+		out += ch;
+		inComment = 0;
+	    }
+	} else {
+	    if (ch == '/') {
+		inComment = 1;
+	    } else if (ch == '\n' || ch == ' ') {
+		if (!inSpace) out += ch;
+		inSpace = true;
+	    } else {
+		out += ch;
+		inSpace = false;
+	    }
+	}
+    }
+    return out;
+}
+
 bool Reveal::createPresentation(const char * destination, String htmlTemplate) {
     String svg = createSVG();
+
+    htmlTemplate = trimTemplate(htmlTemplate);
 
     std::string_view sv{htmlTemplate.data(), size_t(htmlTemplate.size())};
     size_t titleIndex = sv.find("[TITLE]");
