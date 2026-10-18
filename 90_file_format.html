@@ -222,6 +222,10 @@ section of the previous page.  If the attribute is present, but its
 value is an empty string, then the contents of the <code class="docutils literal notranslate"><span class="pre">title</span></code>
 attribute is used instead.</p>
 </dd>
+<dt><code class="docutils literal notranslate"><span class="pre">style</span></code> (optional)</dt><dd><p>The name of a <code class="docutils literal notranslate"><span class="pre">&lt;pagestyle&gt;</span></code> element defined in one of the document’s
+style sheets.  The page style can specify a background symbol and attribute
+mappings that apply to the page’s views.</p>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">subsection</span></code> (optional)</dt><dd><p>Title of document subsection starting
 with this page. If the attribute is not present, this page continues
 the subsection of the previous page.  If the attribute is present,
@@ -619,6 +623,24 @@ from a file with the matching name.</p>
 <p>The contents of the <code class="docutils literal notranslate"><span class="pre">&lt;ipestyle&gt;</span></code> element is a series of style
 definition elements, in no particular order.  These elements are
 described below.</p>
+<div class="section" id="the-pagestyle-element">
+<h3>The <code class="docutils literal notranslate"><span class="pre">&lt;pagestyle&gt;</span></code> element<a class="headerlink" href="#the-pagestyle-element" title="Permalink to this headline">¶</a></h3>
+<p>A page style can be selected for an individual page using the <code class="docutils literal notranslate"><span class="pre">style</span></code>
+attribute of the <code class="docutils literal notranslate"><span class="pre">&lt;page&gt;</span></code> element. It defines the page’s background symbol
+and attribute mappings that apply in all views of that page. Page-style
+mappings are combined with mappings defined by each view; page-style mappings
+take precedence when both map the same attribute.</p>
+<p><em>Attributes</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">name</span></code> (required)</dt><dd><p>The symbolic name used by the <code class="docutils literal notranslate"><span class="pre">style</span></code> attribute of a <code class="docutils literal notranslate"><span class="pre">&lt;page&gt;</span></code> element.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">background</span></code> (optional)</dt><dd><p>The name of the symbol to draw as the page background. If omitted, the page
+style does not select a background symbol.</p>
+</dd>
+</dl>
+<p>The contents of the <code class="docutils literal notranslate"><span class="pre">&lt;pagestyle&gt;</span></code> element is a sequence of <code class="docutils literal notranslate"><span class="pre">&lt;map&gt;</span></code>
+elements, using the same attribute mapping format described for <code class="docutils literal notranslate"><span class="pre">&lt;view&gt;</span></code>.</p>
+</div>
 <div class="section" id="the-symbol-element">
 <h3>The <code class="docutils literal notranslate"><span class="pre">&lt;symbol&gt;</span></code> element<a class="headerlink" href="#the-symbol-element" title="Permalink to this headline">¶</a></h3>
 <p><em>Attributes</em></p>
@@ -927,6 +949,7 @@ select the variant, the value is only for documentation.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#the-ipestyle-element">The <code class="docutils literal notranslate"><span class="pre">&lt;ipestyle&gt;</span></code> element</a><ul>
+<li><a class="reference internal" href="#the-pagestyle-element">The <code class="docutils literal notranslate"><span class="pre">&lt;pagestyle&gt;</span></code> element</a></li>
 <li><a class="reference internal" href="#the-symbol-element">The <code class="docutils literal notranslate"><span class="pre">&lt;symbol&gt;</span></code> element</a></li>
 <li><a class="reference internal" href="#id1">The <code class="docutils literal notranslate"><span class="pre">&lt;preamble&gt;</span></code> element</a></li>
 <li><a class="reference internal" href="#the-textstyle-element">The <code class="docutils literal notranslate"><span class="pre">&lt;textstyle&gt;</span></code> element</a></li>
