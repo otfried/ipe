@@ -12,7 +12,7 @@ LIBS += -L$(buildlib) -lipe
 
 ifdef IPEWASM
 LDFLAGS += --pre-js $(NODEJSPRE) -lembind -lnoderawfs.js -lnodefs.js --use-port=zlib
-LIBS += $(GSL_LIBS) $(SPIRO_LIBS) 
+LIBS += $(GSL_LIBS) $(SPIRO_LIBS) $(PNG_LIBS) $(JPEG_LIBS)
 endif
 
 all: $(TARGET)

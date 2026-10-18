@@ -56,7 +56,12 @@ void BitmapFinder::visitGroup(const Group * obj) {
 	(*it)->accept(*this);
 }
 
-void BitmapFinder::visitImage(const Image * obj) { iBitmaps.push_back(obj->bitmap()); }
+void BitmapFinder::visitImage(const Image * obj) {
+    if (obj->isExternal())
+	iPaths.push_back(obj->path());
+    else
+	iBitmaps.push_back(obj->bitmap());
+}
 
 // --------------------------------------------------------------------
 

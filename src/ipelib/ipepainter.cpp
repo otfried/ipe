@@ -97,6 +97,7 @@ Painter::Painter(const Cascade * style) {
     iState.push_back(state);
     iMatrix.push_back(Matrix()); // identity
     iAttributeMap = nullptr;
+    iBitmapCache = nullptr;
     iInPath = 0;
 }
 
@@ -107,6 +108,9 @@ Painter::~Painter() {
 
 //! Set a new attribute map.
 void Painter::setAttributeMap(const AttributeMap * map) { iAttributeMap = map; }
+
+//! Set a new bitmap cache.
+void Painter::setBitmapCache(BitmapCache * bmc) { iBitmapCache = bmc; }
 
 //! Lookup a symbolic attribute
 /*! Uses first the attribute map and then the stylesheet. */
@@ -235,6 +239,23 @@ void Painter::drawPath(TPathMode mode) {
 void Painter::drawBitmap(Bitmap bitmap) {
     assert(!iInPath);
     doDrawBitmap(bitmap);
+}
+
+//! Render an external bitmap.
+/*! Assumes the transformation matrix has been set up to map the unit
+  square to the image area on the paper.
+*/
+void Painter::drawExternalBitmap(String path) {
+    assert(!iInPath);
+    setFill(Attribute(Color(0, 0, 500)));
+    Bitmap bm;
+    if (iBitmapCache) bm = iBitmapCache->load(path);
+    if (bm.isNull()) {
+	newPath();
+	rect(Rect(Vector(0, 0), Vector(1, 1)));
+	drawPath(EFilledOnly);
+    } else
+	doDrawBitmap(bm);
 }
 
 //! Render a text object.

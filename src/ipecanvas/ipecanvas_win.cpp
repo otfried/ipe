@@ -39,6 +39,7 @@
 #include <cairo-win32.h>
 #include <cairo.h>
 
+#include <shellapi.h>
 #include <windows.h>
 #include <windowsx.h>
 
@@ -440,6 +441,21 @@ LRESULT CALLBACK Canvas::wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 	if (canvas && canvas->isInkMode)
 	    return canvas->handlePointerEvent(hwnd, message, wParam, lParam);
 	break;
+    case WM_DROPFILES: {
+	ipeDebug("DROPFILES");
+	HDROP hDrop = (HDROP)wParam;
+	if (canvas && canvas->iObserver) {
+	    UINT n = DragQueryFileW(hDrop, 0xFFFFFFFF, nullptr, 0);
+	    for (UINT i = 0; i < n; ++i) {
+		UINT len = DragQueryFileW(hDrop, i, nullptr, 0);
+		std::vector<wchar_t> buf(len + 1);
+		DragQueryFileW(hDrop, i, buf.data(), len + 1);
+		canvas->iObserver->canvasObserverFileDropped(String(buf.data()));
+	    }
+	}
+	DragFinish(hDrop);
+	return 0;
+    }
     case WM_DESTROY:
 	ipeDebug("Windows canvas is destroyed");
 	delete canvas;
@@ -483,6 +499,12 @@ Canvas::Canvas(HWND parent, HINSTANCE hInstance)
 					 {GID_TWOFINGERTAP, 0, GC_TWOFINGERTAP}};
 	pSetGestureConfig(hwnd, 0, 3, gestureConfig, sizeof(GESTURECONFIG));
     }
+    DragAcceptFiles(hwnd, TRUE);
+    /*
+    ChangeWindowMessageFilterEx(hwnd, WM_DROPFILES, MSGFLT_ALLOW, nullptr);
+    ChangeWindowMessageFilterEx(hwnd, WM_COPYDATA, MSGFLT_ALLOW, nullptr);
+    ChangeWindowMessageFilterEx(hwnd, 0x0049, MSGFLT_ALLOW, nullptr);
+    */
     isTransient = false;
 }
 

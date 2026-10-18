@@ -406,6 +406,7 @@ public:
     static String spiroVersion();
     static String gslVersion();
     static std::pair<int, std::vector<const char *>> setupNodeJs();
+    static String imageFolder(String fname);
 };
 
 // --------------------------------------------------------------------

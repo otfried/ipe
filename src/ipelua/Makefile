@@ -19,6 +19,12 @@ endif
 
 all: $(TARGET)
 
+LUA ?= $(LUA_PACKAGE)
+
+.PHONY: test
+test: $(TARGET)
+	$(LUA) test.lua "$(abspath $(TARGET))"
+
 sources	= \
 	ipelib.cpp \
 	ipeluageo.cpp \

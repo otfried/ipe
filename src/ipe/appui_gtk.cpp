@@ -147,13 +147,12 @@ static gboolean canvas_drop_cb(GtkDropTarget *, const GValue * value, double, do
 	GdkPixbufFormat * format = gdk_pixbuf_get_file_info(path, nullptr, nullptr);
 	char * name = format ? gdk_pixbuf_format_get_name(format) : nullptr;
 	bool supported = name && (!strcmp(name, "png") || !strcmp(name, "jpeg"));
-	String fformat = name;
 	String fname = path;
 	g_free(name);
 	g_free(path);
 	if (supported) {
 	    ipeDebug("Dropped image file: %s", fname.z());
-	    app->handleDroppedImage(fname, fformat);
+	    app->handleDroppedImage(fname);
 	    return TRUE;
 	}
     }

@@ -56,6 +56,7 @@ void CanvasObserver::canvasObserverMouseAction(int button) { /* nothing */ }
 void CanvasObserver::canvasObserverPositionChanged() { /* nothing */ }
 void CanvasObserver::canvasObserverToolChanged(bool hasTool) { /* nothing */ }
 void CanvasObserver::canvasObserverSizeChanged() { /* nothing */ }
+void CanvasObserver::canvasObserverFileDropped(String fname) { /* nothing */ }
 
 /*! \class ipe::Canvas
   \ingroup canvas
@@ -141,6 +142,11 @@ bool CanvasBase::type3Font() {
     bool result = iType3Font;
     iType3Font = false;
     return result;
+}
+
+void CanvasBase::setImageFolder(String imageFolder) {
+    iImageFolder = imageFolder;
+    iBitmapCache.setImageFolder(imageFolder);
 }
 
 // --------------------------------------------------------------------
@@ -344,6 +350,7 @@ void CanvasBase::drawObjects(cairo_t * cc) {
 
     CairoPainter painter(iCascade, iFonts.get(), cc, iZoom, iStyle.pretty, false);
     painter.setDimmed(iDimmed);
+    painter.setBitmapCache(&iBitmapCache);
     const auto viewMap = iPage->viewMap(iView, iCascade);
     painter.setAttributeMap(&viewMap);
     // std::vector<Matrix> layerMatrices = iPage->layerMatrices(iView);

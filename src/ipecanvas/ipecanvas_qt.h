@@ -36,6 +36,11 @@
 
 #include <QWidget>
 
+class QDragEnterEvent;
+class QDragMoveEvent;
+class QDragLeaveEvent;
+class QDropEvent;
+
 // --------------------------------------------------------------------
 
 namespace ipe {
@@ -81,7 +86,14 @@ protected:
     virtual void tabletEvent(QTabletEvent * ev);
     virtual void wheelEvent(QWheelEvent * ev);
     virtual void keyPressEvent(QKeyEvent * ev);
+    virtual void dragEnterEvent(QDragEnterEvent * ev);
+    virtual void dragMoveEvent(QDragMoveEvent * ev);
+    virtual void dragLeaveEvent(QDragLeaveEvent * ev);
+    virtual void dropEvent(QDropEvent * ev);
     virtual QSize sizeHint() const;
+
+private:
+    bool iDragActive = false;
 };
 
 } // namespace ipe

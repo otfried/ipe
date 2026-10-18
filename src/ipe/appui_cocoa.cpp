@@ -1460,13 +1460,15 @@ int AppUi::clipboard(lua_State * L) {
 		Bitmap bitmap(w, h, Bitmap::ENative, data);
 		ipe::Rect r(Vector::ZERO, Vector(w, h));
 		Image * im = new Image(r, bitmap);
+		lua_pushliteral(L, "image");
 		push_object(L, im);
-		return 1;
+		return 2;
 	    }
 	}
     }
     NSArray * arr = [pasteBoard readObjectsForClasses:@[ [NSString class] ] options:@{}];
     if (arr && [arr count] > 0) {
+	lua_pushliteral(L, "text");
 	lua_pushstring(L, N2C(arr[0]));
 	return 1;
     }

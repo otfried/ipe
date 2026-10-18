@@ -112,6 +112,7 @@ enum Property {
     EPropPinned,
     EPropTransformations,
     EPropTransformableText,
+    EPropExternalImages,
     EPropSplineType,
     EPropMinipage,
     EPropWidth,
@@ -522,6 +523,8 @@ public:
       translations.  Otherwise, the value of iTranslations is used (as
       for other objects). */
     bool iTransformableText;
+    //! Should newly inserted images be stored externally?
+    bool iExternalImages;
     /*! What kind of splines should be created? */
     TSplineType iSplineType;
     //! Allowed transformations.

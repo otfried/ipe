@@ -50,6 +50,7 @@ public:
 
 public:
     std::vector<Bitmap> iBitmaps;
+    std::vector<String> iPaths;
 };
 
 class BBoxPainter : public Painter {

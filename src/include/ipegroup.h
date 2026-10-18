@@ -94,6 +94,7 @@ public:
     inline const_iterator end() const { return iImp->iObjects.end(); }
 
     void push_back(Object *);
+    void replace(int index, Object * obj);
 
     void saveComponentsAsXml(Stream & stream) const;
 

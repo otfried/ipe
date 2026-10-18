@@ -107,11 +107,14 @@ public:
     static Document * load(const char * fname, int & reason);
     static Document * loadWithErrorReport(const char * fname);
 
-    bool save(TellStream & stream, FileFormat format, uint32_t flags) const;
-    bool save(const char * fname, FileFormat format, uint32_t flags) const;
-    bool exportPages(const char * fname, uint32_t flags, int fromPage, int toPage) const;
+    bool save(TellStream & stream, FileFormat format, uint32_t flags,
+	      String imageFolder) const;
+    bool save(const char * fname, FileFormat format, uint32_t flags,
+	      String imageFolder) const;
+    bool exportPages(const char * fname, uint32_t flags, int fromPage, int toPage,
+		     String imageFolder) const;
     bool exportView(const char * fname, FileFormat format, uint32_t flags, int pno,
-		    int vno) const;
+		    int vno, String imageFolder) const;
 
     void saveAsXml(Stream & stream, bool usePdfBitmaps = false) const;
 

@@ -507,10 +507,16 @@ The ``<image>`` element
 
 *Attributes*
 
-``bitmap`` (required)
-  Value is an integer referring
-  to a bitmap defined in a ``<bitmap>`` element in the document,
+``bitmap`` (optional)
+  Value is an integer referring to a bitmap defined in a ``<bitmap>``
+  element in the document,
 
+``path`` (optional)
+  A string referring to an externally stored image. If it starts with
+  a slash, the path is absolute, if it starts with "./", it's relative
+  to the current directory, and otherwise it's relative to the
+  document's image folder.
+  
 ``rect`` (required)
   Four real coordinates separated by white space,
   in the order :math:`x_{1}, y_{1}, x_{2}, y_{2}`, indicating two
@@ -520,12 +526,13 @@ The ``<image>`` element
   Opacity of the image.  This must be a
   symbolic name. The default is ``normal``, meaning fully opaque.
 
+Normally, one of ``bitmap`` or ``path`` is present and the image
+element is empty.
 
-The image element is normally empty.  However, it is allowed to omit
-the ``bitmap`` attribute.  In this case, the ``<image>`` must
-carry all the attributes of the ``<bitmap>`` element, with the
-exception of ``id``.  The element contents is then the bitmap data,
-as described for ``<bitmap>``.
+As a special exception, if both ``bitmap`` and ``path`` are missing,
+then the ``<image>`` must carry all the attributes of the ``<bitmap>``
+element, with the exception of ``id``.  The element contents is then
+the bitmap data, as described for ``<bitmap>``.
 
 
 The ``<use>`` element

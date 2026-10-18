@@ -159,6 +159,22 @@ void Canvas::drawRect(NSRect rect) {
     cairo_destroy(cr);
     cairo_surface_finish(surface);
     cairo_surface_destroy(surface);
+
+    if (iView.dragActive) {
+	CGContextSaveGState(myContext);
+	CGContextSetRGBFillColor(myContext, 30 / 255.0, 144 / 255.0, 255 / 255.0,
+				 40 / 255.0);
+	CGContextFillRect(myContext, CGRectMake(0, 0, iWidth, iHeight));
+	CGContextSetRGBStrokeColor(myContext, 30 / 255.0, 144 / 255.0, 255 / 255.0,
+				   220 / 255.0);
+	CGContextSetLineWidth(myContext, 4.0);
+	CGContextStrokeRect(myContext, CGRectMake(2, 2, iWidth - 4, iHeight - 4));
+	CGContextRestoreGState(myContext);
+    }
+}
+
+void Canvas::fileDropped(String fname) {
+    if (iObserver) iObserver->canvasObserverFileDropped(fname);
 }
 
 static int getModifiers(NSEvent * event) {
@@ -243,7 +259,10 @@ void Canvas::scrollWheel(NSEvent * event) {
 @implementation IpeCanvasView
 
 - (instancetype)initWithFrame:(NSRect)rect {
-    if ([super initWithFrame:rect]) _canvas = new Canvas(self);
+    if ([super initWithFrame:rect]) {
+	_canvas = new Canvas(self);
+	[self registerForDraggedTypes:@[ NSPasteboardTypeFileURL ]];
+    }
     return self;
 }
 
@@ -309,6 +328,40 @@ void Canvas::scrollWheel(NSEvent * event) {
 
 - (void)magnifyWithEvent:(NSEvent *)event {
     self.canvas->magnify(event);
+}
+
+- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender {
+    NSPasteboard * pb = [sender draggingPasteboard];
+    if ([pb canReadObjectForClasses:@[ [NSURL class] ] options:nil]) {
+	self.dragActive = YES;
+	[self setNeedsDisplay:YES];
+	return NSDragOperationCopy;
+    }
+    return NSDragOperationNone;
+}
+
+- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
+    return [self draggingEntered:sender];
+}
+
+- (void)draggingExited:(id<NSDraggingInfo>)sender {
+    self.dragActive = NO;
+    [self setNeedsDisplay:YES];
+}
+
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender {
+    self.dragActive = NO;
+    [self setNeedsDisplay:YES];
+    NSPasteboard * pb = [sender draggingPasteboard];
+    NSArray<NSURL *> * urls = [pb readObjectsForClasses:@[ [NSURL class] ] options:nil];
+    BOOL handled = NO;
+    for (NSURL * url in urls) {
+	if ([url isFileURL]) {
+	    self.canvas->fileDropped(ipe::String([[url path] UTF8String]));
+	    handled = YES;
+	}
+    }
+    return handled;
 }
 
 - (void)dealloc {

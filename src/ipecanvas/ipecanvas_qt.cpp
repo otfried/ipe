@@ -39,6 +39,13 @@
 #include <QPainterPath>
 #include <QPointingDevice>
 
+#include <QDragEnterEvent>
+#include <QDragLeaveEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QMimeData>
+#include <QUrl>
+
 using namespace ipe;
 
 // --------------------------------------------------------------------
@@ -103,6 +110,7 @@ Canvas::Canvas(QWidget * parent, Qt::WindowFlags f)
     setAttribute(Qt::WA_OpaquePaintEvent);
     setMouseTracking(true);
     setFocusPolicy(Qt::ClickFocus);
+    setAcceptDrops(true);
 }
 
 QSize Canvas::sizeHint() const { return QSize(640, 480); }
@@ -241,6 +249,34 @@ void Canvas::wheelEvent(QWheelEvent * ev) {
     ev->accept();
 }
 
+void Canvas::dragEnterEvent(QDragEnterEvent * ev) {
+    if (ev->mimeData()->hasUrls()) {
+	ev->acceptProposedAction();
+	iDragActive = true;
+	QWidget::update();
+    }
+}
+
+void Canvas::dragMoveEvent(QDragMoveEvent * ev) {
+    if (ev->mimeData()->hasUrls()) ev->acceptProposedAction();
+}
+
+void Canvas::dragLeaveEvent(QDragLeaveEvent *) {
+    iDragActive = false;
+    QWidget::update();
+}
+
+void Canvas::dropEvent(QDropEvent * ev) {
+    iDragActive = false;
+    QWidget::update();
+    if (!ev->mimeData()->hasUrls()) return;
+    for (const QUrl & url : ev->mimeData()->urls()) {
+	if (url.isLocalFile() && iObserver)
+	    iObserver->canvasObserverFileDropped(IpeQ(url.toLocalFile()));
+    }
+    ev->acceptProposedAction();
+}
+
 static void draw_plus(const Vector & p, QPainter & q) {
     q.drawLine(QPt(p - Vector(8, 0)), QPt(p + Vector(8, 0)));
     q.drawLine(QPt(p - Vector(0, 8)), QPt(p + Vector(0, 8)));
@@ -338,6 +374,13 @@ void Canvas::paintEvent(QPaintEvent * ev) {
 	qp.pushMatrix();
 	drawTool(qp);
 	qp.popMatrix();
+    }
+    if (iDragActive) {
+	qPainter.fillRect(rect(), QColor(30, 144, 255, 40));
+	QPen pen(QColor(30, 144, 255, 220));
+	pen.setWidth(4);
+	qPainter.setPen(pen);
+	qPainter.drawRect(rect().adjusted(2, 2, -2, -2));
     }
     qPainter.end();
 }

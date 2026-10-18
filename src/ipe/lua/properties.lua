@@ -398,9 +398,13 @@ end
 function MODEL:properties_image(obj, m)
   m:add("comment", "Image object")
   local info = obj:info()
-  m:add("comment", string.format("%d x %d pixels",
-				  info.width, info.height))
-  m:add("comment", "Format " .. info.format)
+  if info.path then
+    m:add("action_image_path", "Path " .. info.path)
+  else
+    m:add("comment", string.format("%d x %d pixels",
+				   info.width, info.height))
+    m:add("comment", "Format " .. info.format)
+  end
   self:insertBasic(m, obj)
   self:insertOpacity(m, obj)
 end

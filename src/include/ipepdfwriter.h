@@ -104,7 +104,7 @@ class PdfWriter {
 public:
     PdfWriter(TellStream & stream, const Document * doc, const PdfResources * resources,
 	      uint32_t flags, int fromPage, int toPage, int compression,
-	      Attribute variant);
+	      Attribute variant, String imageFolder);
     ~PdfWriter();
 
     void createPages();
@@ -168,6 +168,8 @@ private:
     std::unordered_map<int, int> iResourceNumber;
 
     std::vector<Bitmap> iBitmaps;
+    BitmapCache iBitmapCache;
+
     //! Next unused PDF object number.
     int iObjNum;
 

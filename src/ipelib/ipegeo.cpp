@@ -1062,7 +1062,6 @@ static Vector nearbyBezierEllipseIntersection(const Vector & q, const Bezier & a
 	size_t iter = 0;
 	do {
 	    iter++;
-	    ipeDebug("About it iterate");
 	    status = gsl_min_fminimizer_iterate(s);
 	    if (status) break;
 	    double x0 = gsl_min_fminimizer_x_lower(s);

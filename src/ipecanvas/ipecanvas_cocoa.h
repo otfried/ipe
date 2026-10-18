@@ -43,6 +43,7 @@ class Canvas;
 @interface IpeCanvasView : NSView
 
 @property Canvas * canvas;
+@property BOOL dragActive;
 
 @end
 
@@ -62,6 +63,7 @@ public:
     void magnify(NSEvent * event);
 
     void drawRect(NSRect rect);
+    void fileDropped(ipe::String fname);
 
 private:
     // void refreshLayer();

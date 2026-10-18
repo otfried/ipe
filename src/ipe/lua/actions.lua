@@ -1031,6 +1031,11 @@ function MODEL:action_export_pptx()
 end
 
 function MODEL:action_insert_image()
+  if self.attributes.externalimages and not self.file_name then
+    self:warning("Cannot create external image",
+		 "Document does not yet have a file name, so we have no image folder")
+    return
+  end
   if not self.insert_image_dir and self.file_name then
     self.insert_image_dir = self.file_name:match(prefs.dir_pattern)
   end
@@ -1038,17 +1043,8 @@ function MODEL:action_insert_image()
 				filter_images, self.insert_image_dir)
   if s then
     self.insert_image_dir = s:match(prefs.dir_pattern)
-    local format = "png"
-    if s:sub(-4):lower() == ".jpg" or s:sub(-5):lower() == ".jpeg"
-    then format = "jpeg" end
-    local bitmap, res = ipe.readImage(s, format)
-    if not bitmap then
-      messageBox(self.ui:win(), "warning", "Could not read image",
-		 res, "ok")
-    else
-      local info = bitmap:info()
-      local r = self:compute_rect(info.width, info.height, res)
-      local obj = ipe.Image(r, bitmap)
+    local obj = self:readImage(s)
+    if obj then
       self:creation("insert image", obj)
     end
   else
@@ -1056,26 +1052,21 @@ function MODEL:action_insert_image()
   end
 end
 
-
-function MODEL:insert_image(fname, format)
-  local bitmap, res = ipe.readImage(fname, format)
-  if not bitmap then
-    messageBox(self.ui:win(), "warning", "Could not read image",
-	       res, "ok")
-  else
-    local info = bitmap:info()
-    local r = self:compute_rect(info.width, info.height, res)
-    local obj = ipe.Image(r, bitmap)
+-- this is the function that is called when users drag an image onto the canvas
+function MODEL:insert_image(fname)
+  local obj = self:readImage(fname)
+  if obj then
     self:creation("insert image", obj)
   end
 end
 
+-- those two are used in HTMLJS
 function MODEL:action_drop_image_png()
-  self:insert_image("/home/ipe/image.png", "png")
+  self:insert_image("/home/ipe/image.png")
 end
 
 function MODEL:action_drop_image_jpeg()
-  self:insert_image("/home/ipe/image.jpeg", "jpeg")
+  self:insert_image("/home/ipe/image.jpeg")
 end
 
 ----------------------------------------------------------------------
@@ -1959,7 +1950,7 @@ function MODEL:action_new_page()
 end
 
 function MODEL:action_paste_page()
-  local data = self:clipboard(false)
+  local format, data = self:clipboard(false)
   if data:sub(1,9) ~= "<ipepage>" then
     self:warning("No Ipe page to paste")
     return
@@ -2678,13 +2669,13 @@ function MODEL:action_cut()
 end
 
 function MODEL:action_paste()
-  local data = self:clipboard(true)  -- allow a bitmap
-  if not data then
+  local format, data = self:clipboard(true)  -- allow a bitmap
+  if not format then
     self:warning("Nothing to paste")
     return
   end
   local elements
-  if type(data) == "string" then
+  if format == "text" then
     if data:sub(1,13) ~= "<ipeselection" then
       self:warning("No Ipe selection to paste")
       return
@@ -2694,7 +2685,12 @@ function MODEL:action_paste()
       self:warning("Could not parse Ipe selection on clipboard")
       return
     end
+  elseif format == "path" then
+    local image = self:readImage(data)
+    if not image then return end
+    elements = { image } 
   else
+    -- an image object
     elements = { data }
   end
   local p = self:page()
@@ -2721,12 +2717,12 @@ function MODEL:action_paste()
 end
 
 function MODEL:action_paste_with_layer()
-  local data = self:clipboard(false)
-  if not data then
+  local format, data = self:clipboard(false)
+  if not format then
     self:warning("Nothing to paste")
     return
   end
-  if type(data) ~= "string" or data:sub(1,13) ~= "<ipeselection" then
+  if data:sub(1,13) ~= "<ipeselection" then
     self:warning("No Ipe selection to paste")
     return
   end
@@ -3143,6 +3139,31 @@ function MODEL:saction_animate()
 	   end
   t.redo = function (t, doc)
              doc[t.pno][t.primary]:setAnimate(t.animate)
+           end
+  self:register(t)
+end
+
+----------------------------------------------------------------------
+
+function MODEL:saction_image_path()
+  local p = self:page()
+  local prim = p:primarySelection()
+  local obj = p[prim]
+  local path = self:getString("Enter new path", nil, obj:info().path)
+  if not path then return end
+  if path:match("^%s*$") then return end
+  local t = { label="set image path",
+	      pno=self.pno,
+	      vno=self.vno,
+	      primary=prim,
+	      original=obj:info().path,
+	      path=path,
+	    }
+  t.undo = function (t, doc)
+             doc[t.pno][t.primary]:setPath(t.original)
+	   end
+  t.redo = function (t, doc)
+             doc[t.pno][t.primary]:setPath(t.path)
            end
   self:register(t)
 end

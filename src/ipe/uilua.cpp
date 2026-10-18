@@ -93,6 +93,13 @@ static int appui_setResources(lua_State * L) {
     return 0;
 }
 
+static int appui_setImageFolder(lua_State * L) {
+    CanvasBase * canvas = check_canvas(L, 1);
+    String s = luaL_checkstring(L, 2);
+    canvas->setImageFolder(s);
+    return 0;
+}
+
 static int appui_pan(lua_State * L) {
     CanvasBase * canvas = check_canvas(L, 1);
     Vector p = canvas->pan();
@@ -728,6 +735,7 @@ static const struct luaL_Reg appui_methods[] = {
     {"zoom", appui_zoom},
     {"setZoom", appui_setZoom},
     {"setResources", appui_setResources},
+    {"setImageFolder", appui_setImageFolder},
     {"pos", appui_pos},
     {"globalPos", appui_globalPos},
     {"unsnappedPos", appui_unsnappedPos},

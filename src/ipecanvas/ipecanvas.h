@@ -59,6 +59,7 @@ public:
     virtual void canvasObserverPositionChanged();
     virtual void canvasObserverToolChanged(bool hasTool);
     virtual void canvasObserverSizeChanged();
+    virtual void canvasObserverFileDropped(String fname);
 };
 
 class CanvasBase {
@@ -101,6 +102,8 @@ public:
 
     void setPage(const Page * page, int pno, int view, const Cascade * sheet);
     void setResources(const PdfResources * resources);
+
+    void setImageFolder(String imageFolder);
 
     //! Return current pan.
     inline Vector pan() const { return iPan; }
@@ -193,6 +196,9 @@ protected:
     int iView;
     const Cascade * iCascade;
     Attribute iVisibleVariant;
+
+    String iImageFolder;
+    BitmapCache iBitmapCache;
 
     Style iStyle;
 

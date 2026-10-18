@@ -86,6 +86,7 @@ const char * const property_names[] = {"pen",
 				       "pinned",
 				       "transformations",
 				       "transformabletext",
+				       "externalimages",
 				       "splinetype",
 				       "minipage",
 				       "width",
@@ -501,6 +502,7 @@ AllAttributes::AllAttributes() {
     iFArrow = iRArrow = false;
     iSymbolSize = iTextSize = iTextStyle = iLabelStyle = Attribute::NORMAL();
     iTransformableText = false;
+    iExternalImages = true;
     iVerticalAlignment = EAlignBaseline;
     iHorizontalAlignment = EAlignLeft;
     iPinned = ENoPin;

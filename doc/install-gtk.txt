@@ -24,7 +24,7 @@ steps will install the necessary libraries and tools:
     sudo apt-get install libspiro-dev libgsl-dev curl
 
 Use Lua 5.4 or Lua 5.3 if that is what you have.  You can omit
-libspelling-q-dev to compile without spell checking, just remove
+libspelling-1-dev to compile without spell checking, just remove
 IPE_SPELLCHECK=1 in the make command below.
 
 Now you can compile and install Ipe into /usr/local:

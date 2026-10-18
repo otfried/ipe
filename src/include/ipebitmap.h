@@ -42,6 +42,11 @@ namespace ipe {
 
 class Bitmap {
 public:
+    enum Format {
+	None,
+	Png,
+	Jpeg,
+    };
     enum Flags {
 	ERGB = 0x01,     // not grayscale
 	EAlpha = 0x02,   // has alpha channel
@@ -89,7 +94,13 @@ public:
 			   const char *& errmsg);
     static Bitmap readPNG(const char * fname, Vector & dotsPerInch, const char *& errmsg);
 
+    static Bitmap read(const char * fname, Vector & dotsPerInch, const char *& errmsg);
+
+    static Format formatFromFile(const char * fname);
+
     void savePixels(const char * fname);
+
+    bool save(const char * fname) const;
 
 private:
     std::pair<int, int> init(const XmlAttributes & attr);
@@ -112,6 +123,18 @@ private:
     };
 
     Imp * iImp;
+};
+
+// --------------------------------------------------------------------
+
+class BitmapCache {
+public:
+    void setImageFolder(String imageFolder);
+    Bitmap load(String path);
+
+private:
+    String iImageFolder;
+    std::vector<std::pair<String, Bitmap>> iCache;
 };
 
 // --------------------------------------------------------------------

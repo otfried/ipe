@@ -236,12 +236,21 @@ void Object::saveAttributesAsXml(Stream & stream, String layer) const {
 	stream << " transformations=\"translations\"";
     else if (iTransformations == ETransformationsRigidMotions)
 	stream << " transformations=\"rigid\"";
-    if (iCustom != Attribute::UNDEFINED())
-	stream << " custom=\"" << iCustom.string() << "\"";
-    if (iAnimate != Attribute::UNDEFINED())
-	stream << " animate=\"" << iAnimate.string() << "\"";
-    if (iVariant != Attribute::UNDEFINED())
-	stream << " variant=\"" << iVariant.string() << "\"";
+    if (iCustom != Attribute::UNDEFINED()) {
+	stream << " custom=\"";
+	stream.putXmlString(iCustom.string());
+	stream << "\"";
+    }
+    if (iAnimate != Attribute::UNDEFINED()) {
+	stream << " animate=\"";
+	stream.putXmlString(iAnimate.string());
+	stream << "\"";
+    }
+    if (iVariant != Attribute::UNDEFINED()) {
+	stream << " variant=\"";
+	stream.putXmlString(iVariant.string());
+	stream << "\"";
+    }
 }
 
 //! Return pointer to this object if it is an Group, nullptr otherwise.

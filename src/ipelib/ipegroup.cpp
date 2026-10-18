@@ -131,6 +131,18 @@ void Group::push_back(Object * obj) {
     iImp->iPinned = TPinned(iImp->iPinned | obj->pinned());
 }
 
+//! Replace a component, taking ownership of \a obj.
+/*! Other copies of the group remain unchanged. */
+void Group::replace(int index, Object * obj) {
+    assert(0 <= index && index < count());
+    Group updated;
+    for (int i = 0; i < count(); ++i)
+	updated.push_back(i == index ? obj : object(i)->clone());
+    Imp * old = iImp;
+    iImp = updated.iImp;
+    updated.iImp = old;
+}
+
 //! Save all the components, one by one, in XML format.
 void Group::saveComponentsAsXml(Stream & stream) const {
     for (const_iterator it = begin(); it != end(); ++it)

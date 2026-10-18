@@ -42,6 +42,7 @@ namespace ipe {
 class Image : public Object {
 public:
     explicit Image(const Rect & rect, Bitmap bitmap);
+    explicit Image(const Rect & rect, String path);
     explicit Image(const XmlAttributes & attr, String data);
     explicit Image(const XmlAttributes & attr, Bitmap bitmap);
 
@@ -63,8 +64,28 @@ public:
     virtual void snapCtl(const Vector & mouse, const Matrix & m, Vector & pos,
 			 double & bound) const override;
 
-    inline Rect rect() const;
-    inline Bitmap bitmap() const;
+    //! Return the rectangle occupied by the image on the paper.
+    /*! The transformation matrix is applied to this, of course. */
+    inline Rect rect() const { return iRect; }
+
+    //! Return Bitmap of the image.
+    inline Bitmap bitmap() const { return iBitmap; }
+
+    //! Set an internal bitmap, clearing any external image path.
+    inline void setBitmap(Bitmap bitmap) {
+	assert(!bitmap.isNull());
+	iBitmap = bitmap;
+	iPath = String();
+    }
+
+    //! Is the image stored externally?
+    inline bool isExternal() const { return !iPath.empty(); }
+
+    //! Return path to external image file.
+    inline String path() const { return iPath; }
+
+    //! Set path to external image file.
+    inline void setPath(String path) { iPath = path; }
 
     virtual bool setAttribute(Property prop, Attribute value) override;
     virtual Attribute getAttribute(Property prop) const noexcept override;
@@ -78,18 +99,10 @@ private:
 
 private:
     Rect iRect;
-    Bitmap iBitmap;
     Attribute iOpacity;
+    String iPath;
+    Bitmap iBitmap;
 };
-
-// --------------------------------------------------------------------
-
-//! Return the rectangle occupied by the image on the paper.
-/*! The transformation matrix is applied to this, of course. */
-inline Rect Image::rect() const { return iRect; }
-
-//! Return Bitmap of the image.
-inline Bitmap Image::bitmap() const { return iBitmap; }
 
 } // namespace ipe
 

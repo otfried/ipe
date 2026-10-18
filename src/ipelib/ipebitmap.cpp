@@ -30,6 +30,7 @@
 
 #include "ipebitmap.h"
 #include "ipeutils.h"
+#include <limits>
 #include <zlib.h>
 
 using namespace ipe;
@@ -559,7 +560,7 @@ const char * Bitmap::readJpegInfo(FILE * file, int & width, int & height,
 	int ch = fgetc(file);
 	if (ch != 0xff) return "Reading JPEG image failed";
 	do { ch = fgetc(file); } while (ch == 0xff);
-	ipeDebug("JPEG tag %x", ch & 0xff);
+	// ipeDebug("JPEG tag %x", ch & 0xff);
 	int fpos = ftell(file);
 	switch (ch & 0xff) {
 
@@ -663,6 +664,142 @@ Bitmap Bitmap::readJpeg(const char * fname, Vector & dotsPerInch, const char *& 
 
     String a = Platform::readFile(fname);
     return Bitmap(width, height, flags, Buffer(a.data(), a.size()));
+}
+
+Bitmap::Format Bitmap::formatFromFile(const char * fname) {
+    FILE * f = Platform::fopen(fname, "rb");
+    if (f == nullptr) return Format::None;
+    static const unsigned char pngSig[8] = {0x89, 'P', 'N', 'G', 0x0d, 0x0a, 0x1a, 0x0a};
+    unsigned char hdr[8];
+    size_t n = fread(hdr, 1, 8, f);
+    fclose(f);
+    if (n >= 2 && hdr[0] == 0xff && hdr[1] == 0xd8) return Format::Jpeg;
+    if (n != 8) return Format::None;
+    for (int i = 0; i < 8; ++i) {
+	if (hdr[i] != pngSig[i]) return Format::None;
+    }
+    return Format::Png;
+}
+
+Bitmap Bitmap::read(const char * fname, Vector & dotsPerInch, const char *& errmsg) {
+    Format format = formatFromFile(fname);
+    if (format == Format::Png) return readPNG(fname, dotsPerInch, errmsg);
+    if (format == Format::Jpeg) return readJpeg(fname, dotsPerInch, errmsg);
+    return Bitmap();
+}
+
+// --------------------------------------------------------------------
+
+void BitmapCache::setImageFolder(String imageFolder) {
+    if (imageFolder != iImageFolder) {
+	ipeDebug("Setting image folder '%s'", imageFolder.z());
+	iImageFolder = imageFolder;
+	iCache.clear();
+    }
+}
+
+Bitmap BitmapCache::load(String path) {
+    auto it = std::find_if(
+	iCache.begin(), iCache.end(),
+	[&](const std::pair<String, Bitmap> & item) { return item.first == path; });
+    if (it != iCache.end()) return it->second;
+    String rpath = path;
+    if (path.left(2) != "./" && path[0] != '/') rpath = iImageFolder + path;
+    ipeDebug("Loading external image '%s' from '%s'", path.z(), rpath.z());
+    Bitmap bitmap;
+    Vector dotsPerInch;
+    const char * errmsg = nullptr;
+    if (path.right(5) == ".jpeg" || path.right(4) == ".jpg")
+	bitmap = Bitmap::readJpeg(rpath.z(), dotsPerInch, errmsg);
+    else
+	bitmap = Bitmap::readPNG(rpath.z(), dotsPerInch, errmsg);
+    if (errmsg) ipeDebug("Error reading bitmap: %s", errmsg);
+    iCache.push_back({path, bitmap});
+    return bitmap;
+}
+
+// --------------------------------------------------------------------
+
+static void pngUint32(unsigned char * dst, uint32_t value) {
+    dst[0] = value >> 24;
+    dst[1] = value >> 16;
+    dst[2] = value >> 8;
+    dst[3] = value;
+}
+
+static bool writePngChunk(FILE * file, const char * type, const unsigned char * data,
+			  int size) {
+    unsigned char length[4], checksum[4];
+    pngUint32(length, size);
+    uLong crc = crc32(0, reinterpret_cast<const Bytef *>(type), 4);
+    if (size > 0) crc = crc32(crc, data, size);
+    pngUint32(checksum, crc);
+    return fwrite(length, 1, 4, file) == 4 && fwrite(type, 1, 4, file) == 4
+	   && (size == 0 || fwrite(data, 1, size, file) == size_t(size))
+	   && fwrite(checksum, 1, 4, file) == 4;
+}
+
+//! Save as JPEG (without re-encoding) or PNG, preserving straight-alpha pixels.
+/*! Returns false if the bitmap is null, encoding fails, or writing fails. */
+bool Bitmap::save(const char * fname) const {
+    if (isNull()) return false;
+    if (isJpeg()) {
+	std::FILE * file = Platform::fopen(fname, "wb");
+	if (!file) return false;
+	size_t written = ::fwrite(iImp->iData.data(), 1, iImp->iData.size(), file);
+	int closed = ::fclose(file);
+	return written == size_t(iImp->iData.size()) && closed == 0;
+    } else {
+	uint64_t rowSize = uint64_t(width()) * 4 + 1;
+	uint64_t size = rowSize * height();
+	if (size > uint64_t(std::numeric_limits<int>::max())) {
+	    ipeDebug("Bitmap too large for PNG encoding");
+	    return false;
+	}
+	Buffer pixels{int(size)};
+	auto src = reinterpret_cast<const uint32_t *>(iImp->iData.data());
+	auto dst = reinterpret_cast<unsigned char *>(pixels.data());
+	for (int y = 0; y < height(); ++y) {
+	    *dst++ = 0; // PNG filter None
+	    for (int x = 0; x < width(); ++x) {
+		uint32_t pixel = *src++;
+		*dst++ = pixel >> 16;
+		*dst++ = pixel >> 8;
+		*dst++ = pixel;
+		*dst++ = pixel >> 24;
+	    }
+	}
+	uLongf compressedSize = compressBound(pixels.size());
+	if (compressedSize > uLongf(std::numeric_limits<int>::max())) {
+	    ipeDebug("Bitmap too large for PNG compression");
+	    return false;
+	}
+	Buffer compressed{int(compressedSize)};
+	int err =
+	    compress2(reinterpret_cast<Bytef *>(compressed.data()), &compressedSize,
+		      reinterpret_cast<const Bytef *>(pixels.data()), pixels.size(), 9);
+	if (err != Z_OK) {
+	    ipeDebug("PNG compression failed: zlib error %d", err);
+	    return false;
+	}
+
+	unsigned char header[13] = {};
+	pngUint32(header, width());
+	pngUint32(header + 4, height());
+	header[8] = 8; // bits per channel
+	header[9] = 6; // RGBA
+	std::FILE * file = Platform::fopen(fname, "wb");
+	if (!file) return false;
+	bool written =
+	    ::fwrite("\x89PNG\r\n\x1a\n", 1, 8, file) == 8
+	    && writePngChunk(file, "IHDR", header, sizeof(header))
+	    && writePngChunk(file, "IDAT",
+			     reinterpret_cast<const unsigned char *>(compressed.data()),
+			     int(compressedSize))
+	    && writePngChunk(file, "IEND", nullptr, 0);
+	int closed = ::fclose(file);
+	return written && closed == 0;
+    }
 }
 
 // --------------------------------------------------------------------

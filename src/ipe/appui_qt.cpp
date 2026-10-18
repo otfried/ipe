@@ -987,8 +987,9 @@ static int getImage(lua_State * L, QImage & img) {
     Bitmap bitmap(w, h, Bitmap::ENative, data);
     Rect r(Vector::ZERO, Vector(w, h));
     Image * im = new Image(r, bitmap);
+    lua_pushliteral(L, "image");
     push_object(L, im);
-    return 1;
+    return 2;
 }
 
 int AppUi::clipboard(lua_State * L) {
@@ -999,15 +1000,21 @@ int AppUi::clipboard(lua_State * L) {
 	if (md->hasUrls()) {
 	    auto urls = md->urls();
 	    if (urls.size() == 1 && urls[0].isLocalFile()) {
-		if (readImage(L, IpeQ(urls[0].toLocalFile()))) return 1;
+		QString fname = urls[0].toLocalFile();
+		if (Bitmap::formatFromFile(fname.toUtf8()) != Bitmap::Format::None) {
+		    lua_pushliteral(L, "path");
+		    lua_pushstring(L, fname.toUtf8());
+		    return 2;
+		}
 	    }
 	}
 	QImage img = cb->image();
 	if (!img.isNull()) { return getImage(L, img); }
     }
     QString data = cb->text();
+    lua_pushliteral(L, "text");
     lua_pushstring(L, data.toUtf8());
-    return 1;
+    return 2;
 }
 
 // --------------------------------------------------------------------

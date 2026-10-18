@@ -230,6 +230,7 @@ obj = ipe.Text(attributes, text, pos, width)   -- Text of type minipage
 obj = ipe.Path(attributes, shape, with_arrows)	 
 obj = ipe.Group(elements)       -- elements is a table of objects
 obj = ipe.Image(rect, bitmap)   -- where bitmap is another Image object 
+obj = ipe.Image(rect, path)     -- to create an external image
 \endverbatim
 
 Here, \c attributes is a table defining the desired attributes, see
@@ -239,12 +240,12 @@ to false). The arrow settings are then used from the \c attributes.
 
 A bitmap can be created by reading from an image file:
 \verbatim
-bitmap, res = ipe.readImage(fname, format)
+bitmap, res = ipe.readImage(fname)
 \endverbatim
-where format is one of "png" or "jpeg".  If reading the bitmap fails,
-then bitmap is nil and res is an error message. Otherwise, bitmap is
-an Image object and res is the resolution in dots per inch.  This will
-be (0,0) if the file does not contain that information.
+If reading the bitmap fails, then bitmap is nil and res is an error
+message. Otherwise, bitmap is an Image object and res is the
+resolution in dots per inch.  This will be (0,0) if the file does not
+contain that information.
 
 Objects have the following methods:
 \verbatim
@@ -259,6 +260,9 @@ obj:matrix()
 obj:setMatrix(m)
 obj:addToBBox(r, m)         -- including control points
 obj:addToBBox(r, m, false)  -- without control points
+
+obj:setAnimate(s)           -- set string s as animate name
+s = obj:getAnimate()
 
 obj:setCustom(s)            -- set string s as custom field
 s = obj:getCustom()
@@ -279,11 +283,15 @@ obj:setClip(shape)
 str = obj:text()             -- the link action (URL)
 obj:setText(str)
 -- image objects only:
+rect = obj:rect()            -- image rectangle before applying obj:matrix()
 obj:info()                   -- returns table about bitmap
+obj:setBitmap(image)         -- copies image's internal bitmap and clears the external path;
+                            -- preserves the rectangle and all attributes; rejects images without a bitmap
 -- group objects only:
 elements = obj:elements()    -- returns table with clones of elements 
 element = obj:element(i)     -- returns clone of element #i
 obj:elementType(i)           -- returns type of element #i
+obj:replace(i, element)      -- replaces element #i with a clone; other copies of the group are unchanged
 \endverbatim
 
 \section luaattributes Attributes
@@ -337,7 +345,8 @@ linecap             -- "normal", "butt", "round", "square"
 fillrule            -- "normal", "wind", "evenodd"
 pinned              -- "none", "horizontal", "vertical", "fixed"
 transformations     -- "translations", "rigid", "affine"
-language            -- two-letter string or empty string (for no language)
+variant     -- symbolic, or "undefined"
+externalimages -- boolean
 \endverbatim
 
 
@@ -355,8 +364,8 @@ objects.  The property names are
     horizontalalignment, verticalalignment,
     linejoin, linecap, fillrule, 
     pinned, transformations,
-    decoration
-    language
+    decoration,
+    variant
 \endverbatim
 
 It is okay to set a property on objects that do not support them (for
@@ -608,12 +617,16 @@ doc = ipe.Document(filename) -- load from file
 #doc    -- number of pages
 doc[i]  -- return page #i, where 1 <= i <= #doc
 
+copy = doc:clone() -- independent pages, stylesheets, and properties;
+                   -- PDF resources are not copied: run LaTeX before saving as PDF
+
 -- format == nil: guess from filename
 -- flags is either nil, or a table with keys
 -- "export", "nozip", "lastview", "nocolor"
-doc:save(filename, format, flags)  
-doc:exportPages(filename, flags, fromPage, toPage)
-doc:exportView(filename, format, flags, pageNo, viewNo)
+-- if format == "xml", imageFolder can be omitted
+doc:save(filename, format, flags, imageFolder)  
+doc:exportPages(filename, flags, fromPage, toPage, imageFolder)
+doc:exportView(filename, format, flags, pageNo, viewNo, imageFolder)
 
 -- iterating over pages of document:
 for i, p in doc:pages() do
@@ -653,8 +666,9 @@ fullscreen cropbox numberpages sequentialtext tex
 ipe.fileFormat(filename)      -- returns one of "xml", "pdf", "eps", "ipe5", "unknown"
 ipe.fileExists(filename)      -- returns true or false
 ipe.realPath(filename)        -- convert relative path to absolute path
-ipe.directory(path)           -- return list of files in directory
-ipe.openFile(path, mode)      -- replacement for io.open
+ipe.directory(path)           -- return table of files in directory
+ipe.openFile(path, mode)      -- replacement for io.open handling Unicode on Windows
+ipe.mkdir(path)               -- create directory; returns true, or nil, error message, error code
 beziers = ipe.splineToBeziers(spline, is_closed, old_style)
 ipelet = ipe.Ipelet(dllname)  -- loads C++ ipelet from absolute path
 -- returns ipelet or nil, error message
@@ -721,10 +735,14 @@ vno = ui:selectPage(doc, page_no)
 ui:pageSorter(?)
 
 ui:setClipboard(text)     -- store text on system clipboard
--- get text or bitmap property from system clipboard
--- if t is false, only text is retrieved
--- returns either a string or an image object.
-obj = ipeui.clipboard(t)  
+
+-- get text or image from system clipboard
+-- if allowBitmap is false, only text is retrieved
+-- returns:
+-- "text", string  if clipboard contains text
+-- "path", string  if clipboard contains name of an image file
+-- "image", bitmap if clipboard contains actual pixel data
+format, value = ipeui.clipboard(allowBitmap)  
 \endverbatim
 
 The following methods work on the canvas inside the UI:

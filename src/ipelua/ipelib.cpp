@@ -121,6 +121,15 @@ static int document_destruct(lua_State * L) {
     return 0;
 }
 
+static int document_clone(lua_State * L) {
+    Document ** d = check_document(L, 1);
+    Document ** copy = (Document **)lua_newuserdata(L, sizeof(Document *));
+    *copy = new Document(**d);
+    luaL_getmetatable(L, "Ipe.document");
+    lua_setmetatable(L, -2);
+    return 1;
+}
+
 static int document_tostring(lua_State * L) {
     check_document(L, 1);
     lua_pushfstring(L, "Document@%p", lua_topointer(L, 1));
@@ -206,7 +215,9 @@ static int document_save(lua_State * L) {
     else
 	format = FileFormat(luaL_checkoption(L, 3, nullptr, format_name));
     uint32_t flags = check_flags(L, 4);
-    bool result = (*d)->save(fname.z(), format, flags);
+    String imageFolder;
+    if (format == FileFormat::Pdf) imageFolder = luaL_checkstring(L, 5);
+    bool result = (*d)->save(fname.z(), format, flags, imageFolder);
     lua_pushboolean(L, result);
     return 1;
 }
@@ -217,7 +228,8 @@ static int document_exportPages(lua_State * L) {
     uint32_t flags = check_flags(L, 3);
     int fromPage = check_pageno(L, 4, *d);
     int toPage = check_pageno(L, 5, *d);
-    bool result = (*d)->exportPages(fname.z(), flags, fromPage, toPage);
+    String imageFolder = luaL_checkstring(L, 6);
+    bool result = (*d)->exportPages(fname.z(), flags, fromPage, toPage, imageFolder);
     lua_pushboolean(L, result);
     return 1;
 }
@@ -233,7 +245,8 @@ static int document_exportView(lua_State * L) {
     uint32_t flags = check_flags(L, 4);
     int pno = check_pageno(L, 5, *d);
     int vno = check_viewno(L, 6, (*d)->page(pno));
-    bool result = (*d)->exportView(fname.z(), format, flags, pno, vno);
+    String imageFolder = luaL_checkstring(L, 7);
+    bool result = (*d)->exportView(fname.z(), format, flags, pno, vno, imageFolder);
     lua_pushboolean(L, result);
     return 1;
 }
@@ -480,7 +493,7 @@ static void propFlag(lua_State * L, const char * name, bool & flag) {
 
 static void propString(lua_State * L, const char * name, String & str) {
     lua_getfield(L, 2, name);
-    if (lua_isstring(L, -1)) str = lua_tolstring(L, -1, nullptr);
+    if (lua_isstring(L, -1)) str = lua_tostring(L, -1);
     lua_pop(L, 1);
 }
 
@@ -503,7 +516,8 @@ static int document_setProperties(lua_State * L) {
     propString(L, "creator", prop.iCreator);
     String variant;
     propString(L, "variant", variant);
-    prop.iVariant = Attribute(true, variant);
+    if (!variant.empty())
+	prop.iVariant = Attribute(true, variant);
     String tex;
     propString(L, "tex", tex);
     for (int i = 0; i < 4; ++i) {
@@ -521,6 +535,7 @@ static const struct luaL_Reg document_methods[] = {
     {"__len", document_len},
     {"__index", document_index},
     {"pages", document_pages},
+    {"clone", document_clone},
     {"save", document_save},
     {"exportPages", document_exportPages},
     {"exportView", document_exportView},
@@ -625,6 +640,12 @@ static int ipe_fileExists(lua_State * L) {
     return 1;
 }
 
+static int ipe_mkdir(lua_State * L) {
+    String s = check_filename(L, 1);
+    int result = Platform::mkdir(s);
+    return luaL_fileresult(L, result == 0, s.z());
+}
+
 static int ipe_realpath(lua_State * L) {
     String s = check_filename(L, 1);
     push_string(L, Platform::realPath(s));
@@ -674,17 +695,12 @@ static int ipe_openFile(lua_State * L) {
     return (p->f == nullptr) ? luaL_fileresult(L, 0, filename) : 1;
 }
 
-static const char * const image_format_names[] = {"png", "jpeg"};
-
 static int ipe_readImage(lua_State * L) {
     String s = check_filename(L, 1);
-    int fmt = luaL_checkoption(L, 2, nullptr, image_format_names);
-
     Vector dotsPerInch;
     const char * errmsg = nullptr;
 
-    Bitmap bmp = fmt ? Bitmap::readJpeg(s.z(), dotsPerInch, errmsg)
-		     : Bitmap::readPNG(s.z(), dotsPerInch, errmsg);
+    Bitmap bmp = Bitmap::read(s.z(), dotsPerInch, errmsg);
 
     if (bmp.isNull()) {
 	lua_pushnil(L);
@@ -701,12 +717,17 @@ static int ipe_readImage(lua_State * L) {
 
 static int image_constructor(lua_State * L) {
     Rect * r = check_rect(L, 1);
-    Object * s = check_object(L, 2)->obj;
-    luaL_argcheck(L, s->type() == Object::EImage, 2, "not an image object");
-    Bitmap bm = s->asImage()->bitmap();
-
-    Image * img = new Image(*r, bm);
-    push_object(L, img);
+    if (lua_isstring(L, 2)) {
+	String path = lua_tostring(L, 2);
+	Image * img = new Image(*r, path);
+	push_object(L, img);
+    } else {
+	Object * s = check_object(L, 2)->obj;
+	luaL_argcheck(L, s->type() == Object::EImage, 2, "not an image object");
+	Bitmap bm = s->asImage()->bitmap();
+	Image * img = new Image(*r, bm);
+	push_object(L, img);
+    }
     return 1;
 }
 
@@ -756,6 +777,7 @@ static const struct luaL_Reg ipelib_functions[] = {
     {"splineToBeziers", ipe_splinetobeziers},
     {"fileExists", ipe_fileExists},
     {"realPath", ipe_realpath},
+    {"mkdir", ipe_mkdir},
     {"directory", ipe_directory},
     {"openFile", ipe_openFile},
     {"readImage", ipe_readImage},

@@ -199,20 +199,49 @@ function MODEL:clipboard(allowBitmap)
     self.ui:getClipboardAsync(allowBitmap, coroutine.running())
     local format, value = coroutine.yield()
     if format == "text" then return value end
-    if format == "png" or format == "jpeg" then
-      local bitmap, res = ipe.readImage(value, format)
-      if not bitmap then
-	print("Error reading image: ", res)
-	return nil
-      end
-      local info = bitmap:info()
-      local r = self:compute_rect(info.width, info.height, res)
-      return ipe.Image(r, bitmap)
+    if format == "path" then
+      return self:readImage(value)
     end
     return nil
   else
     return self.ui:getClipboard(allowBitmap)
   end
+end
+
+function MODEL:readImage(s)
+  if self.attributes.externalimages and not self.file_name then
+    self:warning("Cannot create external image",
+		 "Document does not yet have a file name, so we have no image folder")
+    return
+  end
+  local bitmap, res = ipe.readImage(s)
+  if not bitmap then
+    self:warning("Could not read image", res)
+    return nil
+  end
+  local info = bitmap:info()
+  local r = self:compute_rect(info.width, info.height, res)
+  if not self.attributes.externalimages then
+    return ipe.Image(r, bitmap)
+  end
+  local basename = s:match(prefs.basename_pattern)
+  if not basename then
+    self:warning("Cannot find basename", s)
+    return nil
+  end
+  local path = self:imageFolder() .. basename
+  if ipe.fileExists(path) then
+    self:warning("A file with this name already exists", path)
+    return nil
+  end
+  local f = ipe.openFile(s, "r")
+  local data = f:read("*all")
+  f:close()
+  ipe.mkdir(self:imageFolder())
+  f = ipe.openFile(path, "w")
+  f:write(data)
+  f:close()
+  return ipe.Image(r, basename)
 end
 
 ------------------------------------------------------------------------------------------
@@ -382,6 +411,7 @@ function MODEL:setPage()
   self.ui:setNumbering(self.doc:properties().numberpages)
   self.ui:update()
   self:setCaption()
+  self.ui:setImageFolder(self:imageFolder())
   self:setBookmarks()
   self.ui:setNotes(p:notes())
   -- to avoid changing the width of the properties gadget, base the
@@ -447,6 +477,13 @@ function MODEL:checkType3Font()
 		   "A modern Latex installation should not normally use Type3 fonts. You could " ..
 		   "try to install the 'cm-super' package to avoid using Type3 fonts.")
   end
+end
+
+function MODEL:imageFolder()
+  if not self.file_name then return "" end
+  local s = self.file_name
+  if s:sub(-4) == ".ipe" or s:sub(-4) == ".pdf" then s = s:sub(1, -5) end
+  return s .. ".images" .. prefs.fsep
 end
 
 ----------------------------------------------------------------------
@@ -750,7 +787,7 @@ function MODEL:saveDocument(fname)
   props.creator = config.version
   self.doc:setProperties(props)
 
-  if not self.doc:save(fname, fm, {}) or not self:persistFile(fname) then
+  if not self.doc:save(fname, fm, {}, self:imageFolder()) or not self:persistFile(fname) then
     self:warning("File not saved!", "Error saving the document")
     return
   end

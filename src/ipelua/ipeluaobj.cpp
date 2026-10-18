@@ -244,6 +244,7 @@ Attribute ipelua::check_property(Property prop, lua_State * L, int i) {
     case EPropRArrow:
     case EPropMinipage:
     case EPropTransformableText: return check_bool_attribute(L, i);
+    case EPropExternalImages: return check_bool_attribute(L, i);
     }
     return Attribute::NORMAL(); // placate compiler
 }
@@ -291,6 +292,7 @@ void ipelua::check_allattributes(lua_State * L, int i, AllAttributes & all) {
     get_attribute(L, i, EPropMarkShape, "markshape", all.iMarkShape);
     get_attribute(L, i, EPropTextSize, "textsize", all.iTextSize);
     get_boolean(L, i, "transformabletext", all.iTransformableText);
+    get_boolean(L, i, "externalimages", all.iExternalImages);
     get_attribute(L, i, EPropTextStyle, "textstyle", all.iTextStyle);
     get_attribute(L, i, EPropTextStyle, "labelstyle", all.iLabelStyle);
     get_attribute(L, i, EPropOpacity, "opacity", all.iOpacity);
@@ -590,6 +592,17 @@ static int object_elementType(lua_State * L) {
     return 1;
 }
 
+static int object_replace(lua_State * L) {
+    Object * obj = check_object(L, 1)->obj;
+    luaL_argcheck(L, obj->type() == Object::EGroup, 1, "not a group object");
+    int idx = (int)luaL_checkinteger(L, 2);
+    Group * g = obj->asGroup();
+    luaL_argcheck(L, 1 <= idx && idx <= g->count(), 2, "incorrect element index");
+    Object * replacement = check_object(L, 3)->obj;
+    g->replace(idx - 1, replacement->clone());
+    return 0;
+}
+
 static int object_xml(lua_State * L) {
     SObject * obj = check_object(L, 1);
     String s;
@@ -849,30 +862,44 @@ static int object_symbol(lua_State * L) {
     return 1;
 }
 
+static int object_rect(lua_State * L) {
+    Object * s = check_object(L, 1)->obj;
+    luaL_argcheck(L, s->type() == Object::EImage, 1, "not an image object");
+    push_rect(L, s->asImage()->rect());
+    return 1;
+}
+
 static int object_info(lua_State * L) {
     Object * s = check_object(L, 1)->obj;
     luaL_argcheck(L, s->type() == Object::EImage, 1, "not an image object");
-    Bitmap bm = s->asImage()->bitmap();
-    lua_createtable(L, 0, 7);
-    lua_pushnumber(L, bm.width());
-    lua_setfield(L, -2, "width");
-    lua_pushnumber(L, bm.height());
-    lua_setfield(L, -2, "height");
-    String format;
-    if (bm.isJpeg())
-	format = "jpg";
-    else {
-	if (bm.isGray())
-	    format = "gray";
-	else
-	    format = "rgb";
-	if (bm.hasAlpha())
-	    format += " alpha";
-	else if (bm.colorKey() >= 0)
-	    format += " colorkeyed";
+    Image * img = s->asImage();
+    if (img->isExternal()) {
+	lua_createtable(L, 0, 1);
+	push_string(L, img->path());
+	lua_setfield(L, -2, "path");
+    } else {
+	Bitmap bm = img->bitmap();
+	lua_createtable(L, 0, 7);
+	lua_pushnumber(L, bm.width());
+	lua_setfield(L, -2, "width");
+	lua_pushnumber(L, bm.height());
+	lua_setfield(L, -2, "height");
+	String format;
+	if (bm.isJpeg())
+	    format = "jpg";
+	else {
+	    if (bm.isGray())
+		format = "gray";
+	    else
+		format = "rgb";
+	    if (bm.hasAlpha())
+		format += " alpha";
+	    else if (bm.colorKey() >= 0)
+		format += " colorkeyed";
+	}
+	push_string(L, format);
+	lua_setfield(L, -2, "format");
     }
-    push_string(L, format);
-    lua_setfield(L, -2, "format");
     return 1;
 }
 
@@ -882,6 +909,34 @@ static int object_savePixels(lua_State * L) {
     String fname = luaL_checklstring(L, 2, nullptr);
     Bitmap bm = s->asImage()->bitmap();
     bm.savePixels(fname.z());
+    return 0;
+}
+
+static int object_saveImage(lua_State * L) {
+    Object * s = check_object(L, 1)->obj;
+    luaL_argcheck(L, s->type() == Object::EImage, 1, "not an image object");
+    String fname = luaL_checklstring(L, 2, nullptr);
+    Bitmap bm = s->asImage()->bitmap();
+    lua_pushboolean(L, bm.save(fname.z()));
+    return 1;
+}
+
+static int object_setPath(lua_State * L) {
+    Object * s = check_object(L, 1)->obj;
+    luaL_argcheck(L, s->type() == Object::EImage, 1, "not an image object");
+    String path = luaL_checkstring(L, 2);
+    s->asImage()->setPath(path);
+    return 0;
+}
+
+static int object_setBitmap(lua_State * L) {
+    Object * obj = check_object(L, 1)->obj;
+    luaL_argcheck(L, obj->type() == Object::EImage, 1, "not an image object");
+    Object * source = check_object(L, 2)->obj;
+    luaL_argcheck(L, source->type() == Object::EImage, 2, "not an image object");
+    Bitmap bitmap = source->asImage()->bitmap();
+    luaL_argcheck(L, !bitmap.isNull(), 2, "image has no internal bitmap");
+    obj->asImage()->setBitmap(bitmap);
     return 0;
 }
 
@@ -908,8 +963,12 @@ static const struct luaL_Reg object_methods[] = {{"__tostring", object_tostring}
 						 {"clip", object_clip},
 						 {"setClip", object_setclip},
 						 {"symbol", object_symbol},
+						 {"rect", object_rect},
 						 {"info", object_info},
 						 {"savePixels", object_savePixels},
+						 {"saveImage", object_saveImage},
+						 {"setPath", object_setPath},
+						 {"setBitmap", object_setBitmap},
 						 {"position", object_position},
 						 {"text", object_text},
 						 {"setText", object_setText},
@@ -917,6 +976,7 @@ static const struct luaL_Reg object_methods[] = {{"__tostring", object_tostring}
 						 {"elements", object_elements},
 						 {"element", object_element},
 						 {"elementType", object_elementType},
+						 {"replace", object_replace},
 						 {nullptr, nullptr}};
 
 // --------------------------------------------------------------------

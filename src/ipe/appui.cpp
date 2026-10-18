@@ -248,6 +248,11 @@ void AppUiBase::buildMenus() {
     addSubItem("spiro", "splinetype|spiro");
     endSubMenu();
 
+    startSubMenu(EPropertiesMenu, "External images");
+    addSubItem("Yes", "externalimages|true");
+    addSubItem("No", "externalimages|false");
+    endSubMenu();
+
     addItem(EPropertiesMenu, "Properties menu", "properties_popup");
 
     addItem(EModeMenu, "Select objects (with Shift: non-destructive)", "mode_select");
@@ -530,6 +535,12 @@ void AppUiBase::canvasObserverSizeChanged() {
     lua_call(L, 1, 0);
 }
 
+void AppUiBase::canvasObserverFileDropped(String fname) {
+    Bitmap::Format format = Bitmap::formatFromFile(fname.z());
+    // silently ignore files that are neither PNG nor JPEG
+    if (format != Bitmap::Format::None) handleDroppedImage(fname);
+}
+
 // --------------------------------------------------------------------
 
 int AppUiBase::actionInfo(lua_State * L) const {
@@ -791,6 +802,7 @@ void AppUiBase::setAttributes(const AllAttributes & all, Cascade * sheet) {
     setCheckMark("splinetype", Attribute(iAll.iSplineType));
     setCheckMark("pinned", Attribute(iAll.iPinned));
     setCheckMark("transformabletext", Attribute::Boolean(iAll.iTransformableText));
+    setCheckMark("externalimages", Attribute::Boolean(iAll.iExternalImages));
     setCheckMark("transformations", Attribute(iAll.iTransformations));
     setCheckMark("linejoin", Attribute(iAll.iLineJoin));
     setCheckMark("linecap", Attribute(iAll.iLineCap));
@@ -813,34 +825,9 @@ int AppUiBase::ipeIcon(String action) {
     return ipeIcons->findPage(action);
 }
 
-int AppUiBase::readImage(lua_State * L, String fn) {
-    // check if it is perhaps a JPEG file
-    FILE * f = Platform::fopen(fn.z(), "rb");
-    bool jpeg = false;
-    if (f != nullptr) {
-	jpeg = (std::fgetc(f) == 0xff && std::fgetc(f) == 0xd8);
-	fclose(f);
-    }
-
-    ipeDebug("Dropping file %s (jpeg: %d)", fn.z(), jpeg);
-
-    Vector dpi;
-    const char * errmsg;
-    Bitmap bm = jpeg ? Bitmap::readJpeg(fn.z(), dpi, errmsg)
-		     : Bitmap::readPNG(fn.z(), dpi, errmsg);
-
-    if (bm.isNull()) return 0;
-
-    ipe::Rect r(Vector::ZERO, Vector(bm.width(), bm.height()));
-    Image * img = new Image(r, bm);
-    push_object(L, img);
-    return 1;
-}
-
-void AppUiBase::handleDroppedImage(String fname, String format) {
+void AppUiBase::handleDroppedImage(String fname) {
     push_string(L, fname);
-    push_string(L, format);
-    wrapCall("insert_image", 2);
+    wrapCall("insert_image", 1);
 }
 
 // --------------------------------------------------------------------

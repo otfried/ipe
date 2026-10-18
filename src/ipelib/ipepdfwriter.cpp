@@ -275,7 +275,7 @@ void PdfPainter::doDrawSymbol(Attribute symbol) {
 //! Create a PDF writer operating on this (open and empty) file.
 PdfWriter::PdfWriter(TellStream & stream, const Document * doc,
 		     const PdfResources * resources, uint32_t flags, int fromPage,
-		     int toPage, int compression, Attribute variant)
+		     int toPage, int compression, Attribute variant, String imageFolder)
     : iStream(stream)
     , iDoc(doc)
     , iResources(resources)
@@ -288,6 +288,7 @@ PdfWriter::PdfWriter(TellStream & stream, const Document * doc,
     iXmlStreamNum = -1; // no XML stream yet
     iBookmarks = -1;
     iDests = -1;
+    iBitmapCache.setImageFolder(imageFolder);
 
     if (iFromPage < 0 || iFromPage >= iDoc->countPages()) iFromPage = 0;
     if (iToPage < iFromPage || iToPage >= iDoc->countPages())
@@ -297,8 +298,7 @@ PdfWriter::PdfWriter(TellStream & stream, const Document * doc,
     BitmapFinder bm;
     iDoc->findBitmaps(bm);
     int id = -1;
-    for (std::vector<Bitmap>::iterator it = bm.iBitmaps.begin(); it != bm.iBitmaps.end();
-	 ++it) {
+    for (auto it = bm.iBitmaps.begin(); it != bm.iBitmaps.end(); ++it) {
 	it->setObjNum(id);
 	--id;
     }
@@ -698,6 +698,10 @@ void PdfWriter::embedBitmaps(const BitmapFinder & bm) {
 	    iBitmaps.push_back(*it);
 	}
     }
+    for (auto it = bm.iPaths.begin(); it != bm.iPaths.end(); ++it) {
+	Bitmap b = iBitmapCache.load(*it);
+	if (b.objNum() < 0) embedBitmap(b);
+    }
 }
 
 void PdfWriter::createResources(const BitmapFinder & bm,
@@ -742,7 +746,8 @@ void PdfWriter::createResources(const BitmapFinder & bm,
     // XObject
     // TODO: Is "hasResource" here used correctly?
     // From Tikz xobject resources seem to go into the Ipe xform.
-    if (!bm.iBitmaps.empty() || !iSymbols.empty() || hasResource("XObject")) {
+    if (!bm.iBitmaps.empty() || !bm.iPaths.empty() || !iSymbols.empty()
+	|| hasResource("XObject")) {
 	iStream << "  /XObject << ";
 	for (BmIter it = bm.iBitmaps.begin(); it != bm.iBitmaps.end(); ++it) {
 	    // mention each PDF object only once
@@ -751,6 +756,10 @@ void PdfWriter::createResources(const BitmapFinder & bm,
 		 it1++);
 	    if (it1 == it)
 		iStream << "/Image" << it->objNum() << " " << it->objNum() << " 0 R ";
+	}
+	for (auto it = bm.iPaths.begin(); it != bm.iPaths.end(); ++it) {
+	    Bitmap b = iBitmapCache.load(*it);
+	    iStream << "/Image" << b.objNum() << " " << b.objNum() << " 0 R ";
 	}
 	for (std::map<int, int>::const_iterator it = iSymbols.begin();
 	     it != iSymbols.end(); ++it)
@@ -767,6 +776,7 @@ std::vector<PdfPainter::GradientUse> PdfWriter::paintView(Stream & stream, int p
 							  int view) {
     const Page * page = iDoc->page(pno);
     PdfPainter painter(iDoc->cascade(), stream);
+    painter.setBitmapCache(&iBitmapCache);
     const auto viewMap = page->viewMap(view, iDoc->cascade());
     painter.setAttributeMap(&viewMap);
     // std::vector<Matrix> layerMatrices = page->layerMatrices(view);

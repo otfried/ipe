@@ -44,13 +44,16 @@ static int topdf(Document * doc, String src, String dst, uint32_t flags,
     int res = doc->runLatex(src);
     if (res) return res;
 
+    String imageFolder = ipe::Platform::imageFolder(src);
+
     bool result = false;
     if (viewNo >= 0) {
-	result = doc->exportView(dst.z(), FileFormat::Pdf, flags, fromPage, viewNo);
+	result = doc->exportView(dst.z(), FileFormat::Pdf, flags, fromPage, viewNo,
+				 imageFolder);
     } else if (toPage >= 0) {
-	result = doc->exportPages(dst.z(), flags, fromPage, toPage);
+	result = doc->exportPages(dst.z(), flags, fromPage, toPage, imageFolder);
     } else {
-	result = doc->save(dst.z(), FileFormat::Pdf, flags);
+	result = doc->save(dst.z(), FileFormat::Pdf, flags, imageFolder);
     }
     if (!result) {
 	fprintf(stderr, "Failed to save or export document!\n");
@@ -235,7 +238,8 @@ int main(int argc, char * argv[]) {
 	if (runLatex)
 	    return topdf(doc.get(), infile, outfile, flags);
 	else
-	    doc->save(outfile.z(), FileFormat::Xml, SaveFlag::SaveNormal);
+	    doc->save(outfile.z(), FileFormat::Xml, SaveFlag::SaveNormal, String());
+
     default: return 0;
 
     case FileFormat::Pdf:

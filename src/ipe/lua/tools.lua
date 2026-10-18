@@ -1761,12 +1761,12 @@ function PASTETOOL:key(text, modifiers)
 end
 
 function MODEL:action_paste_at_cursor()
-  local data = self:clipboard(true) -- allow bitmap
-  if not data then
+  local format, value = self:clipboard(true) -- allow bitmap
+  if not format then
     self:warning("Nothing to paste")
     return
   end
-  if type(data) == "string" then
+  if format == "text" then
     if data:sub(1,13) ~= "<ipeselection" then
       self:warning("No Ipe selection to paste")
       return
@@ -1780,9 +1780,11 @@ function MODEL:action_paste_at_cursor()
       return
     end
     PASTETOOL:new(self, elements, pos)
-  else
-    -- pasting bitmap
-    PASTETOOL:new(self, { data }, V(0, 0))
+  elseif format == "path" then
+    local image = self:readImage(value)
+    if image then PASTETOOL:new(self, { image }, V(0, 0)) end
+  else -- image
+    PASTETOOL:new(self, { value }, V(0, 0))
   end
 end
 

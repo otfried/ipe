@@ -150,7 +150,6 @@ public:
     void luaLayerOrderChanged(std::vector<String> & order);
 
     inline void setInkMode(bool ink) { isInkMode = ink; }
-    static int readImage(lua_State * L, String fn);
     int model() const noexcept { return iModel; }
 
 public: // What platforms must implement:
@@ -177,7 +176,7 @@ public: // What platforms must implement:
 			   int thumbWidth) = 0;
     virtual int clipboard(lua_State * L) = 0;
     virtual int setClipboard(lua_State * L) = 0;
-    virtual void handleDroppedImage(String fname, String format);
+    virtual void handleDroppedImage(String fname);
 
     // Only used on Windows to compute shortcuts:
     virtual int actionInfo(lua_State * L) const;
@@ -208,6 +207,7 @@ protected:
     virtual void canvasObserverPositionChanged();
     virtual void canvasObserverToolChanged(bool hasTool);
     virtual void canvasObserverSizeChanged();
+    virtual void canvasObserverFileDropped(String fname);
 
 protected:
     AppUiBase(lua_State * L0, int model);

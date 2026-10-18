@@ -69,6 +69,8 @@ public:
     void setAttributeMap(const AttributeMap * map);
     Attribute lookup(Kind kind, Attribute sym) const;
 
+    void setBitmapCache(BitmapCache * bmc);
+
     void transform(const Matrix & m);
     void untransform(TTransformations trans);
     void translate(const Vector & v);
@@ -88,6 +90,7 @@ public:
     void closePath();
     void drawPath(TPathMode mode);
     void drawBitmap(Bitmap bitmap);
+    void drawExternalBitmap(String path);
     void drawText(const Text * text);
     void drawSymbol(Attribute symbol);
     void addClipPath();
@@ -170,6 +173,7 @@ protected:
     std::list<Matrix> iMatrix;
     const Cascade * iCascade;
     const AttributeMap * iAttributeMap;
+    BitmapCache * iBitmapCache;
     int iInPath;
 };
 

@@ -49,11 +49,19 @@ Image::Image(const Rect & rect, Bitmap bitmap)
     assert(!iBitmap.isNull());
 }
 
+//! Create a new external image
+Image::Image(const Rect & rect, String path)
+    : Object() {
+    iRect = rect;
+    iPath = path;
+    iOpacity = Attribute::OPAQUE();
+}
+
 //! Create from XML stream.
 Image::Image(const XmlAttributes & attr, String data)
     : Object(attr) {
     init(attr);
-    iBitmap = Bitmap(attr, data);
+    if (!isExternal()) iBitmap = Bitmap(attr, data);
 }
 
 //! Create from XML stream with given bitmap.
@@ -77,6 +85,8 @@ void Image::init(const XmlAttributes & attr) {
     iRect.addPoint(v);
     st >> v.x >> v.y;
     iRect.addPoint(v);
+
+    if (attr.has("path", str)) iPath = str;
 }
 
 //! Clone object
@@ -97,7 +107,12 @@ void Image::saveAsXml(Stream & stream, String layer) const {
     stream << " rect=\"" << rect() << "\"";
     if (iOpacity != Attribute::OPAQUE())
 	stream << " opacity=\"" << iOpacity.string() << "\"";
-    stream << " bitmap=\"" << iBitmap.objNum() << "\"";
+    if (isExternal()) {
+	stream << " path=\"";
+	stream.putXmlString(iPath);
+	stream << "\"";
+    } else
+	stream << " bitmap=\"" << iBitmap.objNum() << "\"";
     stream << "/>\n";
 }
 
@@ -111,7 +126,10 @@ void Image::draw(Painter & painter) const {
     painter.transform(m);
     painter.push();
     painter.setOpacity(iOpacity);
-    painter.drawBitmap(iBitmap);
+    if (isExternal())
+	painter.drawExternalBitmap(iPath);
+    else
+	painter.drawBitmap(iBitmap);
     painter.pop();
     painter.popMatrix();
 }

@@ -802,6 +802,14 @@ String Platform::gslVersion() {
 #endif
 }
 
+String Platform::imageFolder(String fname) {
+    if (fname.right(4) == ".ipe" || fname.right(4) == ".pdf")
+	fname = fname.left(fname.size() - 4);
+    fname += ".images";
+    fname += IPESEP;
+    return fname;
+}
+
 // --------------------------------------------------------------------
 
 #ifdef IPEWASM

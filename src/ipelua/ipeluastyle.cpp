@@ -493,7 +493,7 @@ static int cascade_find(lua_State * L) {
 	push_attribute(L, Attribute(s->fillRule()));
 	break;
     case 4: { // symbol
-	const char * name = luaL_checklstring(L, 3, nullptr);
+	const char * name = luaL_checkstring(L, 3);
 	const Symbol * symbol = s->findSymbol(Attribute(true, name));
 	if (symbol)
 	    push_object(L, symbol->iObject->clone());
@@ -505,7 +505,7 @@ static int cascade_find(lua_State * L) {
 	push_layout(L, *s->findLayout());
 	break;
     case 6: { // gradient
-	const char * name = luaL_checklstring(L, 3, nullptr);
+	const char * name = luaL_checkstring(L, 3);
 	push_gradient(L, *s->findGradient(Attribute(true, name)));
 	break;
     }
@@ -514,8 +514,8 @@ static int cascade_find(lua_State * L) {
 	break;
     default: {
 	Kind kind = Kind(luaL_checkoption(L, 2, nullptr, kind_names));
-	if (lua_isstring(L, 3)) {
-	    const char * name = luaL_checklstring(L, 3, nullptr);
+	if (lua_type(L, 3) == LUA_TSTRING) {
+	    const char * name = luaL_checkstring(L, 3);
 	    push_attribute(L, s->find(kind, Attribute(true, String(name))));
 	} else {
 	    lua_pushvalue(L, 3); // value is not symbolic, simply return the value itself

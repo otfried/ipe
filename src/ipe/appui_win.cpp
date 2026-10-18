@@ -1404,11 +1404,12 @@ static int clipboardBitmap(lua_State * L) {
 
     Rect r(Vector::ZERO, Vector(w, h));
     Image * img = new Image(r, ibm);
+    lua_pushliteral(L, "image");
     push_object(L, img);
     VirtualFree(bits, 0, MEM_RELEASE);
     ReleaseDC(nullptr, hdc);
     CloseClipboard();
-    return 1;
+    return 2;
 }
 
 static int clipboardPNG(lua_State * L, UINT pngFormat) {
@@ -1436,8 +1437,9 @@ static int clipboardPNG(lua_State * L, UINT pngFormat) {
 
     Rect r(Vector::ZERO, Vector(bm.width(), bm.height()));
     Image * img = new Image(r, bm);
+    lua_pushliteral(L, "image");
     push_object(L, img);
-    return 1;
+    return 2;
 }
 
 static int clipboardHDrop(lua_State * L) {
@@ -1459,7 +1461,9 @@ static int clipboardHDrop(lua_State * L) {
     GlobalUnlock(hGlobal);
     CloseClipboard();
 
-    return AppUiBase::readImage(L, fn);
+    lua_pushliteral(L, "path");
+    lua_pushstring(L, fn.z());
+    return 2;
 }
 
 int AppUi::clipboard(lua_State * L) {
@@ -1481,8 +1485,8 @@ int AppUi::clipboard(lua_State * L) {
 	if (!strcmp(formatName, "PNG")) pngFormat = format;
     }
     if (allow_bitmap) {
-	if (haveHDrop && clipboardHDrop(L)) return 1;
-	if (pngFormat && clipboardPNG(L, pngFormat)) return 1;
+	if (haveHDrop && clipboardHDrop(L)) return 2;
+	if (pngFormat && clipboardPNG(L, pngFormat)) return 2;
 	if (haveBitmap) return clipboardBitmap(L);
     }
     if (haveText) {
@@ -1494,8 +1498,9 @@ int AppUi::clipboard(lua_State * L) {
 	String s((wchar_t *)GlobalLock(hGlobal));
 	GlobalUnlock(hGlobal);
 	CloseClipboard();
+	lua_pushliteral(L, "text");
 	lua_pushstring(L, s.z());
-	return 1;
+	return 2;
     }
     CloseClipboard();
     return 0;
