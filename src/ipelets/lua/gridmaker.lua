@@ -35,6 +35,7 @@ about = [[
 
     (1) A grid for two-point perspective drawings.
     (2) A triangular grid.
+    (3) A hexagonal grid.
 ]]
 
 V = _G.V
@@ -264,10 +265,73 @@ function create_layer(model, num)
   model:register(t)
 end
 
+function hexagonal_grid(model, num)
+  local layout = model.doc:sheets():find("layout")
+  local gs = model.snap.gridsize
+  local fs = layout.framesize
+  local t = {}
+  local segments = {}
+  local columns = math.floor(fs.x / (1.5 * gs))
+  local dy = 0.5 * gs * math.sqrt(3)
+    for col = 0, columns + 1 do
+        local x = col * 1.5 * gs
+        local offset = 0
+        if col % 2 == 1 then
+            offset = dy
+        end
+        local rows = math.floor((fs.y - offset) / (2 * dy))
+        for row = 0, rows + 1 do
+            local y = offset + row * 2 * dy
+            segments[#segments + 1] =  {V(x - gs, y), V(x - gs / 2, y - dy)}
+            segments[#segments + 1] =  {V(x - gs / 2, y - dy), V(x + gs / 2, y - dy)}
+            segments[#segments + 1] =  {V(x + gs / 2, y - dy), V(x + gs, y)}
+        end
+    end
+    local frameRect = ipe.Rect()
+    frameRect:add(V(0,0))
+    frameRect:add(V(fs.x,fs.y))
+    local function pruneVertical(a, b, fs)
+        if b.y < a.y then a, b = b, a end
+        if a.y < 0 then a = a + (-a.y / (b.y - a.y)) * (b - a) end
+        if b.y > fs.y then b = a + ((fs.y - a.y) / (b.y - a.y)) * (b - a) end
+        return a, b
+    end
+    for _, s in ipairs(segments) do
+      local segRect = ipe.Rect()
+      segRect:add(s[1])
+      segRect:add(s[2])
+      if segRect:intersects(frameRect) then
+        local a, b = pruneVertical(s[1], s[2], fs)
+        -- Stop zero length pieces
+        if (b - a):len() > 1e-9 then
+            local seg = make_pruned_segment(model.attributes, a, b, fs)
+            local ends = seg:shape()[1][1]
+            if (ends[2] - ends[1]):len() > 1e-9 then
+                t[#t + 1] = seg
+            end
+        end
+      end
+    end
+    local g = ipe.Group(t)
+    local p = model:page()
+    local in_layer = p:active(model.vno)
+    if has_grid_layer(p, true) then
+        in_layer = "GRID"
+    end
+    local t = { label="create hexagonal grid", pno=model.pno, vno=model.vno, layer=in_layer, object=g }
+    t.undo = function (t, doc) doc[t.pno]:remove(#doc[t.pno]) end
+    t.redo = function (t, doc)
+    doc[t.pno]:deselectAll()
+    doc[t.pno]:insert(nil, t.object, 1, t.layer)
+    end
+    model:register(t)
+end
+
 methods = {
   { label="Create a GRID layer", run = create_layer },
   { label="Two-point perspective grid", run = two_point_perspective },
   { label="Triangular grid", run = triangular_grid },
+  { label="Hexagonal grid", run = hexagonal_grid },
 }
 
 ----------------------------------------------------------------------
