@@ -569,7 +569,66 @@ function MODEL:saction_pick_properties()
 end
 
 function MODEL:pick_properties_group(obj)
-  -- nothing
+    local objects = obj:elements()
+
+    -- All the properties listed in this file
+    local propertyScores = {
+        -- shared properties
+        stroke = {}, fill = {}, pen = {}, opacity = {},
+        -- path properties
+        pathmode = {}, dashstyle = {}, strokeopacity = {},
+        farrow = {}, farrowsize = {}, farrowshape = {},
+        rarrow = {}, rarrowsize = {}, rarrowshape = {},
+        linecap = {}, linejoin = {}, fillrule = {}, tiling = {}, gradient = {},
+        -- text properties
+        textsize = {}, textstyle = {}, horizontalalignment = {}, verticalalignment = {},
+        -- mark properties
+        symbolsize = {}, markshape = {},
+        }
+
+    -- To deal with groups inside groups
+    local function countScore(element, propertyScores)
+        if element:type() == "group" then
+            for _, subElement in ipairs(element:elements()) do
+                countScore(subElement, propertyScores)
+            end
+            return
+        end
+        local pathmode = element:get("pathmode")
+        for name, scores in pairs(propertyScores) do
+            local value = element:get(name)
+            local hiddenProperties = (name == "stroke" and pathmode == "filled") or (name == "fill" and pathmode == "stroked") 
+            if value ~= "undefined" and not hiddenProperties then
+                local dictKey = value
+                if type(value) == "table" and (name == "stroke" or name == "fill") then
+                    dictKey = colorString(value)
+                end
+                if scores[dictKey] == nil then
+                    scores[dictKey] = {value = value, count = 0}
+                end
+                scores[dictKey].count = scores[dictKey].count + 1
+            end
+        end
+    end
+    -- Store how often each property is used
+    for _, element in ipairs(objects) do
+        countScore(element, propertyScores)
+    end
+
+    -- Get the value used most often, ties are broken by whatever is read first in the pairs order
+    for name, scores in pairs(propertyScores) do
+        local bestCount = 0
+        local winner = nil
+        for _, scoreEntry in pairs(scores) do
+            if scoreEntry.count > bestCount then
+                winner = scoreEntry.value
+                bestCount = scoreEntry.count
+            end
+        end
+        if winner ~= nil then
+            self.attributes[name] = winner
+        end
+    end
 end
 
 function MODEL:pick_properties_text(obj)
