@@ -572,7 +572,7 @@ function MODEL:pick_properties_group(obj)
     local objects = obj:elements()
 
     -- All the properties listed in this file
-    local propertyScores = {
+    local propertiesUsed = {
         -- shared properties
         stroke = {}, fill = {}, pen = {}, opacity = {},
         -- path properties
@@ -586,46 +586,39 @@ function MODEL:pick_properties_group(obj)
         symbolsize = {}, markshape = {},
         }
 
-    -- To deal with groups inside groups
-    local function countScore(element, propertyScores)
+    local function getProperties(element)
+        -- To deal with groups inside groups
         if element:type() == "group" then
             for _, subElement in ipairs(element:elements()) do
-                countScore(subElement, propertyScores)
+                getProperties(subElement)
             end
             return
         end
         local pathmode = element:get("pathmode")
-        for name, scores in pairs(propertyScores) do
+        for name, values in pairs(propertiesUsed) do
             local value = element:get(name)
-            local hiddenProperties = (name == "stroke" and pathmode == "filled") or (name == "fill" and pathmode == "stroked") 
+            local hiddenProperties = (name == "stroke" and pathmode == "filled") or
+            (name == "fill" and pathmode == "stroked")
             if value ~= "undefined" and not hiddenProperties then
                 local dictKey = value
                 if type(value) == "table" and (name == "stroke" or name == "fill") then
                     dictKey = colorString(value)
                 end
-                if scores[dictKey] == nil then
-                    scores[dictKey] = {value = value, count = 0}
-                end
-                scores[dictKey].count = scores[dictKey].count + 1
+                values[dictKey] = value
             end
         end
-    end
-    -- Store how often each property is used
-    for _, element in ipairs(objects) do
-        countScore(element, propertyScores)
     end
 
-    -- Get the value used most often, ties are broken by whatever is read first in the pairs order
-    for name, scores in pairs(propertyScores) do
-        local bestCount = 0
-        local winner = nil
-        for _, scoreEntry in pairs(scores) do
-            if scoreEntry.count > bestCount then
-                winner = scoreEntry.value
-                bestCount = scoreEntry.count
-            end
-        end
-        if winner ~= nil then
+    -- Collect all the properties each element has
+    for _, element in ipairs(objects) do
+        getProperties(element)
+    end
+
+    -- Get the values used, only take the ones all the objects agree on
+    for name, values in pairs(propertiesUsed) do
+        local dictKey, winner = next(values)
+        -- Only one value recorded
+        if dictKey ~= nil and next(values, dictKey) == nil then
             self.attributes[name] = winner
         end
     end
