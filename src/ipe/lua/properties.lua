@@ -569,7 +569,59 @@ function MODEL:saction_pick_properties()
 end
 
 function MODEL:pick_properties_group(obj)
-  -- nothing
+    local objects = obj:elements()
+
+    -- All the properties listed in this file
+    local propertiesUsed = {
+        -- shared properties
+        stroke = {}, fill = {}, pen = {}, opacity = {},
+        -- path properties
+        pathmode = {}, dashstyle = {}, strokeopacity = {},
+        farrow = {}, farrowsize = {}, farrowshape = {},
+        rarrow = {}, rarrowsize = {}, rarrowshape = {},
+        linecap = {}, linejoin = {}, fillrule = {}, tiling = {}, gradient = {},
+        -- text properties
+        textsize = {}, textstyle = {}, horizontalalignment = {}, verticalalignment = {},
+        -- mark properties
+        symbolsize = {}, markshape = {},
+        }
+
+    local function getProperties(element)
+        -- To deal with groups inside groups
+        if element:type() == "group" then
+            for _, subElement in ipairs(element:elements()) do
+                getProperties(subElement)
+            end
+            return
+        end
+        local pathmode = element:get("pathmode")
+        for name, values in pairs(propertiesUsed) do
+            local value = element:get(name)
+            local hiddenProperties = (name == "stroke" and pathmode == "filled") or
+            (name == "fill" and pathmode == "stroked")
+            if value ~= "undefined" and not hiddenProperties then
+                local dictKey = value
+                if type(value) == "table" and (name == "stroke" or name == "fill") then
+                    dictKey = colorString(value)
+                end
+                values[dictKey] = value
+            end
+        end
+    end
+
+    -- Collect all the properties each element has
+    for _, element in ipairs(objects) do
+        getProperties(element)
+    end
+
+    -- Get the values used, only take the ones all the objects agree on
+    for name, values in pairs(propertiesUsed) do
+        local dictKey, winner = next(values)
+        -- Only one value recorded
+        if dictKey ~= nil and next(values, dictKey) == nil then
+            self.attributes[name] = winner
+        end
+    end
 end
 
 function MODEL:pick_properties_text(obj)
