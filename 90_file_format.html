@@ -450,8 +450,13 @@ elements.</p>
 <h3>The <code class="docutils literal notranslate"><span class="pre">&lt;image&gt;</span></code> element<a class="headerlink" href="#the-image-element" title="Permalink to this headline">¶</a></h3>
 <p><em>Attributes</em></p>
 <dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">bitmap</span></code> (required)</dt><dd><p>Value is an integer referring
-to a bitmap defined in a <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code> element in the document,</p>
+<dt><code class="docutils literal notranslate"><span class="pre">bitmap</span></code> (optional)</dt><dd><p>Value is an integer referring to a bitmap defined in a <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code>
+element in the document,</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">path</span></code> (optional)</dt><dd><p>A string referring to an externally stored image. If it starts with
+a slash, the path is absolute, if it starts with “./”, it’s relative
+to the current directory, and otherwise it’s relative to the
+document’s image folder.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">rect</span></code> (required)</dt><dd><p>Four real coordinates separated by white space,
 in the order <span class="math notranslate nohighlight">\(x_{1}, y_{1}, x_{2}, y_{2}\)</span>, indicating two
@@ -461,11 +466,12 @@ opposite corners of the image in Ipe coordinates).</p>
 symbolic name. The default is <code class="docutils literal notranslate"><span class="pre">normal</span></code>, meaning fully opaque.</p>
 </dd>
 </dl>
-<p>The image element is normally empty.  However, it is allowed to omit
-the <code class="docutils literal notranslate"><span class="pre">bitmap</span></code> attribute.  In this case, the <code class="docutils literal notranslate"><span class="pre">&lt;image&gt;</span></code> must
-carry all the attributes of the <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code> element, with the
-exception of <code class="docutils literal notranslate"><span class="pre">id</span></code>.  The element contents is then the bitmap data,
-as described for <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code>.</p>
+<p>Normally, one of <code class="docutils literal notranslate"><span class="pre">bitmap</span></code> or <code class="docutils literal notranslate"><span class="pre">path</span></code> is present and the image
+element is empty.</p>
+<p>As a special exception, if both <code class="docutils literal notranslate"><span class="pre">bitmap</span></code> and <code class="docutils literal notranslate"><span class="pre">path</span></code> are missing,
+then the <code class="docutils literal notranslate"><span class="pre">&lt;image&gt;</span></code> must carry all the attributes of the <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code>
+element, with the exception of <code class="docutils literal notranslate"><span class="pre">id</span></code>.  The element contents is then
+the bitmap data, as described for <code class="docutils literal notranslate"><span class="pre">&lt;bitmap&gt;</span></code>.</p>
 </div>
 <div class="section" id="the-use-element">
 <h3>The <code class="docutils literal notranslate"><span class="pre">&lt;use&gt;</span></code> element<a class="headerlink" href="#the-use-element" title="Permalink to this headline">¶</a></h3>
