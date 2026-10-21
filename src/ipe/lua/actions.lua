@@ -807,9 +807,9 @@ end
 
 function MODEL:action_save_as()
   local dir
-  if self.file_name then dir = self.file_name:match(prefs.dir_pattern) end
+  if self.file_name then dir = self.file_name:match(dir_pattern) end
   if not dir and #self.recent_files > 0 then
-    dir = self.recent_files[1]:match(prefs.dir_pattern)
+    dir = self.recent_files[1]:match(dir_pattern)
   end
   if not dir then
     dir = prefs.save_as_directory
@@ -877,7 +877,7 @@ end
 
 function MODEL:export(format)
   local dir
-  if self.file_name then dir = self.file_name:match(prefs.dir_pattern) end
+  if self.file_name then dir = self.file_name:match(dir_pattern) end
   if not dir then dir = prefs.save_as_directory end
   local title, filter
   if format == "png" then
@@ -1037,12 +1037,12 @@ function MODEL:action_insert_image()
     return
   end
   if not self.insert_image_dir and self.file_name then
-    self.insert_image_dir = self.file_name:match(prefs.dir_pattern)
+    self.insert_image_dir = self.file_name:match(dir_pattern)
   end
   local s, f = ipeui.fileDialog(self.ui:win(), "open", "Insert image",
 				filter_images, self.insert_image_dir)
   if s then
-    self.insert_image_dir = s:match(prefs.dir_pattern)
+    self.insert_image_dir = s:match(dir_pattern)
     local obj = self:readImage(s)
     if obj then
       self:creation("insert image", obj)

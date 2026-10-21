@@ -34,7 +34,11 @@
 // must be before this
 #include <gdiplus.h>
 
+#include <filesystem>
+
 using namespace ipe;
+
+namespace fs = std::filesystem;
 
 // --------------------------------------------------------------------
 
@@ -89,7 +93,8 @@ bool dctDecode(Buffer dctData, Buffer pixelData) {
 // BMP, GIF, JPEG, PNG, TIFF.
 Bitmap Bitmap::readPNG(const char * fname, Vector & dotsPerInch, const char *& errmsg) {
     // load without color correction
-    Gdiplus::Bitmap * bitmap = Gdiplus::Bitmap::FromFile(String(fname).w().data(), FALSE);
+    fs::path path{reinterpret_cast<const char8_t *>(fname)};
+    Gdiplus::Bitmap * bitmap = Gdiplus::Bitmap::FromFile(path.c_str(), FALSE);
     if (bitmap->GetLastStatus() != Gdiplus::Ok) {
 	delete bitmap;
 	return Bitmap();

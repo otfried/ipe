@@ -181,7 +181,7 @@ local function document_images(model, num)
   if external then
     local base = s
     if s:sub(-4) == ".ipe" or s:sub(-4) == ".pdf" then base = s:sub(1, -5) end
-    folder = base .. ".images" .. _G.prefs.fsep
+    folder = base .. ".images" .. "/"
     if not ipe.fileExists(folder) then
       local ok, errmsg = ipe.mkdir(folder)
       if not ok then

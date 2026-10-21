@@ -234,6 +234,16 @@ filter_eps = { "Postscript files (*.eps)", "*.eps" }
 filter_svg = { "SVG files (*.svg)", "*.svg" }
 filter_pptx = { "PPTX files (*.pptx)", "*.pptx" }
 
+-- Pattern for lists of filenames
+-- The separator is a semicolon on Windows, a colon otherwise
+if config.platform == "win" then
+  fname_pattern = "[^;]+"
+else
+  fname_pattern = "[^:]+"
+end
+dir_pattern = "^(.+)/[^/]+"
+basename_pattern = "/([^/]+)$"
+
 ----------------------------------------------------------------------
 -- This function is called to launch a file on MacOS X
 
@@ -364,7 +374,7 @@ local home = os.getenv("HOME")
 local ipeletpath = os.getenv("IPELETPATH")
 if ipeletpath then
   config.ipeletDirs = {}
-  for ipelet in string.gmatch(ipeletpath, prefs.fname_pattern) do
+  for ipelet in string.gmatch(ipeletpath, fname_pattern) do
     local w = ipelet
     if w == "_" then w = ipe.folder("ipelets") end
     if w:sub(1,4) == "ipe:" then
@@ -381,7 +391,7 @@ end
 local ipestyles = os.getenv("IPESTYLES")
 if ipestyles then
   config.styleDirs = {}
-  for dir in string.gmatch(ipestyles, prefs.fname_pattern) do
+  for dir in string.gmatch(ipestyles, fname_pattern) do
     local w = dir
     if w == "_" then w = ipe.folder("styles") end
     if w:sub(1,4) == "ipe:" then
@@ -407,8 +417,8 @@ end
 function load_ipelet(dir, fname)
   ft = {}
   ft.name = fname:sub(1,-5)
-  ft.path = dir .. prefs.fsep .. fname
-  ft.dllname = dir .. prefs.fsep .. ft.name
+  ft.path = dir .. "/" .. fname
+  ft.dllname = dir .. "/" .. ft.name
   ft._G = _G
   ft.ipe = ipe
   ft.ipeui = ipeui
@@ -433,7 +443,7 @@ ipelets = {}
 for _,w in ipairs(config.ipeletDirs) do
   if ipe.fileExists(w) then
     if w:sub(-4) == ".lua" then
-      load_ipelet(w:match(prefs.dir_pattern), w:match(prefs.basename_pattern))
+      load_ipelet(w:match(dir_pattern), w:match(basename_pattern))
     else
       local files = ipe.directory(w)
       for i, f in ipairs(files) do

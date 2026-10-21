@@ -35,8 +35,12 @@
 #include <cerrno>
 #include <cstring>
 
+#include <filesystem>
+
 using namespace ipe;
 using namespace ipelua;
+
+namespace fs = std::filesystem;
 
 // --------------------------------------------------------------------
 
@@ -516,8 +520,7 @@ static int document_setProperties(lua_State * L) {
     propString(L, "creator", prop.iCreator);
     String variant;
     propString(L, "variant", variant);
-    if (!variant.empty())
-	prop.iVariant = Attribute(true, variant);
+    if (!variant.empty()) prop.iVariant = Attribute(true, variant);
     String tex;
     propString(L, "tex", tex);
     for (int i = 0; i < 4; ++i) {
@@ -642,21 +645,38 @@ static int ipe_fileExists(lua_State * L) {
 
 static int ipe_mkdir(lua_State * L) {
     String s = check_filename(L, 1);
-    int result = Platform::mkdir(s);
-    return luaL_fileresult(L, result == 0, s.z());
+    std::error_code error;
+    fs::create_directory(fs::path(s.s8()), error);
+    return luaL_fileresult(L, !error, s.z());
 }
 
+//! Convert relative filename to absolute.
+/*! This also works when the filename does not exist, or at least it tries. */
 static int ipe_realpath(lua_State * L) {
     String s = check_filename(L, 1);
-    push_string(L, Platform::realPath(s));
+    std::error_code error;
+    fs::path absolute = fs::absolute(fs::path(s.s8()), error);
+    if (error)
+	push_string(L, s);
+    else
+	push_string(L, String(absolute.generic_u8string()));
     return 1;
 }
 
+//! List all files in directory
 static int ipe_directory(lua_State * L) {
-    const char * path = luaL_checklstring(L, 1, nullptr);
+    const char * path = luaL_checkstring(L, 1);
+    std::error_code error;
+    fs::directory_iterator entry(fs::path(reinterpret_cast<const char8_t *>(path)),
+				 error);
+    if (error) luaL_error(L, "cannot list directory '%s'", path);
+    const fs::directory_iterator end;
     std::vector<String> files;
-    if (!Platform::listDirectory(path, files))
-	luaL_error(L, "cannot list directory '%s'", path);
+    while (entry != end) {
+	files.push_back(String(entry->path().filename().generic_u8string()));
+	entry.increment(error);
+	if (error) luaL_error(L, "cannot list directory '%s'", path);
+    }
     lua_createtable(L, 0, files.size());
     for (int i = 0; i < size(files); ++i) {
 	push_string(L, files[i]);
@@ -741,7 +761,9 @@ static int get_folder(lua_State * L) {
     const char * name = nullptr;
     if (lua_isstring(L, 2)) name = lua_tostring(L, 2);
     // Make the cache folder if it doesn't exist
-    if (ft == FolderLatex) Platform::mkdirTree(Platform::folder(FolderLatex));
+    if (ft == FolderLatex) {
+	fs::create_directories(fs::path(Platform::folder(FolderLatex).s8()));
+    }
     push_string(L, Platform::folder(ft, name));
     return 1;
 }

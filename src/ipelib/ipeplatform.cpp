@@ -68,12 +68,16 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <filesystem>
+
 #ifdef IPEWASM
 #include <emscripten.h>
 #include <emscripten/val.h>
 #endif
 
 using namespace ipe;
+
+namespace fs = std::filesystem;
 
 // --------------------------------------------------------------------
 
@@ -117,40 +121,38 @@ static String folders[FOLDER_NUM];
 
 // --------------------------------------------------------------------
 
-// trim trailing path separator
-static void trimPath(String & path) {
-    if (!path.empty() && path[path.size() - 1] == IPESEP)
-	path = path.left(path.size() - 1);
-}
+inline String sp(fs::path const & p) { return String(p.generic_u8string()); }
 
 // overwrites value of path from environment variable 'envvar'
 // and replaces leading "ipe:" by drive letter on windows
 // return true if the environment variable existed
 static bool getenv(const char * envvar, const wchar_t * wenvvar, String & path) {
+    fs::path pp{path.s8()};
 #ifdef WIN32
     const wchar_t * p = _wgetenv(wenvvar);
-    if (p) path = String(p);
-    if (path.hasPrefix("ipe:")) path = ipeDrive + path.substr(4);
+    if (p) pp = fs::path(p);
+    std::wstring native = pp.native();
+    if (native.starts_with(L"ipe:")) {
+	native.replace(0, 4, fs::path(::ipeDrive.s8()).native());
+	pp = fs::path(native);
+    }
 #else
     const char * p = getenv(envvar);
-    if (p) path = String(p);
+    if (p) pp = fs::path(reinterpret_cast<const char8_t *>(p));
 #endif
-    trimPath(path);
+    path = sp(pp);
     return (p != nullptr);
 }
 
 String Platform::folder(IpeFolder ft, const char * fname) {
-    String result = folders[int(ft)];
-    if (fname) {
-	result += IPESEP;
-	result += fname;
-    }
-    return result;
+    fs::path p{folders[int(ft)].s8()};
+    if (fname) p = p / fs::path{reinterpret_cast<const char8_t *>(fname)};
+    return sp(p);
 }
 
-static void readIpeConf(String fname) {
+static void readIpeConf(fs::path fname) {
 #ifndef IPEWASM
-    String conf = Platform::readFile(fname);
+    String conf = Platform::readFile(sp(fname));
     if (conf.empty()) return;
     ipeDebug("ipe.conf = %s", conf.z());
     int i = 0;
@@ -166,8 +168,9 @@ static void readIpeConf(String fname) {
 }
 
 static void setupFolders() {
-    String home{"/home/ipe"};
-    getenv("HOME", L"HOME", home);
+    String home1{"/home/ipe"};
+    getenv("HOME", L"HOME", home1);
+    fs::path home{home1.s8()};
 
     // SYSTEM folders first
 
@@ -195,80 +198,69 @@ static void setupFolders() {
 #else
     String exe{"/opt/ipe/bin/ipe"}; // fake, bundle at /opt/ipe
 #endif
-    int i = exe.rfind(IPESEP);
-    if (i >= 0) {
-	exe = exe.left(i); // strip filename
-	i = exe.rfind(IPESEP);
-	if (i >= 0) {
-	    exe = exe.left(i); // strip bin directory name
-	}
-    }
+    fs::path bundle = fs::path(exe.s8()).parent_path().parent_path();
 #ifdef __APPLE__
-    folders[FolderLua] = exe + "/Resources/lua";
-    folders[FolderIcons] = exe + "/Resources/icons";
-    folders[FolderIpelets] = exe + "/Resources/ipelets";
-    folders[FolderStyles] = exe + "/Resources/styles";
-    folders[FolderScripts] = exe + "/Resources/scripts";
-    folders[FolderDoc] = exe + "/SharedSupport/doc";
+    folders[FolderLua] = sp(bundle / "Resources" / "lua");
+    folders[FolderIcons] = sp(bundle / "Resources" / "icons");
+    folders[FolderIpelets] = sp(bundle / "Resources" / "ipelets");
+    folders[FolderStyles] = sp(bundle / "Resources" / "styles");
+    folders[FolderScripts] = sp(bundle / "Resources" / "scripts");
+    folders[FolderDoc] = sp(bundle / "SharedSupport" / "doc");
 #else
-    String bundle = exe;
-    exe += IPESEP;
-    folders[FolderLua] = exe + "lua";
-    folders[FolderIcons] = exe + "icons";
-    folders[FolderIpelets] = exe + "ipelets";
-    folders[FolderStyles] = exe + "styles";
-    folders[FolderScripts] = exe + "scripts";
-    folders[FolderDoc] = exe + "doc";
+    folders[FolderLua] = sp(bundle / "lua");
+    folders[FolderIcons] = sp(bundle / "icons");
+    folders[FolderIpelets] = sp(bundle / "ipelets");
+    folders[FolderStyles] = sp(bundle / "styles");
+    folders[FolderScripts] = sp(bundle / "scripts");
+    folders[FolderDoc] = sp(bundle / "doc");
 #endif
 #endif
 
     // USER folders
 
 #ifdef __APPLE__
-    String local = home + "/Library/Ipe";
-    folders[FolderConfig] = local;
-    folders[FolderUserStyles] = local + "/styles";
-    folders[FolderUserIpelets] = local + "/ipelets";
-    folders[FolderUserScripts] = local + "/scripts";
-    folders[FolderLatex] = local + "/cache";
+    fs::path local = fs::path(home.s8()) / "Library" / "Ipe";
+    folders[FolderConfig] = sp(local);
+    folders[FolderUserStyles] = sp(local / "styles");
+    folders[FolderUserIpelets] = sp(local / "ipelets");
+    folders[FolderUserScripts] = sp(local / "scripts");
+    folders[FolderLatex] = sp(local / "cache");
 #elif defined(WIN32)
     // only set Config, Latex, and maybe UserIpelets
-    folders[FolderConfig] = bundle;
-    if (const wchar_t * p = _wgetenv(L"USERPROFILE"); p) {
-	String userdir{p};
-	folders[FolderUserIpelets] = userdir + "\\Ipelets";
-    }
+    folders[FolderConfig] = sp(bundle);
+    if (const wchar_t * p = _wgetenv(L"USERPROFILE"); p)
+	folders[FolderUserIpelets] = sp(fs::path{p} / "Ipelets");
     wchar_t * path;
     if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &path))) {
-	folders[FolderLatex] = String(path) + "\\ipe";
+	folders[FolderLatex] = sp(fs::path{path} / "ipe");
 	CoTaskMemFree(path);
     } else {
 	const wchar_t * p = _wgetenv(L"LOCALAPPDATA");
 	if (p)
-	    folders[FolderLatex] = String(p) + "\\ipe";
+	    folders[FolderLatex] = sp(fs::path{p} / "ipe");
 	else
-	    folders[FolderLatex] = exe + "latexrun";
+	    folders[FolderLatex] = sp(bundle / "latexrun");
     }
 #else
     // Linux: XDG base directory specification
     // https://specifications.freedesktop.org/basedir-spec/latest/
-    String dataHome = home + "/.local/share";
-    String configHome = home + "/.config";
-    String cacheHome = home + "/.cache";
-    getenv("XDG_DATA_HOME", nullptr, dataHome);
-    getenv("XDG_CONFIG_HOME", nullptr, configHome);
-    getenv("XDG_CACHE_HOME", nullptr, cacheHome);
-    dataHome += "/ipe";
-    configHome += "/ipe";
-    cacheHome += "/ipe";
-    folders[FolderConfig] = configHome;
-    folders[FolderUserStyles] = dataHome + "/styles";
-    folders[FolderUserIpelets] = dataHome + "/ipelets";
-    folders[FolderUserScripts] = dataHome + "/scripts";
-    folders[FolderLatex] = cacheHome;
+    String dataHome1 = sp(home / ".local" / "share");
+    String configHome1 = sp(home / ".config");
+    String cacheHome1 = sp(home / ".cache");
+    getenv("XDG_DATA_HOME", nullptr, dataHome1);
+    getenv("XDG_CONFIG_HOME", nullptr, configHome1);
+    getenv("XDG_CACHE_HOME", nullptr, cacheHome1);
+    fs::path dataHome = fs::path(dataHome1.s8()) / "ipe";
+    fs::path configHome = fs::path(configHome1.s8()) / "ipe";
+    fs::path cacheHome = fs::path(cacheHome1.s8()) / "ipe";
+    folders[FolderConfig] = sp(configHome);
+    folders[FolderUserStyles] = sp(dataHome / "styles");
+    folders[FolderUserIpelets] = sp(dataHome / "ipelets");
+    folders[FolderUserScripts] = sp(dataHome / "scripts");
+    folders[FolderLatex] = sp(cacheHome);
 #endif
     // read ipe.conf before interpreting environment variables
-    readIpeConf(folders[FolderConfig] + "/ipe.conf");
+    readIpeConf(fs::path(folders[FolderConfig].s8()) / "ipe.conf");
 
     getenv("IPEDOCDIR", L"IPEDOCDIR", folders[FolderDoc]);
     getenv("IPEICONDIR", L"IPEICONDIR", folders[FolderIcons]);
@@ -388,19 +380,6 @@ void ipeDebugBuffer(Buffer data, int maxsize) {
 
 // --------------------------------------------------------------------
 
-//! Returns current working directory.
-/*! Returns empty string if something fails. */
-String Platform::currentDirectory() {
-#ifdef WIN32
-    wchar_t * buffer = _wgetcwd(nullptr, 0);
-    return String(buffer);
-#else
-    char buffer[1024];
-    if (getcwd(buffer, 1024) != buffer) return String();
-    return String(buffer);
-#endif
-}
-
 //! Returns drive on which Ipe executable exists.
 /*! On Linux and OSX, returns empty string. */
 String Platform::ipeDrive() { return ::ipeDrive; }
@@ -411,70 +390,32 @@ String Platform::latexPath() {
     String result;
 #ifdef WIN32
     const wchar_t * p = _wgetenv(L"IPELATEXPATH");
-    if (p) result = String(p);
-    if (result.left(4) == "ipe:") result = ipeDrive() + result.substr(4);
+    if (p) {
+	std::wstring native = fs::path(p).native();
+	if (native.starts_with(L"ipe:")) {
+	    native.replace(0, 4, fs::path(::ipeDrive.s8()).native());
+	}
+	result = sp(fs::path(native));
+    }
 #else
-    char * p = getenv("IPELATEXPATH");
-    if (p) result = p;
+    const char * p = getenv("IPELATEXPATH");
+    if (p) result = sp(fs::path(reinterpret_cast<const char8_t *>(p)));
 #endif
     return result;
 }
 
 //! Determine whether file exists.
 bool Platform::fileExists(String fname) {
-#ifdef WIN32
-    return (_waccess(fname.w().data(), F_OK) == 0);
-#elif defined(IPEWASM)
+    std::error_code error;
+
+#if defined(IPEWASM)
     if (!usePreloader() || fname.hasPrefix("/tmp") || fname.hasPrefix("/opt/ipe"))
-	return (::access(fname.z(), F_OK) == 0);
+	return fs::exists(fs::path(fname.s8()), error);
     emscripten::val fileExistsCache =
 	emscripten::val::global("window")["ipeui"]["fileExistsCache"];
     return !fileExistsCache[fname.z()].isUndefined();
 #else
-    return (::access(fname.z(), F_OK) == 0);
-#endif
-}
-
-//! Convert relative filename to absolute.
-/*! This also works when the filename does not exist, or at least it tries. */
-String Platform::realPath(String fname) {
-#ifdef WIN32
-    wchar_t wresult[MAX_PATH];
-    // this function works also when fname does not exist
-    GetFullPathNameW(fname.w().data(), MAX_PATH, wresult, nullptr);
-    return String(wresult);
-#else
-    char rpath[PATH_MAX];
-    if (realpath(fname.z(), rpath)) return String(rpath);
-    if (errno != ENOENT || fname.left(1) == "/") return fname; // not much we can do
-    if (realpath(".", rpath) == nullptr) return fname;         // nothing we can do
-    return String(rpath) + "/" + fname;
-#endif
-}
-
-//! List all files in directory
-/*! Return true if successful, false on error. */
-bool Platform::listDirectory(String path, std::vector<String> & files) {
-#ifdef WIN32
-    String pattern = path + "\\*";
-    struct _wfinddata_t info;
-    intptr_t h = _wfindfirst(pattern.w().data(), &info);
-    if (h == -1L) return false;
-    files.push_back(String(info.name));
-    while (_wfindnext(h, &info) == 0) files.push_back(String(info.name));
-    _findclose(h);
-    return true;
-#else
-    DIR * dir = opendir(path.z());
-    if (dir == nullptr) return false;
-    struct dirent * entry = readdir(dir);
-    while (entry != nullptr) {
-	String s(entry->d_name);
-	if (s != "." && s != "..") files.push_back(s);
-	entry = readdir(dir);
-    }
-    closedir(dir);
-    return true;
+    return fs::exists(fs::path(fname.s8()), error);
 #endif
 }
 
@@ -496,7 +437,7 @@ String Platform::readFile(String fname) {
 //! Returns command to run latex on file ipetemp.tex in given directory.
 /*! directory of docname is added to TEXINPUTS if its non-empty. */
 String Platform::howToRunLatex(LatexType engine, String docname) noexcept {
-    String dir = folder(FolderLatex, ""); // appends path separator
+    fs::path dir(folders[FolderLatex].s8());
     const char * latex = (engine == LatexType::Xetex)    ? "xelatex"
 			 : (engine == LatexType::Luatex) ? "lualatex"
 							 : "pdflatex";
@@ -507,14 +448,12 @@ String Platform::howToRunLatex(LatexType engine, String docname) noexcept {
 	return how;
     }
 #endif
-    String url = Platform::readFile(dir + "url1.txt");
+    String url = Platform::readFile(sp(dir / "url1.txt"));
     bool online = (url.left(4) == "http");
     String texinputs;
     if (!online && !docname.empty()) {
-	docname = realPath(docname);
-	int i = docname.size();
-	while (i > 0 && docname[i - 1] != IPESEP) --i;
-	if (i > 0) texinputs = docname.substr(0, i - 1);
+	fs::path doc1 = fs::absolute(fs::path(docname.s8()));
+	texinputs = sp(doc1.parent_path());
     }
 #ifdef WIN32
     if (!online && getenv("IPETEXFORMAT")) {
@@ -523,15 +462,17 @@ String Platform::howToRunLatex(LatexType engine, String docname) noexcept {
 						: "pdftex ^&pdflatex";
     }
 
+    dir.make_preferred();
+
     String bat;
     // try to change codepage to UTF-8
     bat += "chcp 65001\r\n";
-    if (dir.size() > 2 && dir[1] == ':') {
-	bat += dir.substr(0, 2);
+    if (folders[FolderLatex].size() > 2 && folders[FolderLatex][1] == ':') {
+	bat += folders[FolderLatex].substr(0, 2);
 	bat += "\r\n";
     }
     bat += "cd \"";
-    bat += dir;
+    bat += dir.u8string();
     bat += "\"\r\n";
     if (!texinputs.empty()) {
 	bat += "setlocal\r\n";
@@ -541,15 +482,19 @@ String Platform::howToRunLatex(LatexType engine, String docname) noexcept {
     }
     if (online) {
 	bat += "\"";
-	bat += folder(FolderConfig, "bin\\ipecurl.exe");
+	fs::path curl = fs::path(folders[FolderConfig].s8()) / "bin" / "ipecurl.exe";
+	curl.make_preferred(); // use Windows style path separators
+	bat += curl.u8string();
 	bat += "\" ";
 	bat += latex;
 	bat += "\r\n";
     } else {
 	String path = latexPath();
 	if (!path.empty()) {
+	    fs::path p(path.s8());
+	    p.make_preferred();
 	    bat += "PATH ";
-	    bat += path;
+	    bat += p.u8string();
 	    bat += ";%PATH%\r\n";
 	}
 	bat += latex;
@@ -558,13 +503,14 @@ String Platform::howToRunLatex(LatexType engine, String docname) noexcept {
     if (!texinputs.empty()) bat += "endlocal\r\n";
     // bat += "pause\r\n";  // alternative for Wine
 
-    String s = dir + "runlatex.bat";
+    String s = sp(dir / "runlatex.bat");
     std::FILE * f = Platform::fopen(s.z(), "wb");
     if (!f) return String();
     std::fwrite(bat.data(), 1, bat.size(), f);
     std::fclose(f);
 
-    return String("cmd /c call \"") + dir + String("runlatex.bat\"");
+    dir = dir / "runlatex.bat";
+    return String("cmd /c call \"") + dir.u8string() + String("\"");
 #else
     if (!online && getenv("IPETEXFORMAT")) {
 	latex = (engine == LatexType::Xetex)    ? "xetex \\&latex"
@@ -572,7 +518,7 @@ String Platform::howToRunLatex(LatexType engine, String docname) noexcept {
 						: "pdftex \\&pdflatex";
     }
     String s("cd \"");
-    s += dir;
+    s += sp(dir);
     s += "\"; rm -f ipetemp.log; ";
     if (!texinputs.empty()) {
 	s += "export TEXINPUTS=\"";
@@ -582,7 +528,8 @@ String Platform::howToRunLatex(LatexType engine, String docname) noexcept {
     if (online) {
 #if defined(__APPLE__) && defined(IPEBUNDLE)
 	s += "\"";
-	s += folder(FolderLua, "../../MacOS/ipecurl");
+	s += sp(fs::path(folders[FolderLua].s8()).parent_path().parent_path() / "MacOS"
+		/ "ipecurl");
 	s += "\" ";
 #else
 	s += "ipecurl ";
@@ -593,7 +540,7 @@ String Platform::howToRunLatex(LatexType engine, String docname) noexcept {
 	if (path.empty())
 	    s += latex;
 	else
-	    s += String("\"") + path + "/" + latex + "\"";
+	    s += String("\"") + sp(fs::path{path.s8()} / latex) + "\"";
 	s += " ipetemp.tex";
     }
     s += " > /dev/null";
@@ -640,12 +587,6 @@ int Platform::system(String cmd) {
 #endif
 
 #ifdef WIN32
-FILE * Platform::fopen(const char * fname, const char * mode) {
-    return _wfopen(String(fname).w().data(), String(mode).w().data());
-}
-
-int Platform::mkdir(String path) { return _wmkdir(path.w().data()); }
-
 //! Return a wide string including a terminating zero character.
 std::wstring String::w() const noexcept {
     if (empty()) return L"\0";
@@ -668,9 +609,7 @@ String::String(const wchar_t * wbuf) {
 	WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, iImp->iData, rm, nullptr, nullptr);
     }
 }
-#else
-
-int Platform::mkdir(String path) { return ::mkdir(path.z(), 0700); }
+#endif
 
 #ifdef IPEWASM
 FILE * Platform::fopen(const char * fname, const char * mode) {
@@ -693,30 +632,15 @@ FILE * Platform::fopen(const char * fname, const char * mode) {
 }
 #else
 FILE * Platform::fopen(const char * fname, const char * mode) {
-    return ::fopen(fname, mode);
+    fs::path path{reinterpret_cast<const char8_t *>(fname)};
+#ifdef _WIN32
+    std::wstring wideMode(mode, mode + std::strlen(mode));
+    return ::_wfopen(path.c_str(), wideMode.c_str());
+#else
+    return std::fopen(path.c_str(), mode);
+#endif
 }
 #endif
-
-#endif
-
-int Platform::mkdirTree(String path) {
-    int i = 0;
-    for (;;) {
-	++i;
-	while (i < path.size() && path[i] != IPESEP) ++i;
-	if (i == path.size()) {
-	    if (Platform::fileExists(path))
-		return 0;
-	    else
-		return Platform::mkdir(path);
-	}
-	String parent = path.left(i);
-	if (!Platform::fileExists(parent)) {
-	    int result = Platform::mkdir(parent);
-	    if (result != 0) return result;
-	}
-    }
-}
 
 // package Latex source as a tarball to send to online Latex conversion
 String Platform::createTarball(String tex) {
@@ -803,11 +727,12 @@ String Platform::gslVersion() {
 }
 
 String Platform::imageFolder(String fname) {
-    if (fname.right(4) == ".ipe" || fname.right(4) == ".pdf")
-	fname = fname.left(fname.size() - 4);
-    fname += ".images";
-    fname += IPESEP;
-    return fname;
+    fs::path path(fname.s8());
+    if (path.extension() == ".ipe" || path.extension() == ".pdf")
+	path.replace_extension();
+    path += ".images";
+    path /= "";
+    return sp(path);
 }
 
 // --------------------------------------------------------------------

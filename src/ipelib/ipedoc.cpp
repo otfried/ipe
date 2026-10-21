@@ -38,9 +38,11 @@
 #include "ipestyle.h"
 #include "ipeutils.h"
 
-#include <errno.h>
+#include <filesystem>
 
 using namespace ipe;
+
+namespace fs = std::filesystem;
 
 // --------------------------------------------------------------------
 
@@ -563,21 +565,23 @@ int Document::prepareLatexRun(Latex ** pConverter) {
 	return ErrNoText;
 
     // First we need a directory
-    String latexDir = Platform::folder(FolderLatex);
-    if (Platform::mkdirTree(latexDir) != 0) {
+    fs::path latexDir{Platform::folder(FolderLatex).s8()};
+    std::error_code error;
+    fs::create_directories(latexDir, error);
+    if (error) {
 	ipeDebug("Latex directory '%s' does not exist and cannot be created!\n",
-		 latexDir.z());
+		 latexDir.generic_u8string().c_str());
 	return ErrNoDir;
     }
-    latexDir += IPESEP;
-    String texFile = latexDir + "ipetemp.tex";
-    String pdfFile = latexDir + "ipetemp.pdf";
-    String logFile = latexDir + "ipetemp.log";
+    fs::path texFile = latexDir / "ipetemp.tex";
+    fs::path pdfFile = latexDir / "ipetemp.pdf";
+    fs::path logFile = latexDir / "ipetemp.log";
 
-    std::remove(logFile.z());
-    std::remove(pdfFile.z());
+    fs::remove(logFile, error);
+    fs::remove(pdfFile, error);
 
-    std::FILE * file = Platform::fopen(texFile.z(), "wb");
+    std::FILE * file = Platform::fopen(
+	reinterpret_cast<const char *>(texFile.generic_u8string().c_str()), "wb");
     if (!file) return ErrWritingSource;
     FileStream stream(file);
     int err = converter->createLatexSource(stream, properties().iPreamble);

@@ -224,7 +224,7 @@ function MODEL:readImage(s)
   if not self.attributes.externalimages then
     return ipe.Image(r, bitmap)
   end
-  local basename = s:match(prefs.basename_pattern)
+  local basename = s:match(basename_pattern)
   if not basename then
     self:warning("Cannot find basename", s)
     return nil
@@ -483,7 +483,7 @@ function MODEL:imageFolder()
   if not self.file_name then return "" end
   local s = self.file_name
   if s:sub(-4) == ".ipe" or s:sub(-4) == ".pdf" then s = s:sub(1, -5) end
-  return s .. ".images" .. prefs.fsep
+  return s .. ".images" .. "/"
 end
 
 ----------------------------------------------------------------------
@@ -680,7 +680,7 @@ function MODEL:newDocument()
   self.doc = ipe.Document()
   for _,w in ipairs(prefs.styles) do
     local sheet
-    if w:find(prefs.fsep) then
+    if w:find("/") then
       sheet = ipe.Sheet(w)
     else
       local s, s1 = self:findStyle(w)
@@ -872,15 +872,15 @@ function MODEL:autosave()
   local f
   if self.file_name then
     if prefs.autosave_filename:find("%%s") then
-      f = self.file_name:match(prefs.basename_pattern) or self.file_name
+      f = self.file_name:match(basename_pattern) or self.file_name
       f = string.format(prefs.autosave_filename, f)
     else
       f = prefs.autosave_filename
     end
-    if f:sub(1, 1) ~= prefs.fsep then -- relative filename
-      local d = self.file_name:match(prefs.dir_pattern)
+    if f:sub(1, 1) ~= "/" then -- relative filename
+      local d = self.file_name:match(dir_pattern)
       if d then
-        f = d .. prefs.fsep .. f
+        f = d .. "/" .. f
       end
     end
   else
@@ -1182,8 +1182,8 @@ end
 -- call with name of style sheet (without ".isy")
 -- returns full path and path of a copy in local file system (for vscode)
 function MODEL:findStyle(w, dir)
-  if dir and ipe.fileExists(dir .. prefs.fsep .. w .. ".isy") then
-    local s = dir .. prefs.fsep .. w .. ".isy"
+  if dir and ipe.fileExists(dir .. "/" .. w .. ".isy") then
+    local s = dir .. "/" .. w .. ".isy"
     return s, s
   end
   if config.platform == "vscode" then
@@ -1193,7 +1193,7 @@ function MODEL:findStyle(w, dir)
     if s then return s, s1 end
   end
   for _, d in ipairs(config.styleDirs) do
-    local s = d .. prefs.fsep .. w .. ".isy"
+    local s = d .. "/" .. w .. ".isy"
     if ipe.fileExists(s) then return s, s end
   end
 end

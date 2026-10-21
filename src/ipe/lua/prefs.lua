@@ -463,20 +463,6 @@ else
   -- prefs.save_as_directory = home
 end
 
--- Pattern for lists of filenames
--- The separator is a semicolon on Windows, a colon otherwise
-if config.platform == "win" then
-  prefs.fsep = "\\"
-  prefs.fname_pattern = "[^;]+"
-  prefs.dir_pattern = "^(.+)\\[^\\]+"
-  prefs.basename_pattern = "\\([^\\]+)$"
-else
-  prefs.fsep = "/"
-  prefs.fname_pattern = "[^:]+"
-  prefs.dir_pattern = "^(.+)/[^/]+"
-  prefs.basename_pattern = "/([^/]+)$"
-end
-
 ----------------------------------------------------------------------
 
 -- Template for creating HTML/JS presentations,

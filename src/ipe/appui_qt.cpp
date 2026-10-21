@@ -60,8 +60,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <filesystem>
+
 using namespace ipe;
 using namespace ipelua;
+
+namespace fs = std::filesystem;
 
 extern void resumeLuaThread(lua_State * T, int nArgs);
 
@@ -78,7 +82,9 @@ QIcon AppUi::prefsIcon(String name) {
     }
 
     String svgdir = Platform::folder(FolderLatex, "icons/");
-    if (Platform::mkdirTree(svgdir) != 0) return QIcon();
+    std::error_code error;
+    fs::create_directories(fs::path(svgdir.s8()), error);
+    if (error) return QIcon();
 
     if (name == "ipe") {
 	String png = svgdir + "icon_128x128.png";
