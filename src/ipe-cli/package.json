@@ -1,0 +1,38 @@
+{
+  "name": "@otfried/ipe-cli",
+  "version": "7.3.1-beta.4",
+  "description": "Ipe command-line tools (ipetoipe, iperender, ipeextract, ipescript) compiled to WebAssembly",
+  "keywords": ["ipe", "ipetoipe", "iperender", "ipeextract", "ipescript", "pdf", "figures"],
+  "homepage": "https://ipe.otfried.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/otfried/ipe.git",
+    "directory": "src/ipe-cli"
+  },
+  "author": {
+    "name": "Otfried Cheong",
+    "email": "ipe@otfried.org"
+  },
+  "license": "GPL-3.0-or-later",
+  "type": "commonjs",
+  "bin": {
+    "ipetoipe": "bin/ipetoipe.js",
+    "iperender": "bin/iperender.js",
+    "ipeextract": "bin/ipeextract.js",
+    "ipescript": "bin/ipescript.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "wasm/",
+    "scripts/",
+    "LICENSE.txt"
+  ],
+  "scripts": {
+    "stage": "node tools/stage.js",
+    "prepack": "node tools/stage.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
