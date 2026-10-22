@@ -353,11 +353,11 @@ function polar_grid(model, num)
         t[#t + 1] = circleObject
     end
 
-    -- Make the spokes, not using lines incase grid angle does not evenly divid 360
-    local maxmimumSpokeLength = circles*gs
+    -- Make the spokes, not using lines incase grid angle does not evenly divide 360
+    local maximumSpokeLength = circles*gs
     for k = 0, spokes - 1 do
         local angle = gridAngle * k
-        local endPoint = center + maxmimumSpokeLength * V(math.cos(angle), math.sin(angle))
+        local endPoint = center + maximumSpokeLength * V(math.cos(angle), math.sin(angle))
         t[#t + 1] = make_segment(model.attributes, center, endPoint)
     end
 
