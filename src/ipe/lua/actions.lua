@@ -1017,7 +1017,7 @@ function MODEL:action_export_pptx()
   d:addButton("cancel", "&Cancel", "reject")
   if not d:execute(prefs.latexlog_size) then return end
   local onlyMarkedViews = d:get("views") == 2
-  local textConversions = {"all", "latex", "label", "math", "none"}
+  local textConversions = {"all", "latex", "labels", "math", "none"}
   local textConversion = textConversions[d:get("textconversion")]
   local titleConversions = {"all", "latex", "none"}
   local titleConversion = titleConversions[d:get("titleconversion")]

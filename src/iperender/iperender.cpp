@@ -83,7 +83,7 @@ static int renderPage(Thumbnail::TargetFormat fm, const char * src, const char *
 // --------------------------------------------------------------------
 
 static int renderReveal(const char * src, const char * dst, const char * pageSpec,
-			bool toJson) {
+			bool toJson, bool onlyMarked) {
     Document * doc = Document::loadWithErrorReport(src);
 
     if (!doc) return 1;
@@ -110,7 +110,7 @@ static int renderReveal(const char * src, const char * dst, const char * pageSpe
 
     Reveal reveal(doc, fromPage, toPage);
     if (toJson) {
-	if (!reveal.createJson(dst, true))
+	if (!reveal.createJson(dst, onlyMarked))
 	    fprintf(stderr, "Failure to create json file.\n");
     } else {
 	if (!reveal.createPresentation(dst, htmlTemplate))
@@ -138,7 +138,7 @@ static void usage() {
     fprintf(stderr, "| -json ");
     fprintf(stderr, "] "
 		    "[ -page <page> ] [ -view <view> ] [ -resolution <dpi> ] "
-		    "[ -transparent ] [ -nocrop ] "
+		    "[ -transparent ] [ -nocrop ] [ -markedview ] "
 		    "infile outfile\n"
 		    "Iperender saves a single page of the Ipe document in some formats.\n"
 		    " -page       : page to save (default 1).\n"
@@ -147,6 +147,7 @@ static void usage() {
 		    " -tolerance  : tolerance when rendering curves (default 0.1).\n"
 		    " -transparent: use transparent background in png format.\n"
 		    " -nocrop     : do not crop page.\n"
+		    " -markedview : json format only: export only marked views on marked pages.\n"
 		    "<page> can be a page number or a page name.\n");
     exit(1);
 }
@@ -186,6 +187,7 @@ int main(int argc, char * argv[]) {
     double tolerance = 0.1;
     bool transparent = false;
     bool nocrop = false;
+    bool markedView = false;
 
     int i = 2;
     while (i < argc - 2) {
@@ -211,6 +213,9 @@ int main(int argc, char * argv[]) {
 	} else if (!strcmp(argv[i], "-nocrop")) {
 	    nocrop = true;
 	    ++i;
+	} else if (!strcmp(argv[i], "-markedview")) {
+	    markedView = true;
+	    ++i;
 	} else
 	    usage();
     }
@@ -220,7 +225,7 @@ int main(int argc, char * argv[]) {
     const char * dst = argv[i + 1];
 
     if (renderHtml || renderJson)
-	return renderReveal(src, dst, page, renderJson);
+	return renderReveal(src, dst, page, renderJson, markedView);
     else
 	return renderPage(fm, src, dst, page, view, dpi / 72.0, tolerance, transparent,
 			  nocrop);

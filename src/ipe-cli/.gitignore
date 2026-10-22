@@ -2,3 +2,5 @@ wasm/
 scripts/
 LICENSE.txt
 *.tgz
+lib/write-pptx.js
+node_modules/

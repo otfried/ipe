@@ -6,6 +6,8 @@ WebAssembly and runnable with Node.js (version 20 or later):
 * `ipetoipe` – convert between Ipe XML and PDF
 * `iperender` – render Ipe pages to PNG, SVG, PDF, EPS
 * `ipeextract` – extract the Ipe XML from a PDF made by Ipe
+* `ipetopptx` – convert to PowerPoint (`ipetopptx figure.ipe figure.pptx`);
+  see `ipetopptx -help` for the options controlling how text is exported
 * `ipescript` – run Lua scripts with the Ipe Lua API (the standard Ipe
   scripts such as `onepage` and `update-master` are included)
 

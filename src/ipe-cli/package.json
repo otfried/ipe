@@ -1,8 +1,16 @@
 {
   "name": "@otfried/ipe-cli",
   "version": "7.3.1-beta.4",
-  "description": "Ipe command-line tools (ipetoipe, iperender, ipeextract, ipescript) compiled to WebAssembly",
-  "keywords": ["ipe", "ipetoipe", "iperender", "ipeextract", "ipescript", "pdf", "figures"],
+  "description": "Ipe command-line tools (ipetoipe, iperender, ipeextract, ipescript, ipetopptx) compiled to WebAssembly",
+  "keywords": [
+    "ipe",
+    "ipetoipe",
+    "iperender",
+    "ipeextract",
+    "ipescript",
+    "pdf",
+    "figures"
+  ],
   "homepage": "https://ipe.otfried.org",
   "repository": {
     "type": "git",
@@ -19,7 +27,8 @@
     "ipetoipe": "bin/ipetoipe.js",
     "iperender": "bin/iperender.js",
     "ipeextract": "bin/ipeextract.js",
-    "ipescript": "bin/ipescript.js"
+    "ipescript": "bin/ipescript.js",
+    "ipetopptx": "bin/ipetopptx.js"
   },
   "files": [
     "bin/",
@@ -34,5 +43,10 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "jszip": "^3.10.2",
+    "pptxgenjs": "^4.0.1"
   }
 }

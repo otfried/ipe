@@ -1,5 +1,5 @@
 "use strict";
-// Copies the build products and Lua scripts from the Ipe source tree into
+// Copies the build products Lua scripts and the PPTX writer from the Ipe source tree into
 // this package.  Run `make IPEWASM=1` in src/ first.
 
 const fs = require("node:fs");
@@ -32,6 +32,21 @@ const scriptsSrc = path.join(repo, "scripts");
 for (const f of fs.readdirSync(scriptsSrc)) {
   if (f.endsWith(".lua")) fs.copyFileSync(path.join(scriptsSrc, f), path.join(scriptsOut, f));
 }
+
+// ipetopptx uses the same PPTX writer as Ipe Web; bundle it for Node.
+require("esbuild").buildSync({
+  entryPoints: [path.join(pkg, "..", "ipe-web", "src", "write-pptx.ts")],
+  outfile: path.join(pkg, "lib", "write-pptx.js"),
+  bundle: true,
+  platform: "node",
+  format: "cjs",
+  target: "node20",
+  alias: {
+    pptxgenjs: path.join(pkg, "node_modules", "pptxgenjs"),
+    jszip: path.join(pkg, "node_modules", "jszip"),
+  },
+  logLevel: "warning",
+});
 
 fs.copyFileSync(path.join(repo, "LICENSE.txt"), path.join(pkg, "LICENSE.txt"));
 console.log(`staged ${tools.length} tools and scripts into ${pkg}`);
