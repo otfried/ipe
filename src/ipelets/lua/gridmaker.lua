@@ -36,6 +36,7 @@ about = [[
     (1) A grid for two-point perspective drawings.
     (2) A triangular grid.
     (3) A hexagonal grid.
+    (4) A polar grid.
 ]]
 
 V = _G.V
@@ -327,11 +328,60 @@ function hexagonal_grid(model, num)
     model:register(t)
 end
 
+function polar_grid(model, num)
+    local layout = model.doc:sheets():find("layout")
+    local gs = model.snap.gridsize
+    local fs = layout.framesize
+    local center = V(fs.x / 2, fs.y / 2)
+    local gridAngle = math.rad(model.snap.anglesize)
+    local spokes = math.ceil(360/model.snap.anglesize)
+    local maxIncircleRadius = math.min(fs.x, fs.y)/2
+    local t = {}
+
+    -- Make the circles
+    local circles = math.floor(maxIncircleRadius / gs)
+    if circles == 0 then
+        model.ui:explain("grid size is too large for the page")
+        -- Otherwise it makes a bunch of 0 length segments
+        return
+    end
+    for k = 1, circles do
+        local circleRadius = k * gs
+        local circle = { type = "ellipse", ipe.Matrix(circleRadius, 0, 0, circleRadius, center.x, center.y) }
+        local circleObject = ipe.Path(model.attributes, { circle })
+        circleObject:set("pathmode", "stroked")
+        t[#t + 1] = circleObject
+    end
+
+    -- Make the spokes, not using lines incase grid angle does not evenly divid 360
+    local maxmimumSpokeLength = circles*gs
+    for k = 0, spokes - 1 do
+        local angle = gridAngle * k
+        local endPoint = center + maxmimumSpokeLength * V(math.cos(angle), math.sin(angle))
+        t[#t + 1] = make_segment(model.attributes, center, endPoint)
+    end
+
+    local g = ipe.Group(t)
+    local p = model:page()
+    local in_layer = p:active(model.vno)
+    if has_grid_layer(p, true) then
+        in_layer = "GRID"
+    end
+    local t = { label = "Create polar grid", pno = model.pno, vno = model.vno, layer = in_layer, object = g }
+    t.undo = function(t, doc) doc[t.pno]:remove(#doc[t.pno]) end
+    t.redo = function(t, doc)
+        doc[t.pno]:deselectAll()
+        doc[t.pno]:insert(nil, t.object, 1, t.layer)
+    end
+    model:register(t)
+end
+
 methods = {
   { label="Create a GRID layer", run = create_layer },
   { label="Two-point perspective grid", run = two_point_perspective },
   { label="Triangular grid", run = triangular_grid },
   { label="Hexagonal grid", run = hexagonal_grid },
+  { label="Polar grid", run = polar_grid },
 }
 
 ----------------------------------------------------------------------
