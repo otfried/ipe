@@ -324,6 +324,7 @@ void CairoPainter::drawImage(cairo_t * cr, const PdfDict * d, const PdfResourceB
     Matrix tf = Matrix(1.0 / width, 0.0, 0.0, -1.0 / height, 0.0, 1.0);
     cairoTransform(cr, tf);
     cairo_set_source_surface(cr, image, 0, 0);
+    cairo_surface_destroy(image); // surface is now owned by cairo context
     cairo_pattern_set_filter(cairo_get_source(cr),
 			     filterBest ? CAIRO_FILTER_BEST : CAIRO_FILTER_FAST);
     cairo_paint_with_alpha(cr, opacity);
@@ -557,6 +558,7 @@ void CairoPainter::doDrawBitmap(Bitmap bitmap) {
 	* Matrix(1.0 / bitmap.width(), 0.0, 0.0, -1.0 / bitmap.height(), 0.0, 1.0);
     cairoTransform(iCairo, tf);
     cairo_set_source_surface(iCairo, image, 0, 0);
+    cairo_surface_destroy(image); // surface is now owned by cairo context
     cairo_pattern_set_filter(cairo_get_source(iCairo),
 			     iFilterBest ? CAIRO_FILTER_BEST : CAIRO_FILTER_FAST);
     cairo_paint_with_alpha(iCairo, opacity().toDouble());
@@ -1127,6 +1129,7 @@ void CairoPainter::createPattern() {
 	cairo_destroy(cc);
 
 	cairo_pattern_t * cpat = cairo_pattern_create_for_surface(sf);
+	cairo_surface_destroy(sf); // surface is now owned by pattern
 	cairo_pattern_set_extend(cpat, CAIRO_EXTEND_REPEAT);
 
 	Matrix mx;
