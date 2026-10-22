@@ -114,10 +114,11 @@ void Canvas::drawRect(NSRect rect) {
     bool resize = [iView inLiveResize];
     NSSize s = [iView bounds].size;
     NSSize sb = [iView convertSizeToBacking:s];
+    iPixelRatio = sb.width / s.width;
     iWidth = s.width;
     iHeight = s.height;
-    iBWidth = sb.width;
-    iBHeight = sb.height;
+    iBWidth = int(sb.width);
+    iBHeight = int(sb.height);
 
     if (!resize) refreshSurface(); // instead of refreshLayer();
 
@@ -137,9 +138,9 @@ void Canvas::drawRect(NSRect rect) {
 
     if (iSurface) {
 	cairo_set_source_surface(cr, iSurface, 0.0, 0.0);
-	if (iWidth != iBWidth) {
+	if (iPixelRatio != 1.0) {
 	    cairo_matrix_t matrix;
-	    cairo_matrix_init_scale(&matrix, iBWidth / iWidth, iBHeight / iHeight);
+	    cairo_matrix_init_scale(&matrix, iPixelRatio, iPixelRatio);
 	    cairo_pattern_set_matrix(cairo_get_source(cr), &matrix);
 	}
 	cairo_paint(cr);

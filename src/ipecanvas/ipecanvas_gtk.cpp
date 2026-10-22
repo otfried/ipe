@@ -132,11 +132,17 @@ void Canvas::scrollHandler(double dx, double dy, GdkModifierType state) {
 void Canvas::exposeHandler(cairo_t * cr, int width, int height) {
     iWidth = width;
     iHeight = height;
-    int scale = gtk_widget_get_scale_factor(iWindow);
-    iBWidth = iWidth * scale;
-    iBHeight = iHeight * scale;
-    // ipeDebug("Canvas::exposeHandler %gx%g (%gx%g)", iWidth, iHeight, iBWidth,
-    // iBHeight);
+    GtkNative * native = gtk_widget_get_native(iWindow);
+    GdkSurface * surface = gtk_native_get_surface(native);
+    double scale = gdk_surface_get_scale(surface);
+
+    if (scale != iPixelRatio)
+      // force redrawing if scale has changed
+      iRepaintObjects = true;
+
+    iPixelRatio = scale;
+    iBWidth = int(std::ceil(width * scale));
+    iBHeight = int(std::ceil(height * scale));
 
     refreshSurface();
 

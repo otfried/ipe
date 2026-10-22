@@ -213,7 +213,8 @@ protected:
 
     bool iRepaintObjects;
     double iWidth, iHeight;
-    double iBWidth, iBHeight; // size of backing store
+    double iPixelRatio;
+    int iBWidth, iBHeight; // size of backing store
     cairo_surface_t * iSurface;
 
     Vector iUnsnappedMousePos;

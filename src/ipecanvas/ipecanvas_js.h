@@ -70,7 +70,6 @@ private:
     emscripten::val iBottomCtx;
     emscripten::val iTopCtx;
     bool iNeedPaint;
-    double iDpr;
 };
 
 } // namespace ipe

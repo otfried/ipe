@@ -34,7 +34,7 @@ jobs:
           cd src
           make LUA_PACKAGE=lua5.4
       - name: Test Lua bindings
-        run: make -C src/ipelua test LUA_PACKAGE=lua5.4
+        run: LD_LIBRARY_PATH="build/lib" make -C src/ipelua test LUA_PACKAGE=lua5.4
       - run: 'echo "Status ${{ job.status }}"'
   BuildQt2604:
     runs-on: ubuntu-26.04
@@ -60,7 +60,7 @@ jobs:
           cd src
           make IPE_SPELLCHECK=1
       - name: Test Lua bindings
-        run: make -C src/ipelua test
+        run: LD_LIBRARY_PATH="build/lib" make -C src/ipelua test
       - run: 'echo "Status ${{ job.status }}"'
   BuildGTK2404:
     runs-on: ubuntu-24.04
@@ -86,7 +86,7 @@ jobs:
           cd src
           make IPE_SPELLCHECK=1 LUA_PACKAGE=lua5.4
       - name: Test Lua bindings
-        run: make -C src/ipelua test LUA_PACKAGE=lua5.4
+        run: LD_LIBRARY_PATH="build/lib" make -C src/ipelua test LUA_PACKAGE=lua5.4
       - run: 'echo "Status ${{ job.status }}"'
   BuildGTK2604:
     runs-on: ubuntu-26.04
@@ -112,5 +112,5 @@ jobs:
           cd src
           make IPE_SPELLCHECK=1
       - name: Test Lua bindings
-        run: make -C src/ipelua test
+        run: LD_LIBRARY_PATH="build/lib" make -C src/ipelua test
       - run: 'echo "Status ${{ job.status }}"'

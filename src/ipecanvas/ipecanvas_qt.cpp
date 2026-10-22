@@ -354,19 +354,18 @@ void Canvas::paintEvent(QPaintEvent * ev) {
     iWidth = width();
     iHeight = height();
 
-    double dpr = devicePixelRatio();
-    iBWidth = iWidth * dpr;
-    iBHeight = iHeight * dpr;
+    iPixelRatio = devicePixelRatio();
+    iBWidth = qRound(iWidth * iPixelRatio);
+    iBHeight = qRound(iHeight * iPixelRatio);
 
     refreshSurface();
 
     QPainter qPainter;
     qPainter.begin(this);
-    QRect r = ev->rect();
-    QRect source(r.left() * dpr, r.top() * dpr, r.width() * dpr, r.height() * dpr);
     QImage bits(cairo_image_surface_get_data(iSurface), iBWidth, iBHeight,
 		QImage::Format_RGB32);
-    qPainter.drawImage(r, bits, source);
+    bits.setDevicePixelRatio(iPixelRatio);
+    qPainter.drawImage(QPointF(0, 0), bits);
     if (iFifiVisible) drawFifi(qPainter);
     if (iPage) {
 	IpeQtPainter qp(iCascade, &qPainter);

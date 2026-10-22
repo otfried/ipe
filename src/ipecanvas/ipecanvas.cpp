@@ -73,8 +73,9 @@ CanvasBase::CanvasBase() {
     iPan = Vector::ZERO;
     iZoom = 1.0;
     iDimmed = false;
-    iWidth = 0; // not yet known (canvas is not yet mapped)
-    iHeight = 0;
+    iWidth = 0.0; // not yet known (canvas is not yet mapped)
+    iHeight = 0.0;
+    iPixelRatio = 1.0;
     iBWidth = 0;
     iBHeight = 0;
     iRepaintObjects = false;
@@ -634,8 +635,8 @@ bool CanvasBase::refreshSurface() {
     if (!iSurface || iBWidth != cairo_image_surface_get_width(iSurface)
 	|| iBHeight != cairo_image_surface_get_height(iSurface)) {
 	// size has changed
-	ipeDebug("size has changed to %g x %g (%g x %g)", iWidth, iHeight, iBWidth,
-		 iBHeight);
+	ipeDebug("size has changed to %g x %g (%d x %d), dpr = %g", iWidth, iHeight,
+		 iBWidth, iBHeight, iPixelRatio);
 	if (iSurface) cairo_surface_destroy(iSurface);
 	iSurface = nullptr;
 	iRepaintObjects = true;
@@ -653,7 +654,7 @@ bool CanvasBase::refreshSurface() {
 	cairo_fill(cc);
 
 	cairo_translate(cc, 0.5 * iBWidth, 0.5 * iBHeight);
-	cairo_scale(cc, iBWidth / iWidth, iBHeight / iHeight);
+	cairo_scale(cc, iPixelRatio, iPixelRatio);
 	cairo_scale(cc, iZoom, -iZoom);
 	cairo_translate(cc, -iPan.x, -iPan.y);
 

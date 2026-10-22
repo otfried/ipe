@@ -180,11 +180,11 @@ Canvas::Canvas(val bottomCanvas, val topCanvas) {
 }
 
 void Canvas::updateSize() {
-    iDpr = val::global("window")["devicePixelRatio"].as<double>();
+    iPixelRatio = val::global("window")["devicePixelRatio"].as<double>();
     iBWidth = iBottomCanvas["width"].as<double>();
     iBHeight = iBottomCanvas["height"].as<double>();
-    iWidth = iBWidth / iDpr;
-    iHeight = iBHeight / iDpr;
+    iWidth = iBWidth / iPixelRatio;
+    iHeight = iBHeight / iPixelRatio;
 }
 
 void Canvas::setCursor(TCursor cursor, double w, Color * color) {
@@ -357,7 +357,7 @@ void Canvas::paint() {
 
     iTopCtx.call<void>("clearRect", 0, 0, iBWidth, iBHeight);
 
-    JsPainter qp(iCascade, iTopCtx, iDpr);
+    JsPainter qp(iCascade, iTopCtx, iPixelRatio);
     if (iFifiVisible) drawFifi(qp);
     if (iPage) {
 	qp.transform(canvasTfm());
