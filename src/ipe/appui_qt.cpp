@@ -193,21 +193,36 @@ void AppUi::addItem(int id, const char * title, const char * name) {
 	addItem(iMenu[id], QString::fromUtf8(title), name);
 }
 
-static QMenu * submenu = nullptr;
+static std::vector<QMenu *> submenuStack;
 static int submenuId = 0;
 
 void AppUi::startSubMenu(int id, const char * name, int tag) {
-    submenuId = id;
-    submenu = new QMenu(name);
+    QMenu * m = new QMenu(QString::fromUtf8(name));
+    if (submenuStack.empty()) {
+	submenuId = id;
+    }
+    submenuStack.push_back(m);
 }
 
 void AppUi::addSubItem(const char * title, const char * name) {
-    addItem(submenu, title, name);
+    if (title == nullptr) {
+	if (!submenuStack.empty())
+	    submenuStack.back()->addSeparator();
+    } else if (!submenuStack.empty()) {
+	addItem(submenuStack.back(), QString::fromUtf8(title), name);
+    }
 }
 
 MENUHANDLE AppUi::endSubMenu() {
-    iMenu[submenuId]->addMenu(submenu);
-    return submenu;
+    assert(!submenuStack.empty());
+    QMenu * m = submenuStack.back();
+    submenuStack.pop_back();
+    if (submenuStack.empty()) {
+	iMenu[submenuId]->addMenu(m);
+    } else {
+	submenuStack.back()->addMenu(m);
+    }
+    return m;
 }
 
 Qt::DockWidgetArea getDockSide(lua_State * L, const char * name,

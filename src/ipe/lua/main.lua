@@ -411,6 +411,11 @@ function load_ipelets()
     local ff = assert(load(function () return fd:read("*L") end,
 			   ft.path, "bt", ft))
     ff()
+    if not ft.category then
+      if ft.name:sub(1, 8) == "libCGAL_" or ft.name:sub(1, 5) == "CGAL_" then
+        ft.category = "CGAL Algorithms"
+      end
+    end
   end
 end
 

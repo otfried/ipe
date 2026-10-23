@@ -35,6 +35,11 @@
 
 #include "ipecairopainter.h"
 
+#include <algorithm>
+#include <cctype>
+#include <map>
+#include <vector>
+
 using namespace ipe;
 using namespace ipelua;
 
@@ -431,6 +436,20 @@ void AppUiBase::buildMenus() {
 #endif
 
     // build Ipelet menu
+    struct SIpeletMethod {
+	String label;
+	String action;
+    };
+
+    struct SIpelet {
+	String label;
+	String name;
+	String category;
+	bool hasMethods;
+	std::vector<SIpeletMethod> methods;
+    };
+
+    std::vector<SIpelet> allIpelets;
     lua_getglobal(L, "ipelets");
     int n = lua_rawlen(L, -1);
     for (int i = 1; i <= n; ++i) {
@@ -440,34 +459,95 @@ void AppUiBase::buildMenus() {
 	    lua_pop(L, 2); // label, ipelet
 	    continue;
 	}
-	String label(lua_tolstring(L, -1, nullptr));
+	SIpelet info;
+	info.label = String(lua_tolstring(L, -1, nullptr));
 	lua_pop(L, 1);
 	lua_getfield(L, -1, "name");
-	String name(lua_tolstring(L, -1, nullptr));
+	info.name = String(lua_tolstring(L, -1, nullptr));
 	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "category");
+	if (lua_isstring(L, -1))
+	    info.category = String(lua_tolstring(L, -1, nullptr));
+	else if (info.name.hasPrefix("libCGAL_") || info.name.hasPrefix("CGAL_"))
+	    info.category = "CGAL Algorithms";
+	lua_pop(L, 1);
+
 	lua_getfield(L, -1, "methods");
-	char buf[20];
-	if (lua_isnil(L, -1)) {
+	info.hasMethods = !lua_isnil(L, -1);
+	if (!info.hasMethods) {
 	    String action("ipelet_1_");
-	    action += name;
-	    addItem(EIpeletMenu, label.z(), action.z());
+	    action += info.name;
+	    info.methods.push_back({ info.label, action });
 	} else {
 	    int m = lua_rawlen(L, -1);
-	    startSubMenu(EIpeletMenu, label.z());
+	    char buf[32];
 	    for (int j = 1; j <= m; ++j) {
 		lua_rawgeti(L, -1, j);
 		lua_getfield(L, -1, "label");
 		sprintf(buf, "ipelet_%d_", j);
 		String action(buf);
-		action += name;
-		addSubItem(lua_tolstring(L, -1, nullptr), action.z());
-		lua_pop(L, 2); // sublabel, method
+		action += info.name;
+		info.methods.push_back({ String(lua_tolstring(L, -1, nullptr)), action });
+		lua_pop(L, 2); // label, method
 	    }
-	    endSubMenu();
 	}
 	lua_pop(L, 2); // methods, ipelet
+	allIpelets.push_back(std::move(info));
     }
     lua_pop(L, 1);
+
+    auto ciCompare = [](const SIpelet & a, const SIpelet & b) {
+	const char * pa = a.label.z();
+	const char * pb = b.label.z();
+	while (*pa && *pb) {
+	    char ca = std::tolower(static_cast<unsigned char>(*pa));
+	    char cb = std::tolower(static_cast<unsigned char>(*pb));
+	    if (ca != cb) return ca < cb;
+	    ++pa;
+	    ++pb;
+	}
+	return *pa == 0 && *pb != 0;
+    };
+
+    std::vector<SIpelet> topLevel;
+    std::map<String, std::vector<SIpelet>> categories;
+    for (auto & ip : allIpelets) {
+	if (ip.category.empty())
+	    topLevel.push_back(std::move(ip));
+	else
+	    categories[ip.category].push_back(std::move(ip));
+    }
+
+    std::sort(topLevel.begin(), topLevel.end(), ciCompare);
+
+    auto addIpeletItem = [this](const SIpelet & ip, bool inSubmenu) {
+	if (!ip.hasMethods) {
+	    if (inSubmenu)
+		addSubItem(ip.label.z(), ip.methods[0].action.z());
+	    else
+		addItem(EIpeletMenu, ip.label.z(), ip.methods[0].action.z());
+	} else {
+	    startSubMenu(EIpeletMenu, ip.label.z());
+	    for (const auto & m : ip.methods)
+		addSubItem(m.label.z(), m.action.z());
+	    endSubMenu();
+	}
+    };
+
+    for (const auto & ip : topLevel)
+	addIpeletItem(ip, false);
+
+    if (!topLevel.empty() && !categories.empty())
+	addItem(EIpeletMenu);
+
+    for (auto & [catName, catIpelets] : categories) {
+	std::sort(catIpelets.begin(), catIpelets.end(), ciCompare);
+	startSubMenu(EIpeletMenu, catName.z());
+	for (const auto & ip : catIpelets)
+	    addIpeletItem(ip, true);
+	endSubMenu();
+    }
 }
 
 // --------------------------------------------------------------------
