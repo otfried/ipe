@@ -89,7 +89,7 @@ QIcon AppUi::prefsIcon(String name) {
     if (name == "ipe") {
 	String png = svgdir + "icon_128x128.png";
 	if (!Platform::fileExists(png)) {
-	    String fname = Platform::folder(FolderIcons, "icon_logo.ipe");
+	    String fname = Platform::folder(FolderIcons, "ipe_logo.ipe");
 	    std::unique_ptr<Document> doc(Document::loadWithErrorReport(fname.z()));
 	    if (!doc || doc->runLatex(fname) != Document::ErrNone) return QIcon();
 	    Thumbnail thumbs(doc.get(), 128);

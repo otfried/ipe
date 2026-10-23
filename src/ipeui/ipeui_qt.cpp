@@ -246,14 +246,10 @@ protected:
     virtual void acceptDialog(lua_State * L);
 
 private:
-    void takeDown();
-
-private:
     IpeUiQDialog * qDialog;
     std::vector<QWidget *> iWidgets;
     QGridLayout * iGrid;
     QHBoxLayout * iButtonArea;
-    int threadRef;
 };
 
 // --------------------------------------------------------------------
@@ -484,24 +480,9 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	}
     }
     qDialog->setMinimumSize(w, h);
-    qDialog->setModal(true);
-    qDialog->show();
-    QObject::connect(qDialog, &QDialog::finished, [this]() { this->takeDown(); });
-    // save current thread
-    lua_pushthread(L);
-    threadRef = luaL_ref(L, LUA_REGISTRYINDEX);
-    return Result::MODAL;
-}
-
-void PDialog::takeDown() {
-    bool accepted = qDialog->result() == QDialog::Accepted;
-    retrieveValues();       // for future reference
-    release(L);             // release references to Lua objects
-    qDialog->deleteLater(); // schedule for deletion
-    qDialog = nullptr;      // and forget it
-    lua_pushboolean(L, accepted);
-    resumeLuaThread(L, 1);
-    luaL_unref(L, LUA_REGISTRYINDEX, threadRef);
+    int res = qDialog->exec();
+    retrieveValues();
+    return (res == QDialog::Accepted) ? Result::ACCEPTED : Result::CLOSED;
 }
 
 void PDialog::retrieveValues() {
