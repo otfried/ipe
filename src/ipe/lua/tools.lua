@@ -1585,6 +1585,14 @@ local function start_group_edit(t, doc)
   for _,l in ipairs(layers) do
     if p:isLocked(l) then data = data .. l .. "," end
   end
+  local clipLayer
+  if t.clip then
+    clipLayer = "EDIT-GROUP-CLIP"
+    while indexOf(clipLayer, layers) do
+      clipLayer = clipLayer .. "*"
+    end
+    data = data .. ";clip=" .. clipLayer
+  end
   p:remove(t.primary)
   p:addLayer(layer)
   p:setLayerData(layer, data)
@@ -1592,6 +1600,14 @@ local function start_group_edit(t, doc)
   for _,obj in ipairs(elements) do
     p:insert(nil, obj, nil, layer)
     p:transform(#p, matrix)
+  end
+  if clipLayer then
+    p:addLayer(clipLayer)
+    p:moveLayer(clipLayer, activeIndex + 2)
+    p:insert(nil, t.clip, nil, clipLayer)
+    p:transform(#p, matrix)
+    p:setVisible(t.vno, clipLayer, true)
+    p:setLocked(clipLayer, true)
   end
   p:deselectAll()
   p:setActive(t.vno, layer)
@@ -1639,6 +1655,22 @@ local function end_group_edit(t, doc)
     if w:sub(1, 4) == "url=" then
       group:setText(w:sub(5))
     end
+    if w:sub(1, 5) == "clip=" then
+      local clipLayer = w:sub(6)
+      if indexOf(clipLayer, p:layers()) then
+	for i = #p,1,-1 do
+	  if p:layerOf(i) == clipLayer then
+	    if p[i]:type() == "path" then
+	      local shape = p[i]:shape()
+	      transformShape(p[i]:matrix(), shape)
+	      group:setClip(shape)
+	    end
+	    p:remove(i)
+	  end
+	end
+	p:removeLayer(clipLayer)
+      end
+    end
   end
   -- to be safe, if the page was tampered with
   if not newActive then
@@ -1665,12 +1697,15 @@ function MODEL:saction_edit_group()
 	      undo = revertOriginal,
 	      redo = start_group_edit,
 	    }
+  local clip = p[prim]:clip()
+  if clip then t.clip = ipe.Path(self.attributes, clip) end
   self:register(t)
 end
 
 function MODEL:action_end_group_edit()
   local p = self:page()
   if (not string.match(p:active(self.vno), "^EDIT%-GROUP")) or
+    string.match(p:active(self.vno), "^EDIT%-GROUP%-CLIP") or
     p:countLayers() < 2 then
     self:warning("Cannot end group edit",
 		 "Active layer is not a group edit layer")
