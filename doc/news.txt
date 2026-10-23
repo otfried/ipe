@@ -40,6 +40,9 @@ Ipe 7.3.1
  * After 15 years, finally fix the memory leak in Freetype/Cairo font
    allocation.
 
+ * Path editor can now cut cubic B-splines at an arbitrary position
+   (#374).
+
  * Refactor UI code to make use of Lua coroutines.  It's now possible
    to use aynchronous services (like online Latex) without a blocking
    wait on a second thread.  All calls into Lua are now protected, so

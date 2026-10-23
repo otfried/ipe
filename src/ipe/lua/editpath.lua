@@ -503,77 +503,72 @@ function EDITTOOL:action_set_tension()
   self.undo[#self.undo + 1] = t
 end
 
+-- Boehm knot insertion of u into cubic B-spline with control points P and knots U
+-- (U is modified in place, new control points are returned)
+local function insertKnot(P, U, u)
+  local m = 1
+  while U[m + 1] <= u do m = m + 1 end
+  local Q = {}
+  for i = 1, m - 3 do Q[i] = P[i] end
+  for i = m - 2, m do
+    local a = (u - U[i]) / (U[i + 3] - U[i])
+    Q[i] = (1 - a) * P[i - 1] + a * P[i]
+  end
+  for i = m + 1, #P + 1 do Q[i] = P[i - 1] end
+  table.insert(U, m + 1, u)
+  return Q
+end
+
+-- Split uniform cubic B-spline seg with knots [0,0,0,0,1,2,...,k,k,k,k]
+-- at integer knot t (0 < t < k).
+local function splitSplineAtKnot(seg, t)
+  local k = #seg - 3
+  local P = {}
+  for i = 1, #seg do P[i] = seg[i] end
+  local U = { 0, 0, 0, 0 }
+  for i = 1, k - 1 do U[#U + 1] = i end
+  for i = 1, 4 do U[#U + 1] = k end
+  P = insertKnot(P, U, t)
+  P = insertKnot(P, U, t)
+  local left, right = { type = "spline" }, { type = "spline" }
+  for i = 1, t + 3 do left[i] = P[i] end
+  for i = t + 3, #P do right[#right + 1] = P[i] end
+  return left, right
+end
+
+-- Split uniform cubic B-spline seg into the spline before knot j-1,
+-- the Bezier curve for knot interval [j-1, j], and the spline after knot j.
+-- The splines have a single control point if they are empty.
+local function splitSplineInterval(seg, j)
+  local k = #seg - 3
+  local left, rest = { type = "spline", seg[1] }, seg
+  if j > 1 then left, rest = splitSplineAtKnot(seg, j - 1) end
+  local bez, right = rest, { type = "spline", seg[#seg] }
+  if j < k then bez, right = splitSplineAtKnot(rest, 1) end
+  return left, bez, right
+end
+
+-- Open uniform B-spline tracing closed spline sp, starting and ending
+-- at the curve point belonging to control point s.
+local function openClosedSpline(sp, s)
+  local n = #sp
+  local function cp(i) return sp[(s + i - 2) % n + 1] end
+  local q = (1.0/3.0) * (cp(n) + 2 * cp(1))
+  local r = (1.0/3.0) * (2 * cp(1) + cp(2))
+  local p = 0.5 * (q + r)
+  local seg = { type = "spline", p, r }
+  for i = 2, n do seg[#seg + 1] = cp(i) end
+  seg[#seg + 1] = q
+  seg[#seg + 1] = p
+  return seg
+end
+
 function EDITTOOL:action_insert_knot()
   local sp = self.shape[self.spNum]
   local seg = sp[self.segNum]
-  -- Knot sequence: [0, 0, 0, 1, 2, 3, 4, 5, 6, ..., k-2, k-1, k, k, k]
-  -- It has k + 5 = n + 2 knots, so there are k = n-3  knot intervals.
-  -- cps are [0,0,0], [0,0,1], [0,1,2]...[k-2,k-1,k],[k-1,k,k],[k,k,k]
-  -- we are going to insert a vertex at knot t, with 1 <= t <= k-1
   local k = #seg - 3
-  -- we need k >= 3, so handle case n = 5 separately:
-  if k < 3 then
-    self:action_convert_spline()
-    return
-  end
-  local t = self.cpNum - 2
-  if t < 1 then t = 1 end
-  if t > k - 1 then t = k-1 end
-  local ls = { type = "spline" }
-  local rs = { type = "spline" }
-  if t == 1 then
-    -- we need [0,1,1], [1,1,1] and [1,1,2]
-    -- [0,1,1] = 1/2 [0,0,1] + 1/2 [0,2,1]
-    local q = 0.5 * (seg[2] + seg[3])
-    -- [1,1,2] = 2/3 [0,1,2] + 1/3 [3,1,2]
-    local r = (1.0/3.0) * (2 * seg[3] + seg[4])
-    local p = 0.5 * (q + r) -- [1,1,1]
-    ls[1] = seg[1]
-    ls[2] = seg[2]
-    ls[3] = q
-    ls[4] = p
-    rs[1] = p
-    rs[2] = r
-    for i=4,#seg do
-      rs[#rs+1] = seg[i]
-    end
-  elseif t == k-1 then
-    -- we need [k-2,k-1,k-1], [k-1,k-1,k-1] and [k-1,k-1,k]
-    -- [k-2,k-1,k-1] = 1/3 [k-2,k-1,k-3] + 2/3 [k-2,k-1,k]
-    local q = (1.0/3.0) * (seg[k] + 2 * seg[k+1])
-    -- [k-1,k-1,k] = 1/2 [k-2,k-1,k] + 1/2 [k,k-1,k]
-    local r = 0.5 * (seg[k+1] + seg[k+2])
-    local p = 0.5 * (q + r) -- [k-1,k-1,k-1]
-    for i = 1,#seg-3 do ls[i] = seg[i] end
-    ls[#ls+1] = q
-    ls[#ls+1] = p
-    rs[1] = p
-    rs[2] = r
-    rs[3] = seg[#seg-1]
-    rs[4] = seg[#seg]
-  else -- 2 <= t <= k-2
-    -- we need [t-1,t,t], [t,t,t], [t,t,t+1]
-    -- [t-1,t,t] = 1/3 [t-1,t,t-2] + 2/3 [t-1,t,t+1]
-    local q = (1.0/3.0) * (seg[t+1] + 2 * seg[t+2])
-    -- [t,t,t+1] = 2/3 [t-1,t,t+1] + 1/3 [t+2,t,t+1]
-    local r = (1.0/3.0) * (2 * seg[t+2] + seg[t+3])
-    -- [t,t,t] = 1/2 [t,t,t-1] + 1/2[t,t,t+1]
-    local p = 0.5 * (q + r)
-
-    -- copy [0,0,0]...[t-2,t-1,t]
-    for i=1,t+1 do
-      ls[i] = seg[i]
-    end
-    ls[t+2] = q
-    ls[t+3] = p
-    rs[1] = p
-    rs[2] = r
-    -- copy [t,t+1,t+2] ... [k,k,k]
-    for i=t+3,#seg do
-      rs[#rs+1] = seg[i]
-    end
-  end
-
+  local t = math.max(1, math.min(self.cpNum - 2, k - 1))
+  local ls, rs = splitSplineAtKnot(seg, t)
   local it = { label = "insert vertex at knot " .. t,
 	       spNum = self.spNum,
 	       original = cloneSubpath(sp),
@@ -584,41 +579,16 @@ function EDITTOOL:action_insert_knot()
   self.undo[#self.undo + 1] = it
 end
 
-
 function EDITTOOL:action_insert_knot_closed()
   local sp = self.shape[self.spNum]
-  local n = #sp
-  local t = self.cpNum
-  local it = { label = "insert vertex at knot " .. t,
+  local it = { label = "insert vertex at knot " .. self.cpNum,
 	       spNum = self.spNum,
 	       original = cloneSubpath(sp),
 	       undo = revertSubpath }
-
-  -- knot sequence: 0 1 2 3 4 ... n-1 n n+1 n+2
-  -- where [n n+1 n+2] = [0 1 2], etc.
-  -- rotate knot to the front
-  for i=1,t-1 do
-    local v = table.remove(sp, 1)
-    sp[#sp+1] = v
-  end
-  -- cut at knot 1
-  -- need [0,1,1], [1,1,1], and [1,1,2]
-  -- [0,1,1] = 1/3 [-1,0,1] + 2/3 [2,0,1]
-  local q = (1.0/3.0) * (sp[n] + 2 * sp[1])
-  -- [1,1,2] = 2/3 [0,1,2] + 1/3 [3,1,2]
-  local r = (1.0/3.0) * (2 * sp[1] + sp[2])
-  local p = 0.5 * (q + r) -- [1,1,1]
-
-  local seg = { type="spline" }
-  seg[1] = p
-  seg[2] = r
-  for i=2,n do seg[#seg+1] = sp[i] end
-  seg[#seg+1] = q
-  seg[#seg+1] = p
-  table.remove(self.shape, self.spNum)
-  table.insert(self.shape, self.spNum, { type="curve", closed=false, seg })
+  local seg = openClosedSpline(sp, self.cpNum)
+  self.shape[self.spNum] = { type="curve", closed=false, seg }
+  self.segNum = 1
   self.cpNum = 1
-
   self.undo[#self.undo + 1] = it
 end
 
@@ -655,6 +625,38 @@ local function subdivideQuad(bez, t)
   return l, r
 end
 
+-- replace current segment by lsegs and rsegs, and cut subpath between them
+function EDITTOOL:cutSegment(label, lsegs, rsegs)
+  local sp = self.shape[self.spNum]
+  local t = { label = label,
+	      spNum = self.spNum,
+	      original = cloneSubpath(sp),
+	      undo = function (t, shape)
+		       shape[t.spNum] = t.original
+		       if t.newSpNum then
+			 table.remove(shape, t.newSpNum)
+		       end
+		     end
+	    }
+  local nsp = { type = "curve", closed = false }
+  for _, s in ipairs(rsegs) do nsp[#nsp + 1] = s end
+  for i = self.segNum+1,#sp do nsp[#nsp + 1] = sp[i] end
+  if not sp.closed then
+    for i = #sp,self.segNum,-1 do table.remove(sp, i) end
+    for _, s in ipairs(lsegs) do sp[#sp + 1] = s end
+    t.newSpNum = self.spNum + 1
+    table.insert(self.shape, t.newSpNum, nsp)
+  else -- sp is closed
+    local lastseg = sp[#sp]
+    nsp[#nsp + 1] = { type = "segment", lastseg[#lastseg], sp[1][1] }
+    for i = 1,self.segNum-1 do nsp[#nsp + 1] = sp[i] end
+    for _, s in ipairs(lsegs) do nsp[#nsp + 1] = s end
+    self.shape[self.spNum] = nsp
+    self.segNum = #nsp
+  end
+  self.undo[#self.undo + 1] = t
+end
+
 function EDITTOOL:cutter_ellipse()
   local sp = self.shape[self.spNum]
   local t = { label = "cut ellipse",
@@ -672,60 +674,20 @@ function EDITTOOL:cutter_ellipse()
 end
 
 function EDITTOOL:cutter_arc()
-  local sp = self.shape[self.spNum]
-  local t = { label = "cut arc",
-	      spNum = self.spNum,
-	      original = cloneSubpath(sp),
-	      undo = function (t, shape)
-		       shape[t.spNum] = t.original
-		       if t.newSpNum then
-			 table.remove(shape, t.newSpNum)
-		       end
-		     end
-	    }
   local nalpha, _ = self.scissor(self.model.ui:pos())
-  local seg = sp[self.segNum]
+  local seg = self.shape[self.spNum][self.segNum]
   local alpha, beta = seg.arc:angles()
   local narc1 = ipe.Arc(seg.arc:matrix(), alpha, nalpha)
   local narc2 = ipe.Arc(seg.arc:matrix(), nalpha, beta)
   local npos, _ = narc2:endpoints()
   local nseg1 = { type = "arc", arc = narc1, seg[1], npos }
   local nseg2 = { type = "arc", arc = narc2, npos, seg[2] }
-  if not sp.closed then
-    local nsp = { type = "curve", closed = false, nseg2 }
-    for i = self.segNum+1,#sp do nsp[#nsp + 1] = sp[i] end
-    for i = #sp,self.segNum+1,-1 do table.remove(sp, i) end
-    sp[self.segNum] = nseg1
-    t.newSpNum = self.spNum + 1
-    table.insert(self.shape, t.newSpNum, nsp)
-  else -- sp is closed
-    sp.closed = false
-    local lastseg = sp[#sp]
-    local nsp = { type = "curve", closed = false, nseg2 }
-    for i = self.segNum+1,#sp do nsp[#nsp + 1] = sp[i] end
-    nsp[#nsp + 1] = { type = "segment", lastseg[#lastseg], sp[1][1] }
-    for i = 1,self.segNum-1 do nsp[#nsp + 1] = sp[i] end
-    nsp[#nsp + 1] = nseg1
-    self.shape[self.spNum] = nsp
-    self.segNum = #nsp
-  end
-  self.undo[#self.undo + 1] = t
+  self:cutSegment("cut arc", { nseg1 }, { nseg2 })
 end
 
 function EDITTOOL:cutter_bezier()
-  local sp = self.shape[self.spNum]
-  local t = { label = "cut bezier",
-	      spNum = self.spNum,
-	      original = cloneSubpath(sp),
-	      undo = function (t, shape)
-		       shape[t.spNum] = t.original
-		       if t.newSpNum then
-			 table.remove(shape, t.newSpNum)
-		       end
-		     end
-	    }
   local param, _ = self.scissor(self.model.ui:pos())
-  local seg = sp[self.segNum]
+  local seg = self.shape[self.spNum][self.segNum]
   local nseg1, nseg2
   if #seg == 4 then
     nseg1, nseg2 = subdivideBezier(seg, param)
@@ -734,24 +696,42 @@ function EDITTOOL:cutter_bezier()
   end
   nseg1.type = "spline"
   nseg2.type = "spline"
-  if not sp.closed then
-    local nsp = { type = "curve", closed = false, nseg2 }
-    for i = self.segNum+1,#sp do nsp[#nsp + 1] = sp[i] end
-    for i = #sp,self.segNum+1,-1 do table.remove(sp, i) end
-    sp[self.segNum] = nseg1
-    t.newSpNum = self.spNum + 1
-    table.insert(self.shape, t.newSpNum, nsp)
-  else -- sp is closed
-    sp.closed = false
-    local lastseg = sp[#sp]
-    local nsp = { type = "curve", closed = false, nseg2 }
-    for i = self.segNum+1,#sp do nsp[#nsp + 1] = sp[i] end
-    nsp[#nsp + 1] = { type = "segment", lastseg[#lastseg], sp[1][1] }
-    for i = 1,self.segNum-1 do nsp[#nsp + 1] = sp[i] end
-    nsp[#nsp + 1] = nseg1
-    self.shape[self.spNum] = nsp
-    self.segNum = #nsp
-  end
+  self:cutSegment("cut bezier", { nseg1 }, { nseg2 })
+end
+
+function EDITTOOL:cutter_spline()
+  local u, _ = self.scissor(self.model.ui:pos())
+  local seg = self.shape[self.spNum][self.segNum]
+  local j = math.min(math.floor(u) + 1, #seg - 3)
+  local left, bez, right = splitSplineInterval(seg, j)
+  local l, r = subdivideBezier(bez, u - (j - 1))
+  l.type = "spline"
+  r.type = "spline"
+  local lsegs, rsegs = {}, { r }
+  if #left > 1 then lsegs[1] = left end
+  lsegs[#lsegs + 1] = l
+  if #right > 1 then rsegs[2] = right end
+  self:cutSegment("cut spline", lsegs, rsegs)
+end
+
+function EDITTOOL:cutter_closed_spline()
+  local u, _ = self.scissor(self.model.ui:pos())
+  local sp = self.shape[self.spNum]
+  local t = { label = "cut closed spline",
+	      spNum = self.spNum,
+	      original = cloneSubpath(sp),
+	      undo = revertSubpath }
+  local n = #sp
+  local j = math.min(math.floor(u) + 1, n)
+  -- Bezier j of the closed spline starts at the point of control point j+1
+  local seg = openClosedSpline(sp, j % n + 1)
+  local _, bez, right = splitSplineInterval(seg, 1)
+  local l, r = subdivideBezier(bez, u - (j - 1))
+  l.type = "spline"
+  r.type = "spline"
+  self.shape[self.spNum] = { type = "curve", closed = false, r, right, l }
+  self.segNum = 1
+  self.cpNum = 1
   self.undo[#self.undo + 1] = t
 end
 
@@ -765,6 +745,40 @@ end
 local function scissor_bezier(pos, bezier)
   local t, p = bezier:snap(pos)
   return t, p
+end
+
+-- returns the knot parameter (0 <= u <= #beziers) of the nearest point
+local function scissor_spline(pos, beziers)
+  local bu, bp, bd
+  for j, b in ipairs(beziers) do
+    local t, p = b:snap(pos)
+    if t and (not bd or (p - pos):sqLen() < bd) then
+      bu, bp, bd = j - 1 + t, p, (p - pos):sqLen()
+    end
+  end
+  return bu, bp
+end
+
+function EDITTOOL:action_cut_spline()
+  local sp = self.shape[self.spNum]
+  local beziers = {}
+  for _, b in ipairs(ipe.splineToBeziers(sp[self.segNum], false)) do
+    beziers[#beziers + 1] = ipe.Bezier(b[1], b[2], b[3], b[4])
+  end
+  self.scissor = function (pos) return scissor_spline(pos, beziers) end
+  self.scissorPos = sp[self.segNum][1]
+  self.cutter = "cutter_spline"
+end
+
+function EDITTOOL:action_cut_closed_spline()
+  local sp = self.shape[self.spNum]
+  local beziers = {}
+  for _, b in ipairs(ipe.splineToBeziers(sp, true)) do
+    beziers[#beziers + 1] = ipe.Bezier(b[1], b[2], b[3], b[4])
+  end
+  self.scissor = function (pos) return scissor_spline(pos, beziers) end
+  self.scissorPos = beziers[1]:point(0)
+  self.cutter = "cutter_closed_spline"
 end
 
 function EDITTOOL:action_cut_bezier()
@@ -837,6 +851,7 @@ function EDITTOOL:showMenu()
       m:add("action_convert_spline", "Convert spline to Bezier segments")
       m:add("action_insert_knot_closed", "Cut closed spline at knot " ..
 	    self.cpNum)
+      m:add("action_cut_closed_spline", "Cut inside closed spline")
     elseif sp[self.segNum].type == "spline" then
       local n = #(sp[self.segNum])
       if n > 4 then
@@ -846,6 +861,7 @@ function EDITTOOL:showMenu()
 	if t > n - 4 then t = n - 4 end
 	m:add("action_insert_knot", "Insert vertex at knot " .. t ..
 	      " (of " .. (n-3) .. " knot intervals)")
+	m:add("action_cut_spline", "Cut inside spline")
       else
 	m:add("action_cut_bezier", "Cut inside Bezier curve")
       end
