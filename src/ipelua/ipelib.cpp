@@ -77,8 +77,7 @@ String ipelua::check_filename(lua_State * L, int index) {
 
 static int document_constructor(lua_State * L) {
     String fname;
-    if (lua_isstring(L, 1))
-	fname = check_filename(L, 1);
+    if (lua_isstring(L, 1)) fname = check_filename(L, 1);
     int overrideTooRecent = lua_toboolean(L, 2);
 
     Document ** d = (Document **)lua_newuserdata(L, sizeof(Document *));

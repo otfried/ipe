@@ -137,8 +137,8 @@ void Canvas::exposeHandler(cairo_t * cr, int width, int height) {
     double scale = gdk_surface_get_scale(surface);
 
     if (scale != iPixelRatio)
-      // force redrawing if scale has changed
-      iRepaintObjects = true;
+	// force redrawing if scale has changed
+	iRepaintObjects = true;
 
     iPixelRatio = scale;
     iBWidth = int(std::ceil(width * scale));

@@ -102,7 +102,8 @@ public:
     static FileFormat fileFormat(DataSource & source);
     static FileFormat formatFromFilename(String fn);
 
-    static Document * load(DataSource & source, FileFormat format, int & reason, bool overrideTooRecent);
+    static Document * load(DataSource & source, FileFormat format, int & reason,
+			   bool overrideTooRecent);
 
     static Document * load(const char * fname, int & reason, bool overrideTooRecent);
     static Document * loadWithErrorReport(const char * fname);

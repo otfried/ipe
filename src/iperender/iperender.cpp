@@ -136,19 +136,20 @@ static void usage() {
     fprintf(stderr, "| -html ");
 #endif
     fprintf(stderr, "| -json ");
-    fprintf(stderr, "] "
-		    "[ -page <page> ] [ -view <view> ] [ -resolution <dpi> ] "
-		    "[ -transparent ] [ -nocrop ] [ -markedview ] "
-		    "infile outfile\n"
-		    "Iperender saves a single page of the Ipe document in some formats.\n"
-		    " -page       : page to save (default 1).\n"
-		    " -view       : view to save (default 1).\n"
-		    " -resolution : resolution for png format (default 72.0 ppi).\n"
-		    " -tolerance  : tolerance when rendering curves (default 0.1).\n"
-		    " -transparent: use transparent background in png format.\n"
-		    " -nocrop     : do not crop page.\n"
-		    " -markedview : json format only: export only marked views on marked pages.\n"
-		    "<page> can be a page number or a page name.\n");
+    fprintf(stderr,
+	    "] "
+	    "[ -page <page> ] [ -view <view> ] [ -resolution <dpi> ] "
+	    "[ -transparent ] [ -nocrop ] [ -markedview ] "
+	    "infile outfile\n"
+	    "Iperender saves a single page of the Ipe document in some formats.\n"
+	    " -page       : page to save (default 1).\n"
+	    " -view       : view to save (default 1).\n"
+	    " -resolution : resolution for png format (default 72.0 ppi).\n"
+	    " -tolerance  : tolerance when rendering curves (default 0.1).\n"
+	    " -transparent: use transparent background in png format.\n"
+	    " -nocrop     : do not crop page.\n"
+	    " -markedview : json format only: export only marked views on marked pages.\n"
+	    "<page> can be a page number or a page name.\n");
     exit(1);
 }
 

@@ -246,6 +246,7 @@ public:
 		  const Vector & p3);
     Vector point(double t) const;
     Vector tangent(double t) const;
+    double length(double t = 1.0) const;
     double distance(const Vector & v, double bound);
     bool straight(double precision) const;
     void subdivide(Bezier & l, Bezier & r) const;

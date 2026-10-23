@@ -70,6 +70,8 @@ Ipe 7.3.1
 
  * Allow loading documents created by newer versions of Ipe (#422).
 
+ * Middle arrows now work on arcs and splines (#536).
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.30 (2024-06-01: mini-release, source only)

@@ -201,6 +201,84 @@ Path::Path(const AllAttributes & attr, const Shape & shape, bool withArrows)
 //! Return a clone (constant-time).
 Object * Path::clone() const { return new Path(*this); }
 
+namespace {
+
+// Parameter t where the length of b from 0 to t is s (Newton with bisection fallback).
+double bezierParameter(const Bezier & b, double s, double total) {
+    if (total <= 0.0) return 0.5;
+    double lo = 0.0, hi = 1.0;
+    double t = s / total;
+    for (int iter = 0; iter < 30; ++iter) {
+	double f = b.length(t) - s;
+	if (std::fabs(f) < 1e-6 * total) break;
+	if (f < 0.0)
+	    lo = t;
+	else
+	    hi = t;
+	double d = b.tangent(t).len();
+	double tn = (d > 0.0) ? t - f / d : -1.0;
+	t = (lo < tn && tn < hi) ? tn : 0.5 * (lo + hi);
+    }
+    return t;
+}
+
+// Length of segment after transformation by m (approximate for elliptic arcs).
+double segmentLength(const CurveSegment & seg, const Matrix & m) {
+    switch (seg.type()) {
+    case CurveSegment::ESegment: return (m * seg.cp(1) - m * seg.cp(0)).len();
+    case CurveSegment::EArc: {
+	Arc a = seg.arc();
+	double delta = Angle(a.iBeta - a.iAlpha).normalize(0.0);
+	return delta * std::sqrt(std::fabs((m.linear() * a.iM.linear()).determinant()));
+    }
+    default: {
+	std::vector<Bezier> bez;
+	seg.beziers(bez);
+	double len = 0.0;
+	for (const auto & b : bez) len += (m * b).length();
+	return len;
+    }
+    }
+}
+
+// Point and direction (untransformed) at distance s along segment of length len.
+void segmentPoint(const CurveSegment & seg, const Matrix & m, double s, double len,
+		  Vector & pos, Angle & dir) {
+    switch (seg.type()) {
+    case CurveSegment::ESegment: {
+	double lambda = s / len;
+	pos = seg.cp(0) + lambda * (seg.cp(1) - seg.cp(0));
+	dir = (seg.cp(1) - seg.cp(0)).angle();
+	return;
+    }
+    case CurveSegment::EArc: {
+	Arc a = seg.arc();
+	double delta = Angle(a.iBeta - a.iAlpha).normalize(0.0);
+	double alpha = a.iAlpha + (s / len) * delta;
+	pos = a.iM * Vector(Angle(alpha));
+	dir = (a.iM.linear() * Vector(Angle(alpha + IpeHalfPi))).angle();
+	return;
+    }
+    default: {
+	std::vector<Bezier> bez;
+	seg.beziers(bez);
+	for (size_t i = 0; i < bez.size(); ++i) {
+	    Bezier mb = m * bez[i];
+	    double l = mb.length();
+	    if (s <= l || i + 1 == bez.size()) {
+		double t = bezierParameter(mb, s, l);
+		pos = bez[i].point(t);
+		dir = bez[i].tangent(t).angle();
+		return;
+	    }
+	    s -= l;
+	}
+    }
+    }
+}
+
+} // namespace
+
 //! Compute the arrow information.
 void Path::makeArrowData() {
     if (iShape.countSubPaths() == 0 || iShape.countSubPaths() > 1
@@ -246,23 +324,19 @@ void Path::makeArrowData() {
 
 	iMArrowOk = false;
 	Matrix m = matrix();
+	std::vector<double> lengths;
 	double len = 0.0;
 	for (int i = 0; i < curve->countSegments(); ++i) {
-	    seg = curve->segment(i);
-	    if (seg.type() != CurveSegment::ESegment) return;
-	    len += (m * seg.cp(0) - m * seg.cp(1)).len();
+	    lengths.push_back(segmentLength(curve->segment(i), m));
+	    len += lengths.back();
 	}
 	double mid = len / 2.0;
 	len = 0.0;
 	for (int i = 0; i < curve->countSegments(); ++i) {
-	    seg = curve->segment(i);
-	    double d = (m * seg.cp(0) - m * seg.cp(1)).len();
+	    double d = lengths[i];
 	    if (len < mid && mid <= len + d) {
-		// found the position
 		iMArrowOk = true;
-		double lambda = (mid - len) / d;
-		iMArrowPos = seg.cp(0) + lambda * (seg.cp(1) - seg.cp(0));
-		iMArrowDir = (seg.cp(1) - seg.cp(0)).angle();
+		segmentPoint(curve->segment(i), m, mid - len, d, iMArrowPos, iMArrowDir);
 		return;
 	    }
 	    len += d;

@@ -151,7 +151,8 @@ Buffer PdfStreamParser::pdfStream(int objNum) {
 
 // --------------------------------------------------------------------
 
-Document * doParse(Document * self, ImlParser & parser, int & reason, bool overrideTooRecent) {
+Document * doParse(Document * self, ImlParser & parser, int & reason,
+		   bool overrideTooRecent) {
     int res = parser.parseDocument(*self, overrideTooRecent);
     if (res) {
 	delete self;
@@ -206,7 +207,8 @@ Document * doParsePdf(DataSource & source, int & reason, bool overrideTooRecent)
   file (stream) offset where parsing failed.  If \a reason is
   negative, it is an error code, see Document::LoadErrors.
 */
-Document * Document::load(DataSource & source, FileFormat format, int & reason, bool overrideTooRecent) {
+Document * Document::load(DataSource & source, FileFormat format, int & reason,
+			  bool overrideTooRecent) {
     if (format == FileFormat::Xml) return doParseXml(source, reason, overrideTooRecent);
 
     if (format == FileFormat::Pdf) return doParsePdf(source, reason, overrideTooRecent);

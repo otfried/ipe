@@ -484,17 +484,31 @@ Vector Bezier::point(double t) const {
 	   + t * t * t * iV[3];
 }
 
-//! Return tangent direction of curve at parameter \a t (from 0.0 to 1.0).
-/*! The returned vector is not normalized. */
+//! Return tangent of curve at parameter \a t (from 0.0 to 1.0).
+/*! The returned vector is the actual derivative, not normalized. */
 Vector Bezier::tangent(double t) const {
-    double tt = 1.0 - t;
-    Vector p = tt * iV[0] + t * iV[1];
-    Vector q = tt * iV[1] + t * iV[2];
-    Vector r = tt * iV[2] + t * iV[3];
-    p = tt * p + t * q;
-    q = tt * q + t * r;
-    r = tt * p + t * q;
-    return r - p;
+    double t1 = 1.0 - t;
+    return 3.0
+	   * (t1 * t1 * (iV[1] - iV[0]) + 2.0 * t * t1 * (iV[2] - iV[1])
+	      + t * t * (iV[3] - iV[2]));
+}
+
+// 5-point Gauss-Legendre quadrature on [-1, 1]
+static const double glNode[5] = {0.0, -0.5384693101056831, 0.5384693101056831,
+				 -0.9061798459386640, 0.9061798459386640};
+static const double glWeight[5] = {0.5688888888888889, 0.4786286704993665,
+				   0.4786286704993665, 0.2369268850561891,
+				   0.2369268850561891};
+
+//! Return length of Bezier curve from parameter 0 to t (composite Gauss-Legendre).
+double Bezier::length(double t) const {
+    const int n = 4;
+    double h = t / n;
+    double sum = 0.0;
+    for (int k = 0; k < n; ++k)
+	for (int i = 0; i < 5; ++i)
+	    sum += glWeight[i] * tangent(h * (k + 0.5 * (glNode[i] + 1.0))).len();
+    return 0.5 * h * sum;
 }
 
 /*! Returns true if the Bezier curve is nearly identical to the line
