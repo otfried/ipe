@@ -72,7 +72,7 @@ Buffer ImlParser::pdfStream(int /* objNum */) { return Buffer(); }
 
 //! Read a complete  document from IML stream.
 /*! Returns an error code. */
-int ImlParser::parseDocument(Document & doc) {
+int ImlParser::parseDocument(Document & doc, bool overrideTooRecent) {
     Document::SProperties properties = doc.properties();
 
     String tag = parseToTag();
@@ -90,7 +90,7 @@ int ImlParser::parseDocument(Document & doc) {
     int version;
     versLex >> version;
     if (version < OLDEST_FILE_FORMAT) return EVersionTooOld;
-    if (version > IPELIB_VERSION) return EVersionTooRecent;
+    if (!overrideTooRecent && version > IPELIB_VERSION) return EVersionTooRecent;
 
     attr.has("creator", properties.iCreator);
 

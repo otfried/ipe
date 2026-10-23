@@ -711,16 +711,25 @@ end
 function MODEL:loadDocument(fname)
   self:preloadFile(fname)
   local err = self:tryLoadDocument(fname)
+  if err == "The document was created by a newer version of Ipe" then
+    if messageBox(self.ui:win(), "question", err,
+		  "Do you want to try loading the document anyway?\n\n" ..
+		    "This may result in an error message during parsing, " ..
+		    "may lose some data, or may actually corrupt the document.",
+		  "okcancel") == 1 then
+      err = self:tryLoadDocument(fname, true)
+    else
+      return
+    end
+  end
   if err then
     self:warning("Document '" .. fname .. "' could not be opened", err)
   end
 end
 
 -- returns error message if there was an error
-function MODEL:tryLoadDocument(fname)
-  print("Loading ", fname)
-  local doc, err = ipe.Document(fname)
-  print("Result ", doc, err)
+function MODEL:tryLoadDocument(fname, overrideTooRecent)
+  local doc, err = ipe.Document(fname, overrideTooRecent)
   if doc then
     self.doc = doc
     self.file_name = fname

@@ -76,17 +76,20 @@ String ipelua::check_filename(lua_State * L, int index) {
 // --------------------------------------------------------------------
 
 static int document_constructor(lua_State * L) {
-    bool has_fname = (lua_gettop(L) > 0);
+    String fname;
+    if (lua_isstring(L, 1))
+	fname = check_filename(L, 1);
+    int overrideTooRecent = lua_toboolean(L, 2);
+
     Document ** d = (Document **)lua_newuserdata(L, sizeof(Document *));
     *d = nullptr;
     luaL_getmetatable(L, "Ipe.document");
     lua_setmetatable(L, -2);
 
     // should we load a document?
-    if (has_fname) {
-	String fname = check_filename(L, 1);
+    if (!fname.empty()) {
 	int reason;
-	*d = Document::load(fname.z(), reason);
+	*d = Document::load(fname.z(), reason, overrideTooRecent);
 	if (*d) return 1;
 
 	lua_pop(L, 1);  // pop empty document udata

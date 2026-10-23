@@ -611,7 +611,8 @@ p:setMarked(f)
 Documents have the following methods:
 \verbatim
 doc = ipe.Document()         -- empty document
-doc = ipe.Document(filename) -- load from file 
+doc = ipe.Document(filename) -- load from file
+doc = ipe.Document(filename, true) -- load from file, ignoring too recent Ipe version
 -- returns either document or nil, error message, error code
 
 #doc    -- number of pages

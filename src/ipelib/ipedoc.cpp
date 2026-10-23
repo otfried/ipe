@@ -151,8 +151,8 @@ Buffer PdfStreamParser::pdfStream(int objNum) {
 
 // --------------------------------------------------------------------
 
-Document * doParse(Document * self, ImlParser & parser, int & reason) {
-    int res = parser.parseDocument(*self);
+Document * doParse(Document * self, ImlParser & parser, int & reason, bool overrideTooRecent) {
+    int res = parser.parseDocument(*self, overrideTooRecent);
     if (res) {
 	delete self;
 	self = nullptr;
@@ -164,13 +164,13 @@ Document * doParse(Document * self, ImlParser & parser, int & reason) {
     return self;
 }
 
-Document * doParseXml(DataSource & source, int & reason) {
+Document * doParseXml(DataSource & source, int & reason, bool overrideTooRecent) {
     Document * self = new Document;
     ImlParser parser(source);
-    return doParse(self, parser, reason);
+    return doParse(self, parser, reason, overrideTooRecent);
 }
 
-Document * doParsePdf(DataSource & source, int & reason) {
+Document * doParsePdf(DataSource & source, int & reason, bool overrideTooRecent) {
     PdfFile loader;
     reason = Document::ENotAnIpeFile;
     if (!loader.parse(source)) // could not parse PDF container
@@ -193,10 +193,10 @@ Document * doParsePdf(DataSource & source, int & reason) {
     if (obj->dict()->deflated()) {
 	InflateSource xml1(xml);
 	PdfStreamParser parser(loader, xml1);
-	return doParse(self, parser, reason);
+	return doParse(self, parser, reason, overrideTooRecent);
     } else {
 	PdfStreamParser parser(loader, xml);
-	return doParse(self, parser, reason);
+	return doParse(self, parser, reason, overrideTooRecent);
     }
 }
 
@@ -206,30 +206,30 @@ Document * doParsePdf(DataSource & source, int & reason) {
   file (stream) offset where parsing failed.  If \a reason is
   negative, it is an error code, see Document::LoadErrors.
 */
-Document * Document::load(DataSource & source, FileFormat format, int & reason) {
-    if (format == FileFormat::Xml) return doParseXml(source, reason);
+Document * Document::load(DataSource & source, FileFormat format, int & reason, bool overrideTooRecent) {
+    if (format == FileFormat::Xml) return doParseXml(source, reason, overrideTooRecent);
 
-    if (format == FileFormat::Pdf) return doParsePdf(source, reason);
+    if (format == FileFormat::Pdf) return doParsePdf(source, reason, overrideTooRecent);
 
     reason = ENotAnIpeFile;
     return nullptr;
 }
 
-Document * Document::load(const char * fname, int & reason) {
+Document * Document::load(const char * fname, int & reason, bool overrideTooRecent) {
     reason = EFileOpenError;
     std::FILE * fd = Platform::fopen(fname, "rb");
     if (!fd) return nullptr;
     FileSource source(fd);
     FileFormat format = fileFormat(source);
     std::rewind(fd);
-    Document * self = load(source, format, reason);
+    Document * self = load(source, format, reason, overrideTooRecent);
     std::fclose(fd);
     return self;
 }
 
 Document * Document::loadWithErrorReport(const char * fname) {
     int reason;
-    Document * doc = load(fname, reason);
+    Document * doc = load(fname, reason, false);
     if (doc) return doc;
 
     fprintf(stderr, "Could not read Ipe file '%s'\n", fname);

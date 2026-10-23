@@ -45,7 +45,7 @@ class ImlParser : public XmlParser {
 public:
     enum Errors { ESuccess = 0, EVersionTooOld, EVersionTooRecent, ESyntaxError };
     explicit ImlParser(DataSource & source);
-    int parseDocument(Document & doc);
+    int parseDocument(Document & doc, bool overrideTooRecent);
     bool parsePage(Page & page);
     bool parseView(Page & page, AttributeMap & map);
     Object * parseObject(String tag, Page * page = nullptr, int * currentLayer = nullptr);
