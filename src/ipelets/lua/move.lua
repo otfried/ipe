@@ -30,6 +30,8 @@
 
 label = "Move"
 
+category = "Basic"
+
 revertOriginal = _G.revertOriginal
 
 about = [[

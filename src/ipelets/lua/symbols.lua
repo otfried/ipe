@@ -30,6 +30,8 @@
 
 label = "Symbols"
 
+category = "Styles"
+
 revertOriginal = _G.revertOriginal
 
 about = [[

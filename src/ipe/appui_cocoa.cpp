@@ -601,6 +601,28 @@ void AppUi::addSubItem(const char * title, const char * name) {
 
 MENUHANDLE AppUi::endSubMenu() { return current_submenu; }
 
+static NSMenu * __unsafe_unretained current_subsubmenu = nullptr;
+
+// A sub-submenu is built while a submenu is under construction, and becomes
+// part of it.
+void AppUi::startSubSubMenu(const char * name) {
+    if (!build_menus) return;
+
+    NSString * title = ipeui_set_mnemonic(C2N(name), nil);
+    NSMenuItem * item =
+	[[NSMenuItem alloc] initWithTitle:title action:nullptr keyEquivalent:@""];
+    NSMenu * subsubmenu = [[NSMenu alloc] initWithTitle:title];
+    item.submenu = subsubmenu;
+    [current_submenu addItem:item];
+    current_subsubmenu = subsubmenu;
+}
+
+void AppUi::addSubSubItem(const char * title, const char * name) {
+    addItem(current_subsubmenu, title, name);
+}
+
+void AppUi::endSubSubMenu() {}
+
 // --------------------------------------------------------------------
 
 AppUi::AppUi(lua_State * L0, int model)

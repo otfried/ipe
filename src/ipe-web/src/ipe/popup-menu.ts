@@ -3,6 +3,7 @@ import "./popup-menu.css";
 export type MainMenuItemType =
 	| "separator"
 	| "submenu"
+	| "subsubmenu"
 	| "checkbox"
 	| "radio"
 	| "normal";
@@ -60,6 +61,12 @@ export class PopupMenu {
 	private _inSubmenu = false;
 	private _pinnedSubmenu = false;
 	private _currentSubmenuAnchor: HTMLDivElement | null = null;
+	// a sub-submenu is shown in the submenu pane, next to the submenu
+	private _subsubmenu: HTMLDivElement | null = null;
+	private _inSubsubmenu = false;
+	private _overSubsubmenuAnchor = false;
+	private _pinnedSubsubmenu = false;
+	private _currentSubsubmenuAnchor: HTMLDivElement | null = null;
 	private _touchBased = false;
 	private _popupCallback: PopupCallback | null = null;
 
@@ -97,7 +104,10 @@ export class PopupMenu {
 
 	// click outside the menu
 	closeOne(): boolean {
-		if (this._pinnedSubmenu) {
+		if (this._pinnedSubsubmenu) {
+			this._closeSubsubmenu();
+			return false;
+		} else if (this._pinnedSubmenu) {
 			this._closeSubmenu();
 			return false;
 		} else {
@@ -117,6 +127,7 @@ export class PopupMenu {
 	}
 
 	private _closeSubmenu(): void {
+		this._closeSubsubmenu();
 		this._submenu?.remove();
 		this._submenu = null;
 		this._inSubmenu = false;
@@ -125,7 +136,31 @@ export class PopupMenu {
 		this.subpane.style.display = "none";
 	}
 
+	private _closeSubsubmenu(): void {
+		this._subsubmenu?.remove();
+		this._subsubmenu = null;
+		this._inSubsubmenu = false;
+		this._overSubsubmenuAnchor = false;
+		this._pinnedSubsubmenu = false;
+		this._currentSubsubmenuAnchor = null;
+	}
+
+	private _createSubsubmenu(): void {
+		this._closeSubsubmenu();
+		const m = document.createElement("div");
+		m.classList.add("popup-submenu", "popup-subsubmenu");
+		m.addEventListener("pointerenter", () => {
+			this._inSubsubmenu = true;
+		});
+		m.addEventListener("pointerleave", () => {
+			this._inSubsubmenu = false;
+			this._scheduleSubsubmenuClose();
+		});
+		this._subsubmenu = m;
+	}
+
 	private _createSubmenu(): void {
+		this._closeSubsubmenu();
 		this._submenu?.remove();
 		this._submenu = document.createElement("div");
 		this._submenu.classList.add("popup-submenu");
@@ -159,6 +194,55 @@ export class PopupMenu {
 				enter();
 			}
 		});
+	}
+
+	// item of a submenu that opens a sub-submenu
+	private _createSubsubmenuItem(
+		item: HTMLDivElement,
+		label: string,
+		enter: () => void,
+	): void {
+		item.classList.add("popup-menu-item", "popup-menu-submenu");
+		const span = document.createElement("span");
+		span.innerText = label.replace("&&", "&").replace("&&", "&");
+		const arrow = document.createElement("span");
+		arrow.classList.add("popup-menu-arrow");
+		item.appendChild(span);
+		item.appendChild(arrow);
+		if (!this._touchBased) {
+			item.addEventListener("pointerenter", () => {
+				this._overSubsubmenuAnchor = true;
+				if (!this._pinnedSubsubmenu && item !== this._currentSubsubmenuAnchor) {
+					this._currentSubsubmenuAnchor = item;
+					enter();
+				}
+			});
+			item.addEventListener("pointerleave", () => {
+				this._overSubsubmenuAnchor = false;
+				this._scheduleSubsubmenuClose();
+			});
+		}
+		item.addEventListener("click", () => {
+			this._pinnedSubsubmenu = true;
+			if (item !== this._currentSubsubmenuAnchor) {
+				this._currentSubsubmenuAnchor = item;
+				enter();
+			}
+		});
+	}
+
+	private _scheduleSubsubmenuClose(): void {
+		const m = this._subsubmenu;
+		if (m == null) return;
+		setTimeout(() => {
+			if (
+				this._subsubmenu === m &&
+				!this._overSubsubmenuAnchor &&
+				!this._inSubsubmenu &&
+				!this._pinnedSubsubmenu
+			)
+				this._closeSubsubmenu();
+		}, 300);
 	}
 
 	private _leaveSubmenuAnchor(): void {
@@ -277,6 +361,28 @@ export class PopupMenu {
 		cb: MainMenuCallback,
 	) {
 		this._createSubmenu();
+		this._fillMainSubmenu(this._submenu!, items, cb, true);
+		const r = handle.getBoundingClientRect();
+		this._show(r.right, r.top, r.bottom, this.subpane, this._submenu!);
+	}
+
+	private _openMainSubsubmenu(
+		handle: HTMLElement,
+		items: MainMenuItemOptions[],
+		cb: MainMenuCallback,
+	) {
+		this._createSubsubmenu();
+		this._fillMainSubmenu(this._subsubmenu!, items, cb, false);
+		const r = handle.getBoundingClientRect();
+		this._show(r.right, r.top, r.bottom, this.subpane, this._subsubmenu!);
+	}
+
+	private _fillMainSubmenu(
+		menu: HTMLDivElement,
+		items: MainMenuItemOptions[],
+		cb: MainMenuCallback,
+		allowSubsubmenus: boolean,
+	) {
 		for (const m of items) {
 			const item = document.createElement("div");
 			if (["normal", "checkbox", "radio"].includes(m.type)) {
@@ -296,11 +402,16 @@ export class PopupMenu {
 					cb(m.id!);
 				});
 				if (m.checked) item.classList.add("checked");
+			} else if (m.type === "separator") {
+				item.classList.add("popup-menu-separator");
+			} else if (m.type === "subsubmenu" && allowSubsubmenus) {
+				item.classList.add("main-submenu-item");
+				this._createSubsubmenuItem(item, m.label!, () =>
+					this._openMainSubsubmenu(item, m.submenu!, cb),
+				);
 			} else throw new Error(`Unknown submenu item type '${m.type}'`);
-			this._submenu!.appendChild(item);
+			menu.appendChild(item);
 		}
-		const r = handle.getBoundingClientRect();
-		this._show(r.right, r.top, r.bottom, this.subpane, this._submenu!);
 	}
 
 	private _openPopupSubmenu(

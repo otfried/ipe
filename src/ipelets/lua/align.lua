@@ -30,6 +30,8 @@
 
 label = "Align && distribute"
 
+category = "Basic"
+
 revertOriginal = _G.revertOriginal
 
 about = [[

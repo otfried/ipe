@@ -98,6 +98,10 @@ div#popup-submenu-pane {
 	pointer-events: all;
 	overflow: auto;
 }
+/* shares the pane with the submenu, so it must not be placed in normal flow */
+.popup-subsubmenu {
+	position: absolute;
+}
 .popup-submenu-item {
 	padding: 4px 10px 1px 16px;
 	cursor: default;

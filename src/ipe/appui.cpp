@@ -430,44 +430,68 @@ void AppUiBase::buildMenus() {
     addItem(EHelpMenu, "&About Ipe", "about");
 #endif
 
-    // build Ipelet menu
-    lua_getglobal(L, "ipelets");
+    buildIpeletMenu();
+}
+
+// Reads a string field of the table on top of the Lua stack (nullptr if absent).
+static const char * stringField(lua_State * L, const char * key) {
+    lua_getfield(L, -1, key);
+    const char * s = lua_isstring(L, -1) ? lua_tostring(L, -1) : nullptr;
+    lua_pop(L, 1); // the string stays valid, as the table still references it
+    return s;
+}
+
+// Builds the Ipelet menu from the global table "ipelet_menu" (see main.lua).
+// Each entry is an ipelet with an "action", an ipelet with "elements" (its methods,
+// shown as a submenu), or a category (name starts with "@") whose "elements" are
+// ipelets, which in turn can have methods (a sub-submenu).
+void AppUiBase::buildIpeletMenu() {
+    lua_getglobal(L, "ipelet_menu");
+    if (!lua_istable(L, -1)) {
+	lua_pop(L, 1);
+	return;
+    }
     int n = lua_rawlen(L, -1);
     for (int i = 1; i <= n; ++i) {
-	lua_rawgeti(L, -1, i);
-	lua_getfield(L, -1, "label");
-	if (!lua_isstring(L, -1)) {
-	    lua_pop(L, 2); // label, ipelet
-	    continue;
-	}
-	String label(lua_tolstring(L, -1, nullptr));
-	lua_pop(L, 1);
-	lua_getfield(L, -1, "name");
-	String name(lua_tolstring(L, -1, nullptr));
-	lua_pop(L, 1);
-	lua_getfield(L, -1, "methods");
-	char buf[20];
-	if (lua_isnil(L, -1)) {
-	    String action("ipelet_1_");
-	    action += name;
-	    addItem(EIpeletMenu, label.z(), action.z());
-	} else {
+	lua_rawgeti(L, -1, i); // entry
+	const char * label = stringField(L, "label");
+	const char * action = stringField(L, "action");
+	lua_getfield(L, -1, "elements");
+	if (label && action) {
+	    // top level ipelet
+	    addItem(EIpeletMenu, label, action);
+	} else if (label && lua_istable(L, -1)) {
+	    // category
 	    int m = lua_rawlen(L, -1);
-	    startSubMenu(EIpeletMenu, label.z());
-	    for (int j = 1; j <= m; ++j) {
-		lua_rawgeti(L, -1, j);
-		lua_getfield(L, -1, "label");
-		sprintf(buf, "ipelet_%d_", j);
-		String action(buf);
-		action += name;
-		addSubItem(lua_tolstring(L, -1, nullptr), action.z());
-		lua_pop(L, 2); // sublabel, method
+	    if (m > 0) {
+		startSubMenu(EIpeletMenu, label);
+		for (int j = 1; j <= m; ++j) {
+		    lua_rawgeti(L, -1, j); // ipelet
+		    const char * sublabel = stringField(L, "label");
+		    const char * subaction = stringField(L, "action");
+		    lua_getfield(L, -1, "elements");
+		    if (sublabel && subaction) {
+			addSubItem(sublabel, subaction);
+		    } else if (sublabel && lua_istable(L, -1)) {
+			startSubSubMenu(sublabel);
+			int k = lua_rawlen(L, -1);
+			for (int l = 1; l <= k; ++l) {
+			    lua_rawgeti(L, -1, l); // method
+			    const char * mlabel = stringField(L, "label");
+			    const char * maction = stringField(L, "action");
+			    addSubSubItem(mlabel, maction);
+			    lua_pop(L, 1); // method
+			}
+			endSubSubMenu();
+		    }
+		    lua_pop(L, 2); // elements, ipelet
+		}
+		endSubMenu();
 	    }
-	    endSubMenu();
 	}
-	lua_pop(L, 2); // methods, ipelet
+	lua_pop(L, 2); // elements, entry
     }
-    lua_pop(L, 1);
+    lua_pop(L, 1); // ipelet_menu
 }
 
 // --------------------------------------------------------------------

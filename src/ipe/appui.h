@@ -193,6 +193,9 @@ protected: // What platforms must implement:
     virtual void startSubMenu(int id, const char * name, int tag = 0) = 0;
     virtual void addSubItem(const char * title, const char * name) = 0;
     virtual MENUHANDLE endSubMenu() = 0;
+    virtual void startSubSubMenu(const char * name) = 0;
+    virtual void addSubSubItem(const char * title, const char * name) = 0;
+    virtual void endSubSubMenu() = 0;
     virtual void addCombo(int sel, String s) = 0;
     virtual void resetCombos() = 0;
     virtual void addComboColors(AttributeSeq & sym, AttributeSeq & abs) = 0;
@@ -216,6 +219,7 @@ protected:
     void luaAction(String name);
 
     void buildMenus();
+    void buildIpeletMenu();
     void showInCombo(const Cascade * sheet, Kind kind, int sel,
 		     const char * deflt = nullptr);
     void showMarksInCombo(const Cascade * sheet);

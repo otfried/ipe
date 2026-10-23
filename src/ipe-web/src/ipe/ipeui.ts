@@ -56,6 +56,7 @@ export class IpeUi {
 	};
 	readonly mainMenu: MainMenuItemOptions[];
 	currentSubMenu: MainMenuItemOptions | null = null;
+	currentSubSubMenu: MainMenuItemOptions | null = null;
 	popupMenu: PopupMenu;
 	readonly selectorNames = [
 		"stroke",
@@ -509,16 +510,16 @@ export class IpeUi {
 	}
 
 	private _findActionFromShortcut(key: string): string | null {
-		for (const rootItem of this.mainMenu) {
-			for (const item of rootItem.submenu!) {
-				if (item.type === "submenu") {
-					for (const subitem of item.submenu!) {
-						if (subitem.accelerator === key) return subitem.id!;
-					}
+		const search = (items: MainMenuItemOptions[]): string | null => {
+			for (const item of items) {
+				if (item.type === "submenu" || item.type === "subsubmenu") {
+					const id = search(item.submenu!);
+					if (id) return id;
 				} else if (item.accelerator === key) return item.id!;
 			}
-		}
-		return null;
+			return null;
+		};
+		return search(this.mainMenu);
 	}
 
 	// ------------------------------------------------------------------------------------
@@ -693,11 +694,11 @@ export class IpeUi {
 				submenu: [],
 			});
 		} else if (type === "separator") {
-			this.mainMenu[id].submenu!.push({
+			this._menuFor(id).submenu!.push({
 				type: "separator",
 			});
 		} else {
-			const menu = id >= 0 ? this.mainMenu[id] : this.currentSubMenu!;
+			const menu = this._menuFor(id);
 			// exclude these for the moment
 			if (["new_window", "keyboard", "cloud_latex"].includes(name)) return;
 			if (
@@ -740,10 +741,17 @@ export class IpeUi {
 				type,
 				submenu: [],
 			});
-			if (type === "submenu")
-				this.currentSubMenu = menu.submenu![menu.submenu!.length - 1];
+			const added = menu.submenu![menu.submenu!.length - 1];
+			if (type === "submenu") this.currentSubMenu = added;
+			else if (type === "subsubmenu") this.currentSubSubMenu = added;
 			else this.actions[name] = { name, label, shortcut };
 		}
+	}
+
+	// id >= 0 is a root menu, -1 the submenu and -2 the sub-submenu under construction
+	private _menuFor(id: number): MainMenuItemOptions {
+		if (id >= 0) return this.mainMenu[id];
+		return id === -2 ? this.currentSubSubMenu! : this.currentSubMenu!;
 	}
 
 	setSubmenu(

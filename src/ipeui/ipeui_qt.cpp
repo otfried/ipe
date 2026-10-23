@@ -273,11 +273,9 @@ void IpeUiQDialog::keyPressEvent(QKeyEvent * e) {
 	    if (lw && lw->count() > 0) {
 		int cur = lw->currentRow();
 		if (e->key() == Qt::Key_Down) {
-		    if (cur + 1 < lw->count())
-			lw->setCurrentRow(cur + 1);
+		    if (cur + 1 < lw->count()) lw->setCurrentRow(cur + 1);
 		} else if (e->key() == Qt::Key_Up) {
-		    if (cur > 0)
-			lw->setCurrentRow(cur - 1);
+		    if (cur > 0) lw->setCurrentRow(cur - 1);
 		}
 		return;
 	    }
@@ -429,7 +427,9 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		if (m.flags & ESelectAll) e->selectAll();
 		if (m.lua_method != LUA_NOREF) {
 		    QObject::connect(e, &QLineEdit::textEdited,
-				     [this, method = m.lua_method](const QString &) { callLua(method); });
+				     [this, method = m.lua_method](const QString &) {
+					 callLua(method);
+				     });
 		}
 		w = e;
 	    } break;

@@ -30,6 +30,8 @@
 
 label = "External images"
 
+category = "Images"
+
 about = [[
     Helpers for managing external vs. internal images.
 

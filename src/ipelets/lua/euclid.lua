@@ -30,6 +30,8 @@
 
 label = "Euclidean Geometry"
 
+category = "Geometry"
+
 about = [[
 Create the incircle, three excircles, or the Steiner inellipse or
 circumellipse of a triangle.

@@ -419,6 +419,24 @@ MENUHANDLE AppUi::endSubMenu() {
     return iSubMenuBuilding;
 }
 
+void AppUi::startSubSubMenu(const char * name) {
+    iSubSubMenuBuildingTitle = name;
+    iSubSubMenuBuilding = g_menu_new();
+}
+
+void AppUi::addSubSubItem(const char * title, const char * name) {
+    if (!title) return; // no separators appear inside submenus
+    addMenuEntry(iSubSubMenuBuilding, title, name, false);
+}
+
+void AppUi::endSubSubMenu() {
+    GMenuItem * item =
+	g_menu_item_new_submenu(change_mnemonic(iSubSubMenuBuildingTitle.z()).z(),
+				G_MENU_MODEL(iSubSubMenuBuilding));
+    g_menu_append_item(iSubMenuBuilding, item);
+    g_object_unref(item);
+}
+
 void AppUi::populateDynamicMenu(int kind) {
     GMenu * menu = nullptr;
     switch (kind) {

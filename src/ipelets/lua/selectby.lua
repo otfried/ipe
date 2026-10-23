@@ -30,6 +30,8 @@
 
 label = "Select by type/attribute"
 
+category = "Basic"
+
 about = [[
 Select objects based on their type or attribute value.
 

@@ -310,6 +310,19 @@ prefs.max_zoom = 100
 
 ----------------------------------------------------------------------
 
+-- Ipelet menu
+
+-- Top level menu: entries are ipelets, or categories prefixed by @
+prefs.ipelet_menu = {
+  "ipeletsearch",
+  "@Basic",
+  "@Styles",
+  "@Images",
+  "@Geometry",
+}
+
+----------------------------------------------------------------------
+
 -- The following settings determine what the scroll wheel on a mouse or a
 -- two-finger pan gesture on a touchpad/trackpad  do.
 

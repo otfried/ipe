@@ -411,6 +411,11 @@ function load_ipelets()
     local ff = assert(load(function () return fd:read("*L") end,
 			   ft.path, "bt", ft))
     ff()
+    if not ft.category then
+      if ft.name:sub(1, 8) == "libCGAL_" or ft.name:sub(1, 5) == "CGAL_" then
+        ft.category = "CGAL Algorithms"
+      end
+    end
   end
 end
 
@@ -456,6 +461,81 @@ for _,w in ipairs(config.ipeletDirs) do
 end
 
 load_ipelets()
+
+local function addIpeletToMenu(menu, name)
+  for _, ft in ipairs(ipelets) do
+    if name == ft.name then
+      if not ft.label then return end -- customization, not ipelet
+      if ft.methods then
+	elements = {}
+	for i, method in ipairs(ft.methods) do
+	  elements[#elements + 1] = {
+	    label = method.label,
+	    action = "ipelet_" .. i .. "_" .. ft.name,
+	  }
+	end
+	menu[#menu + 1] = {
+	  name = name,
+	  label = ft.label,
+	  elements = elements,
+	}
+      else
+	menu[#menu + 1] = {
+	  name = name,
+	  label = ft.label,
+	  action = "ipelet_1_" .. ft.name,
+	}
+      end
+      return
+    end
+  end
+end
+
+ipelet_menu = {}
+for _, x in ipairs(prefs.ipelet_menu) do
+  if x:sub(1,1) == "@" then
+    ipelet_menu[#ipelet_menu + 1] = {
+      name = x,
+      label = x:sub(2),
+      elements = {},
+    }
+  else
+    addIpeletToMenu(ipelet_menu, x)
+  end
+end
+
+local function findMenuForIpelet(ft)
+  for _, x in ipairs(ipelet_menu) do
+    if x.name == ft.name then return nil end -- already in menu
+    if ft.category and x.name == "@" .. ft.category then return x.elements end
+  end
+  if ft.category then
+    -- create the category
+    local m = {
+      label = ft.category,
+      elements = {},
+    }
+    ipelet_menu[#ipelet_menu + 1] = m
+    return m.elements
+  else
+    return ipelet_menu -- append to main menu
+  end
+end
+
+for _, ft in ipairs(ipelets) do
+  if ft.label then
+    local m = findMenuForIpelet(ft)
+    if m then
+      addIpeletToMenu(m, ft.name)
+    end
+  end
+end
+
+for _, x in ipairs(ipelet_menu) do
+  if x.elements then
+    table.sort(x.elements, function (a, b) return a.label < b.label end)
+  end
+end
 
 --------------------------------------------------------------------
 

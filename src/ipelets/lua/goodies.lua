@@ -30,6 +30,8 @@
 
 label = "Goodies"
 
+category = "Basic"
+
 revertOriginal = _G.revertOriginal
 
 about = [[

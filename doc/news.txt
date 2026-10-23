@@ -10,7 +10,7 @@ Ipe 7.3.1
 
  * Laser pointer in IpePresenter (#584).
 
- * Export to PPTX in Ipe Web.
+ * Export to PPTX in Ipe Web and from ipe-cli.
 
  * Support for variants of Ipe documents: keep German and English
    versions of your slides in the same document, or make both a
@@ -26,9 +26,11 @@ Ipe 7.3.1
 
  * Easily add a style sheet by selecting it by name.
 
- * In Ipe Web, Ipe VS Code extension, and the GTK edition you can now
-   add images to your document by simply dragging them into the
-   canvas.
+ * You can now add images to your document by simply dragging them
+   into the canvas.
+
+ * Ipelets can be organized in categories, users can determine the
+   layout of the ipelet menu.
 
  * The ordering of attributes in selectors and context-menus can now
    be set in the preferences (#520).
@@ -37,8 +39,8 @@ Ipe 7.3.1
    local files are no longer in `~/.ipe`.  Check "Show configuration"
    in the Help menu if you are unsure where they should go (#513).
  
- * After 15 years, finally fix the memory leak in Freetype/Cairo font
-   allocation.
+ * After 15 years, finally fix the memory leaks in Freetype/Cairo font
+   allocation and in image rendering.
 
  * Path editor can now cut cubic B-splines at an arbitrary position
    (#374).

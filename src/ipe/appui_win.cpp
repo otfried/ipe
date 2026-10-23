@@ -251,6 +251,22 @@ void AppUi::addSubItem(const char * title, const char * name) {
 
 MENUHANDLE AppUi::endSubMenu() { return submenu; }
 
+static HMENU subsubmenu = nullptr;
+
+// A sub-submenu is built while a submenu is under construction, and becomes
+// part of it.
+void AppUi::startSubSubMenu(const char * name) {
+    subsubmenu = CreatePopupMenu();
+    AppendMenuW(submenu, MF_STRING | MF_POPUP, (UINT_PTR)subsubmenu,
+		WString(name).data());
+}
+
+void AppUi::addSubSubItem(const char * title, const char * name) {
+    addItem(subsubmenu, title, name);
+}
+
+void AppUi::endSubSubMenu() {}
+
 HWND AppUi::createToolBar(HINSTANCE hInst) {
     HWND tb = CreateWindowExW(0, TOOLBARCLASSNAMEW, nullptr,
 			      WS_CHILD | WS_VISIBLE | TBSTYLE_TOOLTIPS | CCS_NOPARENTALIGN

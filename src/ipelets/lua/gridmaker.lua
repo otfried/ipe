@@ -30,6 +30,8 @@
 
 label = "Grid maker"
 
+category = "Basic"
+
 about = [[
     Make various kinds of grids.
 

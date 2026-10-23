@@ -144,6 +144,9 @@ private:
     virtual void startSubMenu(int id, const char * name, int tag) override;
     virtual void addSubItem(const char * title, const char * name) override;
     virtual MENUHANDLE endSubMenu() override;
+    virtual void startSubSubMenu(const char * name) override;
+    virtual void addSubSubItem(const char * title, const char * name) override;
+    virtual void endSubSubMenu() override;
     virtual void setMouseIndicator(const char * s) override;
     virtual void setSnapIndicator(const char * s) override;
     virtual void addCombo(int sel, String s) override;

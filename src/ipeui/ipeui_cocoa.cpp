@@ -49,9 +49,8 @@ inline NSString * S2N(const std::string & s) { return C2N(s.c_str()); }
 
 class PDialog;
 
-@interface IpeDialogDelegate
-    : NSObject <NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate,
-		NSTextFieldDelegate>
+@interface IpeDialogDelegate : NSObject <NSWindowDelegate, NSTableViewDataSource,
+					 NSTableViewDelegate, NSTextFieldDelegate>
 
 @property PDialog * dialog;
 
@@ -193,7 +192,7 @@ private:
 
 // Up/Down in an input move the selection of the dialog's list
 - (BOOL)control:(NSControl *)control
-	   textView:(NSTextView *)textView
+	       textView:(NSTextView *)textView
     doCommandBySelector:(SEL)command {
     if (command == @selector(moveUp:)) return self.dialog->moveListSelection(-1);
     if (command == @selector(moveDown:)) return self.dialog->moveListSelection(1);
@@ -375,7 +374,7 @@ bool PDialog::moveListSelection(int delta) {
 	NSInteger next = std::max<NSInteger>(0, std::min(n - 1, cur + delta));
 	if (next != cur) {
 	    [tv selectRowIndexes:[NSIndexSet indexSetWithIndex:next]
-	      byExtendingSelection:NO];
+		byExtendingSelection:NO];
 	    [tv scrollRowToVisible:next];
 	}
 	return true;

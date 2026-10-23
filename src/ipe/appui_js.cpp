@@ -163,6 +163,18 @@ void AppUi::addSubItem(const char * label, const char * name) {
 
 MENUHANDLE AppUi::endSubMenu() { return currentSubmenu; }
 
+// Menu ids below zero refer to menus under construction: -1 is the current
+// submenu, -2 the current sub-submenu.
+void AppUi::startSubSubMenu(const char * label) {
+    requestMenu("subsubmenu", -1, "subsubmenu", label, nullptr);
+}
+
+void AppUi::addSubSubItem(const char * label, const char * name) {
+    addItem(-2, label, name);
+}
+
+void AppUi::endSubSubMenu() {}
+
 // ------------------------------------------------------------------------
 
 void AppUi::setRecentFileMenu(const std::vector<String> & names) {}

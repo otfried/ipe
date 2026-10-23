@@ -210,6 +210,18 @@ MENUHANDLE AppUi::endSubMenu() {
     return submenu;
 }
 
+static QMenu * subsubmenu = nullptr;
+
+// A sub-submenu is built while a submenu is under construction, and becomes
+// part of it.
+void AppUi::startSubSubMenu(const char * name) { subsubmenu = new QMenu(name); }
+
+void AppUi::addSubSubItem(const char * title, const char * name) {
+    addItem(subsubmenu, title, name);
+}
+
+void AppUi::endSubSubMenu() { submenu->addMenu(subsubmenu); }
+
 Qt::DockWidgetArea getDockSide(lua_State * L, const char * name,
 			       Qt::DockWidgetArea deflt) {
     Qt::DockWidgetArea r = deflt;

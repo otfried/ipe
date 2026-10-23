@@ -30,6 +30,8 @@
 
 label = "Voronoi diagrams"
 
+category = "Geometry"
+
 about = [[
 Computes Voronoi diagrams and Delaunay triangulations.
 

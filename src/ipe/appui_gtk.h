@@ -90,6 +90,9 @@ private:
     virtual void startSubMenu(int id, const char * name, int tag);
     virtual void addSubItem(const char * title, const char * name);
     virtual MENUHANDLE endSubMenu();
+    virtual void startSubSubMenu(const char * name);
+    virtual void addSubSubItem(const char * title, const char * name);
+    virtual void endSubSubMenu();
     virtual void setCheckMark(String name, Attribute a);
 
     struct SAction {
@@ -188,6 +191,9 @@ private:
     GMenu * iSubMenuBuilding;
     String iSubMenuBuildingTitle;
     int iSubMenuParentId;
+    // same for a sub-submenu, which becomes part of iSubMenuBuilding
+    GMenu * iSubSubMenuBuilding;
+    String iSubSubMenuBuildingTitle;
 
     GtkWidget * iStatusBar;
     GtkWidget * iMousePosition;

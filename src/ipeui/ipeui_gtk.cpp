@@ -205,7 +205,8 @@ bool PDialog::moveListSelection(int delta) {
     for (int i = 0; i < int(iWidgets.size()); ++i) {
 	GtkWidget * w = iWidgets[i];
 	if (!w || iElements[i].row < 0) continue;
-	if (iElements[i].type == EInput && (focus == w || gtk_widget_is_ancestor(focus, w)))
+	if (iElements[i].type == EInput
+	    && (focus == w || gtk_widget_is_ancestor(focus, w)))
 	    inInput = true;
 	if (iElements[i].type == EList && !list) list = w;
     }
@@ -512,7 +513,8 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	    case EInput:
 		widget = gtk_entry_new();
 		gtk_editable_set_text(GTK_EDITABLE(widget), m.text.c_str());
-		if (m.flags & ESelectAll) gtk_editable_select_region(GTK_EDITABLE(widget), 0, -1);
+		if (m.flags & ESelectAll)
+		    gtk_editable_select_region(GTK_EDITABLE(widget), 0, -1);
 		if (m.lua_method != LUA_NOREF)
 		    g_signal_connect(widget, "changed", G_CALLBACK(inputResponse), this);
 		break;

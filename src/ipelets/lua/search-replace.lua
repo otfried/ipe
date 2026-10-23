@@ -30,6 +30,8 @@
 
 label = "Search && replace"
 
+category = "Basic"
+
 about = [[
 Search and replace text in selected text objects.
 
