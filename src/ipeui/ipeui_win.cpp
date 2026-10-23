@@ -191,6 +191,8 @@ public:
     PDialog(lua_State * L0, WINID parent, const char * caption, const char * language);
     virtual ~PDialog();
 
+    bool moveListSelection(int delta);
+
 protected:
     virtual void setMapped(lua_State * L, int idx);
     virtual Result buildAndRun(int w, int h);
@@ -215,6 +217,7 @@ private:
     int iButtonX;
     std::vector<int> iRowHeight;
     std::vector<int> iColWidth;
+    bool iSettingText = false; // suppress callbacks for programmatic text changes
 };
 
 PDialog::PDialog(lua_State * L0, WINID parent, const char * caption,
@@ -235,7 +238,11 @@ void PDialog::setMapped(lua_State * L, int idx) {
     switch (m.type) {
     case ETextEdit:
     case EInput:
-    case ELabel: setWindowText(h, m.text.c_str()); break;
+    case ELabel:
+	iSettingText = true;
+	setWindowText(h, m.text.c_str());
+	iSettingText = false;
+	break;
     case EImage: InvalidateRect(h, nullptr, TRUE); break;
     case EList:
 	if (!lua_isnumber(L, 3)) {
@@ -293,7 +300,9 @@ BOOL PDialog::initDialog() {
 	switch (m.type) {
 	case EInput:
 	case ETextEdit:
+	    iSettingText = true;
 	    setWindowText(h, m.text.c_str());
+	    iSettingText = false;
 	    if (m.flags & EFocused) {
 		SetFocus(h);
 		result = FALSE; // we set the focus ourselves
@@ -422,6 +431,10 @@ BOOL PDialog::dlgCommand(WPARAM wParam, LPARAM lParam) {
 	return TRUE;
     } else if (m.type == EList && HIWORD(wParam) != LBN_SELCHANGE) {
 	// ignore other list notifications, such as focus changes
+    } else if (m.type == EInput) {
+	// only react to edits, not to focus changes or programmatic changes
+	if (HIWORD(wParam) == EN_CHANGE && !iSettingText && m.lua_method != LUA_NOREF)
+	    callLua(m.lua_method);
     } else if (m.lua_method != LUA_NOREF)
 	callLua(m.lua_method);
     return FALSE;
@@ -433,7 +446,37 @@ void PDialog::acceptDialog(lua_State * L) {
     EndDialog(hDialog, accept);
 }
 
+// While an input has the focus, Up/Down move the selection of the first list.
+bool PDialog::moveListSelection(int delta) {
+    for (int i = 0; i < int(iElements.size()); ++i) {
+	SElement & m = iElements[i];
+	if (m.type != EList || m.row < 0) continue;
+	HWND h = GetDlgItem(hDialog, i + IDBASE);
+	int n = ListBox_GetCount(h);
+	if (n <= 0) return false;
+	int cur = ListBox_GetCurSel(h);
+	if (cur < 0) cur = 0;
+	int next = std::max(0, std::min(n - 1, cur + delta));
+	if (next != cur) {
+	    ListBox_SetCurSel(h, next);
+	    // programmatic changes do not send LBN_SELCHANGE
+	    if (m.lua_method != LUA_NOREF) callLua(m.lua_method);
+	}
+	return true;
+    }
+    return false;
+}
+
 static WNDPROC wpOrigProc;
+static WNDPROC wpOrigInputProc;
+static LRESULT inputProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    if (message == WM_KEYDOWN && (wParam == VK_UP || wParam == VK_DOWN)) {
+	PDialog * d = (PDialog *)GetWindowLongPtr(GetParent(hwnd), GWLP_USERDATA);
+	if (d && d->moveListSelection(wParam == VK_DOWN ? 1 : -1)) return 0;
+    }
+    return CallWindowProc(wpOrigInputProc, hwnd, message, wParam, lParam);
+}
+
 static LRESULT subclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     if (message == WM_KEYDOWN) {
 	if (wParam == VK_RETURN && (GetKeyState(VK_CONTROL) & 0x8000)) {
@@ -458,6 +501,9 @@ BOOL CALLBACK PDialog::dialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 	    if (d->iElements[i].type == ETextEdit)
 		wpOrigProc = (WNDPROC)SetWindowLongPtr(
 		    GetDlgItem(hwnd, i + IDBASE), GWLP_WNDPROC, (LONG_PTR)&subclassProc);
+	    else if (d->iElements[i].type == EInput)
+		wpOrigInputProc = (WNDPROC)SetWindowLongPtr(
+		    GetDlgItem(hwnd, i + IDBASE), GWLP_WNDPROC, (LONG_PTR)&inputProc);
 	}
 	return d->initDialog();
 
@@ -485,6 +531,9 @@ BOOL CALLBACK PDialog::dialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 	    if (d->iElements[i].type == ETextEdit)
 		SetWindowLongPtr(GetDlgItem(hwnd, i + IDBASE), GWLP_WNDPROC,
 				 (LONG_PTR)wpOrigProc);
+	    else if (d->iElements[i].type == EInput)
+		SetWindowLongPtr(GetDlgItem(hwnd, i + IDBASE), GWLP_WNDPROC,
+				 (LONG_PTR)wpOrigInputProc);
 	}
 	return FALSE;
     default: return FALSE;

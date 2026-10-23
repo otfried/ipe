@@ -225,7 +225,13 @@ void Dialog::addInput(lua_State * L, SElement & m) {
     if (lua_toboolean(L, -1)) m.flags |= EFocused;
     lua_getfield(L, 4, "color_picker");
     if (lua_toboolean(L, -1)) m.flags |= EColorPicker;
-    lua_pop(L, 3);
+    lua_getfield(L, 4, "action");
+    if (!lua_isnil(L, -1)) {
+	luaL_argcheck(L, lua_isfunction(L, -1), 4, "unknown action type");
+	lua_pushvalue(L, -1);
+	m.lua_method = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+    lua_pop(L, 4);
 }
 
 void Dialog::addImage(lua_State * L, SElement & m) {

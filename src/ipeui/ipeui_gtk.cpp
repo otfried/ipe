@@ -82,6 +82,8 @@ public:
 private:
     static void itemResponse(GtkWidget * item, PDialog * dlg);
     static void comboResponse(GObject * object, GParamSpec * pspec, PDialog * dlg);
+    static void inputResponse(GtkEditable * editable, PDialog * dlg);
+    bool moveListSelection(int delta);
     static void listResponse(GtkSelectionModel * model, guint position, guint nitems,
 			     PDialog * dlg);
     static void response_cb(GtkDialog * dialog, int response, PDialog * dlg);
@@ -93,6 +95,7 @@ private:
 private:
     std::vector<GtkWidget *> iWidgets;
     int threadRef;
+    bool iSettingText = false; // suppress callbacks for programmatic text changes
 };
 
 PDialog::PDialog(lua_State * L0, WINID parent, const char * caption,
@@ -183,12 +186,44 @@ gboolean PDialog::key_press_cb(GtkEventControllerKey *, guint keyval, guint,
 	gtk_dialog_response(GTK_DIALOG(dlg->hDialog), GTK_RESPONSE_ACCEPT);
 	return TRUE;
     }
+    if ((keyval == GDK_KEY_Up || keyval == GDK_KEY_Down) && !(state & GDK_MODIFIER_MASK))
+	return dlg->moveListSelection(keyval == GDK_KEY_Down ? 1 : -1);
     if (keyval != GDK_KEY_Escape) return FALSE;
     dlg->retrieveValues();
     if (dlg->iIgnoreEscapeField >= 0
 	&& dlg->iElements[dlg->iIgnoreEscapeField].text == dlg->iIgnoreEscapeText)
 	gtk_dialog_response(GTK_DIALOG(dlg->hDialog), GTK_RESPONSE_DELETE_EVENT);
     return TRUE;
+}
+
+// While an input has the focus, Up/Down move the selection of the first list.
+bool PDialog::moveListSelection(int delta) {
+    GtkWidget * focus = gtk_window_get_focus(GTK_WINDOW(hDialog));
+    if (!focus) return false;
+    GtkWidget * list = nullptr;
+    bool inInput = false;
+    for (int i = 0; i < int(iWidgets.size()); ++i) {
+	GtkWidget * w = iWidgets[i];
+	if (!w || iElements[i].row < 0) continue;
+	if (iElements[i].type == EInput && (focus == w || gtk_widget_is_ancestor(focus, w)))
+	    inInput = true;
+	if (iElements[i].type == EList && !list) list = w;
+    }
+    if (!inInput || !list) return false;
+    GtkSingleSelection * s =
+	GTK_SINGLE_SELECTION(gtk_list_view_get_model(GTK_LIST_VIEW(list)));
+    guint n = g_list_model_get_n_items(G_LIST_MODEL(s));
+    if (n == 0) return false;
+    guint cur = gtk_single_selection_get_selected(s);
+    if (cur == GTK_INVALID_LIST_POSITION) cur = 0;
+    guint next = (delta < 0) ? (cur > 0 ? cur - 1 : 0) : (cur + 1 < n ? cur + 1 : n - 1);
+    if (next != cur) {
+	gtk_single_selection_set_selected(s, next);
+#if GTK_CHECK_VERSION(4, 12, 0)
+	gtk_list_view_scroll_to(GTK_LIST_VIEW(list), next, GTK_LIST_SCROLL_NONE, nullptr);
+#endif
+    }
+    return true;
 }
 
 static void list_item_setup(GtkListItemFactory *, GtkListItem * item, gpointer) {
@@ -228,6 +263,10 @@ void PDialog::comboResponse(GObject * object, GParamSpec *, PDialog * dlg) {
     itemResponse(GTK_WIDGET(object), dlg);
 }
 
+void PDialog::inputResponse(GtkEditable * editable, PDialog * dlg) {
+    if (!dlg->iSettingText) itemResponse(GTK_WIDGET(editable), dlg);
+}
+
 void PDialog::listResponse(GtkSelectionModel * model, guint, guint, PDialog * dlg) {
     int idx = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(model), "ipe-index"));
     dlg->callLua(dlg->iElements[idx].lua_method);
@@ -243,7 +282,11 @@ void PDialog::setMapped(lua_State * L, int idx) {
 	gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(w)),
 				 m.text.c_str(), -1);
 	break;
-    case EInput: gtk_editable_set_text(GTK_EDITABLE(w), m.text.c_str()); break;
+    case EInput:
+	iSettingText = true;
+	gtk_editable_set_text(GTK_EDITABLE(w), m.text.c_str());
+	iSettingText = false;
+	break;
     case EImage:
 	g_object_set_data_full(G_OBJECT(w), "ipe-dialog-image-spec",
 			       g_strdup(m.text.c_str()), g_free);
@@ -466,7 +509,13 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		if (m.lua_method != LUA_NOREF)
 		    g_signal_connect(widget, "toggled", G_CALLBACK(itemResponse), this);
 		break;
-	    case EInput: widget = gtk_entry_new(); break;
+	    case EInput:
+		widget = gtk_entry_new();
+		gtk_editable_set_text(GTK_EDITABLE(widget), m.text.c_str());
+		if (m.flags & ESelectAll) gtk_editable_select_region(GTK_EDITABLE(widget), 0, -1);
+		if (m.lua_method != LUA_NOREF)
+		    g_signal_connect(widget, "changed", G_CALLBACK(inputResponse), this);
+		break;
 	    case EImage:
 		widget = gtk_drawing_area_new();
 		gtk_widget_set_size_request(widget, m.minWidth, m.minHeight);

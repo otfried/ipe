@@ -62,12 +62,39 @@ function updateListSelection(w: ElementOptions, idx: number): void {
 	}
 }
 
+// read the DOM, since the items of a list can be replaced after the dialog was built
+function listItemElements(name: string): HTMLElement[] {
+	const el = document.getElementById(`dialog-element-${name}`);
+	return el
+		? Array.from(el.querySelectorAll<HTMLElement>(".dialog-list-item"))
+		: [];
+}
+
 function getListSelection(w: ElementOptions): number {
-	for (let i = 0; i < w.items!.length; ++i) {
-		const el = document.getElementById(`dialog-element-${w.name}-item-${i}`);
-		if (el?.classList.contains("selected")) return i;
+	const idx = listItemElements(w.name).findIndex((el) =>
+		el.classList.contains("selected"),
+	);
+	return idx < 0 ? 0 : idx;
+}
+
+// Move the selection of the dialog's (first) list, as if the user had clicked.
+// Returns false if there is no non-empty list.
+function moveListSelection(options: DialogOptions, delta: number): boolean {
+	const lw = options.elements.find((e) => e.type === "list");
+	if (!lw) return false;
+	const items = listItemElements(lw.name);
+	if (items.length === 0) return false;
+	const cur = getListSelection(lw);
+	const next = Math.max(0, Math.min(items.length - 1, cur + delta));
+	if (next !== cur) {
+		for (const [i, el] of items.entries())
+			el.classList.toggle("selected", i === next);
+		items[next].scrollIntoView({ block: "nearest" });
+		document
+			.getElementById(`dialog-element-${lw.name}`)!
+			.dispatchEvent(new Event("change"));
 	}
-	return 0;
+	return true;
 }
 
 function setListItems(el1: HTMLDivElement, w: ElementOptions): void {
@@ -304,6 +331,11 @@ export function setupElements(
 				el1.id = `dialog-element-${w.name}`;
 				if (w.flags & 0x020) el1.disabled = true;
 				if (w.flags & 0x400) el1.setAttribute("data-coloris", "true");
+				el1.addEventListener("keydown", (e) => {
+					if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+					if (moveListSelection(options, e.key === "ArrowDown" ? 1 : -1))
+						e.preventDefault();
+				});
 				el = el1;
 				break;
 			}
@@ -384,8 +416,9 @@ export function setupElements(
 				el.addEventListener("click", () =>
 					ipe._dialogCallLua(options.dialogId, w.method!),
 				);
+			// "input" fires on every user edit, "change" only on commit
 			else
-				el.addEventListener("change", () =>
+				el.addEventListener(w.type === "input" ? "input" : "change", () =>
 					ipe._dialogCallLua(options.dialogId, w.method!),
 				);
 		}

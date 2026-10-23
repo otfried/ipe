@@ -8,7 +8,7 @@ include ../../common.mak
 LUASCRIPTS = move.lua goodies.lua align.lua euclid.lua \
 	symbols.lua search-replace.lua selectby.lua \
 	gridmaker.lua variants.lua visualstyles.lua \
-	externalimages.lua
+	externalimages.lua ipeletsearch.lua
 
 all: 
 

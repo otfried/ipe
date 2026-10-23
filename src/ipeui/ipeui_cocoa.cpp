@@ -50,7 +50,8 @@ inline NSString * S2N(const std::string & s) { return C2N(s.c_str()); }
 class PDialog;
 
 @interface IpeDialogDelegate
-    : NSObject <NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate>
+    : NSObject <NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate,
+		NSTextFieldDelegate>
 
 @property PDialog * dialog;
 
@@ -155,6 +156,7 @@ public:
     virtual ~PDialog();
 
     void itemAction(int idx);
+    bool moveListSelection(int delta);
     int numberOfRows(int idx);
     NSString * row(int idx, int row);
 
@@ -182,6 +184,20 @@ private:
 
 - (void)ipeControl:(id)sender {
     self.dialog->itemAction([sender tag]);
+}
+
+// sent only for edits by the user, not for setStringValue
+- (void)controlTextDidChange:(NSNotification *)notification {
+    self.dialog->itemAction([[notification object] tag]);
+}
+
+// Up/Down in an input move the selection of the dialog's list
+- (BOOL)control:(NSControl *)control
+	   textView:(NSTextView *)textView
+    doCommandBySelector:(SEL)command {
+    if (command == @selector(moveUp:)) return self.dialog->moveListSelection(-1);
+    if (command == @selector(moveDown:)) return self.dialog->moveListSelection(1);
+    return NO;
 }
 
 - (BOOL)windowShouldClose:(id)sender {
@@ -346,6 +362,25 @@ void PDialog::itemAction(int idx) {
 	[iPanel close];
     } else if (m.lua_method != LUA_NOREF)
 	callLua(m.lua_method);
+}
+
+// Selecting the row triggers tableViewSelectionDidChange, which calls Lua.
+bool PDialog::moveListSelection(int delta) {
+    for (int i = 0; i < int(iElements.size()); ++i) {
+	if (iElements[i].type != EList || iElements[i].row < 0) continue;
+	NSTableView * tv = (NSTableView *)iViews[i];
+	NSInteger n = [tv numberOfRows];
+	if (n <= 0) return false;
+	NSInteger cur = std::max<NSInteger>([tv selectedRow], 0);
+	NSInteger next = std::max<NSInteger>(0, std::min(n - 1, cur + delta));
+	if (next != cur) {
+	    [tv selectRowIndexes:[NSIndexSet indexSetWithIndex:next]
+	      byExtendingSelection:NO];
+	    [tv scrollRowToVisible:next];
+	}
+	return true;
+    }
+    return false;
 }
 
 int PDialog::numberOfRows(int idx) { return iElements[idx].items.size(); }
@@ -586,6 +621,7 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		NSTextField * t = [[NSTextField alloc] initWithFrame:NSZeroRect];
 		[t setStringValue:S2N(m.text)];
 		if (m.flags & ESelectAll) [t selectText:content];
+		[t setDelegate:iDelegate];
 		ctrl = t;
 	    } break;
 	    case EImage: {
@@ -635,7 +671,8 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	if (ctrl) {
 	    ctrl.enabled = !(m.flags & EDisabled);
 	    ctrl.tag = i;
-	    if (m.type != EList) {
+	    // inputs report changes through controlTextDidChange, not on Enter
+	    if (m.type != EList && m.type != EInput) {
 		ctrl.action = @selector(ipeControl:);
 		ctrl.target = iDelegate;
 	    }
