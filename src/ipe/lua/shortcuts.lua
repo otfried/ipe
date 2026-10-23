@@ -172,6 +172,7 @@ shortcuts = {
   ipelet_15_goodies = nil, -- Make parabolas
   ipelet_16_goodies = nil, -- Regular k-gon
   ipelet_2_symbols = "Alt+Y", -- Use current symbol
+  search_ipelets = "Ctrl+Space",
 }
 
 if config.platform == "apple" then

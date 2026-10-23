@@ -37,6 +37,7 @@ require "editpath"
 require "properties"
 require "shortcuts"
 require "mouse"
+require "ipeletsearch"
 
 ----------------------------------------------------------------------
 

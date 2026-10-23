@@ -431,6 +431,8 @@ void AppUiBase::buildMenus() {
 #endif
 
     // build Ipelet menu
+    addItem(EIpeletMenu, "&Search ipelets...", "search_ipelets");
+    addItem(EIpeletMenu);
     lua_getglobal(L, "ipelets");
     int n = lua_rawlen(L, -1);
     for (int i = 1; i <= n; ++i) {

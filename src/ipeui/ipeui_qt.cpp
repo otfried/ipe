@@ -267,6 +267,22 @@ IpeUiQDialog::IpeUiQDialog(WINID parent, PDialog * pDialog)
 
 void IpeUiQDialog::keyPressEvent(QKeyEvent * e) {
     if (e->key() == Qt::Key_Escape && pDialog->ignoresEscapeKey()) return;
+    if (e->key() == Qt::Key_Down || e->key() == Qt::Key_Up) {
+	if (qobject_cast<QLineEdit *>(focusWidget())) {
+	    QListWidget * lw = findChild<QListWidget *>();
+	    if (lw && lw->count() > 0) {
+		int cur = lw->currentRow();
+		if (e->key() == Qt::Key_Down) {
+		    if (cur + 1 < lw->count())
+			lw->setCurrentRow(cur + 1);
+		} else if (e->key() == Qt::Key_Up) {
+		    if (cur > 0)
+			lw->setCurrentRow(cur - 1);
+		}
+		return;
+	    }
+	}
+    }
     QDialog::keyPressEvent(e);
 }
 
@@ -411,6 +427,10 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		QLineEdit * e = new QLineEdit(qDialog);
 		e->setText(QString::fromUtf8(m.text.c_str()));
 		if (m.flags & ESelectAll) e->selectAll();
+		if (m.lua_method != LUA_NOREF) {
+		    QObject::connect(e, &QLineEdit::textChanged,
+				     [this, method = m.lua_method](const QString &) { callLua(method); });
+		}
 		w = e;
 	    } break;
 	    case ETextEdit: {
@@ -473,6 +493,8 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 			l, &QListWidget::currentRowChanged,
 			[this, method = m.lua_method](int) { callLua(method); });
 		}
+		QObject::connect(l, &QListWidget::itemActivated,
+				 [this](QListWidgetItem *) { qDialog->accept(); });
 		w = l;
 	    } break;
 	    default: break;
