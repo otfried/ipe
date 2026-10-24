@@ -1802,14 +1802,14 @@ function MODEL:action_paste_at_cursor()
     return
   end
   if format == "text" then
-    if data:sub(1,13) ~= "<ipeselection" then
+    if value:sub(1,13) ~= "<ipeselection" then
       self:warning("No Ipe selection to paste")
       return
     end
     local pos
-    local px, py = data:match('^<ipeselection pos="([%d%.]+) ([%d%.]+)"')
+    local px, py = value:match('^<ipeselection pos="([%d%.]+) ([%d%.]+)"')
     if px then pos = V(tonumber(px), tonumber(py)) end
-    local elements = ipe.Object(data)
+    local elements = ipe.Object(value)
     if not elements then
       self:warning("Could not parse Ipe selection on clipboard")
       return
