@@ -77,6 +77,11 @@ Ipe 7.3.1
 
  * Middle arrows now work on arcs and splines (#536).
 
+ * Saving in XML is now stable with respect to
+   adding/removing/duplicating bitmaps, and keeps style sheet
+   definitions in alphabetic order.  This will greatly improve keeping
+   Ipe files (in .ipe format) in git.
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.30 (2024-06-01: mini-release, source only)

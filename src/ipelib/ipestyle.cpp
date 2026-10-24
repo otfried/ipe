@@ -373,6 +373,18 @@ void StyleSheet::allNames(Kind kind, AttributeSeq & seq) const {
 
 // --------------------------------------------------------------------
 
+// Repository indices depend on interning history, so sort keys by name for stable output.
+template <typename M>
+static std::vector<typename M::const_iterator> sortedByName(const M & map) {
+    Repository * rep = Repository::get();
+    std::vector<typename M::const_iterator> its;
+    for (auto it = map.begin(); it != map.end(); ++it) its.push_back(it);
+    std::sort(its.begin(), its.end(), [rep](const auto & a, const auto & b) {
+	return rep->toString(a->first) < rep->toString(b->first);
+    });
+    return its;
+}
+
 //! Save style sheet in XML format.
 void StyleSheet::saveAsXml(Stream & stream, bool saveBitmaps) const {
     stream << "<ipestyle";
@@ -388,7 +400,7 @@ void StyleSheet::saveAsXml(Stream & stream, bool saveBitmaps) const {
 
     Repository * rep = Repository::get();
 
-    for (SymbolMap::const_iterator it = iSymbols.begin(); it != iSymbols.end(); ++it) {
+    for (auto it : sortedByName(iSymbols)) {
 	stream << "<symbol name=\"" << rep->toString(it->first) << "\"";
 	if (it->second.iTransformations == ETransformationsTranslations)
 	    stream << " transformations=\"translations\"";
@@ -476,8 +488,7 @@ void StyleSheet::saveAsXml(Stream & stream, bool saveBitmaps) const {
 	stream << "/>\n";
     }
 
-    for (GradientMap::const_iterator it = iGradients.begin(); it != iGradients.end();
-	 ++it) {
+    for (auto it : sortedByName(iGradients)) {
 	stream << "<gradient name=\"" << rep->toString(it->first) << "\"";
 	const Gradient & g = it->second;
 	if (g.iType == Gradient::EAxial)
@@ -498,14 +509,14 @@ void StyleSheet::saveAsXml(Stream & stream, bool saveBitmaps) const {
 	stream << "</gradient>\n";
     }
 
-    for (TilingMap::const_iterator it = iTilings.begin(); it != iTilings.end(); ++it) {
+    for (auto it : sortedByName(iTilings)) {
 	const Tiling & t = it->second;
 	stream << "<tiling name=\"" << rep->toString(it->first) << "\"" << " angle=\""
 	       << t.iAngle.degrees() << "\"" << " step=\"" << t.iStep << "\""
 	       << " width=\"" << t.iWidth << "\"/>\n";
     }
 
-    for (EffectMap::const_iterator it = iEffects.begin(); it != iEffects.end(); ++it) {
+    for (auto it : sortedByName(iEffects)) {
 	stream << "<effect name=\"" << rep->toString(it->first) << "\"";
 	const Effect & e = it->second;
 	if (e.iDuration != 0) stream << " duration=\"" << e.iDuration << "\"";
@@ -514,8 +525,7 @@ void StyleSheet::saveAsXml(Stream & stream, bool saveBitmaps) const {
 	stream << " effect=\"" << int(e.iEffect) << "\"/>\n";
     }
 
-    for (PageStyleMap::const_iterator it = iPageStyles.begin(); it != iPageStyles.end();
-	 ++it) {
+    for (auto it : sortedByName(iPageStyles)) {
 	stream << "<pagestyle name=\"" << rep->toString(it->first) << "\"";
 	const PageStyle & ps = it->second;
 	if (!ps.iBackground.isNormal())
