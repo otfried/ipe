@@ -383,21 +383,7 @@ void StyleSheet::saveAsXml(Stream & stream, bool saveBitmaps) const {
 	BitmapFinder bm;
 	for (SymbolMap::const_iterator it = iSymbols.begin(); it != iSymbols.end(); ++it)
 	    it->second.iObject->accept(bm);
-	if (!bm.iBitmaps.empty()) {
-	    std::sort(bm.iBitmaps.begin(), bm.iBitmaps.end());
-	    int id = 1;
-	    Bitmap prev;
-	    for (std::vector<Bitmap>::iterator it = bm.iBitmaps.begin();
-		 it != bm.iBitmaps.end(); ++it) {
-		if (!it->equal(prev)) {
-		    it->saveAsXml(stream, id);
-		    it->setObjNum(id);
-		} else
-		    it->setObjNum(prev.objNum()); // noop if prev == it
-		prev = *it;
-		++id;
-	    }
-	}
+	Bitmap::saveBitmaps(stream, bm.iBitmaps);
     }
 
     Repository * rep = Repository::get();

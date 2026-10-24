@@ -112,7 +112,7 @@ void Image::saveAsXml(Stream & stream, String layer) const {
 	stream.putXmlString(iPath);
 	stream << "\"";
     } else
-	stream << " bitmap=\"" << iBitmap.objNum() << "\"";
+	stream << " bitmap=\"" << iBitmap.checksumId(iBitmap.objNum()) << "\"";
     stream << "/>\n";
 }
 

@@ -30,6 +30,7 @@
 
 #include "ipebitmap.h"
 #include "ipeutils.h"
+#include <cstring>
 #include <limits>
 #include <zlib.h>
 
@@ -101,7 +102,7 @@ std::pair<int, int> Bitmap::init(const XmlAttributes & attr) {
     iImp->iFlags = 0;
     iImp->iColorKey = -1;
     iImp->iPixelsComputed = false;
-    iImp->iObjNum = Lex(attr["id"]).getInt();
+    iImp->iObjNum = -1;
     iImp->iWidth = Lex(attr["width"]).getInt();
     iImp->iHeight = Lex(attr["height"]).getInt();
     int length = Lex(attr["length"]).getInt();
@@ -281,14 +282,12 @@ Bitmap & Bitmap::operator=(const Bitmap & rhs) {
 }
 
 //! Save bitmap in XML stream.
-void Bitmap::saveAsXml(Stream & stream, int id, int pdfObjNum) const {
+void Bitmap::saveAsXml(Stream & stream, String id, int pdfObjNum) const {
     assert(iImp);
-    stream << "<bitmap" << " id=\"" << id << "\"" << " width=\"" << width() << "\""
-	   << " height=\"" << height() << "\""
-	   << " BitsPerComponent=\"8\""; // no longer used but required by earlier Ipe
-					 // versions
-
-    stream << " ColorSpace=\"Device";
+    stream << "<bitmap" << " id=\"";
+    stream.putXmlString(id);
+    stream << "\"" << " width=\"" << width() << "\"" << " height=\"" << height() << "\""
+	   << " ColorSpace=\"Device";
     if (isGray())
 	stream << "Gray";
     else
@@ -382,6 +381,60 @@ std::pair<Buffer, Buffer> Bitmap::embed() const {
 	alpha = Buffer(deflated.data(), deflatedSize);
     }
     return std::make_pair(rgb, alpha);
+}
+
+String Bitmap::checksumId(int suffix) const {
+    String out;
+    StringStream ss(out);
+    uint32_t cs = iImp->iChecksum;
+    ss.putHexByte(cs >> 24);
+    ss.putHexByte((cs >> 16) & 0xff);
+    ss.putHexByte((cs >> 8) & 0xff);
+    ss.putHexByte(cs & 0xff);
+    if (suffix > 0) ss << "-" << suffix;
+    return out;
+}
+
+void Bitmap::saveBitmaps(Stream & stream, std::vector<Bitmap> & bitmaps) {
+    if (bitmaps.empty()) return;
+    // equal checksums form blocks, equal imp's smaller blocks
+    std::sort(bitmaps.begin(), bitmaps.end());
+    Bitmap prev;
+    for (std::vector<Bitmap>::iterator it = bitmaps.begin(); it != bitmaps.end(); ++it) {
+	// check if the bitmaps are bitwise equal
+	if (!it->equal(prev)) {
+	    // they are not, consider checksum conflict
+	    if (!prev.isNull() && it->checksumId() == prev.checksumId())
+		it->setObjNum(prev.objNum() + 1);
+	    else
+		it->setObjNum(0);
+	    it->saveAsXml(stream, it->checksumId(it->objNum()));
+	} else
+	    // they are bitwise equal, simply embed same reference
+	    it->setObjNum(prev.objNum()); // noop if prev == it
+	prev = *it;
+    }
+}
+
+//! Less operator, to be able to sort bitmaps.
+/*! The checksum is used. When checksums are equal, compares the actual contents.
+  After sorting, bitmaps with equal checksum form contiguous blocks.
+  Identical bitmaps form smaller blocks within those blocks,
+  and bitmaps with shared implementation form even smaller blocks within those.
+*/
+bool Bitmap::operator<(const Bitmap & rhs) const {
+    if (iImp->iChecksum != rhs.iImp->iChecksum)
+	return iImp->iChecksum < rhs.iImp->iChecksum;
+    // when checksums are equal, most likely it's the same object
+    if (iImp == rhs.iImp) return false;
+    if (iImp->iWidth != rhs.iImp->iWidth) return iImp->iWidth < rhs.iImp->iWidth;
+    if (iImp->iHeight != rhs.iImp->iHeight) return iImp->iHeight < rhs.iImp->iHeight;
+    if (iImp->iFlags != rhs.iImp->iFlags) return iImp->iFlags < rhs.iImp->iFlags;
+    if (iImp->iColorKey != rhs.iImp->iColorKey)
+	return iImp->iColorKey < rhs.iImp->iColorKey;
+    if (iImp->iData.size() != rhs.iImp->iData.size())
+	return iImp->iData.size() < rhs.iImp->iData.size();
+    return memcmp(iImp->iData.data(), rhs.iImp->iData.data(), iImp->iData.size()) < 0;
 }
 
 // --------------------------------------------------------------------

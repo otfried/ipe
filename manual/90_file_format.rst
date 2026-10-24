@@ -158,7 +158,7 @@ Attributes
 
 
 ``id`` (required)
-  the value must be an integer that will define the bitmap throughout
+  the value must be a string that will define the bitmap throughout
   the Ipe document,
   
 ``width`` (required)
@@ -508,7 +508,7 @@ The ``<image>`` element
 *Attributes*
 
 ``bitmap`` (optional)
-  Value is an integer referring to a bitmap defined in a ``<bitmap>``
+  Value is a string referring to a bitmap defined in a ``<bitmap>``
   element in the document,
 
 ``path`` (optional)

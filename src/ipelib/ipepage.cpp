@@ -759,14 +759,7 @@ void Page::saveAsIpePage(Stream & stream) const {
     BitmapFinder bmFinder;
     bmFinder.scanPage(this);
     stream << "<ipepage>\n";
-    int id = 1;
-    for (std::vector<Bitmap>::const_iterator it = bmFinder.iBitmaps.begin();
-	 it != bmFinder.iBitmaps.end(); ++it) {
-	Bitmap bm = *it;
-	bm.saveAsXml(stream, id);
-	bm.setObjNum(id);
-	++id;
-    }
+    Bitmap::saveBitmaps(stream, bmFinder.iBitmaps);
     saveAsXml(stream);
     stream << "</ipepage>\n";
 }
@@ -778,14 +771,7 @@ void Page::saveSelection(Stream & stream) const {
 	if (select(i)) object(i)->accept(bmFinder);
     }
     stream << "<ipeselection>\n";
-    int id = 1;
-    for (std::vector<Bitmap>::const_iterator it = bmFinder.iBitmaps.begin();
-	 it != bmFinder.iBitmaps.end(); ++it) {
-	Bitmap bm = *it;
-	bm.saveAsXml(stream, id);
-	bm.setObjNum(id);
-	++id;
-    }
+    Bitmap::saveBitmaps(stream, bmFinder.iBitmaps);
     for (int i = 0; i < count(); ++i) {
 	if (select(i)) object(i)->saveAsXml(stream, layer(layerOf(i)));
     }

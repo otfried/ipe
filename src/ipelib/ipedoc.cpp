@@ -425,24 +425,16 @@ void Document::saveAsXml(Stream & stream, bool usePdfBitmaps) const {
     // save bitmaps
     BitmapFinder bm;
     findBitmaps(bm);
-    if (!bm.iBitmaps.empty()) {
-	int id = 1;
+    if (usePdfBitmaps) {
 	Bitmap prev;
 	for (std::vector<Bitmap>::iterator it = bm.iBitmaps.begin();
 	     it != bm.iBitmaps.end(); ++it) {
-	    if (!it->equal(prev)) {
-		if (usePdfBitmaps) {
-		    it->saveAsXml(stream, it->objNum(), it->objNum());
-		} else {
-		    it->saveAsXml(stream, id);
-		    it->setObjNum(id);
-		}
-	    } else
-		it->setObjNum(prev.objNum()); // noop if prev == it
+	    if (prev.isNull() || it->objNum() != prev.objNum())
+		it->saveAsXml(stream, it->checksumId(it->objNum()), it->objNum());
 	    prev = *it;
-	    ++id;
 	}
-    }
+    } else
+	Bitmap::saveBitmaps(stream, bm.iBitmaps);
 
     // now save style sheet
     iCascade->saveAsXml(stream);

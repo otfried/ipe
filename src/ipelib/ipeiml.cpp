@@ -164,6 +164,7 @@ int ImlParser::parseDocument(Document & doc, bool overrideTooRecent) {
 bool ImlParser::parseBitmap() {
     XmlAttributes att;
     if (!parseAttributes(att)) return false;
+    String id = att["id"];
     String objNumStr;
     if (att.slash() && att.has("pdfObject", objNumStr)) {
 	Lex lex(objNumStr);
@@ -172,12 +173,12 @@ bool ImlParser::parseBitmap() {
 	lex.skipWhitespace();
 	if (!lex.eos()) alpha = pdfStream(lex.getInt());
 	Bitmap bitmap(att, data, alpha);
-	iBitmaps.push_back(bitmap);
+	iBitmaps.insert({id.s(), bitmap});
     } else {
 	String bits;
 	if (!parsePCDATA("bitmap", bits)) return false;
 	Bitmap bitmap(att, bits);
-	iBitmaps.push_back(bitmap);
+	iBitmaps.insert({id.s(), bitmap});
     }
     return true;
 }
@@ -369,17 +370,10 @@ Object * ImlParser::parseObject(String tag, String & layer) {
     if (!attr.slash() && !parsePCDATA(tag, pcdata)) return nullptr;
     String bitmapId;
     if (tag == "image" && attr.has("bitmap", bitmapId)) {
-	int objNum = Lex(bitmapId).getInt();
-	Bitmap bitmap;
-	for (std::vector<Bitmap>::const_iterator it = iBitmaps.begin();
-	     it != iBitmaps.end(); ++it) {
-	    if (it->objNum() == objNum) {
-		bitmap = *it;
-		break;
-	    }
-	}
-	if (bitmap.isNull()) return nullptr;
-	return ObjectFactory::createImage(tag, attr, bitmap);
+	std::string id = bitmapId.s();
+	auto it = iBitmaps.find(id);
+	if (it == iBitmaps.end()) return nullptr;
+	return ObjectFactory::createImage(tag, attr, it->second);
     } else
 	return ObjectFactory::createObject(tag, attr, pcdata);
 }

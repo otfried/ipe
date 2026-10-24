@@ -59,7 +59,7 @@ public:
     bool parseAttributeMapping(AttributeMap & map);
 
 private:
-    std::vector<Bitmap> iBitmaps;
+    std::map<std::string, Bitmap> iBitmaps;
 };
 
 } // namespace ipe

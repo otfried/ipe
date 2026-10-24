@@ -64,7 +64,7 @@ public:
     ~Bitmap();
     Bitmap & operator=(const Bitmap & rhs);
 
-    void saveAsXml(Stream & stream, int id, int pdfObjNum = -1) const;
+    void saveAsXml(Stream & stream, String id, int pdfObjNum = -1) const;
 
     inline bool isNull() const;
     bool equal(Bitmap rhs) const;
@@ -82,11 +82,17 @@ public:
     inline int objNum() const;
     inline void setObjNum(int objNum) const;
 
+    //! Return checksum as a hexadecimal string, possibly augmented by suffix.
+    String checksumId(int suffix = 0) const;
+
+    //! Save all the bitmaps, assigning objNum to distinguish equal checksums
+    static void saveBitmaps(Stream & stream, std::vector<Bitmap> & bitmaps);
+
     std::pair<Buffer, Buffer> embed() const;
 
     inline bool operator==(const Bitmap & rhs) const;
     inline bool operator!=(const Bitmap & rhs) const;
-    inline bool operator<(const Bitmap & rhs) const;
+    bool operator<(const Bitmap & rhs) const;
 
     static const char * readJpegInfo(FILE * file, int & width, int & height,
 				     Vector & dotsPerInch, uint32_t & flags);
@@ -172,16 +178,6 @@ inline bool Bitmap::operator==(const Bitmap & rhs) const { return iImp == rhs.iI
 
 //! Two bitmaps are equal if they share the same data.
 inline bool Bitmap::operator!=(const Bitmap & rhs) const { return iImp != rhs.iImp; }
-
-//! Less operator, to be able to sort bitmaps.
-/*! The checksum is used, when it is equal, the shared address.
-  This guarantees that bitmaps that are == (share their implementation)
-  are next to each other, and blocks of them are next to blocks that
-  are identical in contents. */
-inline bool Bitmap::operator<(const Bitmap & rhs) const {
-    return (iImp->iChecksum < rhs.iImp->iChecksum
-	    || (iImp->iChecksum == rhs.iImp->iChecksum && iImp < rhs.iImp));
-}
 
 } // namespace ipe
 

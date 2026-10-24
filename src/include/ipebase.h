@@ -67,7 +67,7 @@ const int IPELIB_VERSION = 70301;
 const int OLDEST_FILE_FORMAT = 70000;
 //! Current file format version.
 /*! \ingroup base */
-const int FILE_FORMAT = 70218;
+const int FILE_FORMAT = 70301;
 
 enum class LatexType { Default, Pdftex, Xetex, Luatex };
 
