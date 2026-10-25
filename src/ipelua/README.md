@@ -73,6 +73,24 @@ there, or as `ipe.name` / `ipeui.name` for global functions. It does not check
 that the documentation is correct. Add class mappings or exceptions to the
 script when adding new binding classes.
 
+## Doc-tests for the manual
+
+`doctest.lua` runs the examples of the manual chapter "Scripts and
+ipelets" (`manual/examples`) automatically, using `ipescript`, which must be
+built:
+
+```sh
+make -C ipelua doctest
+```
+
+It checks that every example script and ipelet does what the chapter says,
+using `run-ipelet` for the ipelets (including its undo and redo check); that
+every `ipescript` command shown in the chapter works and prints exactly the
+output shown there; that the Lua code blocks compile; and that the chapter
+and the example files agree. When you change an example or the chapter, run this
+test. A new example file must be used in the chapter and be tested in
+`doctest.lua`.
+
 ## Existing Issues
 
 Expected failures match a specific assertion message. An unrelated exception

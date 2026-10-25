@@ -30,6 +30,10 @@
 -- "false", list and combo elements the item number, and all others a
 -- string.
 --
+-- The Lua code of Ipe is taken from the installed Ipe, or from the Lua
+-- path in the environment variable IPELUAPATH (for instance
+-- "/path/to/ipe/src/ipe/lua/?.lua" to test with a source tree).
+--
 -- This is a testing tool: it has no canvas, no stylesheet selectors, and
 -- no LaTeX, so ipelets that depend on these cannot be tested fully.
 --
@@ -74,11 +78,13 @@ local ipeletName, inname, outname = positional[1], positional[2], positional[3]
 -- Environment of the Ipe editor that ipelets and model.lua depend on
 ----------------------------------------------------------------------
 
-local luadir = ipe.folder("lua")
+-- Ipe's Lua code is in the lua folder of the installation, unless the
+-- environment variable IPELUAPATH (a Lua path) says otherwise.
+local luapath = os.getenv("IPELUAPATH") or (ipe.folder("lua") .. "/?.lua")
 shortcuts = {}
 mouse = {}
-dofile(luadir .. "/prefs.lua")
-dofile(luadir .. "/model.lua")
+dofile(assert(package.searchpath("prefs", luapath)))
+dofile(assert(package.searchpath("model", luapath)))
 
 function revertOriginal(t, doc)
   doc:set(t.pno, t.original)

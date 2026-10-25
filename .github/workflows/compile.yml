@@ -63,6 +63,8 @@ jobs:
         run: LD_LIBRARY_PATH="$GITHUB_WORKSPACE/build/lib" make -C src/ipelua test
       - name: Check Lua binding documentation
         run: make -C src/ipelua checkdocs
+      - name: Check Lua examples in documentation
+        run: LD_LIBRARY_PATH="$GITHUB_WORKSPACE/build/lib" make -C src/ipelua doctest
       - run: 'echo "Status ${{ job.status }}"'
   BuildGTK2404:
     runs-on: ubuntu-24.04

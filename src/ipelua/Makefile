@@ -21,9 +21,23 @@ all: $(TARGET)
 
 LUA ?= $(LUA_PACKAGE)
 
-.PHONY: test checkdocs
+.PHONY: test checkdocs doctest
 test: $(TARGET)
 	$(LUA) test.lua "$(abspath $(TARGET))"
+
+# run the examples of the manual chapter "Scripts and ipelets"; needs the
+# built ipescript, and uses Ipe's Lua code from the source tree
+IPESCRIPT ?= $(buildbin)/ipescript
+
+doctest:
+	unset IPEDEBUG; \
+	LD_LIBRARY_PATH="$(abspath $(buildlib)):$$LD_LIBRARY_PATH" \
+	DYLD_LIBRARY_PATH="$(abspath $(buildlib)):$$DYLD_LIBRARY_PATH" \
+	IPESCRIPT="$(abspath $(IPESCRIPT))" \
+	IPEMANUAL="$(abspath ../../manual)" \
+	IPELUAPATH="$(abspath ../ipe/lua)/?.lua" \
+	IPESCRIPTS="$(abspath .):$(abspath ../../scripts):$(abspath ../../manual/examples)" \
+	"$(abspath $(IPESCRIPT))" doctest
 
 # check that all Lua bindings (including ipeui and AppUi) are in bindings.txt
 checkdocs:
