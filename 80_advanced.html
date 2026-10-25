@@ -15,7 +15,7 @@
     <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="The Ipe file format" href="90_file_format.html" />
+    <link rel="next" title="Scripts and ipelets" href="82_ipelets.html" />
     <link rel="prev" title="Presentations" href="70_presentations.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -32,7 +32,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="90_file_format.html" title="The Ipe file format"
+          <a href="82_ipelets.html" title="Scripts and ipelets"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="70_presentations.html" title="Presentations"
@@ -119,13 +119,9 @@ stylesheet named <code class="docutils literal notranslate"><span class="pre">ma
 </div>
 <div class="section" id="writing-ipelets">
 <span id="id1"></span><h2>Writing ipelets<a class="headerlink" href="#writing-ipelets" title="Permalink to this headline">¶</a></h2>
-<p>An ipelet is an extension to Ipe.  Ipe 7 uses the scripting language
-<a class="reference external" href="http://www.lua.org">Lua</a> (in fact, most of the Ipe program itself
-is written in Lua), and loads ipelets written in Lua when it starts
-up.  It is also possible to write ipelets in C++, using a small Lua
-wrapper that declares the methods available inside the ipelet.</p>
-<p>Documentation about writing ipelets can be found in the <a class="reference external" href="https://ipe.otfried.org/manual/">Ipelib
-documentation</a>.</p>
+<p>An ipelet is an extension to Ipe, written in the scripting language
+<a class="reference external" href="https://www.lua.org">Lua</a> or in C++.  How to write ipelets (and
+scripts) is described in the chapter <a class="reference internal" href="82_ipelets.html"><span class="doc">Scripts and ipelets</span></a>.</p>
 </div>
 <div class="section" id="troubleshooting-the-latex-conversion">
 <span id="troubleshooting"></span><h2>Troubleshooting the LaTeX-conversion<a class="headerlink" href="#troubleshooting-the-latex-conversion" title="Permalink to this headline">¶</a></h2>
@@ -356,8 +352,8 @@ of the file should be:</p>
   <p class="topless"><a href="70_presentations.html"
                         title="previous chapter">Presentations</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="90_file_format.html"
-                        title="next chapter">The Ipe file format</a></p>
+  <p class="topless"><a href="82_ipelets.html"
+                        title="next chapter">Scripts and ipelets</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -386,7 +382,7 @@ of the file should be:</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="90_file_format.html" title="The Ipe file format"
+          <a href="82_ipelets.html" title="Scripts and ipelets"
              >next</a> |</li>
         <li class="right" >
           <a href="70_presentations.html" title="Presentations"

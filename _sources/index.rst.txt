@@ -26,6 +26,7 @@
    66_babel
    70_presentations
    80_advanced
+   82_ipelets
    90_file_format
    92_using_ipe_figures
    94_commandline_programs

@@ -1,0 +1,783 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Scripts and ipelets &#8212; Ipe 7.3.1 documentation</title>
+    <link rel="stylesheet" href="_static/pyramid.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The Ipe file format" href="90_file_format.html" />
+    <link rel="prev" title="Advanced topics" href="80_advanced.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="90_file_format.html" title="The Ipe file format"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="80_advanced.html" title="Advanced topics"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.3.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="scripts-and-ipelets">
+<span id="id1"></span><h1>Scripts and ipelets<a class="headerlink" href="#scripts-and-ipelets" title="Permalink to this headline">¶</a></h1>
+<p>Most of the Ipe program is written in the scripting language <a class="reference external" href="https://www.lua.org">Lua</a>, and the same Lua library that Ipe uses to
+read, write, and modify documents is available for your own programs.
+There are two ways to use it:</p>
+<ul class="simple">
+<li><p>An <strong>Ipe script</strong> is a Lua program that you run from the command
+line using <strong class="program">ipescript</strong>.  A script reads an Ipe document,
+does something with it, and typically writes a new document or prints
+some information.  Scripts are good for batch processing and for
+tasks that you want to run on many files.</p></li>
+<li><p>An <strong>ipelet</strong> is an extension of the Ipe editor.  It is a Lua file
+that adds one or more entries to the <em>Ipelets</em> menu, and works on
+the document you are editing, usually on the objects you have
+selected.  Ipelets are good for functions that you want to use
+interactively.</p></li>
+</ul>
+<p>Scripts and ipelets share most of what they need to know.  They use the
+same classes for documents, pages, objects, and geometry, and the same
+conventions.  The differences are in how they are started and how they
+treat the document:</p>
+<table class="colwidths-given docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 40%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>Script</p></th>
+<th class="head"><p>Ipelet</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Started by</p></td>
+<td><p><strong class="program">ipescript</strong> on the command line</p></td>
+<td><p>the <em>Ipelets</em> menu (or a keyboard shortcut) in the Ipe editor</p></td>
+</tr>
+<tr class="row-odd"><td><p>Document</p></td>
+<td><p>loads and saves it itself</p></td>
+<td><p>the document being edited, accessed through the <em>model</em></p></td>
+</tr>
+<tr class="row-even"><td><p>Changing the document</p></td>
+<td><p>directly</p></td>
+<td><p><strong>never directly</strong>: it registers an undo item with the model</p></td>
+</tr>
+<tr class="row-odd"><td><p>User interface</p></td>
+<td><p>command-line arguments, <code class="code docutils literal notranslate"><span class="pre">print</span></code>, files</p></td>
+<td><p>dialogs, selection, mouse position, status bar</p></td>
+</tr>
+<tr class="row-even"><td><p>Placed in</p></td>
+<td><p>Ipe’s scripts folder</p></td>
+<td><p>Ipe’s ipelets folder</p></td>
+</tr>
+</tbody>
+</table>
+<p>The rest of this chapter first introduces the common Lua library, then
+describes scripts and ipelets in turn.  The complete reference for the
+Lua library is the <a class="reference external" href="https://ipe.otfried.org/manual/">Ipelib documentation</a> (look for the pages <em>Lua bindings
+for …</em>, and <em>Ipelets</em>).  The best documentation of what is possible
+are the existing scripts and ipelets that come with Ipe: the scripts
+are in the <code class="file docutils literal notranslate"><span class="pre">scripts</span></code> folder, and the ipelets in the <code class="file docutils literal notranslate"><span class="pre">ipelets</span></code>
+folder of the Ipe installation (and in the Ipe source distribution).</p>
+<div class="section" id="the-lua-library-in-a-nutshell">
+<span id="lua-library"></span><h2>The Lua library in a nutshell<a class="headerlink" href="#the-lua-library-in-a-nutshell" title="Permalink to this headline">¶</a></h2>
+<p>All of Ipe’s Lua functions are in a table called <code class="code docutils literal notranslate"><span class="pre">ipe</span></code>.  Here are
+the most important things you need to know.</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="kd">local</span> <span class="n">doc</span> <span class="o">=</span> <span class="nb">assert</span><span class="p">(</span><span class="n">ipe</span><span class="p">.</span><span class="n">Document</span><span class="p">(</span><span class="s2">&quot;figure.ipe&quot;</span><span class="p">))</span>  <span class="c1">-- load a document</span>
+<span class="nb">print</span><span class="p">(</span><span class="o">#</span><span class="n">doc</span><span class="p">)</span>                    <span class="c1">-- number of pages</span>
+<span class="kd">local</span> <span class="n">page</span> <span class="o">=</span> <span class="n">doc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>            <span class="c1">-- pages are numbered from 1</span>
+<span class="kr">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">selected</span><span class="p">,</span> <span class="n">layer</span> <span class="kr">in</span> <span class="n">page</span><span class="p">:</span><span class="n">objects</span><span class="p">()</span> <span class="kr">do</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span><span class="nb">type</span><span class="p">(),</span> <span class="n">layer</span><span class="p">)</span>  <span class="c1">-- &quot;path&quot;, &quot;text&quot;, &quot;group&quot;, ...</span>
+<span class="kr">end</span>
+<span class="kd">local</span> <span class="n">v</span> <span class="o">=</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Vector</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
+<span class="kd">local</span> <span class="n">m</span> <span class="o">=</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Translation</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Rotation</span><span class="p">(</span><span class="nb">math.pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">doc</span><span class="p">:</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;result.ipe&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Pages, views, objects, and layers are <strong>numbered from 1</strong>, as usual
+in Lua.  Layers are identified by their name, not by a number.</p></li>
+<li><p>The coordinate system is the one of the Ipe file: units are
+PostScript points (1/72 inch), the origin is at the lower left of
+the paper, and the y-axis points <em>up</em>.</p></li>
+<li><p>The geometric classes <code class="code docutils literal notranslate"><span class="pre">ipe.Vector</span></code>, <code class="code docutils literal notranslate"><span class="pre">ipe.Matrix</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">ipe.Line</span></code>, <code class="code docutils literal notranslate"><span class="pre">ipe.Segment</span></code>, <code class="code docutils literal notranslate"><span class="pre">ipe.Bezier</span></code>, and
+<code class="code docutils literal notranslate"><span class="pre">ipe.Arc</span></code> are immutable values: operations create new values.
+Only <code class="code docutils literal notranslate"><span class="pre">ipe.Rect</span></code> can be changed (<code class="code docutils literal notranslate"><span class="pre">r:add(v)</span></code> extends the
+rectangle).  Vectors and matrices have operators:
+<code class="code docutils literal notranslate"><span class="pre">v</span> <span class="pre">+</span> <span class="pre">w</span></code>, <code class="code docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">v</span></code>, <code class="code docutils literal notranslate"><span class="pre">m</span> <span class="pre">*</span> <span class="pre">v</span></code>, <code class="code docutils literal notranslate"><span class="pre">m1</span> <span class="pre">*</span> <span class="pre">m2</span></code>.</p></li>
+<li><p>The objects you get from a page (<code class="code docutils literal notranslate"><span class="pre">page[i]</span></code> or
+<code class="code docutils literal notranslate"><span class="pre">page:objects()</span></code>) are the page’s own objects, not copies.
+Changing such an object changes the page.  Use <code class="code docutils literal notranslate"><span class="pre">obj:clone()</span></code> to
+make a copy, and <code class="code docutils literal notranslate"><span class="pre">page:clone()</span></code> to make a copy of the entire
+page.</p></li>
+<li><p>Attributes of objects are set and read using <code class="code docutils literal notranslate"><span class="pre">obj:set(name,</span>
+<span class="pre">value)</span></code> and <code class="code docutils literal notranslate"><span class="pre">obj:get(name)</span></code>.  The attribute names are those
+of the Ipe editor’s property boxes, for instance <code class="code docutils literal notranslate"><span class="pre">stroke</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">fill</span></code>, <code class="code docutils literal notranslate"><span class="pre">pen</span></code>, and <code class="code docutils literal notranslate"><span class="pre">dashstyle</span></code>.  The value
+can be an absolute value (a number, or a color given as
+<code class="code docutils literal notranslate"><span class="pre">{r=0.5,</span> <span class="pre">g=0.5,</span> <span class="pre">b=0.5}</span></code>), or a symbolic name from the stylesheet such as
+<code class="code docutils literal notranslate"><span class="pre">&quot;red&quot;</span></code> or <code class="code docutils literal notranslate"><span class="pre">&quot;normal&quot;</span></code>.</p></li>
+<li><p>Functions that read files return <code class="code docutils literal notranslate"><span class="pre">nil</span></code> and an error message
+when they fail.  Calling a function with illegal arguments (such as
+a page number that does not exist) raises a Lua error.</p></li>
+<li><p>New objects are created with <code class="code docutils literal notranslate"><span class="pre">ipe.Path</span></code>, <code class="code docutils literal notranslate"><span class="pre">ipe.Text</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">ipe.Reference</span></code> (a symbol), <code class="code docutils literal notranslate"><span class="pre">ipe.Group</span></code>, and
+<code class="code docutils literal notranslate"><span class="pre">ipe.Image</span></code>.  The first three take a table with the attributes
+of the object (in an ipelet, <code class="code docutils literal notranslate"><span class="pre">model.attributes</span></code> is such a
+table) and the data of the object.  A path’s geometry is described by a
+<em>shape</em>, a Lua table.  For instance, a circle with radius <em>r</em> and
+center <em>c</em> is <code class="code docutils literal notranslate"><span class="pre">{</span> <span class="pre">{</span> <span class="pre">type=&quot;ellipse&quot;;</span> <span class="pre">ipe.Matrix(r,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">r,</span> <span class="pre">c.x,</span>
+<span class="pre">c.y)</span> <span class="pre">}</span> <span class="pre">}</span></code>.  The reference documentation explains shapes in detail.</p></li>
+</ul>
+</div>
+<div class="section" id="writing-scripts">
+<span id="id2"></span><h2>Writing scripts<a class="headerlink" href="#writing-scripts" title="Permalink to this headline">¶</a></h2>
+<p>A script is a Lua file in one of Ipe’s script folders.  The script
+<code class="file docutils literal notranslate"><span class="pre">count-objects.lua</span></code> is run by saying</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ipescript count-objects figure.ipe</span>
+</pre></div>
+</div>
+<p>(Do not write the extension <code class="file docutils literal notranslate"><span class="pre">.lua</span></code>.)  The command-line arguments
+are available in the global table <code class="code docutils literal notranslate"><span class="pre">argv</span></code>.  Ipe looks for scripts
+in the current directory, in the user’s script folder
+(<code class="file docutils literal notranslate"><span class="pre">~/.local/share/ipe/scripts</span></code> on Linux,
+<code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/Scripts</span></code> on MacOS), and in the system-wide script
+folder.  The environment variable <code class="docutils literal notranslate"><span class="pre">IPESCRIPTS</span></code> changes this, see
+<a class="reference internal" href="80_advanced.html#environment"><span class="std std-ref">Environment variables</span></a>.</p>
+<p>Here is a script that prints how many objects of each type there are on
+every page of a document:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- Count the objects in an Ipe document, page by page.</span>
+<span class="c1">--</span>
+<span class="c1">-- Usage: ipescript count-objects &lt;document&gt;</span>
+
+<span class="kr">if</span> <span class="o">#</span><span class="n">argv</span> <span class="o">~=</span> <span class="mi">1</span> <span class="kr">then</span>
+  <span class="nb">io.stderr</span><span class="p">:</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Usage: ipescript count-objects &lt;document&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="kr">return</span>
+<span class="kr">end</span>
+
+<span class="kd">local</span> <span class="n">doc</span> <span class="o">=</span> <span class="nb">assert</span><span class="p">(</span><span class="n">ipe</span><span class="p">.</span><span class="n">Document</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+<span class="kr">for</span> <span class="n">pno</span><span class="p">,</span> <span class="n">page</span> <span class="kr">in</span> <span class="n">doc</span><span class="p">:</span><span class="n">pages</span><span class="p">()</span> <span class="kr">do</span>
+  <span class="c1">-- count the objects of every type (group, text, path, image, reference)</span>
+  <span class="kd">local</span> <span class="n">counts</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="kr">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">layer</span> <span class="kr">in</span> <span class="n">page</span><span class="p">:</span><span class="n">objects</span><span class="p">()</span> <span class="kr">do</span>
+    <span class="kd">local</span> <span class="n">t</span> <span class="o">=</span> <span class="n">obj</span><span class="p">:</span><span class="nb">type</span><span class="p">()</span>
+    <span class="n">counts</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+  <span class="kr">end</span>
+  <span class="kd">local</span> <span class="n">parts</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="kr">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">n</span> <span class="kr">in</span> <span class="nb">pairs</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span> <span class="kr">do</span>
+    <span class="n">parts</span><span class="p">[</span><span class="o">#</span><span class="n">parts</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span> <span class="o">..</span> <span class="s2">&quot; &quot;</span> <span class="o">..</span> <span class="n">t</span>
+  <span class="kr">end</span>
+  <span class="nb">table.sort</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="nb">string.format</span><span class="p">(</span><span class="s2">&quot;Page %d: %d objects (%s)&quot;</span><span class="p">,</span> <span class="n">pno</span><span class="p">,</span> <span class="o">#</span><span class="n">page</span><span class="p">,</span> <span class="nb">table.concat</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="p">)))</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p><a class="reference download internal" download="" href="_downloads/1d1d1c3762977efb1512e58ecd40aacd/count-objects.lua"><code class="xref download docutils literal notranslate"><span class="pre">count-objects.lua</span></code></a></p>
+<p>A script can do anything that Lua can do, and has the entire document
+at its disposal, so it can modify it directly.  Here is a script that
+makes all paths of a document red, and saves the result in a new file:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- Make all paths in an Ipe document red.</span>
+<span class="c1">--</span>
+<span class="c1">-- Usage: ipescript red-paths &lt;input&gt; &lt;output&gt;</span>
+<span class="c1">--</span>
+<span class="c1">-- A script owns the document, so it can modify it directly.</span>
+<span class="c1">-- Compare with ipelet-red-paths.lua, which does the same inside Ipe.</span>
+
+<span class="kr">if</span> <span class="o">#</span><span class="n">argv</span> <span class="o">~=</span> <span class="mi">2</span> <span class="kr">then</span>
+  <span class="nb">io.stderr</span><span class="p">:</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Usage: ipescript red-paths &lt;input&gt; &lt;output&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="kr">return</span>
+<span class="kr">end</span>
+
+<span class="kd">local</span> <span class="n">doc</span> <span class="o">=</span> <span class="nb">assert</span><span class="p">(</span><span class="n">ipe</span><span class="p">.</span><span class="n">Document</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+<span class="kr">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">page</span> <span class="kr">in</span> <span class="n">doc</span><span class="p">:</span><span class="n">pages</span><span class="p">()</span> <span class="kr">do</span>
+  <span class="kr">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obj</span> <span class="kr">in</span> <span class="n">page</span><span class="p">:</span><span class="n">objects</span><span class="p">()</span> <span class="kr">do</span>
+    <span class="kr">if</span> <span class="n">obj</span><span class="p">:</span><span class="nb">type</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;path&quot;</span> <span class="kr">then</span>
+      <span class="c1">-- change the page (and not only the object), so that the page</span>
+      <span class="c1">-- knows that the object&#39;s bounding box may have changed</span>
+      <span class="n">page</span><span class="p">:</span><span class="n">setAttribute</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s2">&quot;stroke&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">)</span>
+    <span class="kr">end</span>
+  <span class="kr">end</span>
+<span class="kr">end</span>
+
+<span class="nb">assert</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span><span class="n">save</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p><a class="reference download internal" download="" href="_downloads/a9e4d8cff4452c1b7265691e2f0d261a/red-paths.lua"><code class="xref download docutils literal notranslate"><span class="pre">red-paths.lua</span></code></a></p>
+<p>Ipe comes with several scripts that are good starting points for your
+own scripts.  For instance, <em>onepage</em> collapses all pages of a document
+into the layers of a single page, <em>scratchpad</em> prepares a presentation
+for annotating during the talk, and <em>update-styles</em> updates the
+stylesheets in many documents.</p>
+</div>
+<div class="section" id="writing-ipelets">
+<span id="writing-ipelets-intro"></span><h2>Writing ipelets<a class="headerlink" href="#writing-ipelets" title="Permalink to this headline">¶</a></h2>
+<p>An ipelet is a Lua file in one of Ipe’s ipelet folders.  Ipe loads all
+ipelets when it starts.  The ipelet folders are the system-wide folder
+that comes with Ipe, and the user’s own folder
+(<code class="file docutils literal notranslate"><span class="pre">~/.local/share/ipe/ipelets</span></code> on Linux,
+<code class="file docutils literal notranslate"><span class="pre">~/Library/Ipe/Ipelets</span></code> on MacOS; you can find the exact location
+under <span class="menuselection">Help ‣ Show configuration</span>, and change it
+using the environment variable <code class="docutils literal notranslate"><span class="pre">IPELETPATH</span></code>, see <a class="reference internal" href="80_advanced.html#environment"><span class="std std-ref">Environment variables</span></a>).</p>
+<p>An ipelet defines some global variables that tell Ipe about it:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">label</span></code></dt><dd><p>the name of the ipelet in the <em>Ipelets</em> menu.  A file that does not
+define a label is not shown in the menu (this is how you can write
+customizations of Ipe).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">about</span></code></dt><dd><p>a string shown in <span class="menuselection">Help ‣ Ipelet information</span>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">run</span></code></dt><dd><p>the function to call when the ipelet is invoked.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">methods</span></code></dt><dd><p>for an ipelet with several functions, a table with one entry for each
+function.  Each entry is a table with a <code class="docutils literal notranslate"><span class="pre">label</span></code> (the text of its
+menu entry) and optionally a <code class="docutils literal notranslate"><span class="pre">run</span></code> function (if it has none, the
+global <code class="docutils literal notranslate"><span class="pre">run</span></code> is called).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">category</span></code></dt><dd><p>optional: the submenu of the <em>Ipelets</em> menu in which the ipelet
+appears.  (The menu is set up by <code class="code docutils literal notranslate"><span class="pre">prefs.ipelet_menu</span></code>.)</p>
+</dd>
+</dl>
+<p>When the user invokes the ipelet, Ipe calls the <code class="docutils literal notranslate"><span class="pre">run</span></code> function with two
+arguments: the <strong>model</strong>, which represents the document window, and the
+number of the method (always 1 for an ipelet with a single function).</p>
+<p>The simplest possible ipelet draws a circle at the mouse position:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">-- Draw a circle at the mouse position</span>
+<span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">--</span>
+<span class="c1">-- Creating a single new object is the simplest case: model:creation</span>
+<span class="c1">-- registers the undo item for you.</span>
+
+<span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Circle&quot;</span>
+
+<span class="n">about</span> <span class="o">=</span> <span class="s">[[</span>
+<span class="s">Draw a circle with radius 32 at the current mouse position.</span>
+<span class="s">]]</span>
+
+<span class="kr">function</span> <span class="nf">run</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+  <span class="kd">local</span> <span class="n">center</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="n">ui</span><span class="p">:</span><span class="n">pos</span><span class="p">()</span>   <span class="c1">-- mouse position, after snapping</span>
+  <span class="kd">local</span> <span class="n">radius</span> <span class="o">=</span> <span class="mi">32</span>
+  <span class="c1">-- an ellipse is given by the matrix that maps the unit circle to it</span>
+  <span class="kd">local</span> <span class="n">shape</span> <span class="o">=</span> <span class="p">{</span> <span class="p">{</span> <span class="nb">type</span> <span class="o">=</span> <span class="s2">&quot;ellipse&quot;</span><span class="p">;</span>
+		    <span class="n">ipe</span><span class="p">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="p">.</span><span class="n">y</span><span class="p">)</span> <span class="p">}</span> <span class="p">}</span>
+  <span class="kd">local</span> <span class="n">obj</span> <span class="o">=</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Path</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">attributes</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+  <span class="n">model</span><span class="p">:</span><span class="n">creation</span><span class="p">(</span><span class="s2">&quot;create circle&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p><a class="reference download internal" download="" href="_downloads/dfed9a19ab0f8045db849b45f76374f2/ipelet-circle.lua"><code class="xref download docutils literal notranslate"><span class="pre">ipelet-circle.lua</span></code></a></p>
+<p>Save this in your ipelet folder as <code class="file docutils literal notranslate"><span class="pre">circle.lua</span></code>, restart Ipe, and
+you will find <em>Circle</em> in the <em>Ipelets</em> menu.  If you set
+<code class="code docutils literal notranslate"><span class="pre">prefs.developer</span> <span class="pre">=</span> <span class="pre">true</span></code> in your <code class="file docutils literal notranslate"><span class="pre">customization.lua</span></code> (see
+<a class="reference internal" href="80_advanced.html#customize"><span class="std std-ref">Customizing Ipe</span></a>), the <em>Help</em> menu has a <em>Developer</em> submenu with an
+entry <span class="menuselection">Help ‣ Developer ‣ Reload ipelets</span>, so you do
+not need to restart Ipe after every change.</p>
+<p>Keyboard shortcuts can be assigned in <code class="file docutils literal notranslate"><span class="pre">customization.lua</span></code> using the
+name of the ipelet’s file (without the extension) and the number of the
+method, for instance <code class="code docutils literal notranslate"><span class="pre">shortcuts.ipelet_1_circle</span> <span class="pre">=</span> <span class="pre">&quot;Ctrl+Alt+C&quot;</span></code>.</p>
+<div class="section" id="the-ipelet-s-environment">
+<h3>The ipelet’s environment<a class="headerlink" href="#the-ipelet-s-environment" title="Permalink to this headline">¶</a></h3>
+<p>Each ipelet runs in a private environment, so you do not have to worry
+about polluting the global namespace.  The following names are
+available inside an ipelet: <code class="code docutils literal notranslate"><span class="pre">ipe</span></code>, <code class="code docutils literal notranslate"><span class="pre">ipeui</span></code>, <code class="code docutils literal notranslate"><span class="pre">math</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">string</span></code>, <code class="code docutils literal notranslate"><span class="pre">table</span></code>, <code class="code docutils literal notranslate"><span class="pre">assert</span></code>, <code class="code docutils literal notranslate"><span class="pre">ipairs</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">pairs</span></code>, <code class="code docutils literal notranslate"><span class="pre">print</span></code>, <code class="code docutils literal notranslate"><span class="pre">tonumber</span></code>, <code class="code docutils literal notranslate"><span class="pre">tostring</span></code>, and
+the Ipe tables <code class="code docutils literal notranslate"><span class="pre">prefs</span></code>, <code class="code docutils literal notranslate"><span class="pre">config</span></code>, <code class="code docutils literal notranslate"><span class="pre">shortcuts</span></code>, and
+<code class="code docutils literal notranslate"><span class="pre">mouse</span></code>.  Everything else, such as <code class="code docutils literal notranslate"><span class="pre">type</span></code>, <code class="code docutils literal notranslate"><span class="pre">pcall</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">io</span></code>, <code class="code docutils literal notranslate"><span class="pre">os</span></code>, or the Lua code of Ipe, must be accessed
+through <code class="code docutils literal notranslate"><span class="pre">_G</span></code>, for instance <code class="code docutils literal notranslate"><span class="pre">_G.type(x)</span></code> or
+<code class="code docutils literal notranslate"><span class="pre">_G.revertOriginal</span></code>.  (Writing <code class="code docutils literal notranslate"><span class="pre">type(x)</span></code> gives the error
+“attempt to call a nil value (global ‘type’)”.)</p>
+<p>Text printed with <code class="code docutils literal notranslate"><span class="pre">print</span></code> appears on the terminal from which you
+started Ipe.</p>
+</div>
+<div class="section" id="the-model-and-why-you-must-not-touch-the-document">
+<span id="ipelet-model"></span><h3>The model, and why you must not touch the document<a class="headerlink" href="#the-model-and-why-you-must-not-touch-the-document" title="Permalink to this headline">¶</a></h3>
+<p>The model is a Lua object with these members:</p>
+<dl class="simple">
+<dt><code class="code docutils literal notranslate"><span class="pre">model.doc</span></code></dt><dd><p>the document being edited.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model.pno</span></code>, <code class="code docutils literal notranslate"><span class="pre">model.vno</span></code></dt><dd><p>the number of the current page and view.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model:page()</span></code></dt><dd><p>the current page.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model:selection()</span></code></dt><dd><p>a table with the numbers of the selected objects of the current
+page.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model.attributes</span></code></dt><dd><p>the attributes currently set in the property boxes of the user
+interface (a table you can pass to <code class="code docutils literal notranslate"><span class="pre">ipe.Path</span></code> and friends).</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model.snap</span></code></dt><dd><p>the current snapping settings.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model.ui</span></code></dt><dd><p>the user interface, with for instance <code class="code docutils literal notranslate"><span class="pre">model.ui:pos()</span></code> (the
+mouse position after snapping), <code class="code docutils literal notranslate"><span class="pre">model.ui:win()</span></code> (the window,
+to be used as the parent of dialogs), and <code class="code docutils literal notranslate"><span class="pre">model.ui:explain(text)</span></code>
+(shows text in the status bar).</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model:warning(text,</span> <span class="pre">details)</span></code></dt><dd><p>shows a warning box.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model:getString(prompt,</span> <span class="pre">caption,</span> <span class="pre">initial)</span></code></dt><dd><p>asks the user for a string (returns <code class="code docutils literal notranslate"><span class="pre">nil</span></code> if the user cancels).</p>
+</dd>
+</dl>
+<p>An ipelet has access to the live document, but it must <strong>not modify
+it directly</strong>.  The Ipe editor keeps an undo stack, and it does not
+notice if the document changes behind its back.  An ipelet that changes
+the page directly breaks undo and redo, may corrupt the document, and
+does not mark the document as modified.  Instead, the ipelet makes its
+changes through an <strong>undo item</strong>.  This is a table with at least these
+fields:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">label</span></code></dt><dd><p>a text for the status bar and the undo history (<span class="guilabel">Undo
+‘label’</span>).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pno</span></code>, <code class="docutils literal notranslate"><span class="pre">vno</span></code></dt><dd><p>the page and view to show after an undo or redo.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">undo</span></code>, <code class="docutils literal notranslate"><span class="pre">redo</span></code></dt><dd><p>functions that are called with the undo item and the document.
+<code class="code docutils literal notranslate"><span class="pre">redo</span></code> makes the change, <code class="code docutils literal notranslate"><span class="pre">undo</span></code> reverts it.</p>
+</dd>
+</dl>
+<p>The ipelet creates the item and passes it to <code class="code docutils literal notranslate"><span class="pre">model:register(t)</span></code>, which
+calls <code class="code docutils literal notranslate"><span class="pre">t.redo(t,</span> <span class="pre">model.doc)</span></code> to perform the change, remembers the
+selection, and puts the item on the undo stack.  The ipelet should
+<strong>not</strong> change the document itself, and neither should it keep any
+reference to the objects of the document: the item’s <code class="code docutils literal notranslate"><span class="pre">redo</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">undo</span></code> functions are the only code that may touch the document
+after the item has been registered.</p>
+<p>There are three ways to create an undo item, from the simplest to the most
+general one.</p>
+<p><strong>1. Use one of the model’s helper functions.</strong>  <code class="code docutils literal notranslate"><span class="pre">model:creation(label,</span>
+<span class="pre">obj)</span></code> inserts a new object on the current page (as in the circle
+ipelet above), <code class="code docutils literal notranslate"><span class="pre">model:transformation(label,</span> <span class="pre">matrix)</span></code> transforms the
+selected objects, and <code class="code docutils literal notranslate"><span class="pre">model:setAttribute(name,</span> <span class="pre">value)</span></code> sets an
+attribute of the selected objects.  These functions create and
+register the undo item for you.  The next ipelet uses
+<code class="code docutils literal notranslate"><span class="pre">model:transformation</span></code>, and also shows how to ask the user for
+a value in a dialog:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">-- Scale the selection by a factor entered by the user</span>
+<span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">--</span>
+<span class="c1">-- This ipelet shows a dialog to ask for the scale factor, and then uses</span>
+<span class="c1">-- model:transformation, which takes care of undo and redo when all you</span>
+<span class="c1">-- want to do is to transform the selected objects by a matrix.</span>
+
+<span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Scale selection&quot;</span>
+
+<span class="n">about</span> <span class="o">=</span> <span class="s">[[</span>
+<span class="s">Scale the selected objects around the center of their bounding box.</span>
+<span class="s">]]</span>
+
+<span class="kr">function</span> <span class="nf">run</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+  <span class="kd">local</span> <span class="n">selection</span> <span class="o">=</span> <span class="n">model</span><span class="p">:</span><span class="n">selection</span><span class="p">()</span>  <span class="c1">-- table with object numbers</span>
+  <span class="kr">if</span> <span class="o">#</span><span class="n">selection</span> <span class="o">==</span> <span class="mi">0</span> <span class="kr">then</span>
+    <span class="n">model</span><span class="p">:</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Nothing is selected&quot;</span><span class="p">)</span>
+    <span class="kr">return</span>
+  <span class="kr">end</span>
+
+  <span class="kd">local</span> <span class="n">d</span> <span class="o">=</span> <span class="n">ipeui</span><span class="p">.</span><span class="n">Dialog</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">ui</span><span class="p">:</span><span class="n">win</span><span class="p">(),</span> <span class="s2">&quot;Scale selection&quot;</span><span class="p">)</span>
+  <span class="n">d</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="p">{</span> <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Scale factor&quot;</span> <span class="p">},</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="n">d</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;factor&quot;</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="p">{</span> <span class="n">select_all</span> <span class="o">=</span> <span class="kc">true</span> <span class="p">},</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+  <span class="n">d</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;factor&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">)</span>
+  <span class="n">d</span><span class="p">:</span><span class="n">addButton</span><span class="p">(</span><span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="s2">&quot;&amp;Ok&quot;</span><span class="p">,</span> <span class="s2">&quot;accept&quot;</span><span class="p">)</span>
+  <span class="n">d</span><span class="p">:</span><span class="n">addButton</span><span class="p">(</span><span class="s2">&quot;cancel&quot;</span><span class="p">,</span> <span class="s2">&quot;&amp;Cancel&quot;</span><span class="p">,</span> <span class="s2">&quot;reject&quot;</span><span class="p">)</span>
+  <span class="kr">if</span> <span class="ow">not</span> <span class="n">d</span><span class="p">:</span><span class="n">execute</span><span class="p">()</span> <span class="kr">then</span> <span class="kr">return</span> <span class="kr">end</span>
+
+  <span class="kd">local</span> <span class="n">factor</span> <span class="o">=</span> <span class="nb">tonumber</span><span class="p">(</span><span class="n">d</span><span class="p">:</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;factor&quot;</span><span class="p">))</span>
+  <span class="kr">if</span> <span class="ow">not</span> <span class="n">factor</span> <span class="ow">or</span> <span class="n">factor</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="kr">then</span>
+    <span class="n">model</span><span class="p">:</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;The scale factor must be a positive number&quot;</span><span class="p">)</span>
+    <span class="kr">return</span>
+  <span class="kr">end</span>
+
+  <span class="kd">local</span> <span class="n">page</span> <span class="o">=</span> <span class="n">model</span><span class="p">:</span><span class="n">page</span><span class="p">()</span>
+  <span class="kd">local</span> <span class="n">box</span> <span class="o">=</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Rect</span><span class="p">()</span>
+  <span class="kr">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">i</span> <span class="kr">in</span> <span class="nb">ipairs</span><span class="p">(</span><span class="n">selection</span><span class="p">)</span> <span class="kr">do</span> <span class="n">box</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">page</span><span class="p">:</span><span class="n">bbox</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="kr">end</span>
+  <span class="kd">local</span> <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="n">box</span><span class="p">:</span><span class="n">bottomLeft</span><span class="p">()</span> <span class="o">+</span> <span class="n">box</span><span class="p">:</span><span class="n">topRight</span><span class="p">())</span> <span class="o">*</span> <span class="mf">0.5</span>
+
+  <span class="kd">local</span> <span class="n">m</span> <span class="o">=</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Translation</span><span class="p">(</span><span class="n">center</span><span class="p">)</span> <span class="o">*</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">factor</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Translation</span><span class="p">(</span><span class="o">-</span><span class="n">center</span><span class="p">)</span>
+  <span class="n">model</span><span class="p">:</span><span class="n">transformation</span><span class="p">(</span><span class="s2">&quot;scale selection&quot;</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p><a class="reference download internal" download="" href="_downloads/8809aca11bd19c69495fc838ca3f4d03/ipelet-scale.lua"><code class="xref download docutils literal notranslate"><span class="pre">ipelet-scale.lua</span></code></a></p>
+<p><strong>2. Work on a copy of the page.</strong>  When the ipelet changes several
+objects, the easiest approach is to make two copies of the page: the
+<em>original</em>, and the <em>final</em> page in which the ipelet makes all its
+changes.  The undo item then simply swaps the page in the document
+between these two copies, using the functions
+<code class="code docutils literal notranslate"><span class="pre">_G.revertOriginal</span></code> and <code class="code docutils literal notranslate"><span class="pre">_G.revertFinal</span></code>.  This is the
+pattern used by most of the ipelets that come with Ipe:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">-- Make the selected paths red</span>
+<span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">--</span>
+<span class="c1">-- An ipelet must not modify the document directly.  Instead, it prepares</span>
+<span class="c1">-- the new version of the page, and registers an undo item that switches</span>
+<span class="c1">-- between the original and the final page.  This is the simplest way to</span>
+<span class="c1">-- write an ipelet that changes existing objects.</span>
+
+<span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Red paths&quot;</span>
+
+<span class="n">about</span> <span class="o">=</span> <span class="s">[[</span>
+<span class="s">Make the stroke color of all selected paths red.</span>
+<span class="s">]]</span>
+
+<span class="kr">function</span> <span class="nf">run</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+  <span class="kd">local</span> <span class="n">t</span> <span class="o">=</span> <span class="p">{</span> <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;make paths red&quot;</span><span class="p">,</span>
+	      <span class="n">pno</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="n">pno</span><span class="p">,</span>
+	      <span class="n">vno</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="n">vno</span><span class="p">,</span>
+	      <span class="n">original</span> <span class="o">=</span> <span class="n">model</span><span class="p">:</span><span class="n">page</span><span class="p">():</span><span class="n">clone</span><span class="p">(),</span>
+	      <span class="n">final</span> <span class="o">=</span> <span class="n">model</span><span class="p">:</span><span class="n">page</span><span class="p">():</span><span class="n">clone</span><span class="p">(),</span>
+	      <span class="n">undo</span> <span class="o">=</span> <span class="n">_G</span><span class="p">.</span><span class="n">revertOriginal</span><span class="p">,</span>
+	      <span class="n">redo</span> <span class="o">=</span> <span class="n">_G</span><span class="p">.</span><span class="n">revertFinal</span><span class="p">,</span>
+	    <span class="p">}</span>
+  <span class="kd">local</span> <span class="n">changed</span> <span class="o">=</span> <span class="kc">false</span>
+  <span class="kr">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">sel</span><span class="p">,</span> <span class="n">layer</span> <span class="kr">in</span> <span class="n">t</span><span class="p">.</span><span class="n">final</span><span class="p">:</span><span class="n">objects</span><span class="p">()</span> <span class="kr">do</span>
+    <span class="kr">if</span> <span class="n">sel</span> <span class="ow">and</span> <span class="n">obj</span><span class="p">:</span><span class="nb">type</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;path&quot;</span> <span class="kr">then</span>
+      <span class="kr">if</span> <span class="n">t</span><span class="p">.</span><span class="n">final</span><span class="p">:</span><span class="n">setAttribute</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s2">&quot;stroke&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">)</span> <span class="kr">then</span> <span class="n">changed</span> <span class="o">=</span> <span class="kc">true</span> <span class="kr">end</span>
+    <span class="kr">end</span>
+  <span class="kr">end</span>
+  <span class="kr">if</span> <span class="n">changed</span> <span class="kr">then</span>
+    <span class="n">model</span><span class="p">:</span><span class="n">register</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+  <span class="kr">else</span>
+    <span class="n">model</span><span class="p">.</span><span class="n">ui</span><span class="p">:</span><span class="n">explain</span><span class="p">(</span><span class="s2">&quot;No selected path to make red&quot;</span><span class="p">)</span>
+  <span class="kr">end</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p><a class="reference download internal" download="" href="_downloads/861889d0d619526a28f01dcb75fa5b7f/ipelet-red-paths.lua"><code class="xref download docutils literal notranslate"><span class="pre">ipelet-red-paths.lua</span></code></a></p>
+<p>The same pattern also works to create several objects.  Here the
+ipelet collects what it needs to know about the selected objects first,
+and only then inserts new objects, since inserting objects while
+iterating over the page would also visit the new objects:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">-- Mark the center of the bounding box of every selected object</span>
+<span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">--</span>
+<span class="c1">-- This ipelet creates several new objects at once.  It uses the same</span>
+<span class="c1">-- undo item as ipelet-red-paths.lua: the original page and the final page.</span>
+
+<span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Mark centers&quot;</span>
+
+<span class="n">about</span> <span class="o">=</span> <span class="s">[[</span>
+<span class="s">Create a mark at the center of the bounding box of every selected object.</span>
+<span class="s">]]</span>
+
+<span class="kr">function</span> <span class="nf">run</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+  <span class="kd">local</span> <span class="n">page</span> <span class="o">=</span> <span class="n">model</span><span class="p">:</span><span class="n">page</span><span class="p">()</span>
+  <span class="kd">local</span> <span class="n">layer</span> <span class="o">=</span> <span class="n">page</span><span class="p">:</span><span class="n">active</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">vno</span><span class="p">)</span>
+  <span class="kd">local</span> <span class="n">t</span> <span class="o">=</span> <span class="p">{</span> <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;mark centers&quot;</span><span class="p">,</span>
+	      <span class="n">pno</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="n">pno</span><span class="p">,</span>
+	      <span class="n">vno</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="n">vno</span><span class="p">,</span>
+	      <span class="n">original</span> <span class="o">=</span> <span class="n">page</span><span class="p">:</span><span class="n">clone</span><span class="p">(),</span>
+	      <span class="n">final</span> <span class="o">=</span> <span class="n">page</span><span class="p">:</span><span class="n">clone</span><span class="p">(),</span>
+	      <span class="n">undo</span> <span class="o">=</span> <span class="n">_G</span><span class="p">.</span><span class="n">revertOriginal</span><span class="p">,</span>
+	      <span class="n">redo</span> <span class="o">=</span> <span class="n">_G</span><span class="p">.</span><span class="n">revertFinal</span><span class="p">,</span>
+	    <span class="p">}</span>
+
+  <span class="c1">-- Collect the centers first: inserting objects while iterating over</span>
+  <span class="c1">-- the page would visit the new objects as well.</span>
+  <span class="kd">local</span> <span class="n">centers</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="kr">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">sel</span> <span class="kr">in</span> <span class="n">t</span><span class="p">.</span><span class="n">final</span><span class="p">:</span><span class="n">objects</span><span class="p">()</span> <span class="kr">do</span>
+    <span class="kr">if</span> <span class="n">sel</span> <span class="kr">then</span>
+      <span class="kd">local</span> <span class="n">box</span> <span class="o">=</span> <span class="n">t</span><span class="p">.</span><span class="n">final</span><span class="p">:</span><span class="n">bbox</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+      <span class="n">centers</span><span class="p">[</span><span class="o">#</span><span class="n">centers</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">box</span><span class="p">:</span><span class="n">bottomLeft</span><span class="p">()</span> <span class="o">+</span> <span class="n">box</span><span class="p">:</span><span class="n">topRight</span><span class="p">())</span> <span class="o">*</span> <span class="mf">0.5</span>
+    <span class="kr">end</span>
+  <span class="kr">end</span>
+
+  <span class="kr">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">center</span> <span class="kr">in</span> <span class="nb">ipairs</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span> <span class="kr">do</span>
+    <span class="c1">-- model.attributes are the attributes currently set in the user interface</span>
+    <span class="kd">local</span> <span class="n">mark</span> <span class="o">=</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Reference</span><span class="p">(</span><span class="n">model</span><span class="p">.</span><span class="n">attributes</span><span class="p">,</span> <span class="s2">&quot;mark/disk(sx)&quot;</span><span class="p">,</span> <span class="n">center</span><span class="p">)</span>
+    <span class="n">t</span><span class="p">.</span><span class="n">final</span><span class="p">:</span><span class="n">insert</span><span class="p">(</span><span class="kc">nil</span><span class="p">,</span> <span class="n">mark</span><span class="p">,</span> <span class="kc">nil</span><span class="p">,</span> <span class="n">layer</span><span class="p">)</span>
+  <span class="kr">end</span>
+
+  <span class="kr">if</span> <span class="o">#</span><span class="n">centers</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="kr">then</span>
+    <span class="n">model</span><span class="p">:</span><span class="n">register</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+  <span class="kr">end</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p><a class="reference download internal" download="" href="_downloads/2285692ab11c9ad677577504de233050/ipelet-mark-centers.lua"><code class="xref download docutils literal notranslate"><span class="pre">ipelet-mark-centers.lua</span></code></a></p>
+<p><strong>3. Write your own undo and redo functions.</strong>  Copying a page is easy, but
+wasteful if the ipelet only changes a small thing, such as the
+properties of a layer.  Then the undo item can remember what it
+needs to revert its action.  The next example also shows an ipelet
+with several methods:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">-- An ipelet with several methods, and an undo item with explicit</span>
+<span class="c1">-- undo and redo functions</span>
+<span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">--</span>
+<span class="c1">-- Cloning the whole page is simple, but wasteful when only a small</span>
+<span class="c1">-- thing changes.  Here the undo item remembers just what is needed to</span>
+<span class="c1">-- go back: which layers were locked before.</span>
+
+<span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Lock layers&quot;</span>
+
+<span class="n">about</span> <span class="o">=</span> <span class="s">[[</span>
+<span class="s">Lock or unlock all layers of the current page.</span>
+<span class="s">]]</span>
+
+<span class="c1">-- The method is called with the model and the number of the method.</span>
+<span class="kd">local</span> <span class="kr">function</span> <span class="nf">lock_layers</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+  <span class="kd">local</span> <span class="n">locked</span> <span class="o">=</span> <span class="p">(</span><span class="n">num</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="kd">local</span> <span class="n">page</span> <span class="o">=</span> <span class="n">model</span><span class="p">:</span><span class="n">page</span><span class="p">()</span>
+  <span class="kd">local</span> <span class="n">was_locked</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="kr">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">layer</span> <span class="kr">in</span> <span class="nb">ipairs</span><span class="p">(</span><span class="n">page</span><span class="p">:</span><span class="n">layers</span><span class="p">())</span> <span class="kr">do</span>
+    <span class="n">was_locked</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="o">=</span> <span class="n">page</span><span class="p">:</span><span class="n">isLocked</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+  <span class="kr">end</span>
+
+  <span class="kd">local</span> <span class="n">t</span> <span class="o">=</span> <span class="p">{</span> <span class="n">label</span> <span class="o">=</span> <span class="n">locked</span> <span class="ow">and</span> <span class="s2">&quot;lock all layers&quot;</span> <span class="ow">or</span> <span class="s2">&quot;unlock all layers&quot;</span><span class="p">,</span>
+	      <span class="n">pno</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="n">pno</span><span class="p">,</span>
+	      <span class="n">vno</span> <span class="o">=</span> <span class="n">model</span><span class="p">.</span><span class="n">vno</span><span class="p">,</span>
+	      <span class="n">locked</span> <span class="o">=</span> <span class="n">locked</span><span class="p">,</span>
+	      <span class="n">was_locked</span> <span class="o">=</span> <span class="n">was_locked</span><span class="p">,</span>
+	    <span class="p">}</span>
+  <span class="c1">-- redo is also called to perform the action the first time</span>
+  <span class="n">t</span><span class="p">.</span><span class="n">redo</span> <span class="o">=</span> <span class="kr">function</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+    <span class="kr">for</span> <span class="n">layer</span> <span class="kr">in</span> <span class="nb">pairs</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">was_locked</span><span class="p">)</span> <span class="kr">do</span>
+      <span class="n">doc</span><span class="p">[</span><span class="n">t</span><span class="p">.</span><span class="n">pno</span><span class="p">]:</span><span class="n">setLocked</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">t</span><span class="p">.</span><span class="n">locked</span><span class="p">)</span>
+    <span class="kr">end</span>
+  <span class="kr">end</span>
+  <span class="n">t</span><span class="p">.</span><span class="n">undo</span> <span class="o">=</span> <span class="kr">function</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+    <span class="kr">for</span> <span class="n">layer</span><span class="p">,</span> <span class="n">was</span> <span class="kr">in</span> <span class="nb">pairs</span><span class="p">(</span><span class="n">t</span><span class="p">.</span><span class="n">was_locked</span><span class="p">)</span> <span class="kr">do</span>
+      <span class="n">doc</span><span class="p">[</span><span class="n">t</span><span class="p">.</span><span class="n">pno</span><span class="p">]:</span><span class="n">setLocked</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">was</span><span class="p">)</span>
+    <span class="kr">end</span>
+  <span class="kr">end</span>
+  <span class="n">model</span><span class="p">:</span><span class="n">register</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="kr">end</span>
+
+<span class="n">methods</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="p">{</span> <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Lock all layers&quot;</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">lock_layers</span> <span class="p">},</span>
+  <span class="p">{</span> <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Unlock all layers&quot;</span><span class="p">,</span> <span class="n">run</span> <span class="o">=</span> <span class="n">lock_layers</span> <span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><a class="reference download internal" download="" href="_downloads/4d6b395674092ccc6a7402ee23a09698/ipelet-lock-layers.lua"><code class="xref download docutils literal notranslate"><span class="pre">ipelet-lock-layers.lua</span></code></a></p>
+<p>If your ipelet changes the stylesheets of the document, set
+<code class="code docutils literal notranslate"><span class="pre">t.style_sheets_changed</span> <span class="pre">=</span> <span class="pre">true</span></code> in the undo item, so that Ipe updates the
+lists of symbolic names in the user interface after an undo or redo.</p>
+</div>
+<div class="section" id="dialogs">
+<h3>Dialogs<a class="headerlink" href="#dialogs" title="Permalink to this headline">¶</a></h3>
+<p>Ipelets can show dialogs using <code class="code docutils literal notranslate"><span class="pre">ipeui.Dialog</span></code>, as in the scale example
+above.  Dialogs can contain labels, input fields, text boxes, lists,
+combo boxes, check boxes, and image previews, arranged in a grid.  See the
+Ipelib documentation (<em>Lua bindings for dialogs and menus</em>) for
+all the details, and the ipelets <em>search-replace</em> and <em>selectby</em> that
+come with Ipe for more examples.</p>
+</div>
+<div class="section" id="testing-an-ipelet-without-the-editor">
+<span id="testing-ipelets"></span><h3>Testing an ipelet without the editor<a class="headerlink" href="#testing-an-ipelet-without-the-editor" title="Permalink to this headline">¶</a></h3>
+<p>It is tedious to test an ipelet by starting the Ipe editor, loading a
+document, selecting objects, and invoking the ipelet.  The script
+<em>run-ipelet</em> that comes with Ipe runs an ipelet on a document from the
+command line, with a model that behaves like the one in the editor
+(it uses the real model of the Ipe editor, including its undo stack):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ipescript run-ipelet circle.lua figure.ipe result.ipe</span>
+</pre></div>
+</div>
+<p>The ipelet is loaded in the same restricted environment as in the editor.
+It is run with all objects of the first page selected (use the options
+<code class="docutils literal notranslate"><span class="pre">--select</span> <span class="pre">none</span></code> or <code class="docutils literal notranslate"><span class="pre">--select</span> <span class="pre">1,3</span></code> to change this, <code class="docutils literal notranslate"><span class="pre">--page</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--view</span></code>, and <code class="docutils literal notranslate"><span class="pre">--method</span></code> to change the page, the view, and the number of
+the method to run).  The result is saved as <code class="file docutils literal notranslate"><span class="pre">result.ipe</span></code>.</p>
+<p>The script then undoes and redoes the changes made by the ipelet, using
+Ipe’s own undo and redo, and checks that the page is restored exactly.
+This finds the most common mistake in ipelets, namely
+not registering an undo item or not reverting everything in the
+<code class="code docutils literal notranslate"><span class="pre">undo</span></code> function:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> ipescript run-ipelet scale.lua figure.ipe result.ipe <span class="nv">factor</span><span class="o">=</span><span class="m">3</span>
+<span class="go">Running scale on page 1, view 1 with 3 selected objects</span>
+<span class="go">[dialog] Scale selection</span>
+<span class="go">[dialog]   factor = 3</span>
+<span class="go">[explain] scale selection</span>
+<span class="go">1 undo item(s) registered: scale selection</span>
+<span class="go">[explain] Undo &#39;scale selection&#39;</span>
+<span class="go">Undo restores the original page: OK</span>
+<span class="go">[explain] Redo &#39;scale selection&#39;</span>
+<span class="go">Redo restores the result: OK</span>
+<span class="go">Saved result.ipe</span>
+</pre></div>
+</div>
+<p>Dialogs cannot be shown by this script.  Instead, a dialog behaves as if
+the user had accepted it (or canceled it, if you pass <code class="docutils literal notranslate"><span class="pre">--cancel</span></code>), and
+with every element having the value set by the ipelet.  You can give a
+different value by adding arguments of the form <em>name=value</em>, as in the
+example above, where <code class="code docutils literal notranslate"><span class="pre">factor=3</span></code> sets the value of the dialog
+element <code class="code docutils literal notranslate"><span class="pre">factor</span></code>.  The exit status of <em>run-ipelet</em> is not zero
+if the ipelet fails or the undo check finds a problem.</p>
+<p><em>run-ipelet</em> has no canvas and does not run LaTeX, so it cannot test
+ipelets that depend on them.  It is very useful for everything else,
+and also makes it possible to write automatic tests for your ipelets.</p>
+</div>
+<div class="section" id="c-ipelets">
+<h3>C++ ipelets<a class="headerlink" href="#c-ipelets" title="Permalink to this headline">¶</a></h3>
+<p>Ipelets can also be written in C++, which is useful if you already have
+code for some geometric computation, or want to use a library such as
+CGAL.  Such an ipelet consists of a shared library, and a small Lua file
+that declares its label and its methods, and calls the C++ code.
+The details are described in the Ipelib documentation (see the page <em>Ipelets</em>).</p>
+</div>
+</div>
+<div class="section" id="writing-scripts-and-ipelets-with-an-ai-assistant">
+<span id="ipelets-ai"></span><h2>Writing scripts and ipelets with an AI assistant<a class="headerlink" href="#writing-scripts-and-ipelets-with-an-ai-assistant" title="Permalink to this headline">¶</a></h2>
+<p>AI assistants (large language models) can write simple scripts and
+ipelets for you.  The result will be much better if the assistant has
+the right information.  We suggest to give it:</p>
+<ul class="simple">
+<li><p>this chapter of the manual, and the reference of the Lua library (the
+page <em>Lua bindings</em> of the Ipelib documentation, which lists all
+functions, and the page about dialogs if your ipelet has a dialog),</p></li>
+<li><p>one or two existing scripts or ipelets that are similar to what you
+need (the examples in this chapter, or the ones that come with Ipe).</p></li>
+</ul>
+<p>Tell the assistant that it must write a script or an ipelet (it
+matters, see above), what the objects it works on are, and
+what should happen.  Then check the result carefully before using it
+on a precious document.</p>
+<p>If you use an assistant that can run commands, tell it about
+<em>run-ipelet</em>: it can then test the ipelet on a sample document,
+see the error messages and the result of the undo check, and fix its code
+without your help.  Ipelets that modify the document without registering
+an undo item are the most common problem of ipelets written without
+testing.  Here is the output of <em>run-ipelet</em> for the example
+<code class="file docutils literal notranslate"><span class="pre">ipelet-wrong.lua</span></code>, which changes the page directly:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">-- WRONG: an ipelet that modifies the document without an undo item</span>
+<span class="c1">----------------------------------------------------------------------</span>
+<span class="c1">--</span>
+<span class="c1">-- This ipelet is an example of what *not* to do.  The page is changed</span>
+<span class="c1">-- directly, so Ipe does not know about the change: the document is not</span>
+<span class="c1">-- marked as modified, and undo and redo no longer work correctly.</span>
+<span class="c1">-- Run it with ipescript run-ipelet to see the warning.</span>
+
+<span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Wrong&quot;</span>
+
+<span class="n">about</span> <span class="o">=</span> <span class="s2">&quot;Do not write ipelets like this.&quot;</span>
+
+<span class="kr">function</span> <span class="nf">run</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+  <span class="kd">local</span> <span class="n">page</span> <span class="o">=</span> <span class="n">model</span><span class="p">:</span><span class="n">page</span><span class="p">()</span>
+  <span class="kr">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">sel</span> <span class="kr">in</span> <span class="n">page</span><span class="p">:</span><span class="n">objects</span><span class="p">()</span> <span class="kr">do</span>
+    <span class="kr">if</span> <span class="n">sel</span> <span class="ow">and</span> <span class="n">obj</span><span class="p">:</span><span class="nb">type</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;path&quot;</span> <span class="kr">then</span>
+      <span class="n">page</span><span class="p">:</span><span class="n">setAttribute</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s2">&quot;stroke&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">)</span>   <span class="c1">-- no undo item!</span>
+    <span class="kr">end</span>
+  <span class="kr">end</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> ipescript run-ipelet ipelet-wrong.lua figure.ipe result.ipe
+<span class="go">Running ipelet-wrong on page 1, view 1 with 3 selected objects</span>
+<span class="go">The ipelet did not register an undo item.</span>
+<span class="go">WARNING: the page has been modified without registering an undo item!</span>
+<span class="go">Saved result.ipe</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Scripts and ipelets</a><ul>
+<li><a class="reference internal" href="#the-lua-library-in-a-nutshell">The Lua library in a nutshell</a></li>
+<li><a class="reference internal" href="#writing-scripts">Writing scripts</a></li>
+<li><a class="reference internal" href="#writing-ipelets">Writing ipelets</a><ul>
+<li><a class="reference internal" href="#the-ipelet-s-environment">The ipelet’s environment</a></li>
+<li><a class="reference internal" href="#the-model-and-why-you-must-not-touch-the-document">The model, and why you must not touch the document</a></li>
+<li><a class="reference internal" href="#dialogs">Dialogs</a></li>
+<li><a class="reference internal" href="#testing-an-ipelet-without-the-editor">Testing an ipelet without the editor</a></li>
+<li><a class="reference internal" href="#c-ipelets">C++ ipelets</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#writing-scripts-and-ipelets-with-an-ai-assistant">Writing scripts and ipelets with an AI assistant</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="80_advanced.html"
+                        title="previous chapter">Advanced topics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="90_file_format.html"
+                        title="next chapter">The Ipe file format</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/82_ipelets.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="90_file_format.html" title="The Ipe file format"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="80_advanced.html" title="Advanced topics"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Ipe 7.3.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2026, Otfried Cheong.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>
