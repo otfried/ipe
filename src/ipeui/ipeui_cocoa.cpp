@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
 #include <sstream>
 
 #define COLORICONSIZE 12
@@ -237,31 +238,20 @@ private:
 
 // --------------------------------------------------------------------
 
-static double previewNumber(const std::string & value, double fallback) {
-    std::istringstream stream(value);
-    double v;
-    if (stream >> v) return v;
-    return fallback;
-}
-
 @interface IpeDialogImage : NSView
 
-- (instancetype)initWithWidth:(int)width
-		       height:(int)height
-			 spec:(const std::string &)spec;
-- (void)setSpec:(const std::string &)spec;
+- (instancetype)initWithWidth:(int)width height:(int)height spec:(const ImageSpec &)spec;
+- (void)setSpec:(const ImageSpec &)spec;
 
 @end
 
 @implementation IpeDialogImage {
-    std::string iSpec;
+    ImageSpec iSpec;
     int iWidth;
     int iHeight;
 }
 
-- (instancetype)initWithWidth:(int)width
-		       height:(int)height
-			 spec:(const std::string &)spec {
+- (instancetype)initWithWidth:(int)width height:(int)height spec:(const ImageSpec &)spec {
     self = [super initWithFrame:NSMakeRect(0., 0., width, height)];
     if (self) {
 	iWidth = width;
@@ -279,7 +269,7 @@ static double previewNumber(const std::string & value, double fallback) {
     return NSMakeSize(iWidth, iHeight);
 }
 
-- (void)setSpec:(const std::string &)spec {
+- (void)setSpec:(const ImageSpec &)spec {
     iSpec = spec;
     [self setNeedsDisplay:YES];
 }
@@ -292,42 +282,59 @@ static double previewNumber(const std::string & value, double fallback) {
     [[NSColor colorWithCalibratedRed:0.62 green:0.62 blue:0.50 alpha:1.0] setStroke];
     NSFrameRect(bounds);
 
-    size_t sep = iSpec.find('|');
-    size_t sep2 = sep == std::string::npos ? std::string::npos : iSpec.find('|', sep + 1);
-    std::string kind = sep == std::string::npos ? iSpec : iSpec.substr(0, sep);
-    std::string value =
-	sep == std::string::npos ? std::string() : iSpec.substr(sep + 1, sep2 - sep - 1);
-    double zoom =
-	sep2 == std::string::npos
-	    ? 1.0
-	    : std::clamp(previewNumber(iSpec.substr(sep2 + 1), 1.0), 0.1, 100.0);
+    double zoom = iSpec.zoom;
     NSRect body = NSInsetRect(bounds, 18., 16.);
 
-    if (kind == "imagefile") {
-	NSImage * image = [[NSImage alloc] initWithContentsOfFile:S2N(value)];
-	if (image) {
-	    NSSize size = image.size;
-	    size.width /= zoom;
-	    size.height /= zoom;
-	    double scale =
-		std::min(body.size.width / size.width, body.size.height / size.height);
-	    scale = std::min(1.0, scale);
-	    NSSize scaled = NSMakeSize(size.width * scale, size.height * scale);
-	    NSRect target = NSMakeRect(NSMidX(body) - scaled.width / 2.,
-				       NSMidY(body) - scaled.height / 2., scaled.width,
-				       scaled.height);
-	    [[NSGraphicsContext currentContext]
-		setImageInterpolation:NSImageInterpolationHigh];
-	    [image drawInRect:target];
-	    return;
+    NSImage * image = nil;
+    if (iSpec.kind == ImageSpec::EFile) {
+	image = [[NSImage alloc] initWithContentsOfFile:S2N(iSpec.text)];
+    } else if (iSpec.kind == ImageSpec::EBitmap) {
+	NSBitmapImageRep * rep = [[NSBitmapImageRep alloc]
+	    initWithBitmapDataPlanes:NULL
+			  pixelsWide:iSpec.width
+			  pixelsHigh:iSpec.height
+		       bitsPerSample:8
+		     samplesPerPixel:4
+			    hasAlpha:YES
+			    isPlanar:NO
+		      colorSpaceName:NSDeviceRGBColorSpace
+			bitmapFormat:NSBitmapFormatAlphaNonpremultiplied
+			 bytesPerRow:4 * iSpec.width
+			bitsPerPixel:32];
+	if (rep) {
+	    memcpy([rep bitmapData], iSpec.pixels.data(), iSpec.pixels.size());
+	    image = [[NSImage alloc] initWithSize:NSMakeSize(iSpec.width, iSpec.height)];
+	    [image addRepresentation:rep];
 	}
+    }
+    if (image) {
+	NSSize size = image.size;
+	size.width /= zoom;
+	size.height /= zoom;
+	double scale =
+	    std::min(body.size.width / size.width, body.size.height / size.height);
+	scale = std::min(1.0, scale);
+	NSSize scaled = NSMakeSize(size.width * scale, size.height * scale);
+	NSRect target =
+	    NSMakeRect(NSMidX(body) - scaled.width / 2.,
+		       NSMidY(body) - scaled.height / 2., scaled.width, scaled.height);
+	[[NSGraphicsContext currentContext]
+	    setImageInterpolation:NSImageInterpolationHigh];
+	[image drawInRect:target
+		  fromRect:NSZeroRect
+		 operation:NSCompositingOperationSourceOver
+		  fraction:1.0
+	    respectFlipped:YES
+		     hints:nil];
+	return;
     }
     NSDictionary * attrs = @{
 	NSFontAttributeName : [NSFont systemFontOfSize:12.],
 	NSForegroundColorAttributeName : [NSColor secondaryLabelColor]
     };
-    NSString * message =
-	(kind == "imagefile" || value.empty()) ? @"Preview unavailable" : S2N(value);
+    NSString * message = (iSpec.kind == ImageSpec::EText && !iSpec.text.empty())
+			     ? S2N(iSpec.text)
+			     : @"Preview unavailable";
     [message drawInRect:body withAttributes:attrs];
 }
 
@@ -393,7 +400,7 @@ void PDialog::setMapped(lua_State * L, int idx) {
     case ELabel:
     case EInput: [((NSTextField *)ctrl) setStringValue:S2N(m.text)]; break;
     case ETextEdit: setTextView((NSTextView *)ctrl, m.text); break;
-    case EImage: [(IpeDialogImage *)ctrl setSpec:m.text]; break;
+    case EImage: [(IpeDialogImage *)ctrl setSpec:m.image]; break;
     case ECheckBox: [((NSButton *)ctrl) setState:m.value]; break;
     case EList:
 	// listbox gets items directly from items array
@@ -626,7 +633,7 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	    case EImage: {
 		view = [[IpeDialogImage alloc] initWithWidth:m.minWidth
 						      height:m.minHeight
-							spec:m.text];
+							spec:m.image];
 	    } break;
 	    case ETextEdit: {
 		scroll = [[NSScrollView alloc] initWithFrame:NSZeroRect];

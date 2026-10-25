@@ -24,6 +24,15 @@ type DialogElement =
 	| "button"
 	| "image";
 
+export interface ImageOptions {
+	kind: "none" | "text" | "file" | "bitmap";
+	text: string; // message ("text") or path in ipe's virtual FS ("file")
+	zoom: number;
+	width: number; // "bitmap" only
+	height: number;
+	pixels?: Uint8Array; // "bitmap" only: RGBA quadruples in row order, not premultiplied
+}
+
 export interface ElementOptions {
 	name: string;
 	type: DialogElement;
@@ -38,6 +47,7 @@ export interface ElementOptions {
 	colspan: number;
 	width: number;
 	height: number;
+	image?: ImageOptions;
 }
 
 interface ButtonOptions {
@@ -147,7 +157,7 @@ export function setElement(ipe: Ipe, w: ElementOptions): void {
 	if (el == null) return;
 	switch (w.type) {
 		case "image":
-			drawImagePreview(ipe, el as HTMLCanvasElement, w.text);
+			drawImagePreview(ipe, el as HTMLCanvasElement, w.image);
 			break;
 		case "checkbox":
 			(el as HTMLInputElement).checked = w.value !== 0;
@@ -173,10 +183,7 @@ export function setElement(ipe: Ipe, w: ElementOptions): void {
 	}
 }
 
-function previewNumber(value: string, fallback: number): number {
-	const n = Number.parseFloat(value);
-	return Number.isFinite(n) ? n : fallback;
-}
+const canvasImages = new WeakMap<HTMLCanvasElement, ImageOptions | undefined>();
 
 // keep the canvas's backing-store resolution in sync with its rendered
 // (grid-stretched) size, and redraw whenever that size changes
@@ -191,10 +198,7 @@ function observeImageCanvas(ipe: Ipe, canvas: HTMLCanvasElement): void {
 		if (canvas.width === width && canvas.height === height) return;
 		canvas.width = width;
 		canvas.height = height;
-		console.log(
-			`Redrawing canvas with spec: ${canvas.dataset.previewSpec ?? ""}`,
-		);
-		drawImagePreview(ipe, canvas, canvas.dataset.previewSpec ?? "");
+		drawImagePreview(ipe, canvas, canvasImages.get(canvas));
 	});
 	observer.observe(canvas);
 }
@@ -202,13 +206,12 @@ function observeImageCanvas(ipe: Ipe, canvas: HTMLCanvasElement): void {
 function drawImagePreview(
 	ipe: Ipe,
 	canvas: HTMLCanvasElement,
-	spec: string,
+	image: ImageOptions | undefined,
 ): void {
-	const [kind, value = "", zoomText = "1"] = spec.split("|");
-	const zoom = Math.max(0.1, Math.min(100, previewNumber(zoomText, 1)));
+	const zoom = Math.max(0.1, Math.min(100, image?.zoom ?? 1));
 	const ctx = canvas.getContext("2d");
 	if (ctx == null) return;
-	canvas.dataset.previewSpec = spec;
+	canvasImages.set(canvas, image);
 	// identical specs can be redrawn at different canvas sizes (e.g. after a
 	// resize), so the async image load below must not rely on spec equality
 	// to detect staleness - use a fresh token for every call instead
@@ -236,11 +239,34 @@ function drawImagePreview(
 		ctx.textBaseline = "middle";
 		ctx.fillText(text || "Preview unavailable", cx, cy);
 	};
-	if (kind === "imagefile") {
-		// `value` is a path in ipe's virtual FS, not a URL the browser can fetch directly
+	const drawScaled = (source: CanvasImageSource, iw: number, ih: number) => {
+		const logicalWidth = iw / zoom;
+		const logicalHeight = ih / zoom;
+		const scale = Math.min(
+			1,
+			(right - left) / logicalWidth,
+			(bottom - top) / logicalHeight,
+		);
+		const width = logicalWidth * scale;
+		const height = logicalHeight * scale;
+		ctx.drawImage(source, cx - width / 2, cy - height / 2, width, height);
+	};
+	if (image?.kind === "bitmap" && image.pixels != null) {
+		const rgba = new Uint8ClampedArray(image.pixels);
+		const bitmap = document.createElement("canvas");
+		bitmap.width = image.width;
+		bitmap.height = image.height;
+		bitmap
+			.getContext("2d")
+			?.putImageData(new ImageData(rgba, image.width, image.height), 0, 0);
+		drawScaled(bitmap, image.width, image.height);
+		return;
+	}
+	if (image?.kind === "file") {
+		// `image.text` is a path in ipe's virtual FS, not a URL the browser can fetch directly
 		let objectUrl: string;
 		try {
-			const data = ipe.FS.readFile(value);
+			const data = ipe.FS.readFile(image.text);
 			objectUrl = URL.createObjectURL(
 				new Blob([data.buffer], { type: "image/png" }),
 			);
@@ -248,30 +274,21 @@ function drawImagePreview(
 			showText();
 			return;
 		}
-		const image = new Image();
-		image.addEventListener("load", () => {
+		const img = new Image();
+		img.addEventListener("load", () => {
 			URL.revokeObjectURL(objectUrl);
 			if (canvas.dataset.previewToken !== token) return;
-			const logicalWidth = image.width / zoom;
-			const logicalHeight = image.height / zoom;
-			const scale = Math.min(
-				1,
-				(right - left) / logicalWidth,
-				(bottom - top) / logicalHeight,
-			);
-			const width = logicalWidth * scale;
-			const height = logicalHeight * scale;
-			ctx.drawImage(image, cx - width / 2, cy - height / 2, width, height);
+			drawScaled(img, img.width, img.height);
 		});
-		image.addEventListener("error", () => {
+		img.addEventListener("error", () => {
 			URL.revokeObjectURL(objectUrl);
 			if (canvas.dataset.previewToken !== token) return;
 			showText();
 		});
-		image.src = objectUrl;
+		img.src = objectUrl;
 		return;
 	}
-	showText(value);
+	showText(image?.kind === "text" ? image.text : undefined);
 }
 
 export function setupElements(
@@ -361,7 +378,7 @@ export function setupElements(
 				el1.id = `dialog-element-${w.name}`;
 				el1.width = w.width;
 				el1.height = w.height;
-				drawImagePreview(ipe, el1, w.text);
+				drawImagePreview(ipe, el1, w.image);
 				observeImageCanvas(ipe, el1);
 				el = el1;
 				break;

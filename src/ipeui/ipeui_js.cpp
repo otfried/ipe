@@ -31,6 +31,7 @@
 #include "ipeui_common.h"
 
 #include <emscripten.h>
+#include <emscripten/bind.h>
 #include <emscripten/val.h>
 
 using emscripten::val;
@@ -87,6 +88,24 @@ val PDialog::element(const SElement & m) {
     w.set("colspan", m.colspan);
     w.set("width", m.minWidth);
     w.set("height", m.minHeight);
+    if (m.type == EImage) {
+	static const char * const kinds[] = {"none", "text", "file", "bitmap"};
+	const ImageSpec & im = m.image;
+	val image = val::object();
+	image.set("kind", std::string(kinds[im.kind]));
+	image.set("text", im.text);
+	image.set("zoom", im.zoom);
+	image.set("width", im.width);
+	image.set("height", im.height);
+	if (im.kind == ImageSpec::EBitmap) {
+	    // slice() copies the data out of the WASM heap
+	    val view(emscripten::typed_memory_view(
+		im.pixels.size(),
+		reinterpret_cast<const unsigned char *>(im.pixels.data())));
+	    image.set("pixels", view.call<val>("slice"));
+	}
+	w.set("image", image);
+    }
     return w;
 }
 

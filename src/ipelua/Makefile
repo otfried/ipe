@@ -21,9 +21,13 @@ all: $(TARGET)
 
 LUA ?= $(LUA_PACKAGE)
 
-.PHONY: test
+.PHONY: test checkdocs
 test: $(TARGET)
 	$(LUA) test.lua "$(abspath $(TARGET))"
+
+# check that all Lua bindings (including ipeui and AppUi) are in bindings.txt
+checkdocs:
+	$(LUA) checkdocs.lua
 
 sources	= \
 	ipelib.cpp \

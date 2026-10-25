@@ -102,63 +102,59 @@ static cairo_status_t stream_writer(void * closure, const unsigned char * data,
 }
 
 // zoom and transparent are ignored for formats other than EPNG
-bool Thumbnail::saveRender(TargetFormat fm, const char * dst, const Page * page, int view,
-			   double zoom, double tolerance) {
-    if (fm != EPNG) zoom = 1.0;
+cairo_surface_t * Thumbnail::saveRenderInner(Buffer & data, FILE * file, TargetFormat fm,
+					     const Page * page, int view,
+					     double tolerance) {
+    cairo_surface_t * surface = nullptr;
+    if (fm != EPNG) iZoom = 1.0;
 
-    int wid, ht;
     Vector offset;
     if (iNoCrop) {
 	offset = iLayout->paper().topLeft();
-	wid = int(iLayout->paper().width() * zoom);
-	ht = int(iLayout->paper().height() * zoom);
+	iWidth = int(iLayout->paper().width() * iZoom);
+	iHeight = int(iLayout->paper().height() * iZoom);
     } else {
 	Rect bbox = page->pageBBox(iDoc->cascade());
-	if (bbox.isEmpty()) return false;
+	if (bbox.isEmpty()) return nullptr;
 	if (fm != EPNG) {
 	    // make sure integer coordinates remain integer
 	    bbox.addPoint(Vector{floor(bbox.left()), ceil(bbox.top())});
 	}
 	offset = bbox.topLeft();
-	wid = int(bbox.width() * zoom + 1);
-	ht = int(bbox.height() * zoom + 1);
+	iWidth = int(bbox.width() * iZoom + 1);
+	iHeight = int(bbox.height() * iZoom + 1);
     }
 
-    Buffer data;
-    cairo_surface_t * surface = nullptr;
-    std::FILE * file = Platform::fopen(dst, "wb");
-    if (!file) return false;
-
     if (fm == EPNG) {
-	if (wid * ht > 20000000) return false;
-	data = Buffer(wid * ht * 4);
-	memset(data.data(), (iTransparent ? 0x00 : 0xff), wid * ht * 4);
+	if (iWidth * iHeight > 20000000) return nullptr;
+	data = Buffer(iWidth * iHeight * 4);
+	memset(data.data(), (iTransparent ? 0x00 : 0xff), iWidth * iHeight * 4);
 	surface = cairo_image_surface_create_for_data(
-	    (uint8_t *)data.data(), CAIRO_FORMAT_ARGB32, wid, ht, wid * 4);
+	    (uint8_t *)data.data(), CAIRO_FORMAT_ARGB32, iWidth, iHeight, iWidth * 4);
 #ifdef CAIRO_HAS_SVG_SURFACE
     } else if (fm == ESVG) {
-	surface =
-	    cairo_svg_surface_create_for_stream(&stream_writer, (void *)file, wid, ht);
+	surface = cairo_svg_surface_create_for_stream(&stream_writer, (void *)file,
+						      iWidth, iHeight);
 #endif
 #ifdef CAIRO_HAS_PS_SURFACE
     } else if (fm == EPS) {
-	surface =
-	    cairo_ps_surface_create_for_stream(&stream_writer, (void *)file, wid, ht);
+	surface = cairo_ps_surface_create_for_stream(&stream_writer, (void *)file, iWidth,
+						     iHeight);
 	cairo_ps_surface_set_eps(surface, true);
 #endif
 #ifdef CAIRO_HAS_PDF_SURFACE
     } else if (fm == EPDF) {
-	surface =
-	    cairo_pdf_surface_create_for_stream(&stream_writer, (void *)file, wid, ht);
+	surface = cairo_pdf_surface_create_for_stream(&stream_writer, (void *)file,
+						      iWidth, iHeight);
 #endif
     }
 
     cairo_t * cc = cairo_create(surface);
-    cairo_scale(cc, zoom, -zoom);
+    cairo_scale(cc, iZoom, -iZoom);
     cairo_translate(cc, -offset.x, -offset.y);
 
     cairo_set_tolerance(cc, tolerance);
-    CairoPainter painter(iDoc->cascade(), iFonts.get(), cc, zoom, true, true);
+    CairoPainter painter(iDoc->cascade(), iFonts.get(), cc, iZoom, true, true);
     const auto viewMap = page->viewMap(view, iDoc->cascade());
     painter.setAttributeMap(&viewMap);
     // std::vector<Matrix> layerMatrices = page->layerMatrices(view);
@@ -189,15 +185,36 @@ bool Thumbnail::saveRender(TargetFormat fm, const char * dst, const Page * page,
     painter.popMatrix();
     cairo_surface_flush(surface);
     cairo_show_page(cc);
+    cairo_destroy(cc);
+    return surface;
+}
 
+// zoom and transparent are ignored for formats other than EPNG
+bool Thumbnail::saveRender(TargetFormat fm, const char * dst, const Page * page, int view,
+			   double zoom, double tolerance) {
+    iZoom = zoom;
+    std::FILE * file = Platform::fopen(dst, "wb");
+    if (!file) return false;
+    Buffer data;
+    cairo_surface_t * surface = saveRenderInner(data, file, fm, page, view, tolerance);
+    if (surface == nullptr) return false;
     if (fm == EPNG)
 	cairo_surface_write_to_png_stream(surface, &stream_writer, (void *)file);
-
-    cairo_destroy(cc);
     cairo_surface_destroy(surface);
-
     ::fclose(file);
     return true;
+}
+
+Thumbnail::Pixels Thumbnail::saveRender(const Page * page, int view, double zoom,
+					double tolerance) {
+    Pixels result;
+    iZoom = zoom;
+    cairo_surface_t * surface =
+	saveRenderInner(result.pixels, nullptr, EPNG, page, view, tolerance);
+    result.width = iWidth;
+    result.height = iHeight;
+    cairo_surface_destroy(surface);
+    return result;
 }
 
 // --------------------------------------------------------------------

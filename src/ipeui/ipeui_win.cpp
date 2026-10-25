@@ -40,6 +40,7 @@
 #include <richedit.h>
 
 #include <algorithm>
+#include <memory>
 #include <sstream>
 
 // --------------------------------------------------------------------
@@ -91,23 +92,7 @@ static void fillRect(HDC dc, const RECT & r, COLORREF color) {
     DeleteObject(b);
 }
 
-static double previewNumber(const std::string & value, double fallback) {
-    std::istringstream stream(value);
-    double v;
-    if (stream >> v) return v;
-    return fallback;
-}
-
-static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
-    size_t sep = spec.find('|');
-    size_t sep2 = sep == std::string::npos ? std::string::npos : spec.find('|', sep + 1);
-    std::string kind = sep == std::string::npos ? spec : spec.substr(0, sep);
-    std::string value =
-	sep == std::string::npos ? std::string() : spec.substr(sep + 1, sep2 - sep - 1);
-    double zoom = sep2 == std::string::npos
-		      ? 1.0
-		      : std::clamp(previewNumber(spec.substr(sep2 + 1), 1.0), 0.1, 100.0);
-
+static void drawImagePreview(HDC dc, RECT rc, const ImageSpec & spec) {
     fillRect(dc, rc, RGB(255, 255, 220));
     HBRUSH frame = CreateSolidBrush(RGB(160, 160, 130));
     FrameRect(dc, &rc, frame);
@@ -116,32 +101,53 @@ static void drawImagePreview(HDC dc, RECT rc, const std::string & spec) {
     RECT body = rc;
     InflateRect(&body, -18, -16);
 
-    if (kind == "imagefile" && !value.empty()) {
+    std::unique_ptr<Gdiplus::Bitmap> bitmap;
+    std::vector<BYTE> bgr; // must outlive the bitmap
+    if (spec.kind == ImageSpec::EFile && !spec.text.empty()) {
 	// load without color correction, as in ipebitmap_win.cpp
-	Gdiplus::Bitmap bitmap(WString(value).c_str(), FALSE);
-	if (bitmap.GetLastStatus() == Gdiplus::Ok) {
-	    double iw = bitmap.GetWidth();
-	    double ih = bitmap.GetHeight();
-	    double bw = body.right - body.left;
-	    double bh = body.bottom - body.top;
-	    double scale = std::min(bw / (iw / zoom), bh / (ih / zoom));
-	    scale = std::min(1.0, scale) / zoom;
-	    double w = iw * scale;
-	    double h = ih * scale;
-	    double x = 0.5 * (body.left + body.right) - 0.5 * w;
-	    double y = 0.5 * (body.top + body.bottom) - 0.5 * h;
-	    Gdiplus::Graphics graphics(dc);
-	    graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
-	    graphics.DrawImage(&bitmap, (Gdiplus::REAL)x, (Gdiplus::REAL)y,
-			       (Gdiplus::REAL)w, (Gdiplus::REAL)h);
-	    return;
+	bitmap.reset(new Gdiplus::Bitmap(WString(spec.text).c_str(), FALSE));
+    } else if (spec.kind == ImageSpec::EBitmap) {
+	// GDI+ wants BGRA (not premultiplied)
+	int stride = spec.width * 4;
+	bgr.assign(size_t(stride) * spec.height, 0);
+	const unsigned char * p = (const unsigned char *)spec.pixels.data();
+	for (int y = 0; y < spec.height; ++y) {
+	    BYTE * q = &bgr[size_t(y) * stride];
+	    for (int x = 0; x < spec.width; ++x, p += 4, q += 4) {
+		q[0] = p[2];
+		q[1] = p[1];
+		q[2] = p[0];
+		q[3] = p[3];
+	    }
 	}
+	bitmap.reset(new Gdiplus::Bitmap(spec.width, spec.height, stride,
+					 PixelFormat32bppARGB, bgr.data()));
+    }
+    if (bitmap && bitmap->GetLastStatus() == Gdiplus::Ok) {
+	double zoom = spec.zoom;
+	double iw = bitmap->GetWidth();
+	double ih = bitmap->GetHeight();
+	double bw = body.right - body.left;
+	double bh = body.bottom - body.top;
+	double scale = std::min(bw / (iw / zoom), bh / (ih / zoom));
+	scale = std::min(1.0, scale) / zoom;
+	double w = iw * scale;
+	double h = ih * scale;
+	double x = 0.5 * (body.left + body.right) - 0.5 * w;
+	double y = 0.5 * (body.top + body.bottom) - 0.5 * h;
+	Gdiplus::Graphics graphics(dc);
+	graphics.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
+	graphics.DrawImage(bitmap.get(), (Gdiplus::REAL)x, (Gdiplus::REAL)y,
+			   (Gdiplus::REAL)w, (Gdiplus::REAL)h);
+	return;
     }
 
     SetBkMode(dc, TRANSPARENT);
-    DrawTextA(
-	dc, kind == "imagefile" || value.empty() ? "Preview unavailable" : value.c_str(),
-	-1, &body, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawTextA(dc,
+	      (spec.kind == ImageSpec::EText && !spec.text.empty())
+		  ? spec.text.c_str()
+		  : "Preview unavailable",
+	      -1, &body, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 void buildFlags(std::vector<short> & t, DWORD flags) {
@@ -520,7 +526,7 @@ BOOL CALLBACK PDialog::dialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 	    SElement & m = d->iElements[wParam - IDBASE];
 	    if (m.type == EImage) {
 		DRAWITEMSTRUCT * dis = (DRAWITEMSTRUCT *)lParam;
-		drawImagePreview(dis->hDC, dis->rcItem, m.text);
+		drawImagePreview(dis->hDC, dis->rcItem, m.image);
 		return TRUE;
 	    }
 	}

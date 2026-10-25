@@ -108,26 +108,69 @@ PDialog::~PDialog() {
     //
 }
 
-static double previewNumber(const std::string & value, double fallback) {
-    std::istringstream stream(value);
-    double v;
-    if (stream >> v) return v;
-    return fallback;
+static cairo_surface_t * imageSurface(const ImageSpec & spec) {
+    if (spec.kind == ImageSpec::EFile) {
+	cairo_surface_t * surface =
+	    cairo_image_surface_create_from_png(spec.text.c_str());
+	if (cairo_surface_status(surface) == CAIRO_STATUS_SUCCESS) return surface;
+	cairo_surface_destroy(surface);
+#if GTK_CHECK_VERSION(4, 6, 0)
+	// not a PNG file (e.g. JPEG): let GDK decode it
+	GError * error = nullptr;
+	GdkTexture * texture = gdk_texture_new_from_filename(spec.text.c_str(), &error);
+	if (!texture) {
+	    g_clear_error(&error);
+	    return nullptr;
+	}
+	int w = gdk_texture_get_width(texture);
+	int h = gdk_texture_get_height(texture);
+	surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
+	if (cairo_surface_status(surface) == CAIRO_STATUS_SUCCESS) {
+	    cairo_surface_flush(surface);
+	    gdk_texture_download(texture, cairo_image_surface_get_data(surface),
+				 cairo_image_surface_get_stride(surface));
+	    cairo_surface_mark_dirty(surface);
+	}
+	g_object_unref(texture);
+	return surface;
+#else
+	return nullptr;
+#endif
+    }
+    if (spec.kind != ImageSpec::EBitmap) return nullptr;
+    cairo_surface_t * surface =
+	cairo_image_surface_create(CAIRO_FORMAT_ARGB32, spec.width, spec.height);
+    if (cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS) return surface;
+    cairo_surface_flush(surface);
+    uint32_t * data = (uint32_t *)cairo_image_surface_get_data(surface);
+    int stride = cairo_image_surface_get_stride(surface) / 4;
+    const unsigned char * p = (const unsigned char *)spec.pixels.data();
+    for (int y = 0; y < spec.height; ++y) {
+	for (int x = 0; x < spec.width; ++x, p += 4) {
+	    // cairo wants premultiplied alpha
+	    uint32_t a = p[3];
+	    uint32_t r = (p[0] * a + 127) / 255;
+	    uint32_t g = (p[1] * a + 127) / 255;
+	    uint32_t b = (p[2] * a + 127) / 255;
+	    data[y * stride + x] = (a << 24) | (r << 16) | (g << 8) | b;
+	}
+    }
+    cairo_surface_mark_dirty(surface);
+    return surface;
+}
+
+static void setImageSpec(GtkWidget * w, const ImageSpec & spec) {
+    g_object_set_data_full(G_OBJECT(w), "ipe-dialog-image-spec", new ImageSpec(spec),
+			   [](gpointer p) { delete static_cast<ImageSpec *>(p); });
 }
 
 static void drawImagePreview(GtkDrawingArea * area, cairo_t * cr, int width, int height,
 			     gpointer) {
-    const char * spec =
-	(const char *)g_object_get_data(G_OBJECT(area), "ipe-dialog-image-spec");
-    std::string s = spec ? spec : "";
-    size_t sep = s.find('|');
-    size_t sep2 = sep == std::string::npos ? std::string::npos : s.find('|', sep + 1);
-    std::string kind = sep == std::string::npos ? s : s.substr(0, sep);
-    std::string value =
-	sep == std::string::npos ? std::string() : s.substr(sep + 1, sep2 - sep - 1);
-    double zoom = sep2 == std::string::npos
-		      ? 1.0
-		      : std::clamp(previewNumber(s.substr(sep2 + 1), 1.0), 0.1, 100.0);
+    const ImageSpec * spec =
+	(const ImageSpec *)g_object_get_data(G_OBJECT(area), "ipe-dialog-image-spec");
+    ImageSpec none;
+    if (!spec) spec = &none;
+    double zoom = spec->zoom;
 
     cairo_set_source_rgb(cr, 1.0, 1.0, 0.86);
     cairo_rectangle(cr, 0.5, 0.5, width - 1.0, height - 1.0);
@@ -140,8 +183,8 @@ static void drawImagePreview(GtkDrawingArea * area, cairo_t * cr, int width, int
     double cx = 0.5 * (left + right);
     double cy = 0.5 * (top + bottom);
 
-    if (kind == "imagefile") {
-	cairo_surface_t * image = cairo_image_surface_create_from_png(value.c_str());
+    cairo_surface_t * image = imageSurface(*spec);
+    if (image) {
 	if (cairo_surface_status(image) == CAIRO_STATUS_SUCCESS) {
 	    double iw = cairo_image_surface_get_width(image);
 	    double ih = cairo_image_surface_get_height(image);
@@ -161,8 +204,9 @@ static void drawImagePreview(GtkDrawingArea * area, cairo_t * cr, int width, int
 	}
 	cairo_surface_destroy(image);
     }
-    const char * message =
-	(kind == "imagefile" || value.empty()) ? "Preview unavailable" : value.c_str();
+    const char * message = (spec->kind == ImageSpec::EText && !spec->text.empty())
+			       ? spec->text.c_str()
+			       : "Preview unavailable";
     cairo_select_font_face(cr, "sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size(cr, 12.0);
     cairo_set_source_rgb(cr, 0.35, 0.35, 0.35);
@@ -289,8 +333,7 @@ void PDialog::setMapped(lua_State * L, int idx) {
 	iSettingText = false;
 	break;
     case EImage:
-	g_object_set_data_full(G_OBJECT(w), "ipe-dialog-image-spec",
-			       g_strdup(m.text.c_str()), g_free);
+	setImageSpec(w, m.image);
 	gtk_widget_queue_draw(w);
 	break;
     case EList: {
@@ -521,8 +564,7 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	    case EImage:
 		widget = gtk_drawing_area_new();
 		gtk_widget_set_size_request(widget, m.minWidth, m.minHeight);
-		g_object_set_data_full(G_OBJECT(widget), "ipe-dialog-image-spec",
-				       g_strdup(m.text.c_str()), g_free);
+		setImageSpec(widget, m.image);
 		gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(widget), drawImagePreview,
 					       nullptr, nullptr);
 		break;

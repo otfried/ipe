@@ -44,7 +44,6 @@ V = ipe.Vector
 current_symbol = nil
 current_group = nil
 current_element = nil
-local symbol_preview_serial = 0
 
 ----------------------------------------------------------------------
 
@@ -108,16 +107,11 @@ function symbol_preview(model, name)
   p:insert(nil, ipe.Reference(model.attributes, name, ipe.Vector(0, 0)),
            1, "alpha")
 
-  -- Number the PNGs and draw this one
-  symbol_preview_serial = symbol_preview_serial + 1
-  local png = ipe.folder("latex", string.format("symbol-preview-%d.png",
-                                                symbol_preview_serial))
-  model.ui:renderPage(doc, 1, 1, "png", png,
-        pixels_per_point, true, false)
+  local bitmap = model.ui:renderPage(doc, 1, 1, "png", nil,
+				     pixels_per_point, true, false)
 
-  -- return the image location for the picture box ("imagefile|<path>|<shrink>")
-  -- and the PNG's path so it can be deleted later
-  return string.format("imagefile|%s|%g", png, shrink_factor), png
+  -- return the image specification for the picture box
+  return { bitmap=bitmap, zoom=shrink_factor }
 end
 
 ----------------------------------------------------------------------
@@ -148,17 +142,14 @@ function select_symbol(model)
   table.sort(groups)
   local d = ipeui.Dialog(model.ui:win(), "Use symbol")
 
-  local png_files = {}
-
   local function show_preview(d)
     -- show the picture of the selected symbol, in whichever group
     local g = groups[current_group]
     -- the selected symbol
     local selected = symbolsByGroup[g][d:get("select")]
     local name = (g ~= "") and (g .. "/" .. selected) or selected
-    local image_location, png = symbol_preview(model, name)
-    png_files[#png_files + 1] = png
-    d:set("preview", image_location)
+    local image_spec = symbol_preview(model, name)
+    d:set("preview", image_spec)
   end
 
   groups.action = function (d)
@@ -181,7 +172,7 @@ function select_symbol(model)
   d:add("select", "combo", symbols, 3, 1, 1, 3)
 
   d:add("preview", "image",
-        { width=120, height=120, value="unavailable|No preview yet" },
+        { width=120, height=120, value={ text="No preview yet" } },
         1, 4, 3, 1)
 
   if current_element and current_element <= #symbols then
@@ -194,7 +185,6 @@ function select_symbol(model)
   d:addButton("cancel", "&Cancel", "reject")
   d:setStretch("column", 1, 1)
   local ok = d:execute()
-  for _, f in ipairs(png_files) do _G.os.remove(f) end
   if not ok then return end
   current_element = d:get("select")
   local g = groups[current_group]

@@ -43,6 +43,11 @@ class Thumbnail {
 public:
     enum TargetFormat { ESVG, EPNG, EPS, EPDF };
 
+    struct Pixels {
+	int width, height;
+	Buffer pixels;
+    };
+
     Thumbnail(const Document * doc, int width);
 
     void setTransparent(bool t) { iTransparent = t; }
@@ -53,6 +58,12 @@ public:
     Buffer render(const Page * page, int view);
     bool saveRender(TargetFormat fm, const char * dst, const Page * page, int view,
 		    double zoom, double tolerance = 0.1);
+
+    Pixels saveRender(const Page * page, int view, double zoom, double tolerance = 0.1);
+
+private:
+    cairo_surface_t * saveRenderInner(Buffer & data, FILE * file, TargetFormat fm,
+				      const Page * page, int view, double tolerance);
 
 private:
     const Document * iDoc;

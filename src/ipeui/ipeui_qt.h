@@ -37,6 +37,7 @@
 #include <QAction>
 #include <QDialog>
 #include <QGridLayout>
+#include <QImage>
 #include <QMenu>
 
 class QTimer;
@@ -95,16 +96,14 @@ public:
 	setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     }
 
-    void setSpec(const std::string & spec) {
-	iSpec = QString::fromUtf8(spec.c_str());
-	update();
-    }
+    void setSpec(const ImageSpec & spec);
 
 protected:
     void paintEvent(QPaintEvent *) override;
 
 private:
-    QString iSpec;
+    ImageSpec iSpec;
+    QImage iImage; // decoded bitmap, null if there is none
 };
 
 // --------------------------------------------------------------------

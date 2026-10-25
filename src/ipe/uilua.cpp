@@ -37,8 +37,11 @@
 #include "ipereveal.h"
 #include "ipethumbs.h"
 
+#include <algorithm>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 #ifdef IPEUI_JS
 extern int appui_jsCall(lua_State * L);
@@ -672,6 +675,30 @@ static int appui_pageSorter(lua_State * L) {
     return (*ui)->pageSorter(L, *doc, page - 1, width, height, thumbWidth);
 }
 
+// Convert Cairo's ARGB32 (premultiplied, native-endian 32-bit words) in place
+// to RGBA bytes with straight alpha, as expected by ipeui bitmaps.
+static void cairoToRgba(char * data, size_t pixels) {
+    for (size_t i = 0; i < pixels; ++i, data += 4) {
+	uint32_t v;
+	std::memcpy(&v, data, 4);
+	uint32_t a = v >> 24;
+	uint32_t r = (v >> 16) & 0xff;
+	uint32_t g = (v >> 8) & 0xff;
+	uint32_t b = v & 0xff;
+	if (a == 0) {
+	    r = g = b = 0;
+	} else if (a != 255) {
+	    r = std::min(255u, (r * 255 + a / 2) / a);
+	    g = std::min(255u, (g * 255 + a / 2) / a);
+	    b = std::min(255u, (b * 255 + a / 2) / a);
+	}
+	data[0] = char(r);
+	data[1] = char(g);
+	data[2] = char(b);
+	data[3] = char(a);
+    }
+}
+
 static const char * const render_formats[] = {"svg", "png", "eps", "pdf", nullptr};
 
 static int appui_renderPage(lua_State * L) {
@@ -681,14 +708,30 @@ static int appui_renderPage(lua_State * L) {
     int viewno = luaL_checkinteger(L, 4);
     Thumbnail::TargetFormat fm =
 	Thumbnail::TargetFormat(luaL_checkoption(L, 5, nullptr, render_formats));
-    const char * dst = luaL_checklstring(L, 6, nullptr);
+    const char * dst = lua_isnil(L, 6) ? nullptr : luaL_checkstring(L, 6);
     double zoom = luaL_checknumber(L, 7);
     Thumbnail tn(*doc, 0);
     tn.setTransparent(lua_toboolean(L, 8));
     tn.setNoCrop(lua_toboolean(L, 9));
     const Page * page = (*doc)->page(pageno - 1);
-    tn.saveRender(fm, dst, page, viewno - 1, zoom);
-    return 0;
+    if (dst) {
+	lua_pushboolean(L, tn.saveRender(fm, dst, page, viewno - 1, zoom));
+    } else {
+	Thumbnail::Pixels p = tn.saveRender(page, viewno - 1, zoom);
+	if (p.pixels.size() == 0) {
+	    lua_pushnil(L);
+	} else {
+	    cairoToRgba(p.pixels.data(), size_t(p.width) * size_t(p.height));
+	    lua_createtable(L, 3, 0);
+	    lua_pushinteger(L, p.width);
+	    lua_setfield(L, -2, "width");
+	    lua_pushinteger(L, p.height);
+	    lua_setfield(L, -2, "height");
+	    lua_pushlstring(L, p.pixels.data(), p.pixels.size());
+	    lua_setfield(L, -2, "pixels");
+	}
+    }
+    return 1;
 }
 
 static int appui_createJson(lua_State * L) {

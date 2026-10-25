@@ -85,6 +85,16 @@ inline std::string tostring(lua_State * L, int i) {
 
 // --------------------------------------------------------------------
 
+// content of an image element: a text, a bitmap file, or a bitmap in memory
+struct ImageSpec {
+    enum TKind { ENone, EText, EFile, EBitmap };
+    TKind kind = ENone;
+    std::string text; // message (EText) or file path (EFile)
+    double zoom = 1.0;
+    int width = 0, height = 0; // EBitmap only
+    std::string pixels; // EBitmap only: RGBA quadruples in row order, not premultiplied
+};
+
 class Dialog {
 public:
     enum class Result {
@@ -145,6 +155,7 @@ protected:
 	int flags;
 	std::vector<std::string> items;
 	std::string text;
+	ImageSpec image;
 	int value;
     };
 
@@ -166,6 +177,7 @@ protected:
     void addCheckbox(lua_State * L, SElement & m);
     void addInput(lua_State * L, SElement & m);
     void addImage(lua_State * L, SElement & m);
+    void parseImage(lua_State * L, int index, ImageSpec & image);
 
     void setListItems(lua_State * L, int index, SElement & m);
 

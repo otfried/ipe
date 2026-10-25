@@ -107,6 +107,7 @@ m * v             -- matrix * vector
 m * arc		  -- matrix * arc
 
 m:elements()      -- returns six-element array with elements
+m:coeff()         -- same as m:elements()
 
 m:isIdentity()
 m:isSingular(threshold)
@@ -183,6 +184,8 @@ s1:intersects(s2)
 
 \verbatim
 b = ipe.Bezier(v1, v2, v3, v4)	
+b = ipe.Quad(v1, v2, v3)  -- quadratic Bezier (control points v1, v2, v3),
+                          -- returned as a cubic Bezier
 b:point(t)                -- point at value t
 v1, v2, v3, v4 = b:controlpoints()  -- returns all four control points
 b:bbox()
@@ -231,12 +234,19 @@ obj = ipe.Path(attributes, shape, with_arrows)
 obj = ipe.Group(elements)       -- elements is a table of objects
 obj = ipe.Image(rect, bitmap)   -- where bitmap is another Image object 
 obj = ipe.Image(rect, path)     -- to create an external image
+obj = ipe.Object(xml)           -- parse an object from its XML representation
 \endverbatim
 
 Here, \c attributes is a table defining the desired attributes, see
 below.  \c shape is a table defining a shape, see below.  To create
 path with arrows, you need to set \c with_arrows to true (it defaults
 to false). The arrow settings are then used from the \c attributes.
+
+\c ipe.Object parses the XML representation of a single object (as
+returned by \c obj:xml()), and returns nil if parsing fails.  If the
+string is an \c <ipeselection> (as used for the clipboard), it
+instead returns two tables, with the objects and with the names of
+their layers.
 
 A bitmap can be created by reading from an image file:
 \verbatim
@@ -269,6 +279,8 @@ s = obj:getCustom()
 
 -- text and reference objects only:
 v = obj:position()
+-- reference objects only:
+name = obj:symbol()          -- the name of the symbol
 -- text objects only:
 obj:setText(str)
 str = obj:text()
@@ -285,6 +297,13 @@ obj:setText(str)
 -- image objects only:
 rect = obj:rect()            -- image rectangle before applying obj:matrix()
 obj:info()                   -- returns table about bitmap
+obj:setPath(path)            -- set the path of an external image
+-- write the bitmap to a file, as PNG or JPEG (without re-encoding),
+-- returns true if successful:
+ok = obj:saveImage(filename)
+-- write raw pixel data to a file (for debugging): a PyRGBA header
+-- followed by RGBA bytes, or the JPEG data for a JPEG image
+obj:savePixels(filename)
 obj:setBitmap(image)         -- copies image's internal bitmap and clears the external path;
                             -- preserves the rectangle and all attributes; rejects images without a bitmap
 -- group objects only:
@@ -519,8 +538,8 @@ p:setActive(view, layer)
 p:insertView(view, layer)
 p:removeView(view)
 p:clearViews()
-f = p:viewMarked(view) -- return true/false
-p:setViewMarked(view, f)
+f = p:markedView(view) -- return true/false
+p:setMarkedView(view, f)
 name = p:viewName(view)
 p:setViewName(view, name)
 map = p:viewMap(view)
@@ -538,8 +557,8 @@ p:isLocked(layer)
 p:setLocked(layer, boolean)
 p:layerData(layer)    -- free-use text for that layer
 p:setLayerData(layer, data)
-p:hasSnapping(layer)
-p:setSnapping(layer)
+mode = p:snapping(layer)  -- "never", "visible", or "always"
+p:setSnapping(layer, mode)
 p:renameLayer(oldname, newname)
 -- if layer is nil, automatically create name for new layer:
 p:addLayer(layer)     -- add layer at the end, return name of new layer
@@ -592,10 +611,14 @@ p:hasSelection()           -- true or false
 p:deselectAll()
 p:ensurePrimarySelection()
 
--- t is a table with fields "title", "section", "subsection"
--- if section or subsection is not a string, the title is used 
-t = p:titles()  
-p:setTitles(t)
+-- variant is optional (a variant name), and defaults to no variant
+title, skipped = p:title(variant)    -- skipped: is page skipped in this variant?
+p:setTitle(variant, title, skipped)  -- use variant == nil for no variant
+
+-- t is a table with fields "section" and "subsection"
+-- if section or subsection is not a string, the title is used
+t = p:sections()
+p:setSections(t)
 
 -- n is a string
 n = p:notes()
@@ -604,6 +627,14 @@ p:setNotes(n)
 -- f is true/false
 f = p:marked()
 p:setMarked(f)
+
+-- XML representation, what is "ipepage" or "ipeselection" (only the
+-- selected objects)
+xml = p:xml(what)
+
+-- find an edge of the page's objects near pos in the view, for snapping
+-- returns origin (a vector) and direction (an angle), or nothing
+origin, dir = p:findEdge(view, pos)
 \endverbatim
 
 \section luadoc Document
@@ -646,7 +677,16 @@ doc:runLatex(docname)  -- pass filename of Ipe document or nil
 -- returns either true, nil, result code, logfile
 --         or     false, error message, result code, logfile
 
-doc:prepareLatexRun() -- prepare to run Latex in background
+-- Running Latex in the background, as done by doc:runLatex:
+-- success is true or false; if false, errmsg and errcode describe the error;
+-- converter is an opaque object to be passed to completeLatexRun
+-- (errcode "notext" with success true means there is no text to convert)
+success, converter, errmsg, errcode = doc:prepareLatexRun()
+-- returns the command line to run (a string), or nil
+command = doc:howToRunLatex(docname)  -- pass filename of Ipe document or nil
+-- after running the command, load the result:
+-- returns success, errmsg, errcode, logfile
+success, errmsg, errcode, log = doc:completeLatexRun(converter)
 
 doc:fontPool()    -- returns light userdata
 doc:checkStyle()  -- returns list of undefined symbolic names
@@ -673,6 +713,19 @@ ipe.mkdir(path)               -- create directory; returns true, or nil, error m
 beziers = ipe.splineToBeziers(spline, is_closed, old_style)
 ipelet = ipe.Ipelet(dllname)  -- loads C++ ipelet from absolute path
 -- returns ipelet or nil, error message
+-- run function number 'num' (starting from 1) of the ipelet;
+-- returns true if the document was modified (so undo information is needed)
+-- layer is the name of a layer, attributes and snap are the tables
+-- described for the user interface, and helper is a table of methods
+-- (message, messageBox, getString, and a table parameters) that implement the ipelet's user interface
+ok = ipelet:run(num, page, doc, pageno, viewno, layer, attributes, snap, helper)
+
+-- return the path of an Ipe folder, followed by the optional file name:
+-- name is one of "lua", "icons", "doc", "styles", "ipelets", "scripts",
+-- "user-styles", "user-ipelets", "user-scripts", "config", "latex"
+-- (the "latex" folder is created if it does not exist)
+path = ipe.folder(name)
+path = ipe.folder(name, filename)
 \endverbatim
 
 */
@@ -713,6 +766,25 @@ ui:showTool(tool, t)
 
 ui:setNotes(n)       -- set string for Notes tool
 
+-- set the list of recent files in the file menu (table of file names)
+ui:setRecentFiles(files)
+
+-- put the window in a screen mode: "normal", "maximized", or "full"
+ui:setScreen(mode)
+
+-- set the text of the snap indicator in the status bar
+ui:setSnapIndicator(text)
+
+-- set grid size and angle size selectors; both are numbers or symbolic names
+ui:setGridAngleSize(gridsize, anglesize)
+
+-- set the order in which symbolic names of this kind are shown in the
+-- selectors (kind as for stylesheets, names is a table of strings)
+ui:setPreferredOrder(kind, names)
+
+-- return the Windows menu id of an action and whether the action is
+-- always enabled (only used on Windows, to compute keyboard shortcuts)
+id, alwaysOn = ui:actionInfo(name)
 
 -- set contents of attribute selectors from style sheet
 ui:setupSymbolicNames(styleSheet)
@@ -743,8 +815,12 @@ ui:setClipboard(text)     -- store text on system clipboard
 -- "text", string  if clipboard contains text
 -- "path", string  if clipboard contains name of an image file
 -- "image", bitmap if clipboard contains actual pixel data
-format, value = ipeui.clipboard(allowBitmap)  
+format, value = ui:getClipboard(allowBitmap)  
 \endverbatim
+
+On GTK and in the JS version, the method is called \c getClipboardAsync
+and delivers its result to the coroutine passed as an additional
+argument.  Use \c model:clipboard instead, which hides this difference.
 
 The following methods work on the canvas inside the UI:
 
@@ -769,6 +845,17 @@ v, dpi = ui:canvasSize()  -- size of canvas in pixels, monitor resolution
 
 ui:setNumbering(t)      -- true or false
 ui:setFifiVisible(t)    -- true or false
+ui:setInkMode(t)        -- true or false: mouse/pen input is freehand drawing
+
+-- the canvas looks for external images relative to this folder
+ui:setImageFolder(folder)
+-- use the PDF resources (fonts) of this document for rendering text
+ui:setResources(doc)
+-- has the canvas encountered a Type 3 font since the last call?
+-- (the flag is reset by this call)
+t = ui:type3Font()
+-- enable automatic angular snapping with this origin (a vector)
+ui:setAutoOrigin(v)
 ui:setSelectionVisible(t) -- true or false
 ui:setPretty(t)         -- true or false
 
@@ -787,6 +874,74 @@ ui:panTool()
 ui:selectTool()
 ui:transformTool()
 ui:shapeTool()
+
+-- tool for pasting an object (usually a group): obj is an object,
+-- tool is a Lua tool table, which gets the additional methods
+-- tool.setColor(r, g, b) and tool.setMatrix(m)
+ui:pasteTool(obj, tool)
+\endverbatim
+
+\subsection luaipeuirender Rendering pages
+
+A view of a page can be rendered to a file or, for PNG, into a bitmap
+in memory.  The document does not need to be the one shown in the UI.
+
+\verbatim
+-- format is one of "svg", "png", "eps", "pdf"
+-- dest is the name of the output file, or nil (only for "png")
+-- zoom is the number of pixels per point (only used for "png")
+-- transparent: if true, the background of a PNG is transparent
+--   instead of white (only used for "png")
+-- nocrop: if true, the whole paper is rendered, including background
+--   and title, instead of the bounding box of the page
+result = ui:renderPage(doc, pageno, viewno, format, dest, zoom,
+                       transparent, nocrop)
+\endverbatim
+
+If \e dest is a file name, the result is true if the file was
+written, and false otherwise.
+
+If \e dest is nil, \e format must be "png", and the result is nil if
+the page is empty or the bitmap would be too large, and otherwise a
+table with the fields
+\verbatim
+width=number     (number of pixel columns)
+height=number    (number of pixel rows)
+pixels=string    (RGBA values in row order, 4 * width * height bytes,
+                  alpha is not premultiplied)
+\endverbatim
+This is exactly the format of the \e bitmap field of an \e image
+element in an \ref luaipeuidialogs "ipeui dialog".  For example:
+\verbatim
+local bitmap = ui:renderPage(doc, 1, 1, "png", nil, 2.0, true, false)
+d:set("preview", { bitmap=bitmap, zoom=2.0 })
+\endverbatim
+
+\subsection luaipeuipresentation Presentations
+
+These methods create files for the HTML presentation (reveal.js), and partially
+for export to PPTX (the json file will then be read by JS code that creates the
+final PPTX presentation).
+
+Page and view numbers start from 1.  Both methods return true if the file
+was written.
+
+\verbatim
+-- write a presentation of pages from_page to to_page, based on an HTML template
+ok = ui:createPresentation(doc, filename, html_template, from_page, to_page)
+
+-- write the JSON description of the document's views;
+-- if only_marked is true, only marked views are included
+ok = ui:createJson(doc, filename, only_marked)
+\endverbatim
+
+\subsection luaipeuijs Calling JavaScript
+
+In the JS version of Ipe (running in a browser or as  a VS Code extension), Lua code
+can call methods of the JavaScript user interface object.  Note that this
+is a function, not a method.  Intended for internal use.
+\verbatim
+ui.js(method, arg1, ...)   -- at most four arguments
 \endverbatim
 
 \subsection luaipewaitdialog Wait dialog
@@ -923,6 +1078,10 @@ d:set("ignore-escape", field, originalValue)
 -- show dialog modally
 accepted = d:execute()
 accepted = d:execute(size)   -- where size == { width, height }
+
+-- close the dialog from a Lua method (such as the action of a button
+-- or checkbox); d:execute() then returns accepted
+d:accept(accepted)           -- true or false
 \endverbatim
 
 Note that on some platforms (Qt and JS), `d:execute` may yield.
@@ -960,24 +1119,43 @@ action= Lua method  (called when state changed)
 -- input:
 
 -- image:
-value="string"  (see below, default is an empty preview)
+value=table     (see below, default is an empty preview)
 width=number    (preview area width in pixels, default 180)
 height=number   (preview area height in pixels, default 80)
 \endverbatim
 
 An \e image element shows a preview of a bitmap inside a fixed-size
-area.  It does not load or display an actual ipe::Image object:
-instead, its \e value is a string with three fields separated by
-vertical bars (\c |):
+area.  It does not load or display an actual ipe::Image object.
+Its \e value is a table that has exactly one of the following fields:
 \verbatim
-kind|value|zoom
+text="string"     (a text message)
+path="string"     (the name of a PNG or JPEG file)
+bitmap=table      (a bitmap in memory)
 \endverbatim
-\e kind must be "imagefile", in which case \e value is the name of a
-PNG file to load and display (scaled to fit the preview area,
-multiplied by \e zoom).  If the file cannot be loaded, or \e kind is
-anything else, \e value is instead shown as a text message inside the
-preview area (and \e zoom is ignored).  The value of an \e image
-element can be changed using \e set, using the same string format.
+and optionally
+\verbatim
+zoom=number       (default 1.0)
+\endverbatim
+A bitmap file or bitmap in memory is displayed centered in the preview
+area, with each of its pixels divided by \e zoom, and scaled down to
+fit the preview area if necessary.  Transparent parts show the
+background of the preview area.  The \e bitmap table has the fields
+\verbatim
+width=number      (number of pixel columns)
+height=number     (number of pixel rows)
+pixels="string"   (RGBA values in row order, 4 * width * height bytes,
+                   alpha is not premultiplied)
+\endverbatim
+If the file cannot be loaded, or if the table is empty, a message
+"Preview unavailable" is shown instead.  The \e value of an \e image
+element can be changed using \e set, using a table in the same format.
+Examples:
+\verbatim
+d:add("preview", "image", { width=100, height=100,
+                            value={ text="No preview yet" } }, 1, 1)
+d:set("preview", { path="/tmp/picture.png", zoom=2.0 })
+d:set("preview", { bitmap={ width=2, height=1, pixels="\255\0\0\255\0\0\255\128" } })
+\endverbatim
 
 The Lua method for button, checkbox, combo, and list is called with
 the dialog as an argument.  Do not capture the dialog inside the
@@ -987,7 +1165,8 @@ if the dialog is destroyed by Lua after the parent window has already
 deleted it.)
 
 The argument of \e set is:
-\li a string value for \e label, \e text, \e input, and \e image,
+\li a string value for \e label, \e text, and \e input,
+\li a table for \e image,
 \li either an integer, a string, or an array of string items for \e
 list and \e combo,
 \li a boolean for \e checkbox.

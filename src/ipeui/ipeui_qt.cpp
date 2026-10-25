@@ -141,20 +141,21 @@ protected:
 
 // --------------------------------------------------------------------
 
-static double previewNumber(const QString & value, double fallback) {
-    std::string s = value.toStdString();
-    std::istringstream stream(s);
-    double v;
-    if (stream >> v) return v;
-    return fallback;
+void DialogImage::setSpec(const ImageSpec & spec) {
+    iSpec = spec;
+    iImage = QImage();
+    if (spec.kind == ImageSpec::EFile) {
+	iImage = QImage(QString::fromUtf8(spec.text.c_str()));
+    } else if (spec.kind == ImageSpec::EBitmap) {
+	// copy, as the QImage must not refer to the string's memory
+	iImage = QImage(reinterpret_cast<const uchar *>(spec.pixels.data()), spec.width,
+			spec.height, 4 * spec.width, QImage::Format_RGBA8888)
+		     .copy();
+    }
+    update();
 }
 
 void DialogImage::paintEvent(QPaintEvent *) {
-    QString kind = iSpec.section(QLatin1Char('|'), 0, 0);
-    QString value = iSpec.section(QLatin1Char('|'), 1, 1);
-    double zoom =
-	std::clamp(previewNumber(iSpec.section(QLatin1Char('|'), 2, 2), 1.0), 0.1, 100.0);
-
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
@@ -164,25 +165,22 @@ void DialogImage::paintEvent(QPaintEvent *) {
     painter.drawRect(r);
 
     QRectF body = r.adjusted(18, 16, -18, -16);
-    if (kind == QLatin1String("imagefile")) {
-	QImage image(value);
-	if (!image.isNull()) {
-	    QSizeF scaled(image.width() / zoom, image.height() / zoom);
-	    double fit =
-		std::min(body.width() / scaled.width(), body.height() / scaled.height());
-	    if (fit < 1.0) scaled *= fit;
-	    QRectF target(QPointF(body.center().x() - scaled.width() / 2.0,
-				  body.center().y() - scaled.height() / 2.0),
-			  scaled);
-	    painter.drawImage(target, image);
-	    return;
-	}
+    if (!iImage.isNull()) {
+	QSizeF scaled(iImage.width() / iSpec.zoom, iImage.height() / iSpec.zoom);
+	double fit =
+	    std::min(body.width() / scaled.width(), body.height() / scaled.height());
+	if (fit < 1.0) scaled *= fit;
+	QRectF target(QPointF(body.center().x() - scaled.width() / 2.0,
+			      body.center().y() - scaled.height() / 2.0),
+		      scaled);
+	painter.drawImage(target, iImage);
+	return;
     }
     painter.setPen(QColor(60, 60, 60));
     painter.drawText(body, Qt::AlignCenter,
-		     (kind == QLatin1String("imagefile") || value.isEmpty())
-			 ? QStringLiteral("Preview unavailable")
-			 : value);
+		     (iSpec.kind == ImageSpec::EText && !iSpec.text.empty())
+			 ? QString::fromUtf8(iSpec.text.c_str())
+			 : QStringLiteral("Preview unavailable"));
 }
 
 void LatexHighlighter::applyFormat(const QString & text, QRegularExpression & exp,
@@ -349,7 +347,7 @@ void PDialog::setMapped(lua_State * L, int idx) {
     case EInput:
 	(qobject_cast<QLineEdit *>(w))->setText(QString::fromUtf8(m.text.c_str()));
 	break;
-    case EImage: (qobject_cast<DialogImage *>(w))->setSpec(m.text); break;
+    case EImage: (qobject_cast<DialogImage *>(w))->setSpec(m.image); break;
     case EList: {
 	QListWidget * l = qobject_cast<QListWidget *>(w);
 	if (!lua_isnumber(L, 3)) {
@@ -457,7 +455,7 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	    } break;
 	    case EImage: {
 		DialogImage * image = new DialogImage(m.minWidth, m.minHeight, qDialog);
-		image->setSpec(m.text);
+		image->setSpec(m.image);
 		bool hstretch = false;
 		for (int c = m.col; c < m.col + m.colspan; ++c)
 		    if (c < int(iColStretch.size()) && iColStretch[c] != 0)

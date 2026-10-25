@@ -57,6 +57,22 @@ The suite covers `libipelua`, not GUI-only `AppUi` or `ipeui` bindings. Native
 ipelet methods require loading a library and an editor helper, so are excluded.
 Garbage-collection metamethods are exercised automatically, never manually.
 
+## Documentation Check
+
+`checkdocs.lua` is a static check that every function registered in the C++
+sources (`libipelua`, `ipeui`, and `AppUi`) is mentioned in `bindings.txt`:
+
+```sh
+make -C ipelua checkdocs
+```
+
+It reads the `luaL_Reg` tables and looks for each name in the part of
+`bindings.txt` that documents the corresponding class (see the table at the
+top of the script). A name is documented if it appears as `:name` or `.name`
+there, or as `ipe.name` / `ipeui.name` for global functions. It does not check
+that the documentation is correct. Add class mappings or exceptions to the
+script when adding new binding classes.
+
 ## Existing Issues
 
 Expected failures match a specific assertion message. An unrelated exception

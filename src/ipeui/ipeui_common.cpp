@@ -238,12 +238,66 @@ void Dialog::addImage(lua_State * L, SElement & m) {
     m.minWidth = 180;
     m.minHeight = 80;
     lua_getfield(L, 4, "value");
-    if (lua_isstring(L, -1)) m.text = tostring(L, -1);
+    if (!lua_isnil(L, -1)) parseImage(L, lua_absindex(L, -1), m.image);
     lua_getfield(L, 4, "width");
     if (lua_isnumber(L, -1)) m.minWidth = luaL_checkinteger(L, -1);
     lua_getfield(L, 4, "height");
     if (lua_isnumber(L, -1)) m.minHeight = luaL_checkinteger(L, -1);
     lua_pop(L, 3); // height, width, value
+}
+
+// Image specification is a table with one of the fields "text", "path",
+// or "bitmap" (a table with "width", "height", and "pixels"), and an
+// optional "zoom".  An empty table clears the image.
+void Dialog::parseImage(lua_State * L, int index, ImageSpec & image) {
+    luaL_checktype(L, index, LUA_TTABLE);
+    ImageSpec result;
+    lua_getfield(L, index, "zoom");
+    if (!lua_isnil(L, -1)) {
+	luaL_argcheck(L, lua_isnumber(L, -1), index, "zoom must be a number");
+	result.zoom = std::clamp(lua_tonumber(L, -1), 0.1, 100.0);
+    }
+    lua_pop(L, 1); // zoom
+
+    lua_getfield(L, index, "text");
+    lua_getfield(L, index, "path");
+    lua_getfield(L, index, "bitmap");
+    int count = !lua_isnil(L, -3) + !lua_isnil(L, -2) + !lua_isnil(L, -1);
+    luaL_argcheck(L, count <= 1, index, "only one of text, path, and bitmap can be set");
+    if (!lua_isnil(L, -3)) {
+	luaL_argcheck(L, lua_isstring(L, -3), index, "text must be a string");
+	result.kind = ImageSpec::EText;
+	result.text = tostring(L, -3);
+    } else if (!lua_isnil(L, -2)) {
+	luaL_argcheck(L, lua_isstring(L, -2), index, "path must be a string");
+	result.kind = ImageSpec::EFile;
+	result.text = tostring(L, -2);
+    } else if (!lua_isnil(L, -1)) {
+	luaL_argcheck(L, lua_istable(L, -1), index, "bitmap must be a table");
+	int bm = lua_absindex(L, -1);
+	lua_getfield(L, bm, "width");
+	lua_getfield(L, bm, "height");
+	lua_getfield(L, bm, "pixels");
+	luaL_argcheck(L, lua_isnumber(L, -3) && lua_isnumber(L, -2), index,
+		      "bitmap needs integer width and height");
+	luaL_argcheck(L, lua_type(L, -1) == LUA_TSTRING, index,
+		      "bitmap needs a pixels string");
+	lua_Integer w = (lua_Integer)lua_tonumber(L, -3);
+	lua_Integer h = (lua_Integer)lua_tonumber(L, -2);
+	luaL_argcheck(L, w > 0 && h > 0 && w <= 65536 && h <= 65536, index,
+		      "invalid bitmap size");
+	size_t len;
+	const char * data = lua_tolstring(L, -1, &len);
+	luaL_argcheck(L, len == size_t(w) * size_t(h) * 4, index,
+		      "bitmap pixels must have 4 * width * height bytes");
+	result.kind = ImageSpec::EBitmap;
+	result.width = int(w);
+	result.height = int(h);
+	result.pixels.assign(data, len);
+	lua_pop(L, 3); // pixels, height, width
+    }
+    lua_pop(L, 3); // bitmap, path, text
+    image = std::move(result);
 }
 
 void Dialog::addTextEdit(lua_State * L, SElement & m) {
@@ -336,8 +390,8 @@ void Dialog::setUnmapped(lua_State * L, int idx) {
     switch (m.type) {
     case ELabel:
     case ETextEdit:
-    case EInput:
-    case EImage: m.text = checkstring(L, 3); break;
+    case EInput: m.text = checkstring(L, 3); break;
+    case EImage: parseImage(L, 3, m.image); break;
     case EList:
     case ECombo:
 	if (lua_isnumber(L, 3)) {

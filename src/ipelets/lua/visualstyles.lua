@@ -169,7 +169,6 @@ end
 local visual_preview_width = 300
 local visual_preview_height = 130
 local visual_preview_scale = 8
-local visual_preview_serial = 0
 
 local function visual_number(value, fallback)
   return tonumber(value) or fallback
@@ -273,17 +272,14 @@ local function visual_preview_spec(dd, c, value)
     ok = doc:runLatex(dd.model.file_name)
     if not ok then return nil end
   end
-  visual_preview_serial = visual_preview_serial + 1
-  local png = ipe.folder("latex", string.format("style-preview-%d.png",
-                                                visual_preview_serial))
-  dd.model.ui:renderPage(doc, 1, 1, "png", png,
-                         dd.model.ui:zoom() * visual_preview_scale, true, false)
-  return string.format("imagefile|%s|%g", png, visual_preview_scale)
+  local bitmap = dd.model.ui:renderPage(doc, 1, 1, "png", nil,
+					dd.model.ui:zoom() * visual_preview_scale, true, false)
+  return { bitmap=bitmap, zoom=visual_preview_scale }
 end
 
 local function visual_set_preview(d, dd, c, value)
   local spec = visual_preview_spec(dd, c, value)
-  d:set("preview", spec or "unavailable|Preview unavailable")
+  d:set("preview", spec or { text="Preview unavailable" })
 end
 
 local function visual_load_sheet(sheet)

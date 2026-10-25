@@ -29,14 +29,23 @@ function help(d)
   d:set("combo", 5)
 end
 
-local showingImage = true
+local imageState = 0
 
+-- cycles through a PNG file, a bitmap from memory, and a text
 function toggleImage(d)
-  showingImage = not showingImage
-  if showingImage then
-    d:set("image", "imagefile|../../artwork/ipe.iconset/icon_64x64.png|1.3")
+  imageState = (imageState + 1) % 3
+  if imageState == 0 then
+    d:set("image", { path="../../artwork/ipe.iconset/icon_64x64.png", zoom=1.3 })
+  elseif imageState == 1 then
+    -- created using pngtopam -alphapam ../../artwork/ipe.iconset/icon_64x64.png > image.pam
+    local f = assert(io.open("image.pam", "rb"))
+    local data = f:read("*all")
+    f:close()
+    -- skip the header
+    local pixels = data:sub(#data - 64 * 64 * 4 + 1)
+    d:set("image", { bitmap={ width=64, height=64, pixels=pixels }, zoom=0.5 })
   else
-    d:set("image", "text|No image loaded|1.0")
+    d:set("image", { text="No image loaded" })
   end
 end
 
@@ -63,7 +72,7 @@ function dialog1()
   -- d:setEnabled("list", false)
   d:set("list", 4)
   d:add("combo", "combo", {"red", "green", "blue", "violet", "yellow", action=listAction}, 5, 2)
-  d:add("image", "image", {value="imagefile|../../artwork/ipe.iconset/icon_64x64.png|1.0",
+  d:add("image", "image", {value={ path="../../artwork/ipe.iconset/icon_64x64.png" },
 			   width=200, height=150}, 6, 1, 1, 2)
   d:setStretch("row", 4, 1)
   d:setStretch("row", 5, 1)
