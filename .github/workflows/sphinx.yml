@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - 'manual/**'
+      - 'scripts/**'
+      - 'src/ipelua/*.txt'
+      - '.github/workflows/sphinx.yml'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,6 +16,11 @@ jobs:
       with:
         docs-folder: "manual/"
         build-command: "sphinx-build -M html . ../build"
+    - name: Generate documentation for AI assistants (llms.txt)
+      run: |
+        sudo apt-get install -y lua5.4
+        # the Sphinx container created the directory as root
+        sudo lua5.4 manual/llms/mkllms.lua build/html https://otfried.github.io/ipe/
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:

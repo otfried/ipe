@@ -91,6 +91,26 @@ and the example files agree. When you change an example or the chapter, run this
 test. A new example file must be used in the chapter and be tested in
 `doctest.lua`.
 
+## Documentation for AI assistants
+
+`manual/llms/mkllms.lua` converts the manual chapter "Scripts and ipelets" and
+the Doxygen pages with the Lua bindings (`bindings.txt`, and the ipelet part of
+`ipelets.txt`) into plain-text Markdown files for AI assistants: `llms.txt` (an
+index in the format of llmstxt.org), `llms-guide.txt`, `llms-api.txt`,
+`llms-full.txt`, and `AGENTS-ipelets.md` (a template for an `AGENTS.md` file that
+users can put into their ipelet folder):
+
+```sh
+lua5.4 manual/llms/mkllms.lua build/html
+```
+
+The GitHub action `sphinx.yml` runs this after building the manual, so the files
+are published together with the manual, at `https://otfried.github.io/ipe/`.
+The script only understands the few ReStructuredText and Doxygen constructs
+used in these sources and fails when it finds something else, so extend it when
+you introduce new markup.  `manual/llms/intro.md` is the "read this first"
+text at the start of the guide: keep it in line with the manual.
+
 ## Existing Issues
 
 Expected failures match a specific assertion message. An unrelated exception

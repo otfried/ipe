@@ -266,8 +266,8 @@ t.redo    -- function t.redo(t, doc) that makes the change
 -- optional:
 t.style_sheets_changed = true  -- if the style sheets of doc are changed
 \endverbatim
-\c model:register(t) records the selection, calls \c t.redo(t, model.doc)
-to make the change, and puts \c t on the undo stack.  A page-wide change
+\c model:register(t) records the selection, calls \c t.redo with the item and the
+document \c model.doc to make the change, and puts \c t on the undo stack.  A page-wide change
 is easily implemented by making copies of the page before and after the
 change, and switching between them:
 \verbatim

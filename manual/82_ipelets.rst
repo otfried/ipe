@@ -51,7 +51,7 @@ treat the document:
 The rest of this chapter first introduces the common Lua library, then
 describes scripts and ipelets in turn.  The complete reference for the
 Lua library is the `Ipelib documentation
-<https://ipe.otfried.org/manual/>`_ (look for the pages *Lua bindings
+<https://ipe.otfried.org/ipelib/>`_ (look for the pages *Lua bindings
 for ...*, and *Ipelets*).  The best documentation of what is possible
 are the existing scripts and ipelets that come with Ipe: the scripts
 are in the :file:`scripts` folder, and the ipelets in the :file:`ipelets`
@@ -442,7 +442,20 @@ Writing scripts and ipelets with an AI assistant
 
 AI assistants (large language models) can write simple scripts and
 ipelets for you.  The result will be much better if the assistant has
-the right information.  We suggest to give it:
+the right information.  For this purpose, the Ipe manual is also published
+as plain text, following the `llms.txt <https://llmstxt.org>`__ convention:
+the file `llms.txt <https://otfried.github.io/ipe/llms.txt>`__ is an index
+for assistants, and `llms-full.txt
+<https://otfried.github.io/ipe/llms-full.txt>`__ contains this chapter and
+the complete reference of the Lua library in a single file, which you can
+give to your assistant (or paste into its instructions).  If you work with a
+coding assistant in your ipelet folder, copy the file `AGENTS-ipelets.md
+<https://otfried.github.io/ipe/AGENTS-ipelets.md>`__ there under the name
+:file:`AGENTS.md`: many assistants read such a file automatically.  It tells
+the assistant where to find the documentation, summarizes the most important
+rules, and asks it to test its ipelets with *run-ipelet*.
+
+If you prefer to select the material yourself, we suggest to give it:
 
 * this chapter of the manual, and the reference of the Lua library (the
   page *Lua bindings* of the Ipelib documentation, which lists all
