@@ -244,7 +244,7 @@ to false). The arrow settings are then used from the \c attributes.
 
 \c ipe.Object parses the XML representation of a single object (as
 returned by \c obj:xml()), and returns nil if parsing fails.  If the
-string is an \c <ipeselection> (as used for the clipboard), it
+string is an \c \<ipeselection\> (as used for the clipboard), it
 instead returns two tables, with the objects and with the names of
 their layers.
 

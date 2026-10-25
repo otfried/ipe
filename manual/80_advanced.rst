@@ -105,14 +105,9 @@ stylesheet named ``master-preamble``).
 Writing ipelets
 ---------------
 
-An ipelet is an extension to Ipe.  Ipe 7 uses the scripting language
-`Lua <http://www.lua.org>`_ (in fact, most of the Ipe program itself
-is written in Lua), and loads ipelets written in Lua when it starts
-up.  It is also possible to write ipelets in C++, using a small Lua
-wrapper that declares the methods available inside the ipelet.
-
-Documentation about writing ipelets can be found in the `Ipelib
-documentation <https://ipe.otfried.org/manual/>`_.
+An ipelet is an extension to Ipe, written in the scripting language
+`Lua <https://www.lua.org>`_ or in C++.  How to write ipelets (and
+scripts) is described in the chapter :doc:`82_ipelets`.
 
 .. _troubleshooting:
 

@@ -134,6 +134,15 @@ The Ipe distribution contains the following scripts:
 * *update-styles* to update the stylesheets in Ipe figures (in the
   same way that Ipe does it using the *Update stylesheets* function).
 
+* *scratchpad* adds a layer for annotations to every page of a
+  presentation;
+
+* *run-ipelet* runs an ipelet on a document without starting Ipe, and
+  tests its undo and redo, see :ref:`testing-ipelets`.
+
+Writing your own scripts is explained in the chapter
+:doc:`82_ipelets`.
+
 
 Ipeextract: extract XML stream from Ipe file
 --------------------------------------------

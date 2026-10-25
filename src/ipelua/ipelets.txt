@@ -225,43 +225,106 @@ about, and either \c run or \c methods (or both).
 If an ipelet defines no \c label variable, then the ipelet is not
 added to the Ipelet menu.  Such ipelets can be used to customize Ipe.
 
+If an ipelet has a \c category, it is placed in that submenu of the
+Ipelet menu (see \c prefs.ipelet_menu in \e prefs.lua).
+
 When Ipe invokes an ipelet, the Lua method is called with two
 arguments: the first argument \a model is the active Ipe user
-interface, the second is the index of the method being invoked.
+interface (the "model" of the document window), the second is the index
+of the method being invoked (always 1 if the ipelet has a single \c
+run function).  A keyboard shortcut for method number \e n of the ipelet in
+file \e name.lua is defined by setting \c shortcuts.ipelet_n_name.
 
 The "global" environment of the ipelet is a private environment for
 this ipelet only, so there is no need to fear polluting the global
-namespace - you can use names here freely.  The commonly used names
-have been imported from Ipe's global namespace already, and you can
-access any others you may need through \c _G.
+namespace - you can use names here freely.  Only the following names
+have been imported from Ipe's global namespace: \c _G, \c ipe, \c
+ipeui, \c math, \c string, \c table, \c assert, \c ipairs, \c
+pairs, \c print, \c tonumber, \c tostring, \c shortcuts, \c prefs,
+\c config, and \c mouse.  You can access any others you may need
+through \c _G (for instance \c _G.type or \c _G.revertOriginal).
+
+The manual (chapter "Scripts and ipelets") has a tutorial with
+examples.  See also \ref lua for the bindings of the Ipe objects, and
+\ref luaipeui for dialogs.
+
+\section lua-ipelet-undo Undo items
 
 It is important that the ipelet does \e not directly modify the
 document.  This would mess up the undo stack, and could cause Ipe to
 crash on undo or redo.  Instead, to modify the document the ipelet
 needs to create an undo item \c t and call \c model:register(t).
 
-If all the ipelet does is to create a new object \c obj, then it can
-simply call 
+An undo item is a Lua table with the following fields:
 \verbatim
-model:creation("create new object", obj)
+t.label   -- string, shown to the user ("Undo 'label'")
+t.pno     -- page number to show after undo and redo
+t.vno     -- view number to show after undo and redo
+t.undo    -- function t.undo(t, doc) that reverts the change
+t.redo    -- function t.redo(t, doc) that makes the change
+
+-- optional:
+t.style_sheets_changed = true  -- if the style sheets of doc are changed
+\endverbatim
+\c model:register(t) records the selection, calls \c t.redo(t, model.doc)
+to make the change, and puts \c t on the undo stack.  A page-wide change
+is easily implemented by making copies of the page before and after the
+change, and switching between them:
+\verbatim
+local t = { label = "my change", pno = model.pno, vno = model.vno,
+            original = model:page():clone(),
+            final = model:page():clone(),
+            undo = _G.revertOriginal,   -- doc:set(t.pno, t.original)
+            redo = _G.revertFinal }     -- doc:set(t.pno, t.final)
+-- modify t.final here (not model:page()!)
+model:register(t)
 \endverbatim
 
-The following are some useful methods and data structures:
+\section lua-ipelet-model The model
+
+The model has the following members and methods:
 \verbatim
-model.doc     -- the document
-model.pno     -- current page number
-model.vno     -- current view number
-
-model:page()  -- returns current page
-
-model:register(t) -- register undo item and execute its redo method
-model:creation("label", obj)  -- register undo item for object creation
-
-model:warning(text, details)  -- display a warning box
-
+model.doc          -- the document
+model.pno          -- current page number
+model.vno          -- current view number
+model.file_name    -- name of the file, or nil
 model.attributes   -- attributes currently set in user interface
-model.snap         -- currently active snap settings
+                   -- (a table suitable for ipe.Path, ipe.Text, ipe.Reference)
+model.snap         -- currently active snap settings (see below)
+model.ui           -- the AppUi object (see \ref luaappui)
+
+model:page()       -- returns current page
+model:selection()  -- table with the numbers of the selected objects
+                   -- of the current page
+
+model:register(t)  -- register undo item and execute its redo method
+
+-- register undo items for the most common changes:
+model:creation(label, obj)       -- insert obj into the active layer;
+                                 -- obj becomes the only selected object
+model:transformation(label, m, deselect)
+                                 -- transform selected objects by matrix m
+model:setAttribute(property, value)
+                                 -- set property of selected objects
+
+model:warning(text, details)     -- display a warning box
+
+-- ask the user for a value; return nil if the user cancels:
+s = model:getString(prompt, caption, initial)  -- caption and initial are optional
+n = model:getDouble(caption, label, initial, minimum, maximum)
 \endverbatim
+
+Useful methods of \c model.ui are \c win() (the window to be used as the
+parent of dialogs), \c explain(text) (show text in the status bar), \c
+pos() (mouse position, after snapping), and \c zoom().
+
+\section lua-ipelet-testing Testing ipelets
+
+The script \e run-ipelet (run as <tt>ipescript run-ipelet</tt>) runs a
+Lua ipelet on a document without starting the Ipe editor.  It uses the
+\c model of the Ipe editor with a user interface that does nothing, runs
+the ipelet, saves the result, and checks that undo and redo restore the
+page exactly.  Dialogs behave as if accepted.  See the manual for details.
 
 Look at the existing ipelets for inspiration.
 
