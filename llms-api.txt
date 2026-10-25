@@ -1,0 +1,1452 @@
+# Ipe: Lua API reference
+
+> Ipe is an extensible drawing editor with a Lua scripting interface. This documentation explains how to write Ipe scripts and ipelets (extensions of the editor) in Lua, with complete examples and a reference for all Lua functions.
+
+(Ipe 7.3.1, generated 2026-10-25 from commit 383662fb621a)
+
+## Lua API reference
+
+### Ipelets written in Lua
+
+Ipelets written in Lua have access to the entire Ipe user interface,
+and can in principle do anything that Ipe can do.
+
+An ipelet is a Lua script that is placed in Ipe's ipelet directory.
+
+The script needs to define three global variables, namely `label`, `about`, and either `run` or `methods` (or both).
+
+* `label` is a string containing the label (that is, the name) of
+  the ipelet.  It is shown in the Ipelet menu.
+
+* `about` is a string containing an 'about' or copyright notice for
+      the ipelet.  Ipe displays this in the "About the ipelets" box.
+
+* `run` is used if the ipelet contains only a single method.
+    When the ipelet is invoked, the function `run` is called by Lua.
+
+* `methods` is used if the ipelet contains more than one method.
+    It is an array with an entry for each method.  Each entry is a
+    table with keys `label` (defining the label of the method) and
+    `run` (a Lua function that will be called by Ipe to execute this
+    method).  If an entry does not have a `run` field, then the
+    global `run` method is called instead.
+
+If an ipelet defines no `label` variable, then the ipelet is not
+added to the Ipelet menu.  Such ipelets can be used to customize Ipe.
+
+If an ipelet has a `category`, it is placed in that submenu of the
+Ipelet menu (see `prefs.ipelet_menu` in *prefs.lua*).
+
+When Ipe invokes an ipelet, the Lua method is called with two
+arguments: the first argument *model* is the active Ipe user
+interface (the "model" of the document window), the second is the index
+of the method being invoked (always 1 if the ipelet has a single `run` function).  A keyboard shortcut for method number *n* of the ipelet in
+file *name.lua* is defined by setting `shortcuts.ipelet_n_name`.
+
+The "global" environment of the ipelet is a private environment for
+this ipelet only, so there is no need to fear polluting the global
+namespace - you can use names here freely.  Only the following names
+have been imported from Ipe's global namespace: `_G`, `ipe`, `ipeui`, `math`, `string`, `table`, `assert`, `ipairs`, `pairs`, `print`, `tonumber`, `tostring`, `shortcuts`, `prefs`,
+`config`, and `mouse`.  You can access any others you may need
+through `_G` (for instance `_G.type` or `_G.revertOriginal`).
+
+The manual (chapter "Scripts and ipelets") has a tutorial with
+examples.  See also "Programming in Lua" for the bindings of the Ipe objects, and
+"Lua bindings for dialogs and menus" for dialogs.
+
+#### Undo items
+
+It is important that the ipelet does *not* directly modify the
+document.  This would mess up the undo stack, and could cause Ipe to
+crash on undo or redo.  Instead, to modify the document the ipelet
+needs to create an undo item `t` and call `model:register(t)`.
+
+An undo item is a Lua table with the following fields:
+```lua
+t.label   -- string, shown to the user ("Undo 'label'")
+t.pno     -- page number to show after undo and redo
+t.vno     -- view number to show after undo and redo
+t.undo    -- function t.undo(t, doc) that reverts the change
+t.redo    -- function t.redo(t, doc) that makes the change
+
+-- optional:
+t.style_sheets_changed = true  -- if the style sheets of doc are changed
+```
+`model:register(t)` records the selection, calls `t.redo` with the item and the
+document `model.doc` to make the change, and puts `t` on the undo stack.  A page-wide change
+is easily implemented by making copies of the page before and after the
+change, and switching between them:
+```lua
+local t = { label = "my change", pno = model.pno, vno = model.vno,
+            original = model:page():clone(),
+            final = model:page():clone(),
+            undo = _G.revertOriginal,   -- doc:set(t.pno, t.original)
+            redo = _G.revertFinal }     -- doc:set(t.pno, t.final)
+-- modify t.final here (not model:page()!)
+model:register(t)
+```
+
+#### The model
+
+The model has the following members and methods:
+```lua
+model.doc          -- the document
+model.pno          -- current page number
+model.vno          -- current view number
+model.file_name    -- name of the file, or nil
+model.attributes   -- attributes currently set in user interface
+                   -- (a table suitable for ipe.Path, ipe.Text, ipe.Reference)
+model.snap         -- currently active snap settings (see below)
+model.ui           -- the AppUi object (see \ref luaappui)
+
+model:page()       -- returns current page
+model:selection()  -- table with the numbers of the selected objects
+                   -- of the current page
+
+model:register(t)  -- register undo item and execute its redo method
+
+-- register undo items for the most common changes:
+model:creation(label, obj)       -- insert obj into the active layer;
+                                 -- obj becomes the only selected object
+model:transformation(label, m, deselect)
+                                 -- transform selected objects by matrix m
+model:setAttribute(property, value)
+                                 -- set property of selected objects
+
+model:warning(text, details)     -- display a warning box
+
+-- ask the user for a value; return nil if the user cancels:
+s = model:getString(prompt, caption, initial)  -- caption and initial are optional
+n = model:getDouble(caption, label, initial, minimum, maximum)
+```
+
+Useful methods of `model.ui` are `win()` (the window to be used as the
+parent of dialogs), `explain(text)` (show text in the status bar), `pos()` (mouse position, after snapping), and `zoom()`.
+
+#### Testing ipelets
+
+The script *run-ipelet* (run as `ipescript run-ipelet`) runs a
+Lua ipelet on a document without starting the Ipe editor.  It uses the
+`model` of the Ipe editor with a user interface that does nothing, runs
+the ipelet, saves the result, and checks that undo and redo restore the
+page exactly.  Dialogs behave as if accepted.  See the manual for details.
+
+Look at the existing ipelets for inspiration.
+
+// --------------------------------------------------------------------
+
+### Programming in Lua
+
+The library *libipelua* implements Lua bindings for many classes in
+Ipelib.  The bindings are available in Lua ipelets, as well as in Lua
+scripts executed using the ipescript program.
+
+These pages document the Lua bindings to Ipelib:
+
+* Lua bindings for geometric objects
+* Lua bindings for objects and attributes
+* Lua bindings for Document, Page, and StyleSheet
+
+When writing Ipelets in Lua, you have access to additional methods
+provided by the Ipe program itself:
+
+* Lua bindings for Ipe
+* Lua bindings for dialogs and menus
+
+#### Examples
+
+Here is a Lua script that reads an Ipe document and then recenters
+each page on the paper.  You can run this script as 
+"ipescript recenter".
+
+```lua
+-- recenter.lua
+-- center objects on each page of the document
+
+if #argv ~= 2 then
+  io.stderr:write("Usage: ipescript recenter <inputfile> <outputfile>\n")
+  return
+end
+
+inname = argv[1]
+outname = argv[2]
+
+doc = assert(ipe.Document(inname))
+
+-- make sure we have size information for text
+assert(doc:runLatex())
+
+layout = doc:sheets():find("layout")
+fs = layout.framesize
+
+for i,p in doc:pages() do
+  box = ipe.Rect()
+  for j = 1,#p do
+    box:add(p:bbox(j))
+  end
+  nx = (fs.x - box:width()) / 2
+  ny = (fs.y - box:height()) / 2
+  trans = ipe.Vector(nx, ny) - box:bottomLeft()
+  m = ipe.Translation(trans)
+  for j = 1,#p do
+    p:transform(j, m)
+  end
+end
+doc:save(outname)
+
+```
+
+The following script prints out all the gradients defined in a
+document:
+
+```lua
+-- -*- lua -*-
+
+function printTable(t, indent)
+  for k in pairs(t) do
+    local v = t[k]
+    if type(v) == "table" then 
+      print(indent .. k .. ":")
+      printTable(v, "  " .. indent)
+    else
+      print(indent .. k .. ": " .. tostring(v))
+    end
+  end
+end
+
+if #argv ~= 1 then
+  io.stderr:write("Usage: ipescript show-gradients <ipe-document>\n")
+  return
+end
+
+local figname = argv[1]
+local doc = assert(ipe.Document(figname))
+local s = doc:sheets()
+
+for _,w in ipairs(s:allNames("gradient")) do
+  print("Gradient: ", w)
+  local g = s:find("gradient", w)
+  printTable(g, "  ")
+end
+```
+
+And here is a script that shows how to add a gradient to a document
+(the same technique works for tilings and effects):
+
+```lua
+-- -*- lua -*-
+
+if #argv ~= 1 then
+  io.stderr:write("Usage: ipescript add-gradient <ipe-document>\n")
+  return
+end
+
+local figname = argv[1]
+local doc = assert(ipe.Document(figname))
+
+local sheet = [[<ipestyle>
+<gradient name="ball" type="radial" coords="-4 10 2 0 0 18">
+ <stop offset="0" color="1 1 0"/>
+ <stop offset="1" color="0 1 0"/>
+</gradient>
+</ipestyle>]]
+
+local ts = ipe.Sheet(nil, sheet)
+
+local s = doc:sheets()
+for i = 1,s:count() do
+  print(s:sheet(i):name())
+end
+
+-- add the gradient to the sheet on top of the stack
+-- in general it is not a good idea to change the "basic" sheet,
+-- better verify if a custom sheet for gradients exists already
+-- and create it if not.
+s:sheet(1):addFrom(ts, "gradient", "ball")
+assert(doc:runLatex())
+doc:save(figname .. ".new.ipe")
+```
+
+For more examples, have a look at the scripts in your Ipe
+installation, such as add-style.lua or update-styles.lua.
+
+### Lua bindings for geometric objects
+
+All Ipelib objects have constructors of the form:
+
+```lua
+ v = ipe.Vector()
+ m = ipe.Matrix()
+ m = ipe.Translation()  -- another Matrix constructor
+ m = ipe.Rotation()     -- yet another Matrix constructor
+ r = ipe.Rect()
+ l = ipe.Line()
+ l = ipe.LineThrough()  -- another Line constructor
+ l = ipe.Bisector()     -- yet another Line constructor
+ s = ipe.Segment()
+ b = ipe.Bezier()
+ a = ipe.Arc()
+```
+
+Note that ipe::Angle and ipe::Linear are not bound in Lua.  Use
+numbers and ipe.Matrix instead.  A useful method for angles is:
+```lua
+beta = ipe.normalizeAngle(alpha, lowLimit)
+```
+
+#### Vector
+
+*ipe.Vector* binds ipe::Vector. There are the following methods:
+```lua
+v = ipe.Vector()         -- zero vector
+v = ipe.Vector(x, y)
+v = ipe.Direction(alpha) -- unit vector in this direction 
+a = v.x                  -- read only access to x and y coordinates
+b = v.y
+
+v:len() -- returns norm of vector
+v:sqLen() -- returns square of norm
+v:normalized() -- returns this vector normalized
+v:orthogonal() -- returns this vector rotated left by 90 degrees
+v:factorize(u) -- factors v = lambda u + x, where x orth. to u, u is unit
+v:angle()     -- return direction 
+v == w        -- vector equality
+v ~= w
+-v            -- unary minus
+v + w         -- vector addition
+v - w         -- vector difference
+5 * v         -- multiplication with a scalar
+v * 5         -- multiplication with a scalar
+v ^ w         -- dot product
+```
+
+#### Matrix
+
+*ipe.Matrix* binds ipe::Matrix. It has the following methods:
+```lua
+m = ipe.Matrix()                        -- identity matrix
+m = ipe.Matrix(a1, a2, a3, a4)		-- linear transformation
+m = ipe.Matrix(a1, a2, a3, a4, a5, a6)  -- affine transformation
+m = ipe.Matrix( { a1, a2, a3, a4, a5, a6 } ) -- same from table
+m = ipe.Rotation(alpha)                 -- rotation matrix
+m = ipe.Translation(v)                  -- v is a vector
+m = ipe.Translation(x, y)
+
+m1 == m2          -- matrix equality
+m1 * m2           -- matrix multiplication
+m * v             -- matrix * vector
+m * arc		  -- matrix * arc
+
+m:elements()      -- returns six-element array with elements
+m:coeff()         -- same as m:elements()
+
+m:isIdentity()
+m:isSingular(threshold)
+m:inverse()
+m:translation()   -- return translation component
+m:linear()        -- returns matrix without the translation component
+```
+
+#### Rect
+
+*ipe.Rect* binds ipe::Rect.  This is the only mutable geometric
+object - take care not to be surprised when *ipe.Rect* objects are
+shared. 
+
+It has the following methods:
+```lua
+r = ipe.Rect()    -- empty
+r:isEmpty()
+r:topRight()
+r:bottomLeft()
+r:topLeft()
+r:bottomRight()
+r:left()
+r:right()
+r:bottom()
+r:top()
+r:width()
+r:height()
+r:add(v)          -- extend to cover vector v
+r1:add(r2)        -- extend to cover rectangle r2
+r1:clipTo(r2)     -- clip r1 to lie inside r2
+r:contains(v)     
+r1:contains(r2)
+r1:intersects(r2)
+```
+
+#### Line
+
+*ipe.Line* binds ipe::Line. It has the following methods:
+
+```lua
+l = ipe.Line(p, dir)      -- dir must be unit vector
+l = ipe.LineThrough(p, q)
+l = ipe.Bisector(p, q)
+
+-- l:side() returns +1 if v lies to the left side of the line, 
+-- 0 if on line, -1 if on the right side
+l:side(v)                 
+l:point()                 -- starting point of line
+l:dir()                   -- unit direction vector
+l:normal()                -- unit normal vector pointing to the left side
+l:distance(v)             -- returns distance from point to line
+l1:intersects(l2)         -- returns intersection point or nil
+l:project(p)              -- projection of point on line
+```
+
+#### Segment
+
+*ipe.Segment* binds ipe::Segment. It has the following methods:
+
+```lua
+s = ipe.Segment(p, q)	
+p, q = s:endpoints()      -- returns both endpoints
+s:line()                  -- returns an ipe.Line
+s:project(p)              -- returns projection or nil
+s:distance(p)
+s:intersects(l)           -- return intersection point or nil
+s1:intersects(s2)
+```
+
+#### Bezier
+
+*ipe.Bezier* binds ipe::Bezier. It has the following methods:
+
+```lua
+b = ipe.Bezier(v1, v2, v3, v4)	
+b = ipe.Quad(v1, v2, v3)  -- quadratic Bezier (control points v1, v2, v3),
+                          -- returned as a cubic Bezier
+b:point(t)                -- point at value t
+v1, v2, v3, v4 = b:controlpoints()  -- returns all four control points
+b:bbox()
+t, p = b:snap(pos)
+
+-- intersections: 
+-- x is line, segment, or bezier
+-- returns table of intersection points
+b:intersect(x)
+```
+
+#### Arc
+
+*ipe.Arc* binds ipe::Arc. It has the following methods:
+
+```lua
+a = ipe.Arc(m)            -- ellipse defined by ipe.Matrix m
+a = ipe.Arc(m, p, q)      -- arc from p to q
+a = ipe.Arc(m, alpha, beta)
+
+a:endpoints()             -- returns two endpoints
+a:angles()                -- returns two angles
+a:bbox()
+a:matrix()
+a:isEllipse() 
+alpha, p = a:snap(pos)
+
+-- intersections: 
+-- x is line, segment, arc, or bezier
+-- returns table of intersection points
+a:intersect(x)
+```
+
+### Lua bindings for objects and attributes
+
+The five Ipe objects are ipe::Group, ipe::Path, ipe::Text, ipe::Image,
+and ipe::Reference.  They can be constructed from Lua as follows:
+
+```lua
+obj = ipe.Reference(attributes, name, pos)
+obj = ipe.Text(attributes, text, pos)          -- Text of type label
+obj = ipe.Text(attributes, text, pos, width)   -- Text of type minipage
+obj = ipe.Path(attributes, shape, with_arrows)	 
+obj = ipe.Group(elements)       -- elements is a table of objects
+obj = ipe.Image(rect, bitmap)   -- where bitmap is another Image object 
+obj = ipe.Image(rect, path)     -- to create an external image
+obj = ipe.Object(xml)           -- parse an object from its XML representation
+```
+
+Here, `attributes` is a table defining the desired attributes, see
+below.  `shape` is a table defining a shape, see below.  To create
+path with arrows, you need to set `with_arrows` to true (it defaults
+to false). The arrow settings are then used from the `attributes`.
+
+`ipe.Object` parses the XML representation of a single object (as
+returned by `obj:xml())`, and returns nil if parsing fails.  If the
+string is an `<ipeselection>` (as used for the clipboard), it
+instead returns two tables, with the objects and with the names of
+their layers.
+
+A bitmap can be created by reading from an image file:
+```lua
+bitmap, res = ipe.readImage(fname)
+```
+If reading the bitmap fails, then bitmap is nil and res is an error
+message. Otherwise, bitmap is an Image object and res is the
+resolution in dots per inch.  This will be (0,0) if the file does not
+contain that information.
+
+Objects have the following methods:
+```lua
+obj:type()    -- return type as string: group, text, path, image, reference
+obj:clone()   -- clone the object
+
+obj:set(property, value)    -- see below
+obj:get(property)           -- see below
+
+obj:xml()                   -- return XML representation
+obj:matrix()
+obj:setMatrix(m)
+obj:addToBBox(r, m)         -- including control points
+obj:addToBBox(r, m, false)  -- without control points
+
+obj:setAnimate(s)           -- set string s as animate name
+s = obj:getAnimate()
+
+obj:setCustom(s)            -- set string s as custom field
+s = obj:getCustom()
+
+-- text and reference objects only:
+v = obj:position()
+-- reference objects only:
+name = obj:symbol()          -- the name of the symbol
+-- text objects only:
+obj:setText(str)
+str = obj:text()
+width, height, depth = obj:dimensions()
+-- path objects only:
+shape = obj:shape()                      
+obj:setShape(shape)            
+-- group objects only:
+n = obj:count()                  
+shape = obj:clip()           -- nil if no clipping
+obj:setClip(shape)
+str = obj:text()             -- the link action (URL)
+obj:setText(str)
+-- image objects only:
+rect = obj:rect()            -- image rectangle before applying obj:matrix()
+obj:info()                   -- returns table about bitmap
+obj:setPath(path)            -- set the path of an external image
+-- write the bitmap to a file, as PNG or JPEG (without re-encoding),
+-- returns true if successful:
+ok = obj:saveImage(filename)
+-- write raw pixel data to a file (for debugging): a PyRGBA header
+-- followed by RGBA bytes, or the JPEG data for a JPEG image
+obj:savePixels(filename)
+obj:setBitmap(image)         -- copies image's internal bitmap and clears the external path;
+                            -- preserves the rectangle and all attributes; rejects images without a bitmap
+-- group objects only:
+elements = obj:elements()    -- returns table with clones of elements 
+element = obj:element(i)     -- returns clone of element #i
+obj:elementType(i)           -- returns type of element #i
+obj:replace(i, element)      -- replaces element #i with a clone; other copies of the group are unchanged
+```
+
+#### Attributes
+
+Attributes are represented in Lua as follows:
+
+* Symbolic names are strings
+
+* Absolute string values (e.g. dash style) are strings
+
+* Absolute numeric values are numbers
+
+* Absolute colors are tables with three entries with keys `r`, `g`, `b`
+
+* Boolean values (for `minipage`, `farrow`, `rarrow`) are
+    booleans (but the strings "true" and "false" can be used to set them)
+
+* Transformations, Pinned, Linejoin, Linecap, Fillrule, Horizontal
+alignment, and Vertical alignment are represented by fixed strings,
+see table below.  
+
+The *attributes* argument to the object constructors is a table
+defining all desired attributes.  Keys in the table are as follows. 
+If a key is not present, the default value is used.
+```lua
+pathmode -- "stroked", "strokedfilled", "filled"
+stroke   -- symbolic or color
+fill     -- symbolic or color
+dashstyle -- symbolic or absolute string
+pen      -- symbolic or number
+farrow   -- boolean
+rarrow   -- boolean
+farrowshape -- symbolic
+rarrowshape -- symbolic
+arrowsize  -- symbolic or number
+symbolsize -- symbolic or number
+symbolshape -- symbolic
+textsize   -- symbolic or number
+transformabletext -- boolean
+textstyle  -- symbolic
+opacity    -- symbolic
+tiling     -- symbolic
+decoration -- symbolic ("normal" means no decoration)
+minipage   -- boolean	   
+width 	   -- number
+horizontalalignment -- "left", "right", "hcenter"
+verticalalignment   -- "bottom", "baseline", "top", "vcenter"
+linejoin            -- "normal", "miter", "round", "bevel"
+linecap             -- "normal", "butt", "round", "square"
+fillrule            -- "normal", "wind", "evenodd"
+pinned              -- "none", "horizontal", "vertical", "fixed"
+transformations     -- "translations", "rigid", "affine"
+variant     -- symbolic, or "undefined"
+externalimages -- boolean
+```
+
+#### Properties
+
+The *set()* and *get()* methods allow to access the attributes of
+objects.  The property names are 
+```lua
+    pen, symbolsize, 
+    farrow, rarrow, farrowsize, rarrowsize, farrowshape, rarrowshape, 
+    stroke, fill, markshape,
+    pathmode, dashstyle, 
+    textsize, textstyle, minipage, width, 
+    opacity, tiling, gradient, 
+    horizontalalignment, verticalalignment,
+    linejoin, linecap, fillrule, 
+    pinned, transformations,
+    decoration,
+    variant
+```
+
+It is okay to set a property on objects that do not support them (for
+instance, "textsize" on a path object).  Reading such properties
+results in an "undefined" return value.
+
+#### Shape
+
+The geometry of a path object and the clipping path of a group object
+is an ipe::Shape.  This is represented in Lua as a pure Lua object,
+namely an array with one entry per subpath.  
+
+Each subpath is again a table with a `type` field whose value must be
+one of "ellipse", "closedspline", or "curve".  
+
+For an ellipse, element 1 of the table is the matrix.  
+
+For a closed spline, the table contains the control points.  
+
+For a curve, the table has a second field `closed`, which is either
+`true` or `false`.  The table also has an entry for each segment of
+the curve.  Each segment is again a table with a `type` field, whose
+value is one of "arc", "segment", "spline", "oldspline", "cardinal",
+or "spiro".  The segment table contains the control points of the
+segment.  For arc segments, there is an additional `arc` field in the
+segment table that contains the arc as an ipe.Arc object.  For
+cardinal spline segments, there is an additional `tension` field in
+the segment table.
+
+### Lua bindings for Document, Page, and StyleSheet
+
+#### Stylesheet
+
+A stylesheet can be constructed by reading from a file (in XML
+format), or by creating an empty stylesheet:
+```lua
+-- create from file:
+-- returns sheet or nil, error message
+sheet = ipe.Sheet("filename")
+-- create from XML data:
+-- returns sheet or nil, error message
+sheet = ipe.Sheet(nil, "<ipestyle> ... </ipestyle>")
+-- create empty stylesheet:
+sheet = ipe.Sheet()    
+```
+
+Stylesheets have the following methods:
+```lua
+sheet:clone()            -- returns a private copy of the stylesheet
+sheet:xml(with_bitmaps)  -- return XML representation 
+sheet:add(kind, symbolic, value)
+sheet:addFrom(other_sheet, kind, symbolic)
+sheet:remove(kind, symbolic)
+sheet:allNames(kind)
+sheet:find(kind, name)
+sheet:setAttribute(kind, name, absolute)
+sheet:set(kind, value)  -- only for preamble, linejoin, linecap, fillrule
+sheet:isStandard()      -- is this the built-in stylesheet?
+sheet:name()            -- name of the stylesheet
+sheet:setName(name)
+```
+
+`sheet:add` adds a definition for symbolic name to the stylesheet.
+Permissible values for `kind` are:
+```lua
+ pen, symbolsize, arrowsize, color, dashstyle, textsize, textstretch, 
+ textstyle, gridsize, anglesize, opacity, symbol, 
+```
+
+`sheet:addFrom` copies a definition for a gradient, tiling, or effect
+from another stylesheet.  This makes it possible to create such
+definitions by creating a temporary stylesheet from an XML string.
+
+`sheet:remove` removes the definition of a symbolic name from the
+stylesheet. This also works for symbols, gradients, tilings, and
+effects. It is permissible to remove a symbolic name that is not
+defined in the stylesheet.
+
+`sheet:set` sets a value. Permissible values for `kind` are:
+```lua
+ preamble, linecap, linejoin, fillrule
+```
+
+#### Stylesheet cascade
+
+Documents own an entire stack of style sheets, the style sheet *cascade*.  An empty style sheet cascade can be created like this:
+```lua
+sheets = ipe.Sheets()
+```
+or you can obtain one from an Ipe document.
+
+Style sheet cascades have the following methods:
+```lua
+sheets1 = sheets:clone()              -- make a private copy
+sheets:allNames(kind)
+sheets:find(kind, symbolic)
+sheets:has(kind, symbolic)
+sheets:count()                        -- return number of sheets
+sheets:sheet(index)                   -- return sheet at index
+sheets:insert(index, style_sheet)     -- insert sheet at index
+sheets:remove(index)                  -- delete a sheet
+log = sheets:update(directory)        -- update style sheets from directory
+```
+
+`sheets:allNames` returns a table with all symbolic names defined in
+the entire stylesheet cascade.  Permissible values for `kind` are:
+```lua
+ pen, symbolsize, arrowsize, color, dashstyle, textsize, textstretch, 
+ textstyle, gridsize, anglesize, opacity, tiling, symbol, gradient, effect
+```
+
+`sheet:has` checks whether a symbolic name is defined in
+the cascade.  Permissible values for `kind` are as for `allNames`.
+
+`sheet:find` looks up a symbolic definition.  Permissible values for
+`kind` are:
+```lua
+ pen, symbolsize, arrowsize, color, dashstyle, textsize, textstretch, 
+ textstyle, gridsize, anglesize, opacity, symbol, 
+ preamble, linecap, linejoin, fillrule, layout
+```
+
+#### Page
+
+Page objects can be created like this:
+```lua
+p = ipe.Page()   -- create basic page with one layer and one view
+p1 = p:clone()   -- returns a copy of the page
+```
+
+The following methods get and set the page style. The style name must be
+defined by a `<pagestyle>` element in a style sheet. Passing `nil` to
+`setStyle` clears the page style.
+```lua
+name = p:style()       -- return the page style name
+p:setStyle(name)       -- use "normal" to reset
+```
+
+The following methods act on the **views** of a page.  Note that views
+are indexed starting from 1, as usual in Lua.
+```lua
+p:countViews() 
+p:effect(view)
+p:setEffect(view, effect)
+p:active(view)
+p:setActive(view, layer)
+p:insertView(view, layer)
+p:removeView(view)
+p:clearViews()
+f = p:markedView(view) -- return true/false
+p:setMarkedView(view, f)
+name = p:viewName(view)
+p:setViewName(view, name)
+map = p:viewMap(view)
+p:setViewMap(view, map)
+lm = p:layerMatrices(view)
+p:setLayerMatrices(view, lm)
+```
+
+The following methods act on the **layers** of a page. Note that layers
+are always accessed by name, not by index as in C++.
+```lua
+p:countLayers()
+p:layers()        -- return table of layer names
+p:isLocked(layer)
+p:setLocked(layer, boolean)
+p:layerData(layer)    -- free-use text for that layer
+p:setLayerData(layer, data)
+mode = p:snapping(layer)  -- "never", "visible", or "always"
+p:setSnapping(layer, mode)
+p:renameLayer(oldname, newname)
+-- if layer is nil, automatically create name for new layer:
+p:addLayer(layer)     -- add layer at the end, return name of new layer
+p:removeLayer(layer)
+p:reorderLayers(order) -- order is a table with layer names
+p:moveLayer(layer, target_index)
+p:visible(view, layer)   -- is layer visible in view?
+p:setVisible(view, layer, boolean)
+```
+
+The **objects** of a page can be accessed by indexing, using an
+iterator, or with various methods. Note that object indices start with
+1, as usual in Lua.
+```lua
+-- objects:
+
+#p      -- return number of objects on page
+p[i]    -- return object #i, where 1 <= i <= #p
+
+-- iterate over objects of page:
+for i, obj, sel, layer in p:objects() do
+  print(i, obj, sel, layer)
+end
+
+p:select(objno)              -- returns nil, 1, or 2
+p:setSelect(objno, status)   -- status is nil, 1, or 2
+p:layerOf(objno)
+p:setLayerOf(objno, layer)
+p:visible(view, objno)       -- is object visible in view?
+p:bbox(objno)                -- cached by page
+p:invalidateBBox(objno)      -- invalidate cached bbox
+p:insert(objno, object, select, layer)  -- objno == nil means append
+p:remove(objno)
+p:replace(objno, object)     -- automatically clones object
+p:transform(objno, matrix)
+
+-- returns distance from pos if it is less than bound
+p:distance(objno, pos, bound)
+
+-- returns true if attribute was actually changed
+p:setAttribute(objno, property, value)
+```
+
+Finally, there are various methods to query and modify the currently
+selected objects, the page title and sections, etc.:
+```lua
+-- selection:
+obj = p:primarySelection() -- nil if no primary selection
+p:hasSelection()           -- true or false
+p:deselectAll()
+p:ensurePrimarySelection()
+
+-- variant is optional (a variant name), and defaults to no variant
+title, skipped = p:title(variant)    -- skipped: is page skipped in this variant?
+p:setTitle(variant, title, skipped)  -- use variant == nil for no variant
+
+-- t is a table with fields "section" and "subsection"
+-- if section or subsection is not a string, the title is used
+t = p:sections()
+p:setSections(t)
+
+-- n is a string
+n = p:notes()
+p:setNotes(n)
+
+-- f is true/false
+f = p:marked()
+p:setMarked(f)
+
+-- XML representation, what is "ipepage" or "ipeselection" (only the
+-- selected objects)
+xml = p:xml(what)
+
+-- find an edge of the page's objects near pos in the view, for snapping
+-- returns origin (a vector) and direction (an angle), or nothing
+origin, dir = p:findEdge(view, pos)
+```
+
+#### Document
+
+Documents have the following methods:
+```lua
+doc = ipe.Document()         -- empty document
+doc = ipe.Document(filename) -- load from file
+doc = ipe.Document(filename, true) -- load from file, ignoring too recent Ipe version
+-- returns either document or nil, error message, error code
+
+#doc    -- number of pages
+doc[i]  -- return page #i, where 1 <= i <= #doc
+
+copy = doc:clone() -- independent pages, stylesheets, and properties;
+                   -- PDF resources are not copied: run LaTeX before saving as PDF
+
+-- format == nil: guess from filename
+-- flags is either nil, or a table with keys
+-- "export", "nozip", "lastview", "nocolor"
+-- if format == "xml", imageFolder can be omitted
+doc:save(filename, format, flags, imageFolder)  
+doc:exportPages(filename, flags, fromPage, toPage, imageFolder)
+doc:exportView(filename, format, flags, pageNo, viewNo, imageFolder)
+
+-- iterating over pages of document:
+for i, p in doc:pages() do
+  print("Page number",  i, p)
+end
+
+doc:set(no, page)         -- replace with a clone of page, returns old page
+doc:insert(no, page)
+doc:append(page)
+doc:remove(no)            -- returns page and removes from document
+doc:countTotalViews()
+doc:sheets()              -- returns style sheet cascade
+old = doc:replaceSheets(sheets)  -- replace and return old cascade
+doc:has(what)  -- where what in { "truetype", "gradients", "tilings", "transparency" }
+doc:runLatex(docname)  -- pass filename of Ipe document or nil
+-- returns either true, nil, result code, logfile
+--         or     false, error message, result code, logfile
+
+-- Running Latex in the background, as done by doc:runLatex:
+-- success is true or false; if false, errmsg and errcode describe the error;
+-- converter is an opaque object to be passed to completeLatexRun
+-- (errcode "notext" with success true means there is no text to convert)
+success, converter, errmsg, errcode = doc:prepareLatexRun()
+-- returns the command line to run (a string), or nil
+command = doc:howToRunLatex(docname)  -- pass filename of Ipe document or nil
+-- after running the command, load the result:
+-- returns success, errmsg, errcode, logfile
+success, errmsg, errcode, log = doc:completeLatexRun(converter)
+
+doc:fontPool()    -- returns light userdata
+doc:checkStyle()  -- returns list of undefined symbolic names
+t = doc:properties()  -- returns table
+doc:setProperties(t)  -- changes properties set in table
+```
+
+`doc:properties()` returns a table with the following fields (all
+fields exist even if their contents is an empty string):
+```lua
+title author subject keywords language preamble created modified creator
+fullscreen cropbox numberpages sequentialtext tex
+```
+
+#### Other functions
+
+```lua
+ipe.fileFormat(filename)      -- returns one of "xml", "pdf", "eps", "ipe5", "unknown"
+ipe.fileExists(filename)      -- returns true or false
+ipe.realPath(filename)        -- convert relative path to absolute path
+ipe.directory(path)           -- return table of files in directory
+ipe.openFile(path, mode)      -- replacement for io.open handling Unicode on Windows
+ipe.mkdir(path)               -- create directory; returns true, or nil, error message, error code
+beziers = ipe.splineToBeziers(spline, is_closed, old_style)
+ipelet = ipe.Ipelet(dllname)  -- loads C++ ipelet from absolute path
+-- returns ipelet or nil, error message
+-- run function number 'num' (starting from 1) of the ipelet;
+-- returns true if the document was modified (so undo information is needed)
+-- layer is the name of a layer, attributes and snap are the tables
+-- described for the user interface, and helper is a table of methods
+-- (message, messageBox, getString, and a table parameters) that implement the ipelet's user interface
+ok = ipelet:run(num, page, doc, pageno, viewno, layer, attributes, snap, helper)
+
+-- return the path of an Ipe folder, followed by the optional file name:
+-- name is one of "lua", "icons", "doc", "styles", "ipelets", "scripts",
+-- "user-styles", "user-ipelets", "user-scripts", "config", "latex"
+-- (the "latex" folder is created if it does not exist)
+path = ipe.folder(name)
+path = ipe.folder(name, filename)
+```
+
+### Lua bindings for Ipe
+
+These are the Lua methods provided by the Ipe program itself.  They
+are only available to Lua code running inside Ipe.
+
+#### Application user interface
+
+The application user interface object provides the GUI for the Ipe
+program. 
+
+```lua
+-- model is a Lua table containing methods that will be called 
+-- by the ui when events occur
+ui = AppUi(model)
+
+-- returns window id of window
+-- (to be used as parent for dialogs)
+id = ui:win()
+
+ui:close()         -- close window
+
+ui:setActionState(name, t) -- set whether action is checked 
+t = ui:actionState(name)   -- is action checked?
+-- return info about action: id, and whether it's always on 
+id, alwaysOn = actionInfo(name)       
+
+ui:explain(text)     -- show message in status bar for a few seconds
+ui:setWindowTitle(caption)
+
+-- make a tool visible or invisible
+-- tool is one of "layers", "properties", "bookmarks", "notes"
+-- t is true or false
+ui:showTool(tool, t)
+
+ui:setNotes(n)       -- set string for Notes tool
+
+-- set the list of recent files in the file menu (table of file names)
+ui:setRecentFiles(files)
+
+-- put the window in a screen mode: "normal", "maximized", or "full"
+ui:setScreen(mode)
+
+-- set the text of the snap indicator in the status bar
+ui:setSnapIndicator(text)
+
+-- set grid size and angle size selectors; both are numbers or symbolic names
+ui:setGridAngleSize(gridsize, anglesize)
+
+-- set the order in which symbolic names of this kind are shown in the
+-- selectors (kind as for stylesheets, names is a table of strings)
+ui:setPreferredOrder(kind, names)
+
+-- return the Windows menu id of an action and whether the action is
+-- always enabled (only used on Windows, to compute keyboard shortcuts)
+id, alwaysOn = ui:actionInfo(name)
+
+-- set contents of attribute selectors from style sheet
+ui:setupSymbolicNames(styleSheet)
+
+-- set attribute values displayed in user interface
+-- 'attributes' table see below
+ui:setAttributes(styleSheet, attributes)
+
+-- set layer list from page
+ui:setLayers(page, view)  
+
+ui:setNumbers(?)
+ui:setBookmarks(?)
+
+-- page/view selector tool:
+-- select one page and return page number (or nil if canceled)
+pno = ui:selectPage(doc) 
+-- select one view and return view number (or nil if canceled)
+vno = ui:selectPage(doc, page_no)
+
+ui:pageSorter(?)
+
+ui:setClipboard(text)     -- store text on system clipboard
+
+-- get text or image from system clipboard
+-- if allowBitmap is false, only text is retrieved
+-- returns:
+-- "text", string  if clipboard contains text
+-- "path", string  if clipboard contains name of an image file
+-- "image", bitmap if clipboard contains actual pixel data
+format, value = ui:getClipboard(allowBitmap)  
+```
+
+On GTK and in the JS version, the method is called `getClipboardAsync`
+and delivers its result to the coroutine passed as an additional
+argument.  Use `model:clipboard` instead, which hides this difference.
+
+The following methods work on the canvas inside the UI:
+
+```lua
+ui:setPage(page, pgno, view, styleSheet) -- set page shown on canvas
+ui:setSnap(snap)                    -- for 'snap' table see below
+ui:setFontPool(p)       -- an opaque object obtained from an ipe.Document
+
+-- 'pan' is a vector indicating the user coordinates at canvas center
+v = ui:pan()       
+ui:setPan(v)
+
+zoom = ui:zoom()        -- a number
+ui:setZoom(zoom)
+
+v = ui:pos()            -- current mouse position, after snapping
+v = ui:unsnappedPos()   -- current mouse position, before snapping
+v = ui:simpleSnapPos()  -- same, but ignoring angular snap
+v = ui:globalPos()      -- mouse position on screen
+
+v, dpi = ui:canvasSize()  -- size of canvas in pixels, monitor resolution
+
+ui:setNumbering(t)      -- true or false
+ui:setFifiVisible(t)    -- true or false
+ui:setInkMode(t)        -- true or false: mouse/pen input is freehand drawing
+
+-- the canvas looks for external images relative to this folder
+ui:setImageFolder(folder)
+-- use the PDF resources (fonts) of this document for rendering text
+ui:setResources(doc)
+-- has the canvas encountered a Type 3 font since the last call?
+-- (the flag is reset by this call)
+t = ui:type3Font()
+-- enable automatic angular snapping with this origin (a vector)
+ui:setAutoOrigin(v)
+ui:setSelectionVisible(t) -- true or false
+ui:setPretty(t)         -- true or false
+
+ui:setVisibleVariant(variant) -- which variant is shown in the canvas
+
+-- setCursor only implemented on Qt.
+-- Windows 8 switches to a dot cursor automatically when using the pen.
+ui:setCursor(name)         -- name in "standard", "hand", "cross"
+ui:setCursor(width, color) -- sets a colored dot cursor (on Qt)
+
+ui:update()             -- update canvas and tool
+ui:update(false)        -- update tool only
+ui:finishTool()
+
+ui:panTool()
+ui:selectTool()
+ui:transformTool()
+ui:shapeTool()
+
+-- tool for pasting an object (usually a group): obj is an object,
+-- tool is a Lua tool table, which gets the additional methods
+-- tool.setColor(r, g, b) and tool.setMatrix(m)
+ui:pasteTool(obj, tool)
+```
+
+##### Rendering pages
+
+A view of a page can be rendered to a file or, for PNG, into a bitmap
+in memory.  The document does not need to be the one shown in the UI.
+
+```lua
+-- format is one of "svg", "png", "eps", "pdf"
+-- dest is the name of the output file, or nil (only for "png")
+-- zoom is the number of pixels per point (only used for "png")
+-- transparent: if true, the background of a PNG is transparent
+--   instead of white (only used for "png")
+-- nocrop: if true, the whole paper is rendered, including background
+--   and title, instead of the bounding box of the page
+result = ui:renderPage(doc, pageno, viewno, format, dest, zoom,
+                       transparent, nocrop)
+```
+
+If *dest* is a file name, the result is true if the file was
+written, and false otherwise.
+
+If *dest* is nil, *format* must be "png", and the result is nil if
+the page is empty or the bitmap would be too large, and otherwise a
+table with the fields
+```lua
+width=number     (number of pixel columns)
+height=number    (number of pixel rows)
+pixels=string    (RGBA values in row order, 4 * width * height bytes,
+                  alpha is not premultiplied)
+```
+This is exactly the format of the *bitmap* field of an *image*
+element in an ipeui dialog.  For example:
+```lua
+local bitmap = ui:renderPage(doc, 1, 1, "png", nil, 2.0, true, false)
+d:set("preview", { bitmap=bitmap, zoom=2.0 })
+```
+
+##### Presentations
+
+These methods create files for the HTML presentation (reveal.js), and partially
+for export to PPTX (the json file will then be read by JS code that creates the
+final PPTX presentation).
+
+Page and view numbers start from 1.  Both methods return true if the file
+was written.
+
+```lua
+-- write a presentation of pages from_page to to_page, based on an HTML template
+ok = ui:createPresentation(doc, filename, html_template, from_page, to_page)
+
+-- write the JSON description of the document's views;
+-- if only_marked is true, only marked views are included
+ok = ui:createJson(doc, filename, only_marked)
+```
+
+##### Calling JavaScript
+
+In the JS version of Ipe (running in a browser or as  a VS Code extension), Lua code
+can call methods of the JavaScript user interface object.  Note that this
+is a function, not a method.  Intended for internal use.
+```lua
+ui.js(method, arg1, ...)   -- at most four arguments
+```
+
+##### Wait dialog
+
+This dialog is for running an external program (that is, latex or a
+text editor).  The dialog is modal, so that the program refreshes but
+otherwise waits for the running command.
+
+```lua
+ui:waitDialog(command, text)
+```
+
+Here, 'command' is a string that is passed to a shell to run the
+command.  The argument 'text' appears in the dialog.
+
+The behaviour is different on differen platforms:
+
+1. On Win32 and MacOS, the dialog has its own event loop.  A thread is
+started for the command, and when the command terminates, the dialog
+is closed and the function returns with the value 'true'.
+
+2. On Qt, the dialog is modal, but lives on the main event loop. A
+thread is started for the command.  If this thread terminates quickly
+(e.g. around 300ms), then the function immediately returns with value
+'true'.  Otherwise, the dialog appears, and the function immediately
+returns with value 'false'.  In this case, the calling Lua code should
+yield to return to the main event loop.  When the thread terminates,
+it will resume the Lua coroutine.
+
+3. On JS, the dialog is modal on the normal browser event loop.
+'command' must be the name of a tex engine.  The method now calls the
+'runLatex' method on the JS 'window' object with the command as an
+argument.  This method is supposed to be an async JS function that
+returns with a promise.  The 'waitDialog' method immediately returns
+with value 'false'.  The JS code that hosts the Ipe WASM libraries
+must ensure that when the promise is fulfilled, the 'resume' method in
+the JS bindings of the 'ui' is called.  No additional threads are
+started by Ipelib.
+
+### Lua bindings for dialogs and menus
+
+The ipeui module provides dialogs and popup menus for Lua.  It does
+not depend on any other Ipe component, and can be reused in other Lua
+projects.
+
+#### Global methods
+
+There are a few global methods in the ipeui module:
+```lua
+ipeui.startBrowser(url)   -- on Win32 and Cocoa only
+dt = ipeui.currentDateTime() -- returns string with current date and time
+```
+
+#### Predefined dialogs
+
+The following are predefined dialogs.  In all cases, `parent` can
+either be `nil` or a Window ID.
+
+##### File dialog
+
+Ask the user to select a filename for opening or for saving.  'type'
+is "open" or "save".  'filter' is a table with the file name
+filters. Each filter has two entries in the table, one with the name
+of the filter and the extensions in parenthesis (this is used by Qt),
+one with the pure patterns separated by semicolons (this is also used
+by Windows). Here is an example:
+```lua
+filter_save = { "XML (*.ipe *.xml)", "*.ipe;*.xml",
+	      	"PDF (*.pdf)", "*.pdf" }
+```
+'dir' is the initially selected directory, or nil.  
+
+'name' is an initial name (without path) to show as the filename, or
+nil.
+
+'selected' is the number of the initally selected file name
+filter (where 1 is the first filter), or nil.
+
+The funtion returns nil, or both a file name and the number of the
+selected filter.
+```lua
+ipeui.fileDialog(parent, type, caption, filter, dir, name, selected)
+```
+
+##### Color dialog
+
+```lua
+-- choose a color
+-- r,g,b are in the range 0.0 to 1.0
+-- returns nil or a (r,g,b) triple
+ipeui.getColor(parent, title, r, g, b)
+```
+
+##### Message box
+
+```lua
+-- show a message box
+-- type is one of "none" "warning" "information" "question" "critical"
+-- details may be nil
+-- buttons may be nil (for "ok") or one of 
+-- "ok" "okcancel" "yesnocancel", "discardcancel", "savediscardcancel", 
+-- return 1 for ok/yes/save, 0 for no/discard, -1 for cancel
+ipeui.messageBox(parent, type, text, details, buttons)
+```
+
+#### Dialogs
+
+Other dialogs can be constructed programmatically.  A dialog consists
+of various elements layed out in a grid, and a row of buttons
+underneath.    Create the dialog by adding elements using 'add', and
+filling the button row using 'addButton'.  The 'action' for
+'addButton' can be one of the strings "accept" or "reject", or a Lua
+method.
+```lua
+d = ipeui.Dialog(parent, window_title, language)
+
+-- row == -1 means last row, row == 0 means start new row
+d:add(name, what, options, row, column, row_span, column_span)
+d:addButton(name, caption, action)
+
+d:setStretch("row", row_number, stretch_factor)
+d:setStretch("column", column_number, stretch_factor)
+
+d:set(name, value)
+value = d:get(name)
+
+-- enable/disable elements
+d:setEnabled(name, true_or_false)
+
+-- set to ignore escape when the value of field is equal to originalValue
+d:set("ignore-escape", field, originalValue)
+
+-- show dialog modally
+accepted = d:execute()
+accepted = d:execute(size)   -- where size == { width, height }
+
+-- close the dialog from a Lua method (such as the action of a button
+-- or checkbox); d:execute() then returns accepted
+d:accept(accepted)           -- true or false
+```
+
+Note that on some platforms (Qt and JS), `d:execute` may yield.
+Closing the dialog causes the Lua thread to be resumed.
+
+*name* can be an arbitrary string. *what* must be one of 
+```lua
+button, text, list, label, combo, checkbox, input, image
+```
+*options* is a table.  Most fields are optional:
+```lua
+-- button:
+label="string"  (Required!)
+action="accept" or "reject" or a Lua method
+
+-- label:
+label="string"  (Required!)
+
+-- text:
+read_only=bool
+syntax="logfile" or "xml" or "latex"
+select_all=bool
+spell_check=bool
+language=str
+
+-- list and combo:
+array of list items (strings)
+can also contain a Lua method with key "action" (called when an item
+is activated).
+
+-- checkbox:
+label="string"  (Required!)
+action= Lua method  (called when state changed)
+
+-- input:
+
+-- image:
+value=table     (see below, default is an empty preview)
+width=number    (preview area width in pixels, default 180)
+height=number   (preview area height in pixels, default 80)
+```
+
+An *image* element shows a preview of a bitmap inside a fixed-size
+area.  It does not load or display an actual ipe::Image object.
+Its *value* is a table that has exactly one of the following fields:
+```lua
+text="string"     (a text message)
+path="string"     (the name of a PNG or JPEG file)
+bitmap=table      (a bitmap in memory)
+```
+and optionally
+```lua
+zoom=number       (default 1.0)
+```
+A bitmap file or bitmap in memory is displayed centered in the preview
+area, with each of its pixels divided by *zoom*, and scaled down to
+fit the preview area if necessary.  Transparent parts show the
+background of the preview area.  The *bitmap* table has the fields
+```lua
+width=number      (number of pixel columns)
+height=number     (number of pixel rows)
+pixels="string"   (RGBA values in row order, 4 * width * height bytes,
+                   alpha is not premultiplied)
+```
+If the file cannot be loaded, or if the table is empty, a message
+"Preview unavailable" is shown instead.  The *value* of an *image*
+element can be changed using *set*, using a table in the same format.
+Examples:
+```lua
+d:add("preview", "image", { width=100, height=100,
+                            value={ text="No preview yet" } }, 1, 1)
+d:set("preview", { path="/tmp/picture.png", zoom=2.0 })
+d:set("preview", { bitmap={ width=2, height=1, pixels="\255\0\0\255\0\0\255\128" } })
+```
+
+The Lua method for button, checkbox, combo, and list is called with
+the dialog as an argument.  Do not capture the dialog inside the
+method, as this would create a cyclic reference that would stop the
+dialog from being garbage collected! (It also causes a crash on Qt
+if the dialog is destroyed by Lua after the parent window has already
+deleted it.)
+
+The argument of *set* is:
+* a string value for *label*, *text*, and *input*,
+* a table for *image*,
+* either an integer, a string, or an array of string items for *list* and *combo*,
+* a boolean for *checkbox*.
+
+The result value of *get* is:
+* a string for *text* and *input*,
+* an integer for *list* (or nil if there is no current item) and *combo*,
+* a boolean for *checkbox*.
+
+#### Popup menus
+
+Popup menus are constructed and shown as follows:
+```lua
+m = ipeui.Menu(parent)	
+item, subitem = m:execute(global_position)
+```
+When the menu is cancelled, *execute* returns *nil*.
+
+You can then add items to the menu one by one.  A simple item is added
+like this:
+```lua
+m:add("name", "Label")
+```
+When this item is selected, execute returns *name*, and an empty string.
+
+The following line adds an entire submenu:
+```lua
+m:add("name", "Submenu", { "alpha", "beta", "gamma" } )
+```
+When an item from this submenu is selected, *execute* returns *name* and the name of the submenu item.
+
+When the strings in the table are not directly the visible labels for
+the submenu, a Lua function can be used to convert them:
+```lua
+m:add("name", "Submenu", { "alpha", "beta", "gamma" },
+      function (i, item) return "select " .. item end )
+```
+
+The final argument can either be a string or a function.
+If it is a string, then all items are checkable, and the item whose
+name is identical to the final argument is checked.
+Otherwise, the function maps item number and
+name to a color (three numbers in the range 0.0 to 1.0).  This is then
+used to display a color icon. 
+
+#### Timers
+
+Timers are constructed as follows:
+```lua
+t = ipeui.Timer(table, "method")
+```
+When the timer times out, it will call the method named *method* in
+the Lua table *table*.  The timer stores only a weak reference to the
+table, so the timer will not stop the table from being garbage
+collected.
+
+The timer is controlled using the methods:
+```lua
+timer:setInterval(interval)     -- an integer in milliseconds
+timer:setSingleShot(bool)       -- default is repeating timer
+timer:start()	
+timer:stop()
+a = timer:active()              -- true if the timer is running
+```

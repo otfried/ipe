@@ -104,7 +104,7 @@ treat the document:</p>
 </table>
 <p>The rest of this chapter first introduces the common Lua library, then
 describes scripts and ipelets in turn.  The complete reference for the
-Lua library is the <a class="reference external" href="https://ipe.otfried.org/manual/">Ipelib documentation</a> (look for the pages <em>Lua bindings
+Lua library is the <a class="reference external" href="https://ipe.otfried.org/ipelib/">Ipelib documentation</a> (look for the pages <em>Lua bindings
 for …</em>, and <em>Ipelets</em>).  The best documentation of what is possible
 are the existing scripts and ipelets that come with Ipe: the scripts
 are in the <code class="file docutils literal notranslate"><span class="pre">scripts</span></code> folder, and the ipelets in the <code class="file docutils literal notranslate"><span class="pre">ipelets</span></code>
@@ -661,7 +661,17 @@ The details are described in the Ipelib documentation (see the page <em>Ipelets<
 <span id="ipelets-ai"></span><h2>Writing scripts and ipelets with an AI assistant<a class="headerlink" href="#writing-scripts-and-ipelets-with-an-ai-assistant" title="Permalink to this headline">¶</a></h2>
 <p>AI assistants (large language models) can write simple scripts and
 ipelets for you.  The result will be much better if the assistant has
-the right information.  We suggest to give it:</p>
+the right information.  For this purpose, the Ipe manual is also published
+as plain text, following the <a class="reference external" href="https://llmstxt.org">llms.txt</a> convention:
+the file <a class="reference external" href="https://otfried.github.io/ipe/llms.txt">llms.txt</a> is an index
+for assistants, and <a class="reference external" href="https://otfried.github.io/ipe/llms-full.txt">llms-full.txt</a> contains this chapter and
+the complete reference of the Lua library in a single file, which you can
+give to your assistant (or paste into its instructions).  If you work with a
+coding assistant in your ipelet folder, copy the file <a class="reference external" href="https://otfried.github.io/ipe/AGENTS-ipelets.md">AGENTS-ipelets.md</a> there under the name
+<code class="file docutils literal notranslate"><span class="pre">AGENTS.md</span></code>: many assistants read such a file automatically.  It tells
+the assistant where to find the documentation, summarizes the most important
+rules, and asks it to test its ipelets with <em>run-ipelet</em>.</p>
+<p>If you prefer to select the material yourself, we suggest to give it:</p>
 <ul class="simple">
 <li><p>this chapter of the manual, and the reference of the Lua library (the
 page <em>Lua bindings</em> of the Ipelib documentation, which lists all

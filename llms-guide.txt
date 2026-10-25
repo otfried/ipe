@@ -1,0 +1,732 @@
+# Ipe: writing scripts and ipelets (guide)
+
+> Ipe is an extensible drawing editor with a Lua scripting interface. This documentation explains how to write Ipe scripts and ipelets (extensions of the editor) in Lua, with complete examples and a reference for all Lua functions.
+
+(Ipe 7.3.1, generated 2026-10-25 from commit 383662fb621a)
+
+## Introduction
+
+Ipe is an extensible drawing editor.  Most of Ipe is written in Lua, and you
+can extend it with **ipelets** (Lua files that add functions to the editor's
+Ipelets menu), or process Ipe documents from the command line with **scripts**
+(run with `ipescript`).  Both use the same Lua library, the table `ipe`.
+
+### Read this first
+
+These are the facts that most often go wrong when writing Ipe scripts and
+ipelets.
+
+1. **Script or ipelet?**  A script is run with `ipescript name args` and owns
+   the document: it loads it with `ipe.Document(filename)` and saves it with
+   `doc:save(filename)`.  An ipelet runs inside the Ipe editor and works on the
+   document being edited, through the `model` argument of its `run` function.
+2. **An ipelet must never modify the document directly.**  It changes the
+   document only through an *undo item* passed to `model:register(t)`, or
+   through `model:creation`, `model:transformation`, and `model:setAttribute`,
+   which do this for you.  The usual pattern is: clone the page twice
+   (`original`, `final`), modify `final`, and register an undo item with
+   `undo = _G.revertOriginal` and `redo = _G.revertFinal`.  A script, on
+   the other hand, modifies the document directly.
+3. **An ipelet defines the global variables** `label` (menu text), `about`,
+   and `run` (or `methods`, a table of `{ label=..., run=... }`).  `run`
+   is called as `run(model, method_number)`.
+4. **An ipelet runs in a restricted environment**: only `_G`, `ipe`, `ipeui`,
+   `math`, `string`, `table`, `assert`, `ipairs`, `pairs`, `print`,
+   `tonumber`, `tostring`, `prefs`, `config`, `shortcuts`, and `mouse` exist.
+   Everything else must be reached through `_G`, for instance `_G.type(x)`,
+   `_G.pcall`, `_G.io`.  Writing `type(x)` fails.
+5. **Conventions**: pages, views, and objects are numbered from 1; layers are
+   identified by name.  Coordinates are in points, the origin is at the
+   lower left, and the y-axis points up.  `ipe.Vector`, `ipe.Matrix`, and the
+   other geometric classes are immutable values (only `ipe.Rect` is mutable).
+   Objects obtained from a page are the page's own objects, not copies: use
+   `obj:clone()` and `page:clone()` to copy them.
+6. **Errors**: functions that read files return `nil` and an error message;
+   calling a function with illegal arguments raises a Lua error.
+7. **Dialogs** use `ipeui.Dialog` and can only be shown inside an ipelet (or
+   program) that runs inside the Ipe editor.
+8. **Test ipelets without the editor** with
+   `ipescript run-ipelet myipelet.lua input.ipe output.ipe [name=value ...]`.
+   It runs the ipelet on a document with the real model of the Ipe editor,
+   accepts dialogs with their default values (or the values given as
+   `name=value`), then undoes and redoes the changes and reports if the page
+   is not restored exactly.  Use `--select none|all|1,3`, `--method N`,
+   `--page N`, `--view N` to control the run.  Always test ipelets this way
+   before presenting them as working.
+9. **Look at working examples**: the examples in this documentation, and the
+   scripts (`scripts/` folder) and ipelets (`ipelets/` folder) that come with
+   Ipe.
+
+### How this documentation is organized
+
+* **Guide**: a tutorial on writing scripts and ipelets, with complete
+  examples.
+* **Lua API reference**: every function of the Lua bindings (geometry,
+  objects, attributes, pages, documents, stylesheets), the Ipe editor
+  (`AppUi`), dialogs and menus, and the ipelet `model`.
+
+## Scripts and ipelets
+
+Most of the Ipe program is written in the scripting language [Lua](https://www.lua.org), and the same Lua library that Ipe uses to
+read, write, and modify documents is available for your own programs.
+There are two ways to use it:
+
+* An **Ipe script** is a Lua program that you run from the command
+  line using `ipescript`.  A script reads an Ipe document,
+  does something with it, and typically writes a new document or prints
+  some information.  Scripts are good for batch processing and for
+  tasks that you want to run on many files.
+
+* An **ipelet** is an extension of the Ipe editor.  It is a Lua file
+  that adds one or more entries to the *Ipelets* menu, and works on
+  the document you are editing, usually on the objects you have
+  selected.  Ipelets are good for functions that you want to use
+  interactively.
+
+Scripts and ipelets share most of what they need to know.  They use the
+same classes for documents, pages, objects, and geometry, and the same
+conventions.  The differences are in how they are started and how they
+treat the document:
+
+|  | Script | Ipelet |
+|---|---|---|
+| Started by | `ipescript` on the command line | the *Ipelets* menu (or a keyboard shortcut) in the Ipe editor |
+| Document | loads and saves it itself | the document being edited, accessed through the *model* |
+| Changing the document | directly | **never directly**: it registers an undo item with the model |
+| User interface | command-line arguments, `print`, files | dialogs, selection, mouse position, status bar |
+| Placed in | Ipe's scripts folder | Ipe's ipelets folder |
+
+The rest of this chapter first introduces the common Lua library, then
+describes scripts and ipelets in turn.  The complete reference for the
+Lua library is the [Ipelib documentation](https://ipe.otfried.org/ipelib/) (look for the pages *Lua bindings
+for ...*, and *Ipelets*).  The best documentation of what is possible
+are the existing scripts and ipelets that come with Ipe: the scripts
+are in the `scripts` folder, and the ipelets in the `ipelets`
+folder of the Ipe installation (and in the Ipe source distribution).
+
+### The Lua library in a nutshell
+
+All of Ipe's Lua functions are in a table called `ipe`.  Here are
+the most important things you need to know.
+
+```lua
+local doc = assert(ipe.Document("figure.ipe"))  -- load a document
+print(#doc)                    -- number of pages
+local page = doc[1]            -- pages are numbered from 1
+for i, obj, selected, layer in page:objects() do
+  print(i, obj:type(), layer)  -- "path", "text", "group", ...
+end
+local v = ipe.Vector(100, 200)
+local m = ipe.Translation(v) * ipe.Rotation(math.pi / 2)
+doc:save("result.ipe")
+```
+
+* Pages, views, objects, and layers are **numbered from 1**, as usual
+  in Lua.  Layers are identified by their name, not by a number.
+
+* The coordinate system is the one of the Ipe file: units are
+  PostScript points (1/72 inch), the origin is at the lower left of
+  the paper, and the y-axis points *up*.
+
+* The geometric classes `ipe.Vector`, `ipe.Matrix`,
+  `ipe.Line`, `ipe.Segment`, `ipe.Bezier`, and
+  `ipe.Arc` are immutable values: operations create new values.
+  Only `ipe.Rect` can be changed (`r:add(v)` extends the
+  rectangle).  Vectors and matrices have operators:
+  `v + w`, `2 * v`, `m * v`, `m1 * m2`.
+
+* The objects you get from a page (`page[i]` or
+  `page:objects()`) are the page's own objects, not copies.
+  Changing such an object changes the page.  Use `obj:clone()` to
+  make a copy, and `page:clone()` to make a copy of the entire
+  page.
+
+* Attributes of objects are set and read using `obj:set(name, value)` and `obj:get(name)`.  The attribute names are those
+  of the Ipe editor's property boxes, for instance `stroke`,
+  `fill`, `pen`, and `dashstyle`.  The value
+  can be an absolute value (a number, or a color given as
+  `{r=0.5, g=0.5, b=0.5}`), or a symbolic name from the stylesheet such as
+  `"red"` or `"normal"`.
+
+* Functions that read files return `nil` and an error message
+  when they fail.  Calling a function with illegal arguments (such as
+  a page number that does not exist) raises a Lua error.
+
+* New objects are created with `ipe.Path`, `ipe.Text`,
+  `ipe.Reference` (a symbol), `ipe.Group`, and
+  `ipe.Image`.  The first three take a table with the attributes
+  of the object (in an ipelet, `model.attributes` is such a
+  table) and the data of the object.  A path's geometry is described by a
+  *shape*, a Lua table.  For instance, a circle with radius *r* and
+  center *c* is `{ { type="ellipse"; ipe.Matrix(r, 0, 0, r, c.x, c.y) } }`.  The reference documentation explains shapes in detail.
+
+### Writing scripts
+
+A script is a Lua file in one of Ipe's script folders.  The script
+`count-objects.lua` is run by saying
+
+```console
+ipescript count-objects figure.ipe
+```
+
+(Do not write the extension `.lua`.)  The command-line arguments
+are available in the global table `argv`.  Ipe looks for scripts
+in the current directory, in the user's script folder
+(`~/.local/share/ipe/scripts` on Linux,
+`~/Library/Ipe/Scripts` on MacOS), and in the system-wide script
+folder.  The environment variable `IPESCRIPTS` changes this, see
+"Environment variables".
+
+Here is a script that prints how many objects of each type there are on
+every page of a document:
+
+```lua
+-- Count the objects in an Ipe document, page by page.
+--
+-- Usage: ipescript count-objects <document>
+
+if #argv ~= 1 then
+  io.stderr:write("Usage: ipescript count-objects <document>\n")
+  return
+end
+
+local doc = assert(ipe.Document(argv[1]))
+
+for pno, page in doc:pages() do
+  -- count the objects of every type (group, text, path, image, reference)
+  local counts = {}
+  for _, obj, _, layer in page:objects() do
+    local t = obj:type()
+    counts[t] = (counts[t] or 0) + 1
+  end
+  local parts = {}
+  for t, n in pairs(counts) do
+    parts[#parts + 1] = n .. " " .. t
+  end
+  table.sort(parts)
+  print(string.format("Page %d: %d objects (%s)", pno, #page, table.concat(parts, ", ")))
+end
+```
+
+A script can do anything that Lua can do, and has the entire document
+at its disposal, so it can modify it directly.  Here is a script that
+makes all paths of a document red, and saves the result in a new file:
+
+```lua
+-- Make all paths in an Ipe document red.
+--
+-- Usage: ipescript red-paths <input> <output>
+--
+-- A script owns the document, so it can modify it directly.
+-- Compare with ipelet-red-paths.lua, which does the same inside Ipe.
+
+if #argv ~= 2 then
+  io.stderr:write("Usage: ipescript red-paths <input> <output>\n")
+  return
+end
+
+local doc = assert(ipe.Document(argv[1]))
+
+for _, page in doc:pages() do
+  for i, obj in page:objects() do
+    if obj:type() == "path" then
+      -- change the page (and not only the object), so that the page
+      -- knows that the object's bounding box may have changed
+      page:setAttribute(i, "stroke", "red")
+    end
+  end
+end
+
+assert(doc:save(argv[2]))
+```
+
+Ipe comes with several scripts that are good starting points for your
+own scripts.  For instance, *onepage* collapses all pages of a document
+into the layers of a single page, *scratchpad* prepares a presentation
+for annotating during the talk, and *update-styles* updates the
+stylesheets in many documents.
+
+### Writing ipelets
+
+An ipelet is a Lua file in one of Ipe's ipelet folders.  Ipe loads all
+ipelets when it starts.  The ipelet folders are the system-wide folder
+that comes with Ipe, and the user's own folder
+(`~/.local/share/ipe/ipelets` on Linux,
+`~/Library/Ipe/Ipelets` on MacOS; you can find the exact location
+under *Help → Show configuration*, and change it
+using the environment variable `IPELETPATH`, see "Environment variables").
+
+An ipelet defines some global variables that tell Ipe about it:
+
+* `label`: the name of the ipelet in the *Ipelets* menu.  A file that does not define a label is not shown in the menu (this is how you can write customizations of Ipe).
+
+* `about`: a string shown in *Help → Ipelet information*.
+
+* `run`: the function to call when the ipelet is invoked.
+
+* `methods`: for an ipelet with several functions, a table with one entry for each function.  Each entry is a table with a `label` (the text of its menu entry) and optionally a `run` function (if it has none, the global `run` is called).
+
+* `category`: optional: the submenu of the *Ipelets* menu in which the ipelet appears.  (The menu is set up by `prefs.ipelet_menu`.)
+
+When the user invokes the ipelet, Ipe calls the `run` function with two
+arguments: the **model**, which represents the document window, and the
+number of the method (always 1 for an ipelet with a single function).
+
+The simplest possible ipelet draws a circle at the mouse position:
+
+```lua
+----------------------------------------------------------------------
+-- Draw a circle at the mouse position
+----------------------------------------------------------------------
+--
+-- Creating a single new object is the simplest case: model:creation
+-- registers the undo item for you.
+
+label = "Circle"
+
+about = [[
+Draw a circle with radius 32 at the current mouse position.
+]]
+
+function run(model)
+  local center = model.ui:pos()   -- mouse position, after snapping
+  local radius = 32
+  -- an ellipse is given by the matrix that maps the unit circle to it
+  local shape = { { type = "ellipse";
+		    ipe.Matrix(radius, 0, 0, radius, center.x, center.y) } }
+  local obj = ipe.Path(model.attributes, shape)
+  model:creation("create circle", obj)
+end
+```
+
+Save this in your ipelet folder as `circle.lua`, restart Ipe, and
+you will find *Circle* in the *Ipelets* menu.  If you set
+`prefs.developer = true` in your `customization.lua` (see
+"Customizing Ipe"), the *Help* menu has a *Developer* submenu with an
+entry *Help → Developer → Reload ipelets*, so you do
+not need to restart Ipe after every change.
+
+Keyboard shortcuts can be assigned in `customization.lua` using the
+name of the ipelet's file (without the extension) and the number of the
+method, for instance `shortcuts.ipelet_1_circle = "Ctrl+Alt+C"`.
+
+#### The ipelet's environment
+
+Each ipelet runs in a private environment, so you do not have to worry
+about polluting the global namespace.  The following names are
+available inside an ipelet: `ipe`, `ipeui`, `math`,
+`string`, `table`, `assert`, `ipairs`,
+`pairs`, `print`, `tonumber`, `tostring`, and
+the Ipe tables `prefs`, `config`, `shortcuts`, and
+`mouse`.  Everything else, such as `type`, `pcall`,
+`io`, `os`, or the Lua code of Ipe, must be accessed
+through `_G`, for instance `_G.type(x)` or
+`_G.revertOriginal`.  (Writing `type(x)` gives the error
+"attempt to call a nil value (global 'type')".)
+
+Text printed with `print` appears on the terminal from which you
+started Ipe.
+
+#### The model, and why you must not touch the document
+
+The model is a Lua object with these members:
+
+* `model.doc`: the document being edited.
+
+* `model.pno`, `model.vno`: the number of the current page and view.
+
+* `model:page()`: the current page.
+
+* `model:selection()`: a table with the numbers of the selected objects of the current page.
+
+* `model.attributes`: the attributes currently set in the property boxes of the user interface (a table you can pass to `ipe.Path` and friends).
+
+* `model.snap`: the current snapping settings.
+
+* `model.ui`: the user interface, with for instance `model.ui:pos()` (the mouse position after snapping), `model.ui:win()` (the window, to be used as the parent of dialogs), and `model.ui:explain(text)` (shows text in the status bar).
+
+* `model:warning(text, details)`: shows a warning box.
+
+* `model:getString(prompt, caption, initial)`: asks the user for a string (returns `nil` if the user cancels).
+
+An ipelet has access to the live document, but it must **not modify
+it directly**.  The Ipe editor keeps an undo stack, and it does not
+notice if the document changes behind its back.  An ipelet that changes
+the page directly breaks undo and redo, may corrupt the document, and
+does not mark the document as modified.  Instead, the ipelet makes its
+changes through an **undo item**.  This is a table with at least these
+fields:
+
+* `label`: a text for the status bar and the undo history (**Undo 'label'**).
+
+* `pno`, `vno`: the page and view to show after an undo or redo.
+
+* `undo`, `redo`: functions that are called with the undo item and the document. `redo` makes the change, `undo` reverts it.
+
+The ipelet creates the item and passes it to `model:register(t)`, which
+calls `t.redo(t, model.doc)` to perform the change, remembers the
+selection, and puts the item on the undo stack.  The ipelet should
+**not** change the document itself, and neither should it keep any
+reference to the objects of the document: the item's `redo` and
+`undo` functions are the only code that may touch the document
+after the item has been registered.
+
+There are three ways to create an undo item, from the simplest to the most
+general one.
+
+**1. Use one of the model's helper functions.**  `model:creation(label, obj)` inserts a new object on the current page (as in the circle
+ipelet above), `model:transformation(label, matrix)` transforms the
+selected objects, and `model:setAttribute(name, value)` sets an
+attribute of the selected objects.  These functions create and
+register the undo item for you.  The next ipelet uses
+`model:transformation`, and also shows how to ask the user for
+a value in a dialog:
+
+```lua
+----------------------------------------------------------------------
+-- Scale the selection by a factor entered by the user
+----------------------------------------------------------------------
+--
+-- This ipelet shows a dialog to ask for the scale factor, and then uses
+-- model:transformation, which takes care of undo and redo when all you
+-- want to do is to transform the selected objects by a matrix.
+
+label = "Scale selection"
+
+about = [[
+Scale the selected objects around the center of their bounding box.
+]]
+
+function run(model)
+  local selection = model:selection()  -- table with object numbers
+  if #selection == 0 then
+    model:warning("Nothing is selected")
+    return
+  end
+
+  local d = ipeui.Dialog(model.ui:win(), "Scale selection")
+  d:add("label", "label", { label = "Scale factor" }, 1, 1)
+  d:add("factor", "input", { select_all = true }, 1, 2)
+  d:set("factor", "2")
+  d:addButton("ok", "&Ok", "accept")
+  d:addButton("cancel", "&Cancel", "reject")
+  if not d:execute() then return end
+
+  local factor = tonumber(d:get("factor"))
+  if not factor or factor <= 0 then
+    model:warning("The scale factor must be a positive number")
+    return
+  end
+
+  local page = model:page()
+  local box = ipe.Rect()
+  for _, i in ipairs(selection) do box:add(page:bbox(i)) end
+  local center = (box:bottomLeft() + box:topRight()) * 0.5
+
+  local m = ipe.Translation(center) * ipe.Matrix(factor, 0, 0, factor)
+            * ipe.Translation(-center)
+  model:transformation("scale selection", m)
+end
+```
+
+**2. Work on a copy of the page.**  When the ipelet changes several
+objects, the easiest approach is to make two copies of the page: the
+*original*, and the *final* page in which the ipelet makes all its
+changes.  The undo item then simply swaps the page in the document
+between these two copies, using the functions
+`_G.revertOriginal` and `_G.revertFinal`.  This is the
+pattern used by most of the ipelets that come with Ipe:
+
+```lua
+----------------------------------------------------------------------
+-- Make the selected paths red
+----------------------------------------------------------------------
+--
+-- An ipelet must not modify the document directly.  Instead, it prepares
+-- the new version of the page, and registers an undo item that switches
+-- between the original and the final page.  This is the simplest way to
+-- write an ipelet that changes existing objects.
+
+label = "Red paths"
+
+about = [[
+Make the stroke color of all selected paths red.
+]]
+
+function run(model)
+  local t = { label = "make paths red",
+	      pno = model.pno,
+	      vno = model.vno,
+	      original = model:page():clone(),
+	      final = model:page():clone(),
+	      undo = _G.revertOriginal,
+	      redo = _G.revertFinal,
+	    }
+  local changed = false
+  for i, obj, sel, layer in t.final:objects() do
+    if sel and obj:type() == "path" then
+      if t.final:setAttribute(i, "stroke", "red") then changed = true end
+    end
+  end
+  if changed then
+    model:register(t)
+  else
+    model.ui:explain("No selected path to make red")
+  end
+end
+```
+
+The same pattern also works to create several objects.  Here the
+ipelet collects what it needs to know about the selected objects first,
+and only then inserts new objects, since inserting objects while
+iterating over the page would also visit the new objects:
+
+```lua
+----------------------------------------------------------------------
+-- Mark the center of the bounding box of every selected object
+----------------------------------------------------------------------
+--
+-- This ipelet creates several new objects at once.  It uses the same
+-- undo item as ipelet-red-paths.lua: the original page and the final page.
+
+label = "Mark centers"
+
+about = [[
+Create a mark at the center of the bounding box of every selected object.
+]]
+
+function run(model)
+  local page = model:page()
+  local layer = page:active(model.vno)
+  local t = { label = "mark centers",
+	      pno = model.pno,
+	      vno = model.vno,
+	      original = page:clone(),
+	      final = page:clone(),
+	      undo = _G.revertOriginal,
+	      redo = _G.revertFinal,
+	    }
+
+  -- Collect the centers first: inserting objects while iterating over
+  -- the page would visit the new objects as well.
+  local centers = {}
+  for i, obj, sel in t.final:objects() do
+    if sel then
+      local box = t.final:bbox(i)
+      centers[#centers + 1] = (box:bottomLeft() + box:topRight()) * 0.5
+    end
+  end
+
+  for _, center in ipairs(centers) do
+    -- model.attributes are the attributes currently set in the user interface
+    local mark = ipe.Reference(model.attributes, "mark/disk(sx)", center)
+    t.final:insert(nil, mark, nil, layer)
+  end
+
+  if #centers > 0 then
+    model:register(t)
+  end
+end
+```
+
+**3. Write your own undo and redo functions.**  Copying a page is easy, but
+wasteful if the ipelet only changes a small thing, such as the
+properties of a layer.  Then the undo item can remember what it
+needs to revert its action.  The next example also shows an ipelet
+with several methods:
+
+```lua
+----------------------------------------------------------------------
+-- An ipelet with several methods, and an undo item with explicit
+-- undo and redo functions
+----------------------------------------------------------------------
+--
+-- Cloning the whole page is simple, but wasteful when only a small
+-- thing changes.  Here the undo item remembers just what is needed to
+-- go back: which layers were locked before.
+
+label = "Lock layers"
+
+about = [[
+Lock or unlock all layers of the current page.
+]]
+
+-- The method is called with the model and the number of the method.
+local function lock_layers(model, num)
+  local locked = (num == 1)
+  local page = model:page()
+  local was_locked = {}
+  for _, layer in ipairs(page:layers()) do
+    was_locked[layer] = page:isLocked(layer)
+  end
+
+  local t = { label = locked and "lock all layers" or "unlock all layers",
+	      pno = model.pno,
+	      vno = model.vno,
+	      locked = locked,
+	      was_locked = was_locked,
+	    }
+  -- redo is also called to perform the action the first time
+  t.redo = function (t, doc)
+    for layer in pairs(t.was_locked) do
+      doc[t.pno]:setLocked(layer, t.locked)
+    end
+  end
+  t.undo = function (t, doc)
+    for layer, was in pairs(t.was_locked) do
+      doc[t.pno]:setLocked(layer, was)
+    end
+  end
+  model:register(t)
+end
+
+methods = {
+  { label = "Lock all layers", run = lock_layers },
+  { label = "Unlock all layers", run = lock_layers },
+}
+```
+
+If your ipelet changes the stylesheets of the document, set
+`t.style_sheets_changed = true` in the undo item, so that Ipe updates the
+lists of symbolic names in the user interface after an undo or redo.
+
+#### Dialogs
+
+Ipelets can show dialogs using `ipeui.Dialog`, as in the scale example
+above.  Dialogs can contain labels, input fields, text boxes, lists,
+combo boxes, check boxes, and image previews, arranged in a grid.  See the
+Ipelib documentation (*Lua bindings for dialogs and menus*) for
+all the details, and the ipelets *search-replace* and *selectby* that
+come with Ipe for more examples.
+
+#### Testing an ipelet without the editor
+
+It is tedious to test an ipelet by starting the Ipe editor, loading a
+document, selecting objects, and invoking the ipelet.  The script
+*run-ipelet* that comes with Ipe runs an ipelet on a document from the
+command line, with a model that behaves like the one in the editor
+(it uses the real model of the Ipe editor, including its undo stack):
+
+```console
+ipescript run-ipelet circle.lua figure.ipe result.ipe
+```
+
+The ipelet is loaded in the same restricted environment as in the editor.
+It is run with all objects of the first page selected (use the options
+`--select none` or `--select 1,3` to change this, `--page`,
+`--view`, and `--method` to change the page, the view, and the number of
+the method to run).  The result is saved as `result.ipe`.
+
+The script then undoes and redoes the changes made by the ipelet, using
+Ipe's own undo and redo, and checks that the page is restored exactly.
+This finds the most common mistake in ipelets, namely
+not registering an undo item or not reverting everything in the
+`undo` function:
+
+```console
+$ ipescript run-ipelet scale.lua figure.ipe result.ipe factor=3
+Running scale on page 1, view 1 with 3 selected objects
+[dialog] Scale selection
+[dialog]   factor = 3
+[explain] scale selection
+1 undo item(s) registered: scale selection
+[explain] Undo 'scale selection'
+Undo restores the original page: OK
+[explain] Redo 'scale selection'
+Redo restores the result: OK
+Saved result.ipe
+```
+
+Dialogs cannot be shown by this script.  Instead, a dialog behaves as if
+the user had accepted it (or canceled it, if you pass `--cancel`), and
+with every element having the value set by the ipelet.  You can give a
+different value by adding arguments of the form *name=value*, as in the
+example above, where `factor=3` sets the value of the dialog
+element `factor`.  The exit status of *run-ipelet* is not zero
+if the ipelet fails or the undo check finds a problem.
+
+*run-ipelet* takes the Lua code of the Ipe editor from your Ipe
+installation.  If you want to test with a different version (for
+instance a source tree), set the environment variable `IPELUAPATH` to a Lua
+path such as `/path/to/ipe/src/ipe/lua/?.lua`.
+
+*run-ipelet* has no canvas and does not run LaTeX, so it cannot test
+ipelets that depend on them.  It is very useful for everything else,
+and also makes it possible to write automatic tests for your ipelets.
+
+#### C++ ipelets
+
+Ipelets can also be written in C++, which is useful if you already have
+code for some geometric computation, or want to use a library such as
+CGAL.  Such an ipelet consists of a shared library, and a small Lua file
+that declares its label and its methods, and calls the C++ code.
+The details are described in the Ipelib documentation (see the page *Ipelets*).
+
+### Writing scripts and ipelets with an AI assistant
+
+AI assistants (large language models) can write simple scripts and
+ipelets for you.  The result will be much better if the assistant has
+the right information.  For this purpose, the Ipe manual is also published
+as plain text, following the [llms.txt](https://llmstxt.org) convention:
+the file [llms.txt](https://otfried.github.io/ipe/llms.txt) is an index
+for assistants, and [llms-full.txt](https://otfried.github.io/ipe/llms-full.txt) contains this chapter and
+the complete reference of the Lua library in a single file, which you can
+give to your assistant (or paste into its instructions).  If you work with a
+coding assistant in your ipelet folder, copy the file [AGENTS-ipelets.md](https://otfried.github.io/ipe/AGENTS-ipelets.md) there under the name
+`AGENTS.md`: many assistants read such a file automatically.  It tells
+the assistant where to find the documentation, summarizes the most important
+rules, and asks it to test its ipelets with *run-ipelet*.
+
+If you prefer to select the material yourself, we suggest to give it:
+
+* this chapter of the manual, and the reference of the Lua library (the
+  page *Lua bindings* of the Ipelib documentation, which lists all
+  functions, and the page about dialogs if your ipelet has a dialog),
+
+* one or two existing scripts or ipelets that are similar to what you
+  need (the examples in this chapter, or the ones that come with Ipe).
+
+Tell the assistant that it must write a script or an ipelet (it
+matters, see above), what the objects it works on are, and
+what should happen.  Then check the result carefully before using it
+on a precious document.
+
+If you use an assistant that can run commands, tell it about
+*run-ipelet*: it can then test the ipelet on a sample document,
+see the error messages and the result of the undo check, and fix its code
+without your help.  Ipelets that modify the document without registering
+an undo item are the most common problem of ipelets written without
+testing.  Here is the output of *run-ipelet* for the example
+`ipelet-wrong.lua`, which changes the page directly:
+
+```lua
+----------------------------------------------------------------------
+-- WRONG: an ipelet that modifies the document without an undo item
+----------------------------------------------------------------------
+--
+-- This ipelet is an example of what *not* to do.  The page is changed
+-- directly, so Ipe does not know about the change: the document is not
+-- marked as modified, and undo and redo no longer work correctly.
+-- Run it with ipescript run-ipelet to see the warning.
+
+label = "Wrong"
+
+about = "Do not write ipelets like this."
+
+function run(model)
+  local page = model:page()
+  for i, obj, sel in page:objects() do
+    if sel and obj:type() == "path" then
+      page:setAttribute(i, "stroke", "red")   -- no undo item!
+    end
+  end
+end
+```
+
+```console
+$ ipescript run-ipelet ipelet-wrong.lua figure.ipe result.ipe
+Running ipelet-wrong on page 1, view 1 with 3 selected objects
+The ipelet did not register an undo item.
+WARNING: the page has been modified without registering an undo item!
+Saved result.ipe
+```
