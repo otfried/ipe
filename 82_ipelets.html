@@ -640,6 +640,10 @@ different value by adding arguments of the form <em>name=value</em>, as in the
 example above, where <code class="code docutils literal notranslate"><span class="pre">factor=3</span></code> sets the value of the dialog
 element <code class="code docutils literal notranslate"><span class="pre">factor</span></code>.  The exit status of <em>run-ipelet</em> is not zero
 if the ipelet fails or the undo check finds a problem.</p>
+<p><em>run-ipelet</em> takes the Lua code of the Ipe editor from your Ipe
+installation.  If you want to test with a different version (for
+instance a source tree), set the environment variable <code class="docutils literal notranslate"><span class="pre">IPELUAPATH</span></code> to a Lua
+path such as <code class="file docutils literal notranslate"><span class="pre">/path/to/ipe/src/ipe/lua/?.lua</span></code>.</p>
 <p><em>run-ipelet</em> has no canvas and does not run LaTeX, so it cannot test
 ipelets that depend on them.  It is very useful for everything else,
 and also makes it possible to write automatic tests for your ipelets.</p>

@@ -417,6 +417,11 @@ example above, where :code:`factor=3` sets the value of the dialog
 element :code:`factor`.  The exit status of *run-ipelet* is not zero
 if the ipelet fails or the undo check finds a problem.
 
+*run-ipelet* takes the Lua code of the Ipe editor from your Ipe
+installation.  If you want to test with a different version (for
+instance a source tree), set the environment variable ``IPELUAPATH`` to a Lua
+path such as :file:`/path/to/ipe/src/ipe/lua/?.lua`.
+
 *run-ipelet* has no canvas and does not run LaTeX, so it cannot test
 ipelets that depend on them.  It is very useful for everything else,
 and also makes it possible to write automatic tests for your ipelets.
