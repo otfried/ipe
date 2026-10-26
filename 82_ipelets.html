@@ -236,6 +236,117 @@ makes all paths of a document red, and saves the result in a new file:</p>
 </pre></div>
 </div>
 <p><a class="reference download internal" download="" href="_downloads/a9e4d8cff4452c1b7265691e2f0d261a/red-paths.lua"><code class="xref download docutils literal notranslate"><span class="pre">red-paths.lua</span></code></a></p>
+<p>Here is a Lua script that reads an Ipe document and then recenters
+each page on the paper.</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- recenter.lua</span>
+<span class="c1">-- center objects on each page of the document</span>
+
+<span class="kr">if</span> <span class="o">#</span><span class="n">argv</span> <span class="o">~=</span> <span class="mi">2</span> <span class="kr">then</span>
+  <span class="nb">io.stderr</span><span class="p">:</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Usage: ipescript recenter &lt;inputfile&gt; &lt;outputfile&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="kr">return</span>
+<span class="kr">end</span>
+
+<span class="n">inname</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">outname</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="n">doc</span> <span class="o">=</span> <span class="nb">assert</span><span class="p">(</span><span class="n">ipe</span><span class="p">.</span><span class="n">Document</span><span class="p">(</span><span class="n">inname</span><span class="p">))</span>
+
+<span class="c1">-- make sure we have size information for text</span>
+<span class="nb">assert</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span><span class="n">runLatex</span><span class="p">())</span>
+
+<span class="n">layout</span> <span class="o">=</span> <span class="n">doc</span><span class="p">:</span><span class="n">sheets</span><span class="p">():</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;layout&quot;</span><span class="p">)</span>
+<span class="n">fs</span> <span class="o">=</span> <span class="n">layout</span><span class="p">.</span><span class="n">framesize</span>
+
+<span class="kr">for</span> <span class="n">i</span><span class="p">,</span><span class="n">p</span> <span class="kr">in</span> <span class="n">doc</span><span class="p">:</span><span class="n">pages</span><span class="p">()</span> <span class="kr">do</span>
+  <span class="n">box</span> <span class="o">=</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Rect</span><span class="p">()</span>
+  <span class="kr">for</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span><span class="o">#</span><span class="n">p</span> <span class="kr">do</span>
+    <span class="n">box</span><span class="p">:</span><span class="n">add</span><span class="p">(</span><span class="n">p</span><span class="p">:</span><span class="n">bbox</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
+  <span class="kr">end</span>
+  <span class="n">nx</span> <span class="o">=</span> <span class="p">(</span><span class="n">fs</span><span class="p">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">box</span><span class="p">:</span><span class="n">width</span><span class="p">())</span> <span class="o">/</span> <span class="mi">2</span>
+  <span class="n">ny</span> <span class="o">=</span> <span class="p">(</span><span class="n">fs</span><span class="p">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">box</span><span class="p">:</span><span class="n">height</span><span class="p">())</span> <span class="o">/</span> <span class="mi">2</span>
+  <span class="n">trans</span> <span class="o">=</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">)</span> <span class="o">-</span> <span class="n">box</span><span class="p">:</span><span class="n">bottomLeft</span><span class="p">()</span>
+  <span class="n">m</span> <span class="o">=</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Translation</span><span class="p">(</span><span class="n">trans</span><span class="p">)</span>
+  <span class="kr">for</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span><span class="o">#</span><span class="n">p</span> <span class="kr">do</span>
+    <span class="n">p</span><span class="p">:</span><span class="n">transform</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+  <span class="kr">end</span>
+<span class="kr">end</span>
+<span class="n">doc</span><span class="p">:</span><span class="n">save</span><span class="p">(</span><span class="n">outname</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference download internal" download="" href="_downloads/07685ddfb0f3b90bb101431a136cdb6c/recenter.lua"><code class="xref download docutils literal notranslate"><span class="pre">recenter.lua</span></code></a></p>
+<p>The following script prints out all the gradients defined in a
+document:</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- -*- lua -*-</span>
+
+<span class="kr">function</span> <span class="nf">printTable</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">indent</span><span class="p">)</span>
+  <span class="kr">for</span> <span class="n">k</span> <span class="kr">in</span> <span class="nb">pairs</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="kr">do</span>
+    <span class="kd">local</span> <span class="n">v</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="kr">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;table&quot;</span> <span class="kr">then</span> 
+      <span class="nb">print</span><span class="p">(</span><span class="n">indent</span> <span class="o">..</span> <span class="n">k</span> <span class="o">..</span> <span class="s2">&quot;:&quot;</span><span class="p">)</span>
+      <span class="n">printTable</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">&quot;  &quot;</span> <span class="o">..</span> <span class="n">indent</span><span class="p">)</span>
+    <span class="kr">else</span>
+      <span class="nb">print</span><span class="p">(</span><span class="n">indent</span> <span class="o">..</span> <span class="n">k</span> <span class="o">..</span> <span class="s2">&quot;: &quot;</span> <span class="o">..</span> <span class="nb">tostring</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+    <span class="kr">end</span>
+  <span class="kr">end</span>
+<span class="kr">end</span>
+
+<span class="kr">if</span> <span class="o">#</span><span class="n">argv</span> <span class="o">~=</span> <span class="mi">1</span> <span class="kr">then</span>
+  <span class="nb">io.stderr</span><span class="p">:</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Usage: ipescript show-gradients &lt;ipe-document&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="kr">return</span>
+<span class="kr">end</span>
+
+<span class="kd">local</span> <span class="n">figname</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="kd">local</span> <span class="n">doc</span> <span class="o">=</span> <span class="nb">assert</span><span class="p">(</span><span class="n">ipe</span><span class="p">.</span><span class="n">Document</span><span class="p">(</span><span class="n">figname</span><span class="p">))</span>
+<span class="kd">local</span> <span class="n">s</span> <span class="o">=</span> <span class="n">doc</span><span class="p">:</span><span class="n">sheets</span><span class="p">()</span>
+
+<span class="kr">for</span> <span class="n">_</span><span class="p">,</span><span class="n">w</span> <span class="kr">in</span> <span class="nb">ipairs</span><span class="p">(</span><span class="n">s</span><span class="p">:</span><span class="n">allNames</span><span class="p">(</span><span class="s2">&quot;gradient&quot;</span><span class="p">))</span> <span class="kr">do</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Gradient: &quot;</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+  <span class="kd">local</span> <span class="n">g</span> <span class="o">=</span> <span class="n">s</span><span class="p">:</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;gradient&quot;</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+  <span class="n">printTable</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s2">&quot;  &quot;</span><span class="p">)</span>
+<span class="kr">end</span>
+</pre></div>
+</div>
+<p><a class="reference download internal" download="" href="_downloads/9ce1f9b1b7d4135c8b36dd37d53f8904/show-gradients.lua"><code class="xref download docutils literal notranslate"><span class="pre">show-gradients.lua</span></code></a></p>
+<p>Here is a script that shows how to add a gradient to a document (the
+same technique works for tilings and effects). The script simply adds
+to the top style sheet - in general this is not a good idea, as you
+shouldn’t modify the distributed style sheets (updating style sheets
+from Ipe would lose the modifications), and if the document has only
+the built-in style sheet, the change would not be preserved at all.</p>
+<div class="highlight-lua notranslate"><div class="highlight"><pre><span></span><span class="c1">-- -*- lua -*-</span>
+
+<span class="kr">if</span> <span class="o">#</span><span class="n">argv</span> <span class="o">~=</span> <span class="mi">1</span> <span class="kr">then</span>
+  <span class="nb">io.stderr</span><span class="p">:</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Usage: ipescript add-gradient &lt;ipe-document&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+  <span class="kr">return</span>
+<span class="kr">end</span>
+
+<span class="kd">local</span> <span class="n">figname</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="kd">local</span> <span class="n">doc</span> <span class="o">=</span> <span class="nb">assert</span><span class="p">(</span><span class="n">ipe</span><span class="p">.</span><span class="n">Document</span><span class="p">(</span><span class="n">figname</span><span class="p">))</span>
+
+<span class="kd">local</span> <span class="n">sheet</span> <span class="o">=</span> <span class="s">[[&lt;ipestyle&gt;</span>
+<span class="s">&lt;gradient name=&quot;ball&quot; type=&quot;radial&quot; coords=&quot;-4 10 2 0 0 18&quot;&gt;</span>
+<span class="s"> &lt;stop offset=&quot;0&quot; color=&quot;1 1 0&quot;/&gt;</span>
+<span class="s"> &lt;stop offset=&quot;1&quot; color=&quot;0 1 0&quot;/&gt;</span>
+<span class="s">&lt;/gradient&gt;</span>
+<span class="s">&lt;/ipestyle&gt;]]</span>
+
+<span class="kd">local</span> <span class="n">ts</span> <span class="o">=</span> <span class="n">ipe</span><span class="p">.</span><span class="n">Sheet</span><span class="p">(</span><span class="kc">nil</span><span class="p">,</span> <span class="n">sheet</span><span class="p">)</span>
+
+<span class="kd">local</span> <span class="n">s</span> <span class="o">=</span> <span class="n">doc</span><span class="p">:</span><span class="n">sheets</span><span class="p">()</span>
+<span class="kr">for</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span><span class="n">s</span><span class="p">:</span><span class="n">count</span><span class="p">()</span> <span class="kr">do</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="p">:</span><span class="n">sheet</span><span class="p">(</span><span class="n">i</span><span class="p">):</span><span class="n">name</span><span class="p">())</span>
+<span class="kr">end</span>
+
+<span class="c1">-- add the gradient to the sheet on top of the stack</span>
+<span class="c1">-- in general it is not a good idea to change the &quot;basic&quot; sheet,</span>
+<span class="c1">-- better verify if a custom sheet for gradients exists already</span>
+<span class="c1">-- and create it if not.</span>
+<span class="n">s</span><span class="p">:</span><span class="n">sheet</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span><span class="n">addFrom</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="s2">&quot;gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;ball&quot;</span><span class="p">)</span>
+<span class="nb">assert</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span><span class="n">runLatex</span><span class="p">())</span>
+<span class="n">doc</span><span class="p">:</span><span class="n">save</span><span class="p">(</span><span class="n">figname</span> <span class="o">..</span> <span class="s2">&quot;.new.ipe&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference download internal" download="" href="_downloads/ef01b432885f12400dc3fdc40c2a87bb/add-gradient.lua"><code class="xref download docutils literal notranslate"><span class="pre">add-gradient.lua</span></code></a></p>
 <p>Ipe comes with several scripts that are good starting points for your
 own scripts.  For instance, <em>onepage</em> collapses all pages of a document
 into the layers of a single page, <em>scratchpad</em> prepares a presentation

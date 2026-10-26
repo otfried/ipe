@@ -155,6 +155,34 @@ makes all paths of a document red, and saves the result in a new file:
 
 :download:`red-paths.lua <examples/red-paths.lua>`
 
+Here is a Lua script that reads an Ipe document and then recenters
+each page on the paper.
+
+.. literalinclude:: examples/recenter.lua
+   :language: lua
+
+:download:`recenter.lua <examples/recenter.lua>`
+
+The following script prints out all the gradients defined in a
+document:
+
+.. literalinclude:: examples/show-gradients.lua
+   :language: lua
+
+:download:`show-gradients.lua <examples/show-gradients.lua>`
+
+Here is a script that shows how to add a gradient to a document (the
+same technique works for tilings and effects). The script simply adds
+to the top style sheet - in general this is not a good idea, as you
+shouldn't modify the distributed style sheets (updating style sheets
+from Ipe would lose the modifications), and if the document has only
+the built-in style sheet, the change would not be preserved at all.
+
+.. literalinclude:: examples/add-gradient.lua
+   :language: lua
+
+:download:`add-gradient.lua <examples/add-gradient.lua>`
+
 Ipe comes with several scripts that are good starting points for your
 own scripts.  For instance, *onepage* collapses all pages of a document
 into the layers of a single page, *scratchpad* prepares a presentation

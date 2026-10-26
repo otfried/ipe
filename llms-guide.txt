@@ -2,7 +2,7 @@
 
 > Ipe is an extensible drawing editor with a Lua scripting interface. This documentation explains how to write Ipe scripts and ipelets (extensions of the editor) in Lua, with complete examples and a reference for all Lua functions.
 
-(Ipe 7.3.1, generated 2026-10-25 from commit 383662fb621a)
+(Ipe 7.3.1, generated 2026-10-26 from commit 29e6c6c24eca)
 
 ## Introduction
 
@@ -238,6 +238,121 @@ for _, page in doc:pages() do
 end
 
 assert(doc:save(argv[2]))
+```
+
+Here is a Lua script that reads an Ipe document and then recenters
+each page on the paper.
+
+```lua
+-- recenter.lua
+-- center objects on each page of the document
+
+if #argv ~= 2 then
+  io.stderr:write("Usage: ipescript recenter <inputfile> <outputfile>\n")
+  return
+end
+
+inname = argv[1]
+outname = argv[2]
+
+doc = assert(ipe.Document(inname))
+
+-- make sure we have size information for text
+assert(doc:runLatex())
+
+layout = doc:sheets():find("layout")
+fs = layout.framesize
+
+for i,p in doc:pages() do
+  box = ipe.Rect()
+  for j = 1,#p do
+    box:add(p:bbox(j))
+  end
+  nx = (fs.x - box:width()) / 2
+  ny = (fs.y - box:height()) / 2
+  trans = ipe.Vector(nx, ny) - box:bottomLeft()
+  m = ipe.Translation(trans)
+  for j = 1,#p do
+    p:transform(j, m)
+  end
+end
+doc:save(outname)
+
+```
+
+The following script prints out all the gradients defined in a
+document:
+
+```lua
+-- -*- lua -*-
+
+function printTable(t, indent)
+  for k in pairs(t) do
+    local v = t[k]
+    if type(v) == "table" then 
+      print(indent .. k .. ":")
+      printTable(v, "  " .. indent)
+    else
+      print(indent .. k .. ": " .. tostring(v))
+    end
+  end
+end
+
+if #argv ~= 1 then
+  io.stderr:write("Usage: ipescript show-gradients <ipe-document>\n")
+  return
+end
+
+local figname = argv[1]
+local doc = assert(ipe.Document(figname))
+local s = doc:sheets()
+
+for _,w in ipairs(s:allNames("gradient")) do
+  print("Gradient: ", w)
+  local g = s:find("gradient", w)
+  printTable(g, "  ")
+end
+```
+
+Here is a script that shows how to add a gradient to a document (the
+same technique works for tilings and effects). The script simply adds
+to the top style sheet - in general this is not a good idea, as you
+shouldn't modify the distributed style sheets (updating style sheets
+from Ipe would lose the modifications), and if the document has only
+the built-in style sheet, the change would not be preserved at all.
+
+```lua
+-- -*- lua -*-
+
+if #argv ~= 1 then
+  io.stderr:write("Usage: ipescript add-gradient <ipe-document>\n")
+  return
+end
+
+local figname = argv[1]
+local doc = assert(ipe.Document(figname))
+
+local sheet = [[<ipestyle>
+<gradient name="ball" type="radial" coords="-4 10 2 0 0 18">
+ <stop offset="0" color="1 1 0"/>
+ <stop offset="1" color="0 1 0"/>
+</gradient>
+</ipestyle>]]
+
+local ts = ipe.Sheet(nil, sheet)
+
+local s = doc:sheets()
+for i = 1,s:count() do
+  print(s:sheet(i):name())
+end
+
+-- add the gradient to the sheet on top of the stack
+-- in general it is not a good idea to change the "basic" sheet,
+-- better verify if a custom sheet for gradients exists already
+-- and create it if not.
+s:sheet(1):addFrom(ts, "gradient", "ball")
+assert(doc:runLatex())
+doc:save(figname .. ".new.ipe")
 ```
 
 Ipe comes with several scripts that are good starting points for your
