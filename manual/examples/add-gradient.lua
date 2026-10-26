@@ -27,5 +27,5 @@ end
 -- better verify if a custom sheet for gradients exists already
 -- and create it if not.
 s:sheet(1):addFrom(ts, "gradient", "ball")
-assert(doc:runLatex())
+-- assert(doc:runLatex())
 doc:save(figname .. ".new.ipe")

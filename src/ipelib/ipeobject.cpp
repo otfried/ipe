@@ -102,7 +102,7 @@
 
    The Lua bindings for ipeui (dialogs, menus, etc.), and for Ipe
    itself (available in ipelets, but not in Ipe scripts):
-   
+
    \li \ref luaipeui Lua bindings for dialogs, menus, etc.
    \li \ref luaipe Lua bindings for the Ipe program itself.
 */
