@@ -53,10 +53,11 @@
    Ipe uses UTF-8 for all text strings, including filenames passed to
    Ipelib and all Lua strings.
 
-   \subpage ipelets explains how to write ipelets, that is, extensions
-   to Ipe.  Ipelets are either written in Lua or in C++ (using a small
-   Lua wrapper to describe the ipelet).  C++ ipelets have to be linked
-   with Ipelib to access and modify Ipe objects.
+   The [manual](https://otfried.github.io/ipe/82_ipelets.html)
+   explains how to write Ipe scripts and ipelets (extensions to Ipe)
+   in Lua.  Ipelets can also be \ref cpp-ipelets "written in C++"
+   (using a small Lua wrapper to describe the ipelet).  C++ ipelets
+   have to be linked with Ipelib to access and modify Ipe objects.
 
    The classes documented here are implemented in five different libraries:
 
@@ -69,7 +70,7 @@
    \li \e libipelua implements the \ref lua "Lua bindings" for Ipelib.
    If installed properly, it can be loaded dynamically from Lua using
    \c require. It is also used by ipescript.
-   \li \e libipecanvas implements the \ref qtcanvas "Ipe canvas module".
+   \li \e libipecanvas implements the \ref canvas "Ipe canvas module".
    It provides a widget for displaying and editing Ipe objects.
    \li \e libipeui implements the \ref luaipeui "Lua bindings" for user
    interfaces. This library does not depend on any other Ipe component,

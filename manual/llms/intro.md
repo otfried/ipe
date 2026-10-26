@@ -52,7 +52,8 @@ ipelets.
 ## How this documentation is organized
 
 * **Guide**: a tutorial on writing scripts and ipelets, with complete
-  examples.
+  examples.  It also describes the ipelet `model` object, undo items, and
+  the snap settings.
 * **Lua API reference**: every function of the Lua bindings (geometry,
   objects, attributes, pages, documents, stylesheets), the Ipe editor
-  (`AppUi`), dialogs and menus, and the ipelet `model`.
+  (`AppUi`), and dialogs and menus.

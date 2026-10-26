@@ -94,8 +94,7 @@ test. A new example file must be used in the chapter and be tested in
 ## Documentation for AI assistants
 
 `manual/llms/mkllms.lua` converts the manual chapter "Scripts and ipelets" and
-the Doxygen pages with the Lua bindings (`bindings.txt`, and the ipelet part of
-`ipelets.txt`) into plain-text Markdown files for AI assistants: `llms.txt` (an
+the Doxygen pages with the Lua bindings (`bindings.txt`) into plain-text Markdown files for AI assistants: `llms.txt` (an
 index in the format of llmstxt.org), `llms-guide.txt`, `llms-api.txt`,
 `llms-full.txt`, and `AGENTS-ipelets.md` (a template for an `AGENTS.md` file that
 users can put into their ipelet folder):

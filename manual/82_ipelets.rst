@@ -6,7 +6,9 @@ Scripts and ipelets
 Most of the Ipe program is written in the scripting language `Lua
 <https://www.lua.org>`_, and the same Lua library that Ipe uses to
 read, write, and modify documents is available for your own programs.
-There are two ways to use it:
+Interesting classes like vectors, matrices, Ipe objects, and Ipe
+documents are made available through this library. There are two ways
+to use it:
 
 * An **Ipe script** is a Lua program that you run from the command
   line using :program:`ipescript`.  A script reads an Ipe document,
@@ -20,10 +22,16 @@ There are two ways to use it:
   selected.  Ipelets are good for functions that you want to use
   interactively.
 
-Scripts and ipelets share most of what they need to know.  They use the
-same classes for documents, pages, objects, and geometry, and the same
-conventions.  The differences are in how they are started and how they
-treat the document:
+A quick aside: Sometimes you will already have code that provides some
+geometric computation in another programming language such as C++.
+Ipe provides an easy mechanism, sufficient for many applictions, to
+implement your ipelet entirely in C++ .  It is described in the
+`Ipelib documentation <https://otfried.github.io/ipe/ipelib/cpp-ipelets.html>`_.
+
+But back to Lua: scripts and ipelets share most of what they need to
+know.  They use the same classes for documents, pages, objects, and
+geometry, and the same conventions.  The differences are in how they
+are started and how they treat the document:
 
 .. list-table::
    :header-rows: 1
@@ -279,6 +287,10 @@ The model is a Lua object with these members:
 :code:`model.pno`, :code:`model.vno`
   the number of the current page and view.
 
+:code:`model.file_name`
+  the name of the document's file, or :code:`nil` if the document has
+  not been saved yet.
+
 :code:`model:page()`
   the current page.
 
@@ -291,19 +303,42 @@ The model is a Lua object with these members:
   interface (a table you can pass to :code:`ipe.Path` and friends).
 
 :code:`model.snap`
-  the current snapping settings.
+  the current snapping settings, see :ref:`snap-settings`.
 
 :code:`model.ui`
   the user interface, with for instance :code:`model.ui:pos()` (the
   mouse position after snapping), :code:`model.ui:win()` (the window,
-  to be used as the parent of dialogs), and :code:`model.ui:explain(text)`
-  (shows text in the status bar).
+  to be used as the parent of dialogs), :code:`model.ui:zoom()` (the
+  zoom of the canvas, in pixels per point), and
+  :code:`model.ui:explain(text)` (shows text in the status bar).  All
+  methods are listed in the `Ipelib documentation
+  <https://otfried.github.io/ipe/ipelib/luaipe.html#luaappui>`__.
+
+:code:`model:register(t)`
+  registers an undo item and performs its change, see below.
+
+:code:`model:creation(label, obj)`
+  inserts a new object into the active layer of the current page, and
+  makes it the only selected object (registers the undo item).
+
+:code:`model:transformation(label, matrix, deselect)`
+  transforms the selected objects by a matrix, and deselects them if
+  :code:`deselect` is true (registers the undo item).
+
+:code:`model:setAttribute(name, value)`
+  sets an attribute of the selected objects (registers the undo item).
 
 :code:`model:warning(text, details)`
   shows a warning box.
 
 :code:`model:getString(prompt, caption, initial)`
-  asks the user for a string (returns :code:`nil` if the user cancels).
+  asks the user for a string (returns :code:`nil` if the user cancels);
+  :code:`caption` and :code:`initial` are optional.
+
+:code:`model:getDouble(caption, label, value, minimum, maximum)`
+  asks the user for a number between :code:`minimum` and :code:`maximum`,
+  with :code:`value` as the initial value (returns :code:`nil` if the user
+  cancels or enters something illegal).
 
 An ipelet has access to the live document, but it must **not modify
 it directly**.  The Ipe editor keeps an undo stack, and it does not
@@ -386,6 +421,39 @@ with several methods:
 If your ipelet changes the stylesheets of the document, set
 :code:`t.style_sheets_changed = true` in the undo item, so that Ipe updates the
 lists of symbolic names in the user interface after an undo or redo.
+
+.. _snap-settings:
+
+The snap settings
+"""""""""""""""""
+
+The table :code:`model.snap` contains the snapping settings of the editor
+(see :doc:`40_snapping`).  The same table is passed to C++ ipelets and to
+:code:`ui:setSnap`.  Its fields are:
+
+:code:`snapvtx`, :code:`snapctl`, :code:`snapbd`, :code:`snapint`, :code:`snapgrid`, :code:`snapangle`, :code:`snapcustom`, :code:`snapauto`
+  booleans that say whether snapping to vertices, control points,
+  boundaries, intersections, the grid, angles, the custom grid, and
+  automatic angular snapping is switched on.
+
+:code:`grid_visible`
+  boolean: is the grid shown?
+
+:code:`gridsize`
+  the grid size in points (an integer).
+
+:code:`anglesize`
+  the angle for angular snapping, in degrees.
+
+:code:`snap_distance`
+  the distance in pixels within which snapping takes effect.
+
+:code:`with_axes`
+  boolean: are the axes of the axis system shown?
+
+:code:`origin`, :code:`orientation`
+  the origin of the axis system (a vector) and the direction of its
+  x-axis (an angle in radians).
 
 Dialogs
 """""""

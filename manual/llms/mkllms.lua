@@ -4,10 +4,10 @@
 -- Usage:  lua5.4 manual/llms/mkllms.lua [output-directory [base-url]]
 --
 -- Reads the manual chapter "Scripts and ipelets" (ReStructuredText) and
--- the Doxygen pages with the Lua bindings (src/ipelua/*.txt), and writes
+-- the Doxygen pages with the Lua bindings (src/ipelua/bindings.txt), and writes
 --   llms.txt         index, in the format of https://llmstxt.org
 --   llms-guide.txt   the tutorial on writing scripts and ipelets
---   llms-api.txt     the reference for the Lua bindings and the ipelet model
+--   llms-api.txt     the reference for the Lua bindings
 --   llms-full.txt    both, in one file
 --   AGENTS-ipelets.md  template for an AGENTS.md file that users can put into
 --                    their ipelet folder; it points assistants to the files above
@@ -30,7 +30,6 @@ if baseurl:sub(-1) ~= "/" then baseurl = baseurl .. "/" end
 
 local chapterFile = "82_ipelets.rst"
 local apiSources = {
-  { file = root .. "/src/ipelua/ipelets.txt", only = { ["lua-ipelets"] = true } },
   { file = root .. "/src/ipelua/bindings.txt" },
 }
 -- where Doxygen's \include and \verbinclude look for files
@@ -92,6 +91,7 @@ end
 
 -- title and label tables of all chapters of the manual
 local labels = {}
+local docTitles = {}   -- document name (as in :doc:) -> title of the chapter
 local function isUnderline(line, title)
   if not line or #title == 0 or #line < #title then return false end
   local c = line:sub(1, 1)
@@ -116,8 +116,15 @@ do
     local name = line:match("^   ([%w_%-]+)%s*$")
     local f = name and io.open(manual .. "/" .. name .. ".rst", "rb")
     if f then
-      scanLabels(splitLines(f:read("a")))
+      local lines = splitLines(f:read("a"))
       f:close()
+      scanLabels(lines)
+      for k, l in ipairs(lines) do
+	if not l:match("^%.%.") and isUnderline(lines[k + 1], l) then
+	  docTitles[name] = l
+	  break
+	end
+      end
     end
   end
 end
@@ -141,7 +148,8 @@ local function rstInline(s)
       if not labels[arg] then fail("unknown label in :ref:`" .. arg .. "`") end
       return '"' .. labels[arg] .. '"'
     elseif role == "doc" then
-      return "the chapter " .. '"' .. arg .. '"'
+      if not docTitles[arg] then fail("unknown document in :doc:`" .. arg .. "`") end
+      return "the chapter " .. '"' .. docTitles[arg] .. '"'
     elseif role == "download" then
       return ""
     end
@@ -546,7 +554,7 @@ writefile(outdir .. "/llms.txt", join({
     .. "tutorial with tested examples for scripts and ipelets",
   "- [Lua API reference](" .. baseurl .. "llms-api.txt): all Lua functions of "
     .. "Ipe (geometry, objects, pages, documents, stylesheets, the editor, "
-    .. "dialogs and menus), and the ipelet model and undo items",
+    .. "dialogs and menus)",
   "- [Complete documentation](" .. baseurl .. "llms-full.txt): guide and reference "
     .. "in one file",
   "",
