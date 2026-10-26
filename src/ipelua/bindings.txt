@@ -1,4 +1,4 @@
-/*! \page lua Programming in Lua
+/*! \page lua Lua bindings for Ipelib
 
 The library \e libipelua implements Lua bindings for many classes in
 Ipelib.  The bindings are available in Lua ipelets, as well as in Lua
@@ -10,13 +10,7 @@ These pages document the Lua bindings to Ipelib:
 \li \subpage luaobj
 \li \subpage luapage
 
-When writing Ipelets in Lua, you have access to additional methods
-provided by the Ipe program itself:
-
-\li \subpage luaipe
-\li \subpage luaipeui
-
-*/	
+*/
 
 /*! \page luageo Lua bindings for geometric objects
 
@@ -717,7 +711,8 @@ are only available to Lua code running inside Ipe.
 \section luaappui Application user interface
 
 The application user interface object provides the GUI for the Ipe
-program. 
+program.  Ipelets reach it as \c model.ui; the manual explains the
+[ipelet model](https://otfried.github.io/ipe/82_ipelets.html#ipelet-model) with examples.
 
 \verbatim
 -- model is a Lua table containing methods that will be called 
@@ -942,13 +937,13 @@ The behaviour is different on differen platforms:
 started for the command, and when the command terminates, the dialog
 is closed and the function returns with the value 'true'.
 
-2. On Qt, the dialog is modal, but lives on the main event loop. A
-thread is started for the command.  If this thread terminates quickly
-(e.g. around 300ms), then the function immediately returns with value
-'true'.  Otherwise, the dialog appears, and the function immediately
-returns with value 'false'.  In this case, the calling Lua code should
-yield to return to the main event loop.  When the thread terminates,
-it will resume the Lua coroutine.
+2. On Qt and GTK, the dialog is modal, but lives on the main event
+loop. A thread is started for the command.  If this thread terminates
+quickly (e.g. around 300ms), then the function immediately returns
+with value 'true'.  Otherwise, the dialog appears, and the function
+immediately returns with value 'false'.  In this case, the calling Lua
+code should yield to return to the main event loop.  When the thread
+terminates, it will resume the Lua coroutine.
 
 3. On JS, the dialog is modal on the normal browser event loop.
 'command' must be the name of a tex engine.  The method now calls the
@@ -965,7 +960,8 @@ started by Ipelib.
 
 The ipeui module provides dialogs and popup menus for Lua.  It does
 not depend on any other Ipe component, and can be reused in other Lua
-projects.
+projects.  The manual shows
+[dialogs in ipelets](https://otfried.github.io/ipe/82_ipelets.html#dialogs) with a complete example.
 
 \section luaipeuiglobal Global methods
 

@@ -51,11 +51,12 @@ treat the document:
 The rest of this chapter first introduces the common Lua library, then
 describes scripts and ipelets in turn.  The complete reference for the
 Lua library is the `Ipelib documentation
-<https://ipe.otfried.org/ipelib/>`_ (look for the pages *Lua bindings
-for ...*, and *Ipelets*).  The best documentation of what is possible
-are the existing scripts and ipelets that come with Ipe: the scripts
-are in the :file:`scripts` folder, and the ipelets in the :file:`ipelets`
-folder of the Ipe installation (and in the Ipe source distribution).
+<https://otfried.github.io/ipe/ipelib/>`_ (look for the pages *Lua
+bindings for ...*, and *Ipelets*).  The best documentation of what is
+possible are the existing scripts and ipelets that come with Ipe: the
+scripts are in the :file:`scripts` folder, and the ipelets in the
+:file:`ipelets` folder of the Ipe installation (and in the Ipe source
+distribution).
 
 .. _lua-library:
 

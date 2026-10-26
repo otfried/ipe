@@ -11,7 +11,7 @@
    `pdf format <https://ipe.otfried.org/ipe-manual.pdf>`_.
 
    For writing Ipe scripts and ipelets, see the
-   `Ipe library documentation <https://ipe.otfried.org/ipelib>`_.
+   `Ipe library documentation <https://otfried.github.io/ipe/ipelib>`_.
 
 .. toctree::
    :maxdepth: 2

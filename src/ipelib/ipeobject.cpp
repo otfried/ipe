@@ -47,14 +47,11 @@
    the library by calling ipe::Platform::initLib().
 
    Many of the Ipelib classes are also made available as Lua objects.
-   \subpage lua describes the Lua bindings to Ipelib, to ipeui, and to
-   the Ipe program itself.  The Ipe program itself is mostly written
-   in Lua and uses these Lua bindings.
+   \subpage lua describes these bindings.  The Ipe program itself is
+   mostly written in Lua and uses these Lua bindings.
 
-   On Unix, all filenames passed to Ipelib are assumed to be in the
-   local system's encoding.  On Windows, all filenames passed to
-   Ipelib are assumed to be UTF-8.  All Lua strings are assumed to be
-   UTF-8 (filenames are converted by the ipelua bindings).
+   Ipe uses UTF-8 for all text strings, including filenames passed to
+   Ipelib and all Lua strings.
 
    \subpage ipelets explains how to write ipelets, that is, extensions
    to Ipe.  Ipelets are either written in Lua or in C++ (using a small
@@ -74,9 +71,9 @@
    \c require. It is also used by ipescript.
    \li \e libipecanvas implements the \ref qtcanvas "Ipe canvas module".
    It provides a widget for displaying and editing Ipe objects.
-   \li \e libipeui implements Lua bindings for user interfaces. This
-   library does not depend on any other Ipe component, and can be used
-   for other Lua projects.
+   \li \e libipeui implements the \ref luaipeui "Lua bindings" for user
+   interfaces. This library does not depend on any other Ipe component,
+   and can be used for other Lua projects.
 
    Here is an annotated list of the modules:
 
@@ -97,11 +94,15 @@
    and tools for this canvas: ipe::PanTool, ipe::SelectTool,
    ipe::TransformTool.
 
-   Finally, here is list of the pages describing Lua bindings:
+   For quick access, the Lua bindings for Ipelib:
 
    \li \ref luageo Lua bindings for basic geometric objects
    \li \ref luaobj Lua bindings for Ipe objects
    \li \ref luapage Lua bindings for documents, pages, and stylesheets
+
+   The Lua bindings for ipeui (dialogs, menus, etc.), and for Ipe
+   itself (available in ipelets, but not in Ipe scripts):
+   
    \li \ref luaipeui Lua bindings for dialogs, menus, etc.
    \li \ref luaipe Lua bindings for the Ipe program itself.
 */

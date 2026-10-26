@@ -8,8 +8,9 @@ Ipe extensions are called Ipelets.  They are most easily written in
 the language Lua (www.lua.org), in which also most of Ipe's user
 interface is written.  Lua is a high-level interpreted language, in
 which interesting classes like vectors, matrices, and Ipe objects are
-made available. See \ref lua for more information about programming
-with Ipelib in Lua. 
+made available. See the chapter [Scripts and
+ipelets](https://otfried.github.io/ipe/82_ipelets.html) in the manual
+for an introduction.
 
 \subpage lua-ipelets explains how to write ipelets in Lua.
 
@@ -31,10 +32,9 @@ code.
 
 /*! \page cpp-ipelets Ipelets written in C++
 
-As in Ipe 6, it is possible to write ipelets entirely in C++.
-Different from Ipe 6, however, the labels of the ipelet and its
-functions must now be specified in a short Lua wrapper with some
-boilerplate code.  This Lua code will invoke your C++ methods.
+It is possible to write ipelets entirely in C++.  The labels of the
+ipelet and its functions must be specified in a short Lua wrapper with
+some boilerplate code.  This Lua code will invoke your C++ methods.
 
 \section cpp-framework C++ ipelet framework
 
@@ -244,9 +244,9 @@ pairs, \c print, \c tonumber, \c tostring, \c shortcuts, \c prefs,
 \c config, and \c mouse.  You can access any others you may need
 through \c _G (for instance \c _G.type or \c _G.revertOriginal).
 
-The manual (chapter "Scripts and ipelets") has a tutorial with
-examples.  See also \ref lua for the bindings of the Ipe objects, and
-\ref luaipeui for dialogs.
+The manual has a tutorial with complete examples: see the chapter
+[Scripts and ipelets](https://otfried.github.io/ipe/82_ipelets.html).  See also \ref lua for the bindings
+of the Ipe objects, and \ref luaipeui for dialogs.
 
 \section lua-ipelet-undo Undo items
 
@@ -324,7 +324,8 @@ The script \e run-ipelet (run as <tt>ipescript run-ipelet</tt>) runs a
 Lua ipelet on a document without starting the Ipe editor.  It uses the
 \c model of the Ipe editor with a user interface that does nothing, runs
 the ipelet, saves the result, and checks that undo and redo restore the
-page exactly.  Dialogs behave as if accepted.  See the manual for details.
+page exactly.  Dialogs behave as if accepted.  See the manual section
+[Testing an ipelet without the editor](https://otfried.github.io/ipe/82_ipelets.html#testing-ipelets) for details.
 
 Look at the existing ipelets for inspiration.
 
