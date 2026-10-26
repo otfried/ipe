@@ -91,13 +91,19 @@ end
 ----------------------------------------------------------------------
 
 -- Take a symbol 'name' and draw it in an invisible Ipe document,
--- then turn it into a PNG, based on visualstyles.lua
-function symbol_preview(model, name)
-  -- draw every symbol about 100 pixels across, however big it is
+-- then turn it into a bitmap
+function symbol_preview(model, name, width, shrink)
   local box = ipe.Rect()
   model.doc:sheets():find("symbol", name):addToBBox(box, ipe.Matrix(), false)
-  local pixels_per_point = 200 / math.max(box:width(), box:height(), 1)
-  local shrink_factor = 2
+  -- Symbols with an 'x' in the parentheses at the end of their name (marks and
+  -- arrows) are magnified by the symbolsize of the reference.
+  local scale = 1
+  local letters = name:match("%(([^)]*)%)$")
+  if letters and letters:find("x", 1, true) then
+    scale = model.doc:sheets():find("symbolsize", model.attributes.symbolsize)
+  end
+  local pixels_per_point =
+    width / math.max(scale * box:width(), scale * box:height(), 1)
   -- invisible document to make pictures on
   local doc = ipe.Document()
   -- Give it our style sheets, so it knows the symbol,
@@ -106,12 +112,9 @@ function symbol_preview(model, name)
   local p = doc[1]
   p:insert(nil, ipe.Reference(model.attributes, name, ipe.Vector(0, 0)),
            1, "alpha")
-
   local bitmap = model.ui:renderPage(doc, 1, 1, "png", nil,
 				     pixels_per_point, true, false)
-
-  -- return the image specification for the picture box
-  return { bitmap=bitmap, zoom=shrink_factor }
+  return { bitmap=bitmap, zoom=shrink }
 end
 
 ----------------------------------------------------------------------
@@ -148,7 +151,7 @@ function select_symbol(model)
     -- the selected symbol
     local selected = symbolsByGroup[g][d:get("select")]
     local name = (g ~= "") and (g .. "/" .. selected) or selected
-    local image_spec = symbol_preview(model, name)
+    local image_spec = symbol_preview(model, name, 200, 2)
     d:set("preview", image_spec)
   end
 
@@ -270,13 +273,85 @@ end
 
 ----------------------------------------------------------------------
 
+function show_symbols(model)
+  local s = model.doc:sheets():allNames("symbol")
+  local symbolsByGroup = {}
+  for _, sym in ipairs(s) do
+    local i = sym:find("/")
+    local g, n
+    if i then
+      g = sym:sub(1, i-1)
+      n = sym:sub(i+1)
+    else
+      g = ""
+      n = sym
+    end
+    if not symbolsByGroup[g] then
+      symbolsByGroup[g] = {}
+    end
+    local sbg = symbolsByGroup[g]
+    sbg[#sbg+1] = n
+  end
+  local groups = {}
+  for g,sbg in pairs(symbolsByGroup) do
+    groups[#groups+1] = g
+  end
+  table.sort(groups)
+  local d = ipeui.Dialog(model.ui:win(), "Show symbols")
+
+  local function show_preview()
+    local g = groups[current_group]
+    -- shows all symbols in the group
+    local items = {}
+    for _, s in ipairs(symbolsByGroup[g]) do
+      local name = (g ~= "") and (g .. "/" .. s) or s
+      local item = symbol_preview(model, name, 50, nil)
+      item.label = s
+      items[#items + 1] = item
+    end
+    items.readonly = true
+    return items
+  end
+
+  groups.action = function (d)
+    local g = d:get("group")
+    if g ~= current_group then
+      current_group = g
+      d:set("sorter", show_preview())
+    end
+  end
+
+  d:add("label", "label", { label = "Show symbols" }, 1, 1)
+  d:add("group", "combo", groups, 2, 1)
+  if current_group == nil or current_group > #groups then current_group = 1 end
+  d:set("group", current_group)
+
+  d:add("sorter", "sorter", show_preview(), 3, 1)
+
+  d:addButton("ok", "&Ok", "accept")
+  d:addButton("cancel", "&Cancel", "reject")
+  d:setStretch("column", 1, 1)
+  d:setStretch("row", 3, 1)
+  local ok = d:execute({600, 450})
+  if not ok then return end
+  current_element = d:get("sorter")[1]
+  if not current_element then return end
+  local g = groups[current_group]
+  local sym = symbolsByGroup[g][current_element]
+  if g ~= "" then g = g .. "/" end
+  current_symbol = g .. sym
+end
+
+----------------------------------------------------------------------
+
 methods = {
   { label = "use symbol", run = use_symbol },
   { label = "use current symbol", run = use_current_symbol },
   { label = "create symbol (in new style sheet)", run = create_symbol },
   { label = "create symbol (in top style sheet)", run = create_symbol },
   { label = "clone symbol", run = use_symbol },
-  { label = "select current symbol", run = select_current_symbol }
+  { label = "select current symbol", run = select_current_symbol },
+  { label = "show symbols", run = show_symbols },
 }
 
 ----------------------------------------------------------------------

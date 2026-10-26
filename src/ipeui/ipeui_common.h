@@ -95,6 +95,15 @@ struct ImageSpec {
     std::string pixels; // EBitmap only: RGBA quadruples in row order, not premultiplied
 };
 
+// one item of a sorter element: an optional checkbox, an optional label,
+// and an optional bitmap (kind ENone or EBitmap)
+struct SorterItem {
+    bool hasMark = false;
+    bool mark = false; // only used if hasMark
+    std::string label;
+    ImageSpec image;
+};
+
 class Dialog {
 public:
     enum class Result {
@@ -143,19 +152,24 @@ protected:
 	ECombo,
 	ECheckBox,
 	EInput,
-	EImage
+	EImage,
+	ESorter
     };
 
     struct SElement {
 	std::string name;
 	TType type;
 	int row, col, rowspan, colspan;
-	int minWidth, minHeight; // only used on Windows and for EImage
+	int minWidth, minHeight; // only used on Windows and for EImage and ESorter
 	int lua_method;
 	int flags;
 	std::vector<std::string> items;
 	std::string text;
 	ImageSpec image;
+	// ESorter: the items as originally given, and the current result of "get":
+	// numbers of the items still present in their order, negative if marked
+	std::vector<SorterItem> sorter;
+	std::vector<int> order;
 	int value;
     };
 
@@ -178,6 +192,8 @@ protected:
     void addInput(lua_State * L, SElement & m);
     void addImage(lua_State * L, SElement & m);
     void parseImage(lua_State * L, int index, ImageSpec & image);
+    void addSorter(lua_State * L, SElement & m);
+    void parseSorter(lua_State * L, int index, SElement & m);
 
     void setListItems(lua_State * L, int index, SElement & m);
 

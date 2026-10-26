@@ -38,7 +38,10 @@
 #include <QDialog>
 #include <QGridLayout>
 #include <QImage>
+#include <QListWidget>
 #include <QMenu>
+
+#include <vector>
 
 class QTimer;
 class QTextEdit;
@@ -104,6 +107,63 @@ protected:
 private:
     ImageSpec iSpec;
     QImage iImage; // decoded bitmap, null if there is none
+};
+
+// --------------------------------------------------------------------
+
+// A list of icons that the user can delete, mark, and rearrange, either by
+// dragging the selected items to a new place, or by cutting them and
+// inserting them somewhere else (using a context menu).
+// Every item remembers its number in the list given to setItems.
+class DialogSorter : public QListWidget {
+    Q_OBJECT
+public:
+    // In a readonly sorter the user can only select items (and scroll)
+    explicit DialogSorter(bool readOnly, QWidget * parent = nullptr);
+    ~DialogSorter();
+
+    void setItems(const std::vector<SorterItem> & items);
+
+    // Numbers (starting from 1) of the items that are still present, in
+    // their current order; negative for items whose checkbox is marked.
+    // For a readonly sorter: the numbers of the selected items, in the order
+    // of the list.
+    std::vector<int> order() const;
+
+    void deleteSelected();
+    void cutSelected();
+    // insert the cut items before row (at the end if row is negative)
+    void insertCut(int row);
+    void markSelected(bool mark);
+    // move the selected items (keeping their order) before the item in this
+    // row (to the end if row == count())
+    void moveSelected(int before);
+
+    bool hasCut() const { return !iCutList.isEmpty(); }
+    QList<int> selectedRows() const; // in increasing order
+
+    // Where would items dropped at this position (in viewport coordinates)
+    // go?  Returns the item closest to the position, and whether the
+    // items go after it or before it.  False if there are no items.
+    bool dropTarget(const QPoint & pos, int & targetRow, bool & after) const;
+
+protected:
+    void contextMenuEvent(QContextMenuEvent * event) override;
+    void startDrag(Qt::DropActions supportedActions) override;
+    void dragEnterEvent(QDragEnterEvent * event) override;
+    void dragMoveEvent(QDragMoveEvent * event) override;
+    void dragLeaveEvent(QDragLeaveEvent * event) override;
+    void dropEvent(QDropEvent * event) override;
+    void paintEvent(QPaintEvent * event) override;
+
+private:
+    void clearCutList();
+    void setDropIndicator(int targetRow, bool after);
+
+    bool iReadOnly;
+    QList<QListWidgetItem *> iCutList;
+    int iDropRow = -1; // item next to the drop indicator, or -1
+    bool iDropAfter = false;
 };
 
 // --------------------------------------------------------------------

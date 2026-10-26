@@ -350,6 +350,46 @@ void MainWindow::setLaser(bool on, const Vector & pos) {
     iScreen->pdfView()->setLaser(on, pos);
 }
 
+// ------------------------------------------------------------------------------------------
+
+PageSelector::PageSelector(QWidget * parent)
+    : QListWidget(parent) {
+    setViewMode(QListView::IconMode);
+    setSelectionMode(QAbstractItemView::SingleSelection);
+    setResizeMode(QListView::Adjust);
+    setWrapping(true);
+    setUniformItemSizes(true);
+    setFlow(QListView::LeftToRight);
+    setSpacing(10);
+    setMovement(QListView::Static);
+
+    connect(this, SIGNAL(itemActivated(QListWidgetItem *)),
+	    SLOT(pageSelected(QListWidgetItem *)));
+}
+
+void PageSelector::pageSelected(QListWidgetItem * item) { emit selectionMade(); }
+
+void PageSelector::fill(std::vector<QPixmap> & icons, std::vector<String> & labels) {
+    int maxWidth = 0;
+    int maxHeight = 0;
+    for (const auto & icon : icons) {
+	if (icon.width() > maxWidth) maxWidth = icon.width();
+	if (icon.height() > maxHeight) maxHeight = icon.height();
+    }
+    setGridSize(QSize(maxWidth + 10, maxHeight + 50));
+    setIconSize(QSize(maxWidth, maxHeight));
+
+    for (size_t i = 0; i < icons.size(); ++i) {
+	QString s = QString::fromUtf8(labels[i].z());
+	QListWidgetItem * item = new QListWidgetItem(QIcon(icons[i]), s);
+	item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+	item->setToolTip(s);
+	addItem(item);
+    }
+}
+
+// ------------------------------------------------------------------------------------------
+
 void MainWindow::selectPage() {
     constexpr int iconWidth = 250;
     std::vector<String> labels;

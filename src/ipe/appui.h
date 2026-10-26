@@ -172,8 +172,6 @@ public: // What platforms must implement:
     virtual void setSnapIndicator(const char * s) = 0;
     virtual void setBookmarks(int no, const String * s) = 0;
     virtual void setToolVisible(int m, bool vis) = 0;
-    virtual int pageSorter(lua_State * L, Document * doc, int pno, int width, int height,
-			   int thumbWidth) = 0;
     virtual int clipboard(lua_State * L) = 0;
     virtual int setClipboard(lua_State * L) = 0;
     virtual void handleDroppedImage(String fname);

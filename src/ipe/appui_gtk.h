@@ -68,8 +68,6 @@ public:
 
     virtual void setBookmarks(int no, const String * s);
     virtual void setToolVisible(int m, bool vis);
-    virtual int pageSorter(lua_State * L, Document * doc, int pno, int width, int height,
-			   int thumbWidth);
 
     virtual int clipboard(lua_State * L);
     virtual int setClipboard(lua_State * L);

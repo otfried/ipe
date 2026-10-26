@@ -65,8 +65,26 @@ private:
 // --------------------------------------------------------------------
 
 static const char * typenames[] = {
-    "button", "textedit", "list", "label", "combo", "checkbox", "input", "image",
+    "button",   "textedit", "list",  "label",  "combo",
+    "checkbox", "input",    "image", "sorter",
 };
+
+static val imageValue(const ImageSpec & im) {
+    static const char * const kinds[] = {"none", "text", "file", "bitmap"};
+    val image = val::object();
+    image.set("kind", std::string(kinds[im.kind]));
+    image.set("text", im.text);
+    image.set("zoom", im.zoom);
+    image.set("width", im.width);
+    image.set("height", im.height);
+    if (im.kind == ImageSpec::EBitmap) {
+	// slice() copies the data out of the WASM heap
+	val view(emscripten::typed_memory_view(
+	    im.pixels.size(), reinterpret_cast<const unsigned char *>(im.pixels.data())));
+	image.set("pixels", view.call<val>("slice"));
+    }
+    return image;
+}
 
 val PDialog::element(const SElement & m) {
     val w = val::object();
@@ -88,23 +106,18 @@ val PDialog::element(const SElement & m) {
     w.set("colspan", m.colspan);
     w.set("width", m.minWidth);
     w.set("height", m.minHeight);
-    if (m.type == EImage) {
-	static const char * const kinds[] = {"none", "text", "file", "bitmap"};
-	const ImageSpec & im = m.image;
-	val image = val::object();
-	image.set("kind", std::string(kinds[im.kind]));
-	image.set("text", im.text);
-	image.set("zoom", im.zoom);
-	image.set("width", im.width);
-	image.set("height", im.height);
-	if (im.kind == ImageSpec::EBitmap) {
-	    // slice() copies the data out of the WASM heap
-	    val view(emscripten::typed_memory_view(
-		im.pixels.size(),
-		reinterpret_cast<const unsigned char *>(im.pixels.data())));
-	    image.set("pixels", view.call<val>("slice"));
+    if (m.type == EImage) w.set("image", imageValue(m.image));
+    if (m.type == ESorter) {
+	val items = val::array();
+	for (const SorterItem & it : m.sorter) {
+	    val item = val::object();
+	    item.set("hasMark", it.hasMark);
+	    item.set("mark", it.mark);
+	    item.set("label", it.label);
+	    item.set("image", imageValue(it.image));
+	    items.call<void>("push", item);
 	}
-	w.set("image", image);
+	w.set("sorter", items);
     }
     return w;
 }
@@ -150,6 +163,8 @@ void PDialog::retrieveValues() {
 		m.value = value.as<bool>() ? 1 : 0;
 	    else if (m.type == EList || m.type == ECombo)
 		m.value = value.as<int>();
+	    else if (m.type == ESorter)
+		m.order = emscripten::vecFromJSArray<int>(value);
 	}
     }
 }

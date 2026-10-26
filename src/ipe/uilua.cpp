@@ -607,74 +607,6 @@ static int appui_explain(lua_State * L) {
 
 // --------------------------------------------------------------------
 
-void get_page_sorter_size(lua_State * L, int & width, int & height, int & thumbWidth) {
-    thumbWidth = 300;
-    width = 600;
-    height = 480;
-
-    lua_getglobal(L, "prefs");
-    lua_getfield(L, -1, "page_sorter_size");
-    if (lua_istable(L, -1)) {
-	lua_rawgeti(L, -1, 1);
-	if (lua_isnumber(L, -1)) width = lua_tointegerx(L, -1, nullptr);
-	lua_rawgeti(L, -2, 2);
-	if (lua_isnumber(L, -1)) height = lua_tointegerx(L, -1, nullptr);
-	lua_pop(L, 2);
-    }
-    lua_pop(L, 1); // page_sorter_size
-
-    lua_getfield(L, -1, "thumbnail_width");
-    if (lua_isnumber(L, -1)) thumbWidth = lua_tointegerx(L, -1, nullptr);
-    lua_pop(L, 1); // thumbnail_width, prefs
-}
-
-static int appui_selectPage(lua_State * L) {
-    check_appui(L, 1); // not actually used now
-    Document ** doc = check_document(L, 2);
-    int page = -1;
-    if (lua_isnumber(L, 3)) {
-	page = lua_tointegerx(L, 3, nullptr);
-	luaL_argcheck(L, 1 <= page && page <= (*doc)->countPages(), 3,
-		      "invalid page number");
-    }
-
-    int startIndex = 1;
-    if (lua_isnumber(L, 4)) {
-	startIndex = lua_tointegerx(L, 4, nullptr);
-	int maxIndex =
-	    (page < 0) ? (*doc)->countPages() : (*doc)->page(page - 1)->countViews();
-	luaL_argcheck(L, 1 <= startIndex && startIndex <= maxIndex, 4,
-		      "invalid start index");
-    }
-
-    int width, height, thumbWidth;
-    get_page_sorter_size(L, width, height, thumbWidth);
-
-    int sel = CanvasBase::selectPageOrView(*doc, page - 1, startIndex - 1, thumbWidth,
-					   width, height);
-    if (sel >= 0) {
-	lua_pushinteger(L, sel + 1);
-	return 1;
-    } else
-	return 0;
-}
-
-static int appui_pageSorter(lua_State * L) {
-    AppUiBase ** ui = check_appui(L, 1);
-    Document ** doc = check_document(L, 2);
-    int page = -1;
-    if (lua_isnumber(L, 3)) {
-	page = lua_tointegerx(L, 3, nullptr);
-	luaL_argcheck(L, 1 <= page && page <= (*doc)->countPages(), 3,
-		      "invalid page number");
-    }
-
-    int width, height, thumbWidth;
-    get_page_sorter_size(L, width, height, thumbWidth);
-
-    return (*ui)->pageSorter(L, *doc, page - 1, width, height, thumbWidth);
-}
-
 // Convert Cairo's ARGB32 (premultiplied, native-endian 32-bit words) in place
 // to RGBA bytes with straight alpha, as expected by ipeui bitmaps.
 static void cairoToRgba(char * data, size_t pixels) {
@@ -832,15 +764,8 @@ static const struct luaL_Reg appui_methods[] = {
 #endif
 #if defined(IPEUI_JS) || defined(IPEUI_GTK)
     {"getClipboardAsync", appui_clipboard},
-    {"pageSorterAsync", appui_pageSorter},
 #else
-    {"pageSorter", appui_pageSorter},
     {"getClipboard", appui_clipboard},
-#endif
-#ifdef IPEUI_JS
-    {"selectPageAsync", appui_selectPage},
-#else
-    {"selectPage", appui_selectPage},
 #endif
     {nullptr, nullptr}};
 

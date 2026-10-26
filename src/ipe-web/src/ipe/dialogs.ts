@@ -1,8 +1,10 @@
 import "@melloware/coloris/dist/coloris.css";
 import Coloris from "@melloware/coloris";
 
+import Sortable from "sortablejs";
 import "./dialogs.css";
 import type { DialogId, Ipe } from "./ipejs";
+import type { PopupMenu } from "./popup-menu";
 import { removeChildren } from "./util";
 
 Coloris.init();
@@ -22,7 +24,8 @@ type DialogElement =
 	| "list"
 	| "checkbox"
 	| "button"
-	| "image";
+	| "image"
+	| "sorter";
 
 export interface ImageOptions {
 	kind: "none" | "text" | "file" | "bitmap";
@@ -31,6 +34,14 @@ export interface ImageOptions {
 	width: number; // "bitmap" only
 	height: number;
 	pixels?: Uint8Array; // "bitmap" only: RGBA quadruples in row order, not premultiplied
+}
+
+// one item of a sorter element
+export interface SorterItemOptions {
+	hasMark: boolean;
+	mark: boolean; // only used if hasMark
+	label: string;
+	image: ImageOptions;
 }
 
 export interface ElementOptions {
@@ -48,6 +59,7 @@ export interface ElementOptions {
 	width: number;
 	height: number;
 	image?: ImageOptions;
+	sorter?: SorterItemOptions[];
 }
 
 interface ButtonOptions {
@@ -123,8 +135,268 @@ function setListItems(el1: HTMLDivElement, w: ElementOptions): void {
 	}
 }
 
+// ------------------------------------------------------------------------------------
+// The sorter element: icons with an optional label and checkbox.  The user can
+// select items; unless the sorter is readonly, they can also delete, cut, insert,
+// mark, and rearrange them (by dragging, all selected items move together).
+
+const SORTER_ITEM = ".dialog-sorter-item";
+const FLAG_READONLY = 0x010;
+
+class DialogSorter {
+	readonly el: HTMLDivElement;
+	private readonly readOnly: boolean;
+	private readonly popupMenu: PopupMenu;
+	private readonly sortable: Sortable | null = null;
+	private cut: HTMLElement[] = [];
+	private anchor: HTMLElement | null = null;
+	private collapseOnClick: HTMLElement | null = null;
+	private dragGroup: HTMLElement[] = [];
+
+	constructor(w: ElementOptions, popupMenu: PopupMenu) {
+		this.readOnly = (w.flags & FLAG_READONLY) !== 0;
+		this.popupMenu = popupMenu;
+		const el = document.createElement("div");
+		el.id = `dialog-element-${w.name}`;
+		el.classList.add("dialog-sorter");
+		this.el = el;
+		el.addEventListener("pointerdown", (e) => this.pointerDown(e));
+		el.addEventListener("click", (e) => this.click(e));
+		if (!this.readOnly) {
+			el.addEventListener("contextmenu", (e) => this.contextMenu(e));
+			this.sortable = Sortable.create(el, {
+				draggable: SORTER_ITEM,
+				filter: "input",
+				preventOnFilter: false,
+				animation: 150,
+				ghostClass: "dialog-sorter-ghost",
+				onStart: (evt) => this.dragStart(evt.item),
+				onEnd: (evt) => this.dragEnd(evt.item),
+			});
+		}
+		this.setItems(w.sorter ?? []);
+	}
+
+	destroy(): void {
+		this.sortable?.destroy();
+	}
+
+	// Replace the items.  The numbers of the items refer to the new items.
+	setItems(items: SorterItemOptions[]): void {
+		this.cut = [];
+		this.anchor = null;
+		removeChildren(this.el);
+		let iconWidth = 32;
+		let iconHeight = 32;
+		for (const it of items) {
+			if (it.image.kind !== "bitmap") continue;
+			iconWidth = Math.max(iconWidth, it.image.width);
+			iconHeight = Math.max(iconHeight, it.image.height);
+		}
+		// all items have the size of the largest icon (and room for a short label)
+		this.el.style.setProperty(
+			"--sorter-item-width",
+			`${Math.max(iconWidth + 16, 90)}px`,
+		);
+		this.el.style.setProperty("--sorter-icon-height", `${iconHeight}px`);
+		items.forEach((it, i) => {
+			this.el.appendChild(this.makeItem(it, i + 1));
+		});
+	}
+
+	// The numbers of the items in their current order, negated if marked.
+	// For a readonly sorter, the numbers of the selected items.
+	order(): number[] {
+		const result: number[] = [];
+		for (const item of this.items()) {
+			const n = Number.parseInt(item.dataset.number ?? "0", 10);
+			if (this.readOnly) {
+				if (item.classList.contains("selected")) result.push(n);
+			} else {
+				const check = item.querySelector<HTMLInputElement>("input");
+				result.push(check?.checked ? -n : n);
+			}
+		}
+		return result;
+	}
+
+	private makeItem(it: SorterItemOptions, number: number): HTMLDivElement {
+		const item = document.createElement("div");
+		item.classList.add("dialog-sorter-item");
+		item.dataset.number = `${number}`;
+		const icon = document.createElement("div");
+		icon.classList.add("dialog-sorter-icon");
+		if (it.image.kind === "bitmap" && it.image.pixels != null)
+			icon.appendChild(makeBitmapCanvas(it.image));
+		item.appendChild(icon);
+		const caption = document.createElement("div");
+		caption.classList.add("dialog-sorter-caption");
+		if (it.hasMark) {
+			const check = document.createElement("input");
+			check.type = "checkbox";
+			check.checked = it.mark;
+			// the marks of a readonly sorter are only displayed
+			check.disabled = this.readOnly;
+			caption.appendChild(check);
+		}
+		const label = document.createElement("span");
+		label.innerText = it.label;
+		caption.appendChild(label);
+		item.appendChild(caption);
+		return item;
+	}
+
+	private items(): HTMLElement[] {
+		return Array.from(this.el.querySelectorAll<HTMLElement>(SORTER_ITEM));
+	}
+
+	private selected(): HTMLElement[] {
+		return this.items().filter((i) => i.classList.contains("selected"));
+	}
+
+	private clearSelection(): void {
+		for (const i of this.selected()) i.classList.remove("selected");
+	}
+
+	private selectOnly(item: HTMLElement): void {
+		this.clearSelection();
+		item.classList.add("selected");
+		this.anchor = item;
+	}
+
+	private pointerDown(e: PointerEvent): void {
+		if (e.button !== 0) return;
+		const target = e.target as HTMLElement;
+		this.collapseOnClick = null;
+		if (target.closest("input")) return; // a checkbox
+		const item = target.closest<HTMLElement>(SORTER_ITEM);
+		if (!item) {
+			// clicking on empty space clears the selection, but not clicking the scrollbar
+			if (e.offsetX < this.el.clientWidth && e.offsetY < this.el.clientHeight)
+				this.clearSelection();
+			return;
+		}
+		if (e.ctrlKey || e.metaKey) {
+			item.classList.toggle("selected");
+			this.anchor = item;
+		} else if (e.shiftKey && this.anchor?.isConnected) {
+			const all = this.items();
+			const a = all.indexOf(this.anchor);
+			const b = all.indexOf(item);
+			this.clearSelection();
+			for (const i of all.slice(Math.min(a, b), Math.max(a, b) + 1))
+				i.classList.add("selected");
+		} else if (!item.classList.contains("selected")) {
+			this.selectOnly(item);
+		} else {
+			// the item is part of the selection: this may be the start of a drag
+			// of the whole selection, so only select it alone on mouse release
+			this.collapseOnClick = item;
+		}
+	}
+
+	private click(e: MouseEvent): void {
+		const item = (e.target as HTMLElement).closest<HTMLElement>(SORTER_ITEM);
+		if (item && item === this.collapseOnClick) this.selectOnly(item);
+		this.collapseOnClick = null;
+	}
+
+	private dragStart(item: HTMLElement): void {
+		this.collapseOnClick = null;
+		this.dragGroup = item.classList.contains("selected")
+			? this.selected()
+			: [item];
+		for (const i of this.dragGroup)
+			if (i !== item) i.classList.add("dialog-sorter-dragged");
+	}
+
+	// Sortable has moved the dragged item; the other selected items follow it.
+	private dragEnd(item: HTMLElement): void {
+		const group = this.dragGroup;
+		this.dragGroup = [];
+		for (const i of group) i.classList.remove("dialog-sorter-dragged");
+		const at = group.indexOf(item);
+		if (at < 0) return;
+		for (let i = at - 1; i >= 0; --i)
+			this.el.insertBefore(group[i], group[i + 1]);
+		for (let i = at + 1; i < group.length; ++i)
+			this.el.insertBefore(group[i], group[i - 1].nextSibling);
+	}
+
+	private contextMenu(e: MouseEvent): void {
+		e.preventDefault();
+		const hit = (e.target as HTMLElement).closest<HTMLElement>(SORTER_ITEM);
+		// the item under the pointer is selected, unless it was already
+		if (hit && !hit.classList.contains("selected")) this.selectOnly(hit);
+		const sel = this.selected();
+		const checks = sel
+			.map((i) => i.querySelector<HTMLInputElement>("input"))
+			.filter((c): c is HTMLInputElement => c != null);
+		const menu: { name: string; label: string }[] = [];
+		if (sel.length > 0) {
+			menu.push({ name: "delete", label: "Delete" });
+			menu.push({ name: "cut", label: "Cut" });
+			if (checks.some((c) => !c.checked))
+				menu.push({ name: "mark", label: "Mark" });
+			if (checks.some((c) => c.checked))
+				menu.push({ name: "unmark", label: "Unmark" });
+		}
+		if (this.cut.length > 0) menu.push({ name: "insert", label: "Insert" });
+		if (menu.length === 0) return;
+		this.popupMenu.openPopup(e.clientX, e.clientY, menu, (result) => {
+			if (result) this.menuAction(result[0], sel, checks, hit);
+		});
+	}
+
+	private menuAction(
+		name: string,
+		sel: HTMLElement[],
+		checks: HTMLInputElement[],
+		hit: HTMLElement | null,
+	): void {
+		switch (name) {
+			case "delete":
+				for (const i of sel) i.remove();
+				break;
+			case "cut":
+				this.cut = sel;
+				for (const i of sel) {
+					i.classList.remove("selected");
+					i.remove();
+				}
+				break;
+			case "insert": {
+				// before the item that was clicked, or at the end
+				const before = hit?.isConnected ? hit : null;
+				this.clearSelection();
+				for (const i of this.cut) {
+					this.el.insertBefore(i, before);
+					i.classList.add("selected");
+				}
+				this.cut = [];
+				break;
+			}
+			case "mark":
+			case "unmark":
+				for (const c of checks) c.checked = name === "mark";
+				break;
+		}
+	}
+}
+
+const sorters = new Map<HTMLElement, DialogSorter>();
+
+// forget the sorters of dialogs that have been closed
+function discardOldSorters(): void {
+	for (const [el, s] of sorters) {
+		if (el.isConnected) continue;
+		s.destroy();
+		sorters.delete(el);
+	}
+}
+
 export function retrieveValues(options: DialogOptions) {
-	const values: { [key: string]: string | number | boolean } = {};
+	const values: { [key: string]: string | number | boolean | number[] } = {};
 	for (const w of options.elements) {
 		const el = document.getElementById(`dialog-element-${w.name}`);
 		switch (w.type) {
@@ -146,6 +418,11 @@ export function retrieveValues(options: DialogOptions) {
 			case "list":
 				values[w.name] = getListSelection(w);
 				break;
+			case "sorter": {
+				const sorter = el ? sorters.get(el) : undefined;
+				if (sorter) values[w.name] = sorter.order();
+				break;
+			}
 		}
 	}
 	return values;
@@ -174,6 +451,9 @@ export function setElement(ipe: Ipe, w: ElementOptions): void {
 		case "list":
 			setListItems(el as HTMLDivElement, w);
 			break;
+		case "sorter":
+			sorters.get(el)?.setItems(w.sorter ?? []);
+			break;
 		case "label":
 			(el as HTMLSpanElement).innerText = w.text;
 			break;
@@ -181,6 +461,20 @@ export function setElement(ipe: Ipe, w: ElementOptions): void {
 			console.error("Setting element not yet implemented: ", w);
 			break;
 	}
+}
+
+// a canvas showing a bitmap in memory (kind "bitmap")
+function makeBitmapCanvas(image: ImageOptions): HTMLCanvasElement {
+	const canvas = document.createElement("canvas");
+	canvas.width = image.width;
+	canvas.height = image.height;
+	if (image.pixels != null) {
+		const rgba = new Uint8ClampedArray(image.pixels);
+		canvas
+			.getContext("2d")
+			?.putImageData(new ImageData(rgba, image.width, image.height), 0, 0);
+	}
+	return canvas;
 }
 
 const canvasImages = new WeakMap<HTMLCanvasElement, ImageOptions | undefined>();
@@ -252,14 +546,7 @@ function drawImagePreview(
 		ctx.drawImage(source, cx - width / 2, cy - height / 2, width, height);
 	};
 	if (image?.kind === "bitmap" && image.pixels != null) {
-		const rgba = new Uint8ClampedArray(image.pixels);
-		const bitmap = document.createElement("canvas");
-		bitmap.width = image.width;
-		bitmap.height = image.height;
-		bitmap
-			.getContext("2d")
-			?.putImageData(new ImageData(rgba, image.width, image.height), 0, 0);
-		drawScaled(bitmap, image.width, image.height);
+		drawScaled(makeBitmapCanvas(image), image.width, image.height);
 		return;
 	}
 	if (image?.kind === "file") {
@@ -295,7 +582,9 @@ export function setupElements(
 	ipe: Ipe,
 	body: HTMLDivElement,
 	options: DialogOptions,
+	popupMenu: PopupMenu,
 ): HTMLElement | null {
+	discardOldSorters();
 	let focusElement: HTMLElement | null = null;
 	const contents = document.createElement("div");
 	contents.setAttribute("id", "contents");
@@ -306,11 +595,11 @@ export function setupElements(
 	}
 	contents.style.gridTemplateColumns = colt;
 	// non-stretched rows are fixed-size, but must be at least as tall
-	// as any image placed in them (image is the only element with a
+	// as any image or sorter placed in them (the only elements with a
 	// meaningful pixel height)
 	const rowMinHeight = options.rowstretch.map(() => 30);
 	for (const w of options.elements) {
-		if (w.type !== "image" || w.row < 0) continue;
+		if ((w.type !== "image" && w.type !== "sorter") || w.row < 0) continue;
 		const perRow = Math.ceil(w.height / w.rowspan);
 		for (let r = w.row; r < w.row + w.rowspan; ++r)
 			rowMinHeight[r] = Math.max(rowMinHeight[r], perRow);
@@ -383,6 +672,13 @@ export function setupElements(
 				el = el1;
 				break;
 			}
+			case "sorter": {
+				const sorter = new DialogSorter(w, popupMenu);
+				sorters.set(sorter.el, sorter);
+				sorter.el.style.minWidth = `${w.width}px`;
+				el = sorter.el;
+				break;
+			}
 			case "list": {
 				const el1 = document.createElement("div");
 				el1.id = `dialog-element-${w.name}`;
@@ -413,6 +709,7 @@ export function setupElements(
 			case "textedit":
 			case "list":
 			case "image":
+			case "sorter":
 				el.style.justifySelf = "stretch";
 				el.style.alignSelf = "stretch";
 				break;

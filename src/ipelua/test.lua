@@ -49,7 +49,6 @@ local function trackMethods(owner, methods)
             if owner == "ipe" then
               if name == "Document" then assert(select("#", ...) == 0, "file loading excluded") end
               if name == "Sheet" then assert(type((...)) ~= "string", "file loading excluded") end
-              if name == "folder" then assert((...) ~= "latex", "directory creation excluded") end
             end
             return implementation(...)
           end
@@ -1163,8 +1162,8 @@ test("documents: stylesheet replacement, borrowed cascades and style checking", 
   assert(not contains(document:checkStyle(), "undefined-test-pen"))
 end)
 
-test("folders: path construction without directory creation", function()
-  for _, name in ipairs({"lua", "icons", "doc", "styles", "ipelets", "scripts",
+test("folders: path construction", function()
+  for _, name in ipairs({"lua", "icons", "doc", "styles", "ipelets", "scripts", "latex",
                          "user-styles", "user-ipelets", "user-scripts", "config"}) do
     local folder = ipe.folder(name)
     equal(type(folder), "string")
@@ -1218,6 +1217,6 @@ for name in pairs(excluded) do
 end
 table.sort(skipped)
 for _, name in ipairs(skipped) do print("SKIP " .. name .. ": " .. excluded[name]) end
-print("SKIP file-loading constructor overloads and folder('latex'): file-system access")
+print("SKIP file-loading constructor overloads: file-system access")
 print(string.format("\n%d tests, %d failures, %d known failures", tests, failures, knownFailures))
 if failures > 0 or knownFailures > 0 then os.exit(1) end

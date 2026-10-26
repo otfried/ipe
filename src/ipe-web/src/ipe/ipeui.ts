@@ -7,12 +7,7 @@ import {
 	setElement,
 } from "./dialogs";
 import type { Ipe, ResumeResult } from "./ipejs";
-import {
-	type FileDialogOptions,
-	type MessageBoxOptions,
-	Modal,
-	type PageSelectorItem,
-} from "./modal";
+import { type FileDialogOptions, type MessageBoxOptions, Modal } from "./modal";
 import {
 	type Color,
 	type ComboColorItem,
@@ -909,7 +904,7 @@ export class IpeUi {
 	}
 
 	async showDialog(options: DialogOptions) {
-		this.modal.showDialog(options);
+		this.modal.showDialog(options, this.popupMenu);
 	}
 
 	dialogRetrieveValues(options: DialogOptions) {
@@ -1191,14 +1186,6 @@ export class IpeUi {
 			div.addEventListener("click", (_e) => this.ipe._bookmarkSelected(i));
 			bm.appendChild(div);
 		}
-	}
-
-	selectPage(
-		caption: string,
-		items: PageSelectorItem[],
-		sorter: boolean,
-	): void {
-		this.modal.pageSelector(caption, items, sorter, this.popupMenu);
 	}
 
 	setActionsEnabled(enabled: boolean): void {

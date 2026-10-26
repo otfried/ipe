@@ -895,49 +895,6 @@ void AppUi::action(String name) {
 
 // --------------------------------------------------------------------
 
-int AppUi::pageSorter(lua_State * L, Document * doc, int pno, int width, int height,
-		      int thumbWidth) {
-    QDialog * d = new QDialog();
-    if (pno >= 0)
-	d->setWindowTitle("Ipe View Sorter");
-    else
-	d->setWindowTitle("Ipe Page Sorter");
-
-    QLayout * lo = new QVBoxLayout;
-    PageSorter * p = new PageSorter(doc, pno, thumbWidth);
-    QDialogButtonBox * buttonBox =
-	new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    lo->addWidget(p);
-    lo->addWidget(buttonBox);
-    d->setLayout(lo);
-
-    d->connect(buttonBox, SIGNAL(accepted()), SLOT(accept()));
-    d->connect(buttonBox, SIGNAL(rejected()), SLOT(reject()));
-
-    d->resize(width, height);
-
-    if (d->exec() == QDialog::Rejected) {
-	delete d;
-	return 0;
-    }
-
-    lua_createtable(L, p->count(), 0);
-    for (int i = 1; i <= p->count(); ++i) {
-	lua_pushinteger(L, p->pageAt(i - 1) + 1);
-	lua_rawseti(L, -2, i);
-    }
-    int m = p->iMarks.size();
-    lua_createtable(L, m, 0);
-    for (int i = 1; i <= m; ++i) {
-	lua_pushboolean(L, p->iMarks[i - 1]);
-	lua_rawseti(L, -2, i);
-    }
-    delete d;
-    return 2;
-}
-
-// --------------------------------------------------------------------
-
 void AppUi::showPathStylePopup(Vector v) { luaShowPathStylePopup(v); }
 
 void AppUi::showLayerBoxPopup(Vector v, String layer) { luaShowLayerBoxPopup(v, layer); }

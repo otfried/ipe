@@ -84,8 +84,6 @@ public:
     virtual void setFullScreen(int mode) override;
     virtual void setBookmarks(int no, const String * s) override;
     virtual void setToolVisible(int m, bool vis) override;
-    virtual int pageSorter(lua_State * L, Document * doc, int pno, int width, int height,
-			   int thumbWidth) override;
     virtual int clipboard(lua_State * L) override;
     virtual int setClipboard(lua_State * L) override;
 

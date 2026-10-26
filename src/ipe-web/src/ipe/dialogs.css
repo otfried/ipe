@@ -60,3 +60,69 @@ button.dialog-element {
 .dialog-list-item.selected {
 	background-color: lightskyblue;
 }
+
+.dialog-sorter {
+	border: 1px solid black;
+	padding: 6px;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-content: flex-start;
+	gap: 6px;
+	text-align: center;
+	background-color: white;
+	color: black;
+	/* scroll within the grid cell, like a list */
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.dialog-sorter-item {
+	box-sizing: border-box;
+	width: var(--sorter-item-width);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 4px;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	cursor: default;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.dialog-sorter-item.selected {
+	background-color: lightskyblue;
+	border-color: black;
+}
+
+.dialog-sorter-icon {
+	height: var(--sorter-icon-height);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	/* the icon must not be dragged as an image */
+	pointer-events: none;
+}
+
+.dialog-sorter-caption {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	max-width: 100%;
+}
+
+.dialog-sorter-caption span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dialog-sorter-ghost {
+	opacity: 0.4;
+}
+
+.dialog-sorter-dragged {
+	opacity: 0.5;
+}

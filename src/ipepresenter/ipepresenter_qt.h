@@ -34,14 +34,16 @@
 
 #include "ipepdfview_qt.h"
 #include "ipepresenter.h"
-#include "ipeselector_qt.h"
 #include "timelabel_qt.h"
 
 #include <QAction>
+#include <QListWidget>
 #include <QMainWindow>
 #include <QPlainTextEdit>
 #include <QTime>
 #include <QTimer>
+
+using namespace ipe;
 
 // --------------------------------------------------------------------
 
@@ -66,6 +68,24 @@ public:
 
 private:
     PdfView * iView;
+};
+
+// --------------------------------------------------------------------
+
+class PageSelector : public QListWidget {
+    Q_OBJECT
+
+public:
+    PageSelector(QWidget * parent = nullptr);
+    void fill(std::vector<QPixmap> & icons, std::vector<String> & labels);
+
+    int selectedIndex() const { return currentRow(); }
+
+signals:
+    void selectionMade();
+
+private slots:
+    void pageSelected(QListWidgetItem * item);
 };
 
 // --------------------------------------------------------------------

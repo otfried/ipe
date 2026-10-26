@@ -68,6 +68,694 @@ std::string gtkMnemonic(const std::string & text) {
 
 // --------------------------------------------------------------------
 
+// The sorter element: a grid of icons that the user can select and, unless
+// the sorter is readonly, delete, mark, and rearrange (by dragging the
+// selected items, or by cutting them and inserting them somewhere else).
+// GtkIconView is gone in GTK4, so this is built from GtkGridView + GListModel.
+// Items are plain GObjects carrying their data as qdata.
+class DialogSorter {
+public:
+    explicit DialogSorter(bool readOnly);
+
+    GtkWidget * window() const { return iScroller; }
+    static DialogSorter * of(GtkWidget * window) {
+	return (DialogSorter *)g_object_get_data(G_OBJECT(window), "ipe-dialog-sorter");
+    }
+
+    void setItems(const std::vector<SorterItem> & items);
+    // see ipeui_qt.h: the current order, or the selected items if readonly
+    std::vector<int> order() const;
+
+private:
+    struct Cell {
+	GtkWidget * widget;
+	int number;
+	graphene_rect_t rect;
+    };
+
+    static void setup_cb(GtkListItemFactory *, GtkListItem * item, gpointer data);
+    static void bind_cb(GtkListItemFactory *, GtkListItem * item, gpointer data);
+    static void unbind_cb(GtkListItemFactory *, GtkListItem * item, gpointer data);
+    static void check_toggled_cb(GtkCheckButton * check, gpointer);
+    static void item_pressed_cb(GtkGestureClick * gesture, int, double, double,
+				gpointer data);
+    static void item_released_cb(GtkGestureClick * gesture, int, double, double,
+				 gpointer data);
+    static GdkContentProvider * drag_prepare_cb(GtkDragSource * source, double x,
+						double y, gpointer data);
+    static void drag_end_cb(GtkDragSource *, GdkDrag *, gboolean, gpointer data);
+    static GdkDragAction drop_motion_cb(GtkDropTarget *, double x, double y,
+					gpointer data);
+    static void drop_leave_cb(GtkDropTarget *, gpointer data);
+    static gboolean drop_cb(GtkDropTarget *, const GValue * value, double x, double y,
+			    gpointer data);
+    static void popup_cb(GtkGestureClick *, int, double x, double y, gpointer data);
+
+    guint count() const { return g_list_model_get_n_items(G_LIST_MODEL(iStore)); }
+    GObject * itemAt(guint pos) const; // new reference
+    static int numberOf(GObject * item);
+    guint positionOf(int number) const;
+    std::vector<guint> selectedPositions() const;
+    std::vector<Cell> cells(GtkWidget * relativeTo) const;
+    bool dropTarget(double x, double y, GtkWidget *& cell, int & number,
+		    bool & after) const;
+    void setDropIndicator(GtkWidget * cell, bool after);
+    void selectRange(guint first, guint n);
+
+    void deleteSelected();
+    void cutSelected();
+    void insertCut(guint pos);
+    void markSelected(bool mark);
+    // menu actions
+    void markAction() { markSelected(true); }
+    void unmarkAction() { markSelected(false); }
+    void insertAction() { insertCut(iInsertPos); }
+    void moveSelected(guint before);
+    void syncChecks();
+    void showContextMenu(double x, double y);
+
+private:
+    bool iReadOnly;
+    GtkWidget * iScroller;
+    GtkWidget * iGridView;
+    GListStore * iStore; // owned by iSelection
+    GtkSelectionModel * iSelection;
+    int iIconWidth = 0, iIconHeight = 0;
+    std::vector<GObject *> iCutList;
+    GtkWidget * iDropCell = nullptr; // cell showing the drop indicator
+    bool iDropAfter = false;
+    bool iDragging = false;
+    guint iInsertPos = 0; // where the context menu's "Insert" puts the cut items
+    guint iAnchor = GTK_INVALID_LIST_POSITION; // for selecting ranges with Shift
+    // a selected item was pressed: unless it is dragged, a click on it selects
+    // only this item
+    guint iPressedPos = GTK_INVALID_LIST_POSITION;
+};
+
+static void ensureSorterCss() {
+    static bool loaded = false;
+    if (loaded) return;
+    loaded = true;
+    GtkCssProvider * provider = gtk_css_provider_new();
+    const char * css =
+	".ipe-sorter-item { margin: 0; padding: 0; }"
+	".ipe-drop-before { box-shadow: inset 3px 0 0 0 @theme_selected_bg_color; }"
+	".ipe-drop-after { box-shadow: inset -3px 0 0 0 @theme_selected_bg_color; }";
+#if GTK_CHECK_VERSION(4, 12, 0)
+    gtk_css_provider_load_from_string(provider, css);
+#else
+    gtk_css_provider_load_from_data(provider, css, -1);
+#endif
+    gtk_style_context_add_provider_for_display(gdk_display_get_default(),
+					       GTK_STYLE_PROVIDER(provider),
+					       GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    g_object_unref(provider);
+}
+
+static gboolean sorter_idle_unparent_cb(gpointer data) {
+    gtk_widget_unparent(GTK_WIDGET(data));
+    return G_SOURCE_REMOVE;
+}
+
+// GtkPopoverMenu closes (emitting "closed") *before* a clicked row's GAction
+// "activate" signal fires, so unparenting must wait until that idle callback ran.
+static void sorter_popover_closed_cb(GtkPopover * popover, gpointer) {
+    g_idle_add(sorter_idle_unparent_cb, popover);
+}
+
+DialogSorter::DialogSorter(bool readOnly)
+    : iReadOnly(readOnly) {
+    ensureSorterCss();
+    iStore = g_list_store_new(G_TYPE_OBJECT);
+    iSelection = GTK_SELECTION_MODEL(gtk_multi_selection_new(G_LIST_MODEL(iStore)));
+
+    GtkListItemFactory * factory = gtk_signal_list_item_factory_new();
+    g_signal_connect(factory, "setup", G_CALLBACK(setup_cb), this);
+    g_signal_connect(factory, "bind", G_CALLBACK(bind_cb), this);
+    g_signal_connect(factory, "unbind", G_CALLBACK(unbind_cb), this);
+
+    iGridView = gtk_grid_view_new(iSelection, factory);
+    gtk_grid_view_set_max_columns(GTK_GRID_VIEW(iGridView), 100);
+
+    iScroller = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(iScroller), GTK_POLICY_NEVER,
+				   GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(iScroller), iGridView);
+    g_object_set_data_full(G_OBJECT(iScroller), "ipe-dialog-sorter", this,
+			   [](gpointer p) { delete static_cast<DialogSorter *>(p); });
+
+    if (!iReadOnly) {
+	GtkGesture * popup = gtk_gesture_click_new();
+	gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(popup), GDK_BUTTON_SECONDARY);
+	g_signal_connect(popup, "pressed", G_CALLBACK(popup_cb), this);
+	gtk_widget_add_controller(iGridView, GTK_EVENT_CONTROLLER(popup));
+
+	// the drop target covers the entire element, also the empty space
+	GtkDropTarget * dropTarget = gtk_drop_target_new(G_TYPE_STRING, GDK_ACTION_MOVE);
+	g_signal_connect(dropTarget, "motion", G_CALLBACK(drop_motion_cb), this);
+	g_signal_connect(dropTarget, "leave", G_CALLBACK(drop_leave_cb), this);
+	g_signal_connect(dropTarget, "drop", G_CALLBACK(drop_cb), this);
+	gtk_widget_add_controller(iScroller, GTK_EVENT_CONTROLLER(dropTarget));
+    }
+}
+
+static GObject * sorterItemNew(GdkTexture * texture, const std::string & label,
+			       int number, bool hasMark, bool mark) {
+    GObject * obj = (GObject *)g_object_new(G_TYPE_OBJECT, nullptr);
+    if (texture) g_object_set_data_full(obj, "ipe-texture", texture, g_object_unref);
+    g_object_set_data_full(obj, "ipe-label", g_strdup(label.c_str()), g_free);
+    g_object_set_data(obj, "ipe-number", GINT_TO_POINTER(number));
+    g_object_set_data(obj, "ipe-hasmark", GINT_TO_POINTER(hasMark ? 1 : 0));
+    g_object_set_data(obj, "ipe-mark", GINT_TO_POINTER(mark ? 1 : 0));
+    return obj;
+}
+
+void DialogSorter::setItems(const std::vector<SorterItem> & items) {
+    // all icons get the size of the largest bitmap
+    iIconWidth = iIconHeight = 0;
+    for (const SorterItem & item : items) {
+	if (item.image.kind != ImageSpec::EBitmap) continue;
+	iIconWidth = std::max(iIconWidth, item.image.width);
+	iIconHeight = std::max(iIconHeight, item.image.height);
+    }
+    for (GObject * obj : iCutList) g_object_unref(obj);
+    iCutList.clear();
+
+    GObject ** objs = g_new0(GObject *, items.size() + 1);
+    for (int i = 0; i < int(items.size()); ++i) {
+	const SorterItem & it = items[i];
+	GdkTexture * texture = nullptr;
+	if (it.image.kind == ImageSpec::EBitmap) {
+	    GBytes * bytes = g_bytes_new(it.image.pixels.data(), it.image.pixels.size());
+	    texture =
+		gdk_memory_texture_new(it.image.width, it.image.height,
+				       GDK_MEMORY_R8G8B8A8, bytes, 4 * it.image.width);
+	    g_bytes_unref(bytes);
+	}
+	objs[i] = sorterItemNew(texture, it.label, i + 1, it.hasMark, it.mark);
+    }
+    g_list_store_splice(iStore, 0, count(), (gpointer *)objs, items.size());
+    for (int i = 0; i < int(items.size()); ++i) g_object_unref(objs[i]);
+    g_free(objs);
+}
+
+GObject * DialogSorter::itemAt(guint pos) const {
+    return (GObject *)g_list_model_get_item(G_LIST_MODEL(iStore), pos);
+}
+
+int DialogSorter::numberOf(GObject * item) {
+    return GPOINTER_TO_INT(g_object_get_data(item, "ipe-number"));
+}
+
+guint DialogSorter::positionOf(int number) const {
+    guint n = count();
+    for (guint i = 0; i < n; ++i) {
+	GObject * obj = itemAt(i);
+	int k = numberOf(obj);
+	g_object_unref(obj);
+	if (k == number) return i;
+    }
+    return GTK_INVALID_LIST_POSITION;
+}
+
+std::vector<guint> DialogSorter::selectedPositions() const {
+    std::vector<guint> result;
+    guint n = count();
+    for (guint i = 0; i < n; ++i)
+	if (gtk_selection_model_is_selected(iSelection, i)) result.push_back(i);
+    return result;
+}
+
+std::vector<int> DialogSorter::order() const {
+    std::vector<int> result;
+    guint n = count();
+    for (guint i = 0; i < n; ++i) {
+	GObject * obj = itemAt(i);
+	int number = numberOf(obj);
+	if (iReadOnly) {
+	    if (gtk_selection_model_is_selected(iSelection, i)) result.push_back(number);
+	} else {
+	    bool marked = g_object_get_data(obj, "ipe-hasmark")
+			  && g_object_get_data(obj, "ipe-mark");
+	    result.push_back(marked ? -number : number);
+	}
+	g_object_unref(obj);
+    }
+    return result;
+}
+
+// --------------------------------------------------------------------
+// Items
+
+void DialogSorter::setup_cb(GtkListItemFactory *, GtkListItem * item, gpointer data) {
+    DialogSorter * self = (DialogSorter *)data;
+    GtkWidget * box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+    // the view stretches its cells to fill the width; keep the content centered
+    gtk_widget_set_halign(box, GTK_ALIGN_CENTER);
+    gtk_widget_set_margin_start(box, 6);
+    gtk_widget_set_margin_end(box, 6);
+    gtk_widget_set_margin_top(box, 6);
+    gtk_widget_set_margin_bottom(box, 6);
+
+    GtkWidget * check = gtk_check_button_new();
+    gtk_widget_set_valign(check, GTK_ALIGN_START);
+    gtk_widget_set_focusable(check, FALSE);
+    // the checkbox of a readonly sorter is only displayed
+    if (self->iReadOnly)
+	gtk_widget_set_can_target(check, FALSE);
+    else
+	g_signal_connect(check, "toggled", G_CALLBACK(check_toggled_cb), nullptr);
+
+    GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+    gtk_widget_add_css_class(box, "ipe-sorter-item");
+    gtk_widget_add_css_class(vbox, "ipe-sorter-item");
+    GtkWidget * picture = gtk_picture_new();
+    gtk_widget_set_halign(picture, GTK_ALIGN_CENTER);
+    GtkWidget * label = gtk_label_new(nullptr);
+    gtk_label_set_wrap(GTK_LABEL(label), TRUE);
+    gtk_label_set_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD_CHAR);
+    gtk_label_set_max_width_chars(GTK_LABEL(label), 14);
+    gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
+    gtk_box_append(GTK_BOX(vbox), picture);
+    gtk_box_append(GTK_BOX(vbox), label);
+    gtk_box_append(GTK_BOX(box), check);
+    gtk_box_append(GTK_BOX(box), vbox);
+    g_object_set_data(G_OBJECT(box), "ipe-check", check);
+    g_object_set_data(G_OBJECT(box), "ipe-picture", picture);
+    g_object_set_data(G_OBJECT(box), "ipe-label", label);
+
+    // GtkListItemWidget's own click gesture claims the press, which would
+    // cancel the drag source below.  So items are not selectable for the view,
+    // and the selection is done here.
+    gtk_list_item_set_selectable(item, FALSE);
+    gtk_list_item_set_activatable(item, FALSE);
+    GtkGesture * click = gtk_gesture_click_new();
+    gtk_gesture_single_set_button(GTK_GESTURE_SINGLE(click), GDK_BUTTON_PRIMARY);
+    g_signal_connect(click, "pressed", G_CALLBACK(item_pressed_cb), self);
+    g_signal_connect(click, "released", G_CALLBACK(item_released_cb), self);
+    gtk_widget_add_controller(box, GTK_EVENT_CONTROLLER(click));
+
+    if (!self->iReadOnly) {
+	GtkDragSource * dragSource = gtk_drag_source_new();
+	gtk_drag_source_set_actions(dragSource, GDK_ACTION_MOVE);
+	g_signal_connect(dragSource, "prepare", G_CALLBACK(drag_prepare_cb), self);
+	g_signal_connect(dragSource, "drag-end", G_CALLBACK(drag_end_cb), self);
+	gtk_widget_add_controller(box, GTK_EVENT_CONTROLLER(dragSource));
+    }
+    gtk_list_item_set_child(item, box);
+}
+
+void DialogSorter::bind_cb(GtkListItemFactory *, GtkListItem * item, gpointer data) {
+    DialogSorter * self = (DialogSorter *)data;
+    GObject * obj = G_OBJECT(gtk_list_item_get_item(item));
+    GtkWidget * box = gtk_list_item_get_child(item);
+    GtkWidget * check = GTK_WIDGET(g_object_get_data(G_OBJECT(box), "ipe-check"));
+    GtkWidget * picture = GTK_WIDGET(g_object_get_data(G_OBJECT(box), "ipe-picture"));
+    GtkWidget * label = GTK_WIDGET(g_object_get_data(G_OBJECT(box), "ipe-label"));
+
+    // GtkGridView does not reliably rebind a row when only its position
+    // changes, so remember the item's number (not its position) in the widget
+    g_object_set_data(G_OBJECT(box), "ipe-number", GINT_TO_POINTER(numberOf(obj)));
+
+    GdkTexture * texture = (GdkTexture *)g_object_get_data(obj, "ipe-texture");
+    gtk_picture_set_paintable(GTK_PICTURE(picture),
+			      texture ? GDK_PAINTABLE(texture) : nullptr);
+    // every icon has the cell of the largest bitmap, with the bitmap centered
+    gtk_widget_set_size_request(picture, self->iIconWidth, self->iIconHeight);
+    gtk_picture_set_can_shrink(GTK_PICTURE(picture), TRUE);
+#if GTK_CHECK_VERSION(4, 8, 0)
+    gtk_picture_set_content_fit(GTK_PICTURE(picture), GTK_CONTENT_FIT_SCALE_DOWN);
+#endif
+    // the natural width of a wrapping label is max_width_chars, so this keeps the cell
+    // about as wide as the icon (roughly 8 pixels per character)
+    gtk_label_set_max_width_chars(GTK_LABEL(label), std::max(8, self->iIconWidth / 8));
+    gtk_label_set_text(GTK_LABEL(label),
+		       (const char *)g_object_get_data(obj, "ipe-label"));
+
+    bool hasMark = g_object_get_data(obj, "ipe-hasmark") != nullptr;
+    gtk_widget_set_visible(check, hasMark);
+    // the item must be set first: setting the state calls check_toggled_cb
+    g_object_set_data(G_OBJECT(check), "ipe-item", obj);
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(check),
+				g_object_get_data(obj, "ipe-mark") != nullptr);
+}
+
+void DialogSorter::unbind_cb(GtkListItemFactory *, GtkListItem * item, gpointer) {
+    GtkWidget * box = gtk_list_item_get_child(item);
+    GtkWidget * check = GTK_WIDGET(g_object_get_data(G_OBJECT(box), "ipe-check"));
+    g_object_set_data(G_OBJECT(check), "ipe-item", nullptr);
+    g_object_set_data(G_OBJECT(box), "ipe-number", nullptr);
+}
+
+void DialogSorter::item_pressed_cb(GtkGestureClick * gesture, int, double, double,
+				   gpointer data) {
+    DialogSorter * self = (DialogSorter *)data;
+    GtkWidget * box = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+    guint pos =
+	self->positionOf(GPOINTER_TO_INT(g_object_get_data(G_OBJECT(box), "ipe-number")));
+    if (pos == GTK_INVALID_LIST_POSITION) return;
+    gtk_widget_grab_focus(self->iGridView);
+
+    GdkModifierType state =
+	gtk_event_controller_get_current_event_state(GTK_EVENT_CONTROLLER(gesture));
+    bool extend = state & GDK_SHIFT_MASK;
+    bool modify = state & GDK_CONTROL_MASK;
+    self->iPressedPos = GTK_INVALID_LIST_POSITION;
+    if (extend) {
+	guint anchor = self->iAnchor < self->count() ? self->iAnchor : pos;
+	guint first = std::min(anchor, pos);
+	guint last = std::max(anchor, pos);
+	gtk_selection_model_select_range(self->iSelection, first, last - first + 1,
+					 !modify);
+    } else if (modify) {
+	if (gtk_selection_model_is_selected(self->iSelection, pos))
+	    gtk_selection_model_unselect_item(self->iSelection, pos);
+	else
+	    gtk_selection_model_select_item(self->iSelection, pos, FALSE);
+	self->iAnchor = pos;
+    } else {
+	self->iAnchor = pos;
+	if (gtk_selection_model_is_selected(self->iSelection, pos))
+	    self->iPressedPos = pos; // wait for the release: this may be a drag
+	else
+	    gtk_selection_model_select_item(self->iSelection, pos, TRUE);
+    }
+}
+
+// a drag claims the press and cancels this gesture, so this is a plain click
+void DialogSorter::item_released_cb(GtkGestureClick * gesture, int, double, double,
+				    gpointer data) {
+    DialogSorter * self = (DialogSorter *)data;
+    GtkWidget * box = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(gesture));
+    guint pos =
+	self->positionOf(GPOINTER_TO_INT(g_object_get_data(G_OBJECT(box), "ipe-number")));
+    if (pos != GTK_INVALID_LIST_POSITION && pos == self->iPressedPos)
+	gtk_selection_model_select_item(self->iSelection, pos, TRUE);
+    self->iPressedPos = GTK_INVALID_LIST_POSITION;
+}
+
+void DialogSorter::check_toggled_cb(GtkCheckButton * check, gpointer) {
+    GObject * obj = (GObject *)g_object_get_data(G_OBJECT(check), "ipe-item");
+    if (!obj) return;
+    bool active = gtk_check_button_get_active(check);
+    g_object_set_data(obj, "ipe-mark", GINT_TO_POINTER(active ? 1 : 0));
+}
+
+// Make the checkboxes of the visible items show the state of their items
+void DialogSorter::syncChecks() {
+    for (const Cell & c : cells(iGridView)) {
+	GtkWidget * box = gtk_widget_get_first_child(c.widget);
+	GtkWidget * check = GTK_WIDGET(g_object_get_data(G_OBJECT(box), "ipe-check"));
+	GObject * obj = (GObject *)g_object_get_data(G_OBJECT(check), "ipe-item");
+	if (obj)
+	    gtk_check_button_set_active(GTK_CHECK_BUTTON(check),
+					g_object_get_data(obj, "ipe-mark") != nullptr);
+    }
+}
+
+// The widgets of the items that are currently shown, with their bounds
+// relative to the given widget
+std::vector<DialogSorter::Cell> DialogSorter::cells(GtkWidget * relativeTo) const {
+    std::vector<Cell> result;
+    for (GtkWidget * c = gtk_widget_get_first_child(iGridView); c;
+	 c = gtk_widget_get_next_sibling(c)) {
+	GtkWidget * box = gtk_widget_get_first_child(c);
+	if (!box) continue;
+	int number = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(box), "ipe-number"));
+	if (number == 0) continue; // not bound to an item
+	Cell cell = {c, number, {}};
+	if (gtk_widget_compute_bounds(c, relativeTo, &cell.rect)) result.push_back(cell);
+    }
+    return result;
+}
+
+void DialogSorter::selectRange(guint first, guint n) {
+    gtk_selection_model_unselect_all(iSelection);
+    for (guint i = 0; i < n; ++i)
+	gtk_selection_model_select_item(iSelection, first + i, FALSE);
+}
+
+// --------------------------------------------------------------------
+// Changing the list
+
+void DialogSorter::deleteSelected() {
+    std::vector<guint> rows = selectedPositions();
+    for (auto it = rows.rbegin(); it != rows.rend(); ++it)
+	g_list_store_remove(iStore, *it);
+}
+
+void DialogSorter::cutSelected() {
+    std::vector<guint> rows = selectedPositions();
+    if (rows.empty()) return;
+    // the new cut items replace the old ones
+    for (GObject * obj : iCutList) g_object_unref(obj);
+    iCutList.clear();
+    for (auto it = rows.rbegin(); it != rows.rend(); ++it) {
+	iCutList.insert(iCutList.begin(), itemAt(*it));
+	g_list_store_remove(iStore, *it);
+    }
+}
+
+void DialogSorter::insertCut(guint pos) {
+    pos = std::min(pos, count());
+    guint first = pos;
+    for (GObject * obj : iCutList) {
+	g_list_store_insert(iStore, pos++, obj);
+	g_object_unref(obj);
+    }
+    guint n = pos - first;
+    iCutList.clear();
+    selectRange(first, n);
+}
+
+void DialogSorter::markSelected(bool mark) {
+    for (guint pos : selectedPositions()) {
+	GObject * obj = itemAt(pos);
+	if (g_object_get_data(obj, "ipe-hasmark"))
+	    g_object_set_data(obj, "ipe-mark", GINT_TO_POINTER(mark ? 1 : 0));
+	g_object_unref(obj);
+    }
+    syncChecks();
+}
+
+// Move the selected items (keeping their order) before the item in this
+// position (to the end if it is the number of items)
+void DialogSorter::moveSelected(guint before) {
+    std::vector<guint> rows = selectedPositions();
+    if (rows.empty()) return;
+    before = std::min(before, count());
+    guint removedBefore = 0;
+    for (guint r : rows)
+	if (r < before) ++removedBefore;
+
+    std::vector<GObject *> moved;
+    for (auto it = rows.rbegin(); it != rows.rend(); ++it) {
+	moved.insert(moved.begin(), itemAt(*it));
+	g_list_store_remove(iStore, *it);
+    }
+    guint first = before - removedBefore;
+    guint pos = first;
+    for (GObject * obj : moved) {
+	g_list_store_insert(iStore, pos++, obj);
+	g_object_unref(obj);
+    }
+    selectRange(first, moved.size());
+}
+
+// --------------------------------------------------------------------
+// Dragging
+
+GdkContentProvider * DialogSorter::drag_prepare_cb(GtkDragSource * source, double, double,
+						   gpointer data) {
+    DialogSorter * self = (DialogSorter *)data;
+    GtkWidget * box = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(source));
+    int number = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(box), "ipe-number"));
+    guint pos = self->positionOf(number);
+    if (pos == GTK_INVALID_LIST_POSITION) return nullptr;
+    // dragging an item that is not selected selects just that item, otherwise
+    // the entire selection is dragged
+    if (!gtk_selection_model_is_selected(self->iSelection, pos))
+	gtk_selection_model_select_item(self->iSelection, pos, TRUE);
+    self->iDragging = true;
+    gchar * id = g_strdup_printf("ipe-sorter:%p", (void *)self);
+    GdkContentProvider * provider = gdk_content_provider_new_typed(G_TYPE_STRING, id);
+    g_free(id);
+    return provider;
+}
+
+void DialogSorter::drag_end_cb(GtkDragSource *, GdkDrag *, gboolean, gpointer data) {
+    DialogSorter * self = (DialogSorter *)data;
+    self->iDragging = false;
+    self->setDropIndicator(nullptr, false);
+}
+
+// Where would items dropped at this position (relative to the scroller) go?
+// Look for the line of items closest to the position (vertically), then for
+// the item in that line closest to it (horizontally), and whether the items go
+// before or after it.  So dropping below the last line, or to the right of its
+// last item, moves the items to the end.
+bool DialogSorter::dropTarget(double x, double y, GtkWidget *& cell, int & number,
+			      bool & after) const {
+    double bestVertical = 0, bestHorizontal = 0;
+    cell = nullptr;
+    for (const Cell & c : cells(iScroller)) {
+	double top = c.rect.origin.y, bottom = top + c.rect.size.height;
+	double left = c.rect.origin.x, centerX = left + c.rect.size.width / 2;
+	double vertical = std::max({top - y, y - bottom, 0.0});
+	double horizontal = std::abs(centerX - x);
+	if (!cell || vertical < bestVertical
+	    || (vertical == bestVertical && horizontal < bestHorizontal)) {
+	    bestVertical = vertical;
+	    bestHorizontal = horizontal;
+	    cell = c.widget;
+	    number = c.number;
+	    after = x >= centerX;
+	}
+    }
+    return cell != nullptr;
+}
+
+void DialogSorter::setDropIndicator(GtkWidget * cell, bool after) {
+    if (cell == iDropCell && after == iDropAfter) return;
+    if (iDropCell) {
+	gtk_widget_remove_css_class(iDropCell, "ipe-drop-before");
+	gtk_widget_remove_css_class(iDropCell, "ipe-drop-after");
+	g_object_remove_weak_pointer(G_OBJECT(iDropCell), (gpointer *)&iDropCell);
+	iDropCell = nullptr;
+    }
+    if (cell) {
+	iDropCell = cell;
+	g_object_add_weak_pointer(G_OBJECT(cell), (gpointer *)&iDropCell);
+	gtk_widget_add_css_class(cell, after ? "ipe-drop-after" : "ipe-drop-before");
+    }
+    iDropAfter = after;
+}
+
+GdkDragAction DialogSorter::drop_motion_cb(GtkDropTarget *, double x, double y,
+					   gpointer data) {
+    DialogSorter * self = (DialogSorter *)data;
+    GtkWidget * cell;
+    int number;
+    bool after = false;
+    if (!self->iDragging || !self->dropTarget(x, y, cell, number, after)) {
+	self->setDropIndicator(nullptr, false);
+	return (GdkDragAction)0;
+    }
+    self->setDropIndicator(cell, after);
+    return GDK_ACTION_MOVE;
+}
+
+void DialogSorter::drop_leave_cb(GtkDropTarget *, gpointer data) {
+    ((DialogSorter *)data)->setDropIndicator(nullptr, false);
+}
+
+gboolean DialogSorter::drop_cb(GtkDropTarget *, const GValue * value, double x, double y,
+			       gpointer data) {
+    DialogSorter * self = (DialogSorter *)data;
+    self->setDropIndicator(nullptr, false);
+    gchar * id = g_strdup_printf("ipe-sorter:%p", (void *)self);
+    bool ours = g_strcmp0(g_value_get_string(value), id) == 0;
+    g_free(id);
+    GtkWidget * cell;
+    int number;
+    bool after = false;
+    if (!ours || !self->dropTarget(x, y, cell, number, after)) return FALSE;
+    guint pos = self->positionOf(number);
+    if (pos == GTK_INVALID_LIST_POSITION) return FALSE;
+    self->moveSelected(pos + (after ? 1 : 0));
+    return TRUE;
+}
+
+// --------------------------------------------------------------------
+// Context menu
+
+void DialogSorter::popup_cb(GtkGestureClick *, int, double x, double y, gpointer data) {
+    ((DialogSorter *)data)->showContextMenu(x, y);
+}
+
+void DialogSorter::showContextMenu(double x, double y) {
+    // item under the pointer: select it if it is not selected yet, and insert
+    // before it; in empty space, insert at the end
+    iInsertPos = count();
+    for (const Cell & c : cells(iGridView)) {
+	if (x >= c.rect.origin.x && x < c.rect.origin.x + c.rect.size.width
+	    && y >= c.rect.origin.y && y < c.rect.origin.y + c.rect.size.height) {
+	    guint pos = positionOf(c.number);
+	    if (pos == GTK_INVALID_LIST_POSITION) break;
+	    iInsertPos = pos;
+	    if (!gtk_selection_model_is_selected(iSelection, pos))
+		gtk_selection_model_select_item(iSelection, pos, TRUE);
+	    break;
+	}
+    }
+
+    bool canMark = false, canUnmark = false;
+    std::vector<guint> rows = selectedPositions();
+    for (guint pos : rows) {
+	GObject * obj = itemAt(pos);
+	if (g_object_get_data(obj, "ipe-hasmark")) {
+	    if (g_object_get_data(obj, "ipe-mark"))
+		canUnmark = true;
+	    else
+		canMark = true;
+	}
+	g_object_unref(obj);
+    }
+
+    GMenu * menu = g_menu_new();
+    if (!rows.empty()) {
+	g_menu_append(menu, "_Delete", "sorter.delete");
+	g_menu_append(menu, "_Cut", "sorter.cut");
+	if (canMark) g_menu_append(menu, "_Mark", "sorter.mark");
+	if (canUnmark) g_menu_append(menu, "_Unmark", "sorter.unmark");
+    }
+    if (!iCutList.empty()) g_menu_append(menu, "_Insert", "sorter.insert");
+    if (g_menu_model_get_n_items(G_MENU_MODEL(menu)) == 0) {
+	g_object_unref(menu);
+	return;
+    }
+
+    GSimpleActionGroup * group = g_simple_action_group_new();
+    auto addAction = [&](const char * name, void (DialogSorter::*method)()) {
+	GSimpleAction * action = g_simple_action_new(name, nullptr);
+	struct Call {
+	    DialogSorter * sorter;
+	    void (DialogSorter::*method)();
+	};
+	Call * call = new Call{this, method};
+	g_signal_connect_data(
+	    action, "activate", G_CALLBACK(+[](GSimpleAction *, GVariant *, gpointer p) {
+		Call * c = static_cast<Call *>(p);
+		(c->sorter->*(c->method))();
+	    }),
+	    call, [](gpointer p, GClosure *) { delete static_cast<Call *>(p); },
+	    (GConnectFlags)0);
+	g_action_map_add_action(G_ACTION_MAP(group), G_ACTION(action));
+	g_object_unref(action);
+    };
+    addAction("delete", &DialogSorter::deleteSelected);
+    addAction("cut", &DialogSorter::cutSelected);
+    addAction("mark", &DialogSorter::markAction);
+    addAction("unmark", &DialogSorter::unmarkAction);
+    addAction("insert", &DialogSorter::insertAction);
+
+    GtkWidget * popover = gtk_popover_menu_new_from_model(G_MENU_MODEL(menu));
+    gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
+    gtk_widget_set_halign(popover, GTK_ALIGN_START);
+    // insert the actions directly on the popover: it is not a descendant of
+    // the view until it has a parent, so they would not be found yet
+    gtk_widget_insert_action_group(popover, "sorter", G_ACTION_GROUP(group));
+    g_object_unref(menu);
+    g_object_unref(group);
+    gtk_widget_set_parent(popover, iGridView);
+    g_signal_connect(popover, "closed", G_CALLBACK(sorter_popover_closed_cb), nullptr);
+    GdkRectangle rect = {int(x), int(y), 1, 1};
+    gtk_popover_set_pointing_to(GTK_POPOVER(popover), &rect);
+    gtk_popover_popup(GTK_POPOVER(popover));
+}
+
+// --------------------------------------------------------------------
+
 class PDialog : public Dialog {
 public:
     PDialog(lua_State * L0, WINID parent, const char * caption, const char * language);
@@ -336,6 +1024,7 @@ void PDialog::setMapped(lua_State * L, int idx) {
 	setImageSpec(w, m.image);
 	gtk_widget_queue_draw(w);
 	break;
+    case ESorter: DialogSorter::of(w)->setItems(m.sorter); break;
     case EList: {
 	GtkSingleSelection * s =
 	    GTK_SINGLE_SELECTION(gtk_list_view_get_model(GTK_LIST_VIEW(w)));
@@ -385,6 +1074,7 @@ void PDialog::retrieveValues() {
 	} break;
 	case ECombo: m.value = gtk_drop_down_get_selected(GTK_DROP_DOWN(w)); break;
 	case ECheckBox: m.value = gtk_check_button_get_active(GTK_CHECK_BUTTON(w)); break;
+	case ESorter: m.order = DialogSorter::of(w)->order(); break;
 	default: break; // label and button - nothing to do
 	}
     }
@@ -568,6 +1258,11 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(widget), drawImagePreview,
 					       nullptr, nullptr);
 		break;
+	    case ESorter: {
+		DialogSorter * sorter = new DialogSorter(m.flags & EReadOnly);
+		widget = sorter->window();
+		sorter->setItems(m.sorter);
+	    } break;
 	    case ETextEdit:
 #ifdef IPE_SPELLCHECK
 		widget = gtk_source_view_new();

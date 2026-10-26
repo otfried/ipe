@@ -24,6 +24,8 @@ Ipe 7.3.1
 
  * Visual style sheet editor contributed by Dmitriy Morozov. Thanks!
 
+ * Visual symbol picker.
+
  * Easily add a style sheet by selecting it by name.
 
  * You can now add images to your document by simply dragging them

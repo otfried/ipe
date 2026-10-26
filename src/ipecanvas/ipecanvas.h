@@ -168,9 +168,6 @@ public:
 
     virtual void setCursor(TCursor cursor, double w = 1.0, Color * color = nullptr) = 0;
 
-    static int selectPageOrView(Document * doc, int page = -1, int startIndex = 0,
-				int pageWidth = 240, int width = 600, int height = 480);
-
     virtual void invalidate(int x, int y, int w, int h) = 0;
 
 protected:

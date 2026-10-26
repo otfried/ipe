@@ -73,8 +73,6 @@ public:
     virtual void setToolVisible(int m, bool vis) override;
 
     virtual int actionInfo(lua_State * L) const override;
-    virtual int pageSorter(lua_State * L, Document * doc, int pno, int width, int height,
-			   int thumbWidth) override;
 
     virtual int clipboard(lua_State * L) override;
     virtual int setClipboard(lua_State * L) override;

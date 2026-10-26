@@ -35,8 +35,10 @@
 #include <QCloseEvent>
 #include <QColorDialog>
 #include <QComboBox>
+#include <QContextMenuEvent>
 #include <QDateTime>
 #include <QDialog>
+#include <QDrag>
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QInputDialog>
@@ -45,6 +47,7 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPushButton>
@@ -182,6 +185,339 @@ void DialogImage::paintEvent(QPaintEvent *) {
 			 ? QString::fromUtf8(iSpec.text.c_str())
 			 : QStringLiteral("Preview unavailable"));
 }
+
+// --------------------------------------------------------------------
+
+static bool isMarkable(const QListWidgetItem * item) {
+    return item->data(Qt::CheckStateRole).isValid();
+}
+
+DialogSorter::DialogSorter(bool readOnly, QWidget * parent)
+    : QListWidget(parent)
+    , iReadOnly(readOnly) {
+    setViewMode(QListView::IconMode);
+    setSelectionMode(QAbstractItemView::ExtendedSelection);
+    setResizeMode(QListView::Adjust);
+    setWrapping(true);
+    setUniformItemSizes(true);
+    setFlow(QListView::LeftToRight);
+    setSpacing(10);
+    setMovement(QListView::Static);
+    // the icon view has no padding at the top, so the first row touches the frame
+    setViewportMargins(0, 8, 0, 0);
+    setBackgroundRole(QPalette::Base);
+    setAutoFillBackground(true);
+    setDropIndicatorShown(false);
+    if (iReadOnly) {
+	setDragDropMode(QAbstractItemView::NoDragDrop);
+    } else {
+	// dragging is handled by this class, as the built-in drag and drop of
+	// an icon view does not reorder items
+	setDragDropMode(QAbstractItemView::InternalMove);
+	viewport()->setAcceptDrops(true); // the viewport receives the drag events
+    }
+}
+
+DialogSorter::~DialogSorter() { clearCutList(); }
+
+void DialogSorter::clearCutList() {
+    qDeleteAll(iCutList);
+    iCutList.clear();
+}
+
+void DialogSorter::setItems(const std::vector<SorterItem> & items) {
+    clear();
+    clearCutList();
+
+    // all icons get the size of the largest bitmap
+    int iconWidth = 0, iconHeight = 0;
+    for (const SorterItem & item : items) {
+	if (item.image.kind != ImageSpec::EBitmap) continue;
+	iconWidth = std::max(iconWidth, item.image.width);
+	iconHeight = std::max(iconHeight, item.image.height);
+    }
+    setIconSize(QSize(iconWidth, iconHeight));
+    setGridSize(QSize(std::max(iconWidth, 80) + 40, iconHeight + 50));
+
+    for (int i = 0; i < int(items.size()); ++i) {
+	const SorterItem & it = items[i];
+	QPixmap pixmap(iconWidth, iconHeight);
+	pixmap.fill(Qt::transparent);
+	if (it.image.kind == ImageSpec::EBitmap) {
+	    // copy the pixels, as the image would refer to the string's memory
+	    QImage bits(reinterpret_cast<const uchar *>(it.image.pixels.data()),
+			it.image.width, it.image.height, 4 * it.image.width,
+			QImage::Format_RGBA8888);
+	    pixmap = QPixmap::fromImage(bits.copy());
+	}
+	QString label = QString::fromUtf8(it.label.c_str());
+	QListWidgetItem * item = new QListWidgetItem(QIcon(pixmap), label);
+	Qt::ItemFlags flags = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+	if (!iReadOnly) flags |= Qt::ItemIsDragEnabled;
+	if (it.hasMark) {
+	    // the checkbox of a readonly sorter is only displayed
+	    if (!iReadOnly) flags |= Qt::ItemIsUserCheckable;
+	    item->setCheckState(it.mark ? Qt::Checked : Qt::Unchecked);
+	}
+	item->setFlags(flags);
+	if (!label.isEmpty()) item->setToolTip(label);
+	item->setData(Qt::UserRole, i + 1);
+	addItem(item);
+    }
+
+    // The view uses the size of the first item for all items.  Items with a
+    // checkbox are wider than items without, so give all items the size of the
+    // largest one, or the layout would depend on the current order.
+    QSize hint(0, 0);
+    for (int r = 0; r < count(); ++r)
+	hint = hint.expandedTo(sizeHintForIndex(model()->index(r, 0)));
+    for (int r = 0; r < count(); ++r) item(r)->setSizeHint(hint);
+}
+
+std::vector<int> DialogSorter::order() const {
+    std::vector<int> result;
+    for (int r = 0; r < count(); ++r) {
+	const QListWidgetItem * it = item(r);
+	int number = it->data(Qt::UserRole).toInt();
+	if (iReadOnly) {
+	    if (it->isSelected()) result.push_back(number);
+	    continue;
+	}
+	if (isMarkable(it) && it->checkState() == Qt::Checked) number = -number;
+	result.push_back(number);
+    }
+    return result;
+}
+
+QList<int> DialogSorter::selectedRows() const {
+    QList<int> rows;
+    for (int r = 0; r < count(); ++r)
+	if (item(r)->isSelected()) rows.append(r);
+    return rows;
+}
+
+void DialogSorter::deleteSelected() {
+    QList<int> rows = selectedRows();
+    for (int k = rows.size() - 1; k >= 0; --k) delete takeItem(rows[k]);
+}
+
+void DialogSorter::cutSelected() {
+    QList<int> rows = selectedRows();
+    if (rows.isEmpty()) return;
+    // the new cut items replace the old ones
+    clearCutList();
+    for (int k = rows.size() - 1; k >= 0; --k) iCutList.prepend(takeItem(rows[k]));
+}
+
+void DialogSorter::insertCut(int row) {
+    clearSelection();
+    int r = (row >= 0 && row <= count()) ? row : count();
+    for (QListWidgetItem * it : std::as_const(iCutList)) {
+	insertItem(r, it);
+	it->setSelected(true);
+	++r;
+    }
+    iCutList.clear();
+}
+
+void DialogSorter::moveSelected(int before) {
+    QList<int> rows = selectedRows();
+    if (rows.isEmpty()) return;
+    before = std::clamp(before, 0, count());
+    int removedBefore = 0;
+    for (int r : std::as_const(rows))
+	if (r < before) ++removedBefore;
+
+    // take the items out from the back, and put them in again in their order
+    QList<QListWidgetItem *> moved;
+    for (int k = rows.size() - 1; k >= 0; --k) moved.prepend(takeItem(rows[k]));
+    int r = before - removedBefore;
+    for (QListWidgetItem * it : std::as_const(moved)) {
+	insertItem(r++, it);
+	it->setSelected(true);
+    }
+}
+
+void DialogSorter::markSelected(bool mark) {
+    for (int r : selectedRows()) {
+	QListWidgetItem * it = item(r);
+	if (isMarkable(it)) it->setCheckState(mark ? Qt::Checked : Qt::Unchecked);
+    }
+}
+
+bool DialogSorter::dropTarget(const QPoint & pos, int & targetRow, bool & after) const {
+    // First the line of items closest to the position (vertically), then the
+    // item in that line closest to it (horizontally).  So dropping below the
+    // last line, or to the right of its last item, goes to the end.
+    int bestVertical = 0, bestHorizontal = 0;
+    targetRow = -1;
+    for (int r = 0; r < count(); ++r) {
+	QRect rc = visualRect(model()->index(r, 0));
+	int vertical = std::max({rc.top() - pos.y(), pos.y() - rc.bottom(), 0});
+	int horizontal = std::abs(rc.center().x() - pos.x());
+	if (targetRow < 0 || vertical < bestVertical
+	    || (vertical == bestVertical && horizontal < bestHorizontal)) {
+	    bestVertical = vertical;
+	    bestHorizontal = horizontal;
+	    targetRow = r;
+	    after = pos.x() >= rc.center().x();
+	}
+    }
+    return targetRow >= 0;
+}
+
+void DialogSorter::startDrag(Qt::DropActions) {
+    if (iReadOnly) return;
+    QList<int> rows = selectedRows();
+    if (rows.isEmpty()) return;
+
+    // a picture of the dragged items (icons and labels, partly transparent)
+    QRect bounds;
+    for (int r : std::as_const(rows)) bounds |= visualRect(model()->index(r, 0));
+    bounds &= viewport()->rect();
+    if (bounds.isEmpty()) return;
+    QPixmap pixmap(bounds.size());
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setOpacity(0.6);
+    painter.setPen(palette().color(QPalette::Text));
+    for (int r : std::as_const(rows)) {
+	QRect rc = visualRect(model()->index(r, 0)).translated(-bounds.topLeft());
+	const QListWidgetItem * it = item(r);
+	QSize size = iconSize();
+	QRect iconRect(QPoint(rc.left() + (rc.width() - size.width()) / 2, rc.top()),
+		       size);
+	it->icon().paint(&painter, iconRect);
+	painter.drawText(QRect(rc.left(), iconRect.bottom() + 4, rc.width(),
+			       std::max(0, rc.bottom() - iconRect.bottom() - 4)),
+			 Qt::AlignHCenter | Qt::AlignTop, it->text());
+    }
+    painter.end();
+
+    QDrag * drag = new QDrag(this);
+    drag->setPixmap(pixmap);
+    QPoint hot = viewport()->mapFromGlobal(QCursor::pos()) - bounds.topLeft();
+    drag->setHotSpot(QPoint(std::clamp(hot.x(), 0, bounds.width() - 1),
+			    std::clamp(hot.y(), 0, bounds.height() - 1)));
+    QMimeData * mime = new QMimeData;
+    mime->setData(QStringLiteral("application/x-ipe-sorter"), QByteArray());
+    drag->setMimeData(mime);
+    // the items are moved by dropEvent, so nothing to do when exec returns
+    drag->exec(Qt::MoveAction, Qt::MoveAction);
+    setDropIndicator(-1, false);
+}
+
+void DialogSorter::setDropIndicator(int targetRow, bool after) {
+    if (iDropRow == targetRow && iDropAfter == after) return;
+    iDropRow = targetRow;
+    iDropAfter = after;
+    viewport()->update();
+}
+
+void DialogSorter::dragEnterEvent(QDragEnterEvent * ev) {
+    if (ev->source() == this)
+	ev->acceptProposedAction();
+    else
+	ev->ignore();
+}
+
+void DialogSorter::dragMoveEvent(QDragMoveEvent * ev) {
+    if (ev->source() != this) {
+	ev->ignore();
+	return;
+    }
+    // the base class keeps the view scrolling when dragging near its edges
+    QListWidget::dragMoveEvent(ev);
+    int targetRow;
+    bool after = false;
+    if (dropTarget(ev->position().toPoint(), targetRow, after)) {
+	setDropIndicator(targetRow, after);
+	ev->setDropAction(Qt::MoveAction);
+	ev->accept();
+    } else {
+	setDropIndicator(-1, false);
+	ev->ignore();
+    }
+}
+
+void DialogSorter::dragLeaveEvent(QDragLeaveEvent * ev) {
+    setDropIndicator(-1, false);
+    QListWidget::dragLeaveEvent(ev);
+}
+
+void DialogSorter::dropEvent(QDropEvent * ev) {
+    int targetRow;
+    bool after = false;
+    setDropIndicator(-1, false);
+    if (ev->source() != this || !dropTarget(ev->position().toPoint(), targetRow, after)) {
+	ev->ignore();
+	return;
+    }
+    moveSelected(targetRow + (after ? 1 : 0));
+    ev->setDropAction(Qt::MoveAction);
+    ev->accept();
+}
+
+void DialogSorter::paintEvent(QPaintEvent * ev) {
+    QListWidget::paintEvent(ev);
+    if (iDropRow < 0 || iDropRow >= count()) return;
+    // a vertical bar next to the item before or after which items will go
+    QRect rc = visualRect(model()->index(iDropRow, 0));
+    int x = iDropAfter ? rc.right() + 1 : rc.left();
+    QPainter painter(viewport());
+    painter.setPen(QPen(palette().color(QPalette::Highlight), 3));
+    painter.drawLine(x, rc.top(), x, rc.bottom());
+}
+
+void DialogSorter::contextMenuEvent(QContextMenuEvent * ev) {
+    if (iReadOnly) {
+	ev->ignore();
+	return;
+    }
+    ev->accept();
+    QListWidgetItem * clicked = itemAt(ev->pos());
+    int clickedRow = clicked ? row(clicked) : -1;
+
+    bool canMark = false, canUnmark = false;
+    for (int r : selectedRows()) {
+	const QListWidgetItem * it = item(r);
+	if (!isMarkable(it)) continue;
+	if (it->checkState() == Qt::Checked)
+	    canUnmark = true;
+	else
+	    canMark = true;
+    }
+
+    QMenu menu(this);
+    QAction * actionDelete = nullptr;
+    QAction * actionCut = nullptr;
+    QAction * actionMark = nullptr;
+    QAction * actionUnmark = nullptr;
+    QAction * actionInsert = nullptr;
+    if (!selectedItems().isEmpty()) {
+	actionDelete = menu.addAction(tr("&Delete"));
+	actionCut = menu.addAction(tr("&Cut"));
+	if (canMark) actionMark = menu.addAction(tr("&Mark"));
+	if (canUnmark) actionUnmark = menu.addAction(tr("&Unmark"));
+    }
+    if (hasCut()) actionInsert = menu.addAction(tr("&Insert"));
+    if (menu.isEmpty()) return;
+
+    QAction * chosen = menu.exec(ev->globalPos());
+    if (!chosen) return;
+    if (chosen == actionDelete)
+	deleteSelected();
+    else if (chosen == actionCut)
+	cutSelected();
+    else if (chosen == actionInsert)
+	insertCut(clickedRow);
+    else if (chosen == actionMark)
+	markSelected(true);
+    else if (chosen == actionUnmark)
+	markSelected(false);
+}
+
+// --------------------------------------------------------------------
 
 void LatexHighlighter::applyFormat(const QString & text, QRegularExpression & exp,
 				   const QTextCharFormat & format) {
@@ -348,6 +684,7 @@ void PDialog::setMapped(lua_State * L, int idx) {
 	(qobject_cast<QLineEdit *>(w))->setText(QString::fromUtf8(m.text.c_str()));
 	break;
     case EImage: (qobject_cast<DialogImage *>(w))->setSpec(m.image); break;
+    case ESorter: (qobject_cast<DialogSorter *>(w))->setItems(m.sorter); break;
     case EList: {
 	QListWidget * l = qobject_cast<QListWidget *>(w);
 	if (!lua_isnumber(L, 3)) {
@@ -469,6 +806,12 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		    vstretch ? QSizePolicy::Expanding : QSizePolicy::Fixed);
 		w = image;
 	    } break;
+	    case ESorter: {
+		DialogSorter * sorter = new DialogSorter(m.flags & EReadOnly, qDialog);
+		sorter->setItems(m.sorter);
+		sorter->setMinimumSize(m.minWidth, m.minHeight);
+		w = sorter;
+	    } break;
 	    case ECombo: {
 		QComboBox * b = new QComboBox(qDialog);
 		for (int k = 0; k < int(m.items.size()); ++k)
@@ -539,6 +882,7 @@ void PDialog::retrieveValues() {
 	} break;
 	case ECombo: m.value = (qobject_cast<QComboBox *>(w))->currentIndex(); break;
 	case ECheckBox: m.value = qobject_cast<QCheckBox *>(w)->isChecked(); break;
+	case ESorter: m.order = qobject_cast<DialogSorter *>(w)->order(); break;
 	default: break; // label and button - nothing to do
 	}
     }

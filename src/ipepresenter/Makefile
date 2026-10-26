@@ -17,7 +17,7 @@ all: $(TARGET)
 
 sources = ipepresenter.cpp
 win_sources = ipepresenter_win.cpp
-cocoa_sources = ipepresenter_cocoa.cpp
+cocoa_sources = ipepresenter_cocoa.cpp ipeselector_cocoa.cpp
 qt_sources = ipepresenter_qt.cpp timelabel_qt.cpp
 moc_headers = ipepresenter_qt.h timelabel_qt.h
 gtk_sources = ipepresenter_gtk.cpp

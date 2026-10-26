@@ -238,6 +238,28 @@ private:
 
 // --------------------------------------------------------------------
 
+// An image from a bitmap in memory (RGBA, not premultiplied); nil for other kinds.
+static NSImage * bitmapImage(const ImageSpec & spec) {
+    if (spec.kind != ImageSpec::EBitmap) return nil;
+    NSBitmapImageRep * rep = [[NSBitmapImageRep alloc]
+	initWithBitmapDataPlanes:NULL
+		      pixelsWide:spec.width
+		      pixelsHigh:spec.height
+		   bitsPerSample:8
+		 samplesPerPixel:4
+			hasAlpha:YES
+			isPlanar:NO
+		  colorSpaceName:NSDeviceRGBColorSpace
+		    bitmapFormat:NSBitmapFormatAlphaNonpremultiplied
+		     bytesPerRow:4 * spec.width
+		    bitsPerPixel:32];
+    if (!rep) return nil;
+    memcpy([rep bitmapData], spec.pixels.data(), spec.pixels.size());
+    NSImage * image = [[NSImage alloc] initWithSize:NSMakeSize(spec.width, spec.height)];
+    [image addRepresentation:rep];
+    return image;
+}
+
 @interface IpeDialogImage : NSView
 
 - (instancetype)initWithWidth:(int)width height:(int)height spec:(const ImageSpec &)spec;
@@ -289,23 +311,7 @@ private:
     if (iSpec.kind == ImageSpec::EFile) {
 	image = [[NSImage alloc] initWithContentsOfFile:S2N(iSpec.text)];
     } else if (iSpec.kind == ImageSpec::EBitmap) {
-	NSBitmapImageRep * rep = [[NSBitmapImageRep alloc]
-	    initWithBitmapDataPlanes:NULL
-			  pixelsWide:iSpec.width
-			  pixelsHigh:iSpec.height
-		       bitsPerSample:8
-		     samplesPerPixel:4
-			    hasAlpha:YES
-			    isPlanar:NO
-		      colorSpaceName:NSDeviceRGBColorSpace
-			bitmapFormat:NSBitmapFormatAlphaNonpremultiplied
-			 bytesPerRow:4 * iSpec.width
-			bitsPerPixel:32];
-	if (rep) {
-	    memcpy([rep bitmapData], iSpec.pixels.data(), iSpec.pixels.size());
-	    image = [[NSImage alloc] initWithSize:NSMakeSize(iSpec.width, iSpec.height)];
-	    [image addRepresentation:rep];
-	}
+	image = bitmapImage(iSpec);
     }
     if (image) {
 	NSSize size = image.size;
@@ -336,6 +342,344 @@ private:
 			     ? S2N(iSpec.text)
 			     : @"Preview unavailable";
     [message drawInRect:body withAttributes:attrs];
+}
+
+@end
+
+// --------------------------------------------------------------------
+// The sorter element: a collection view (the same kind of legacy,
+// prototype-based collection view that the page sorter uses) showing items
+// with an icon, an optional label, and an optional checkbox.
+
+static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
+
+@interface IpeSorterEntry : NSObject
+@property NSInteger number; // number of the item in the table given to Lua (from 1)
+@property BOOL hasMark;
+@property BOOL marked;
+@property BOOL readOnly;
+@property NSString * label;
+@property NSImage * image;
+@end
+
+@implementation IpeSorterEntry
+@end
+
+@interface IpeSorterItemView : NSBox
+@property(assign) NSImageView * image;
+@property(assign) NSTextField * ititle;
+@property(assign) NSButton * imarked;
+@property IpeSorterEntry * entry;
+
+- (void)ipeSet:(IpeSorterEntry *)entry;
+@end
+
+@implementation IpeSorterItemView
+
+- (id)initWithFrame:(NSRect)frameRect {
+    self = [super initWithFrame:frameRect];
+    if (self) {
+	self.titlePosition = NSNoTitle;
+	self.boxType = NSBoxCustom;
+	self.cornerRadius = 8.0;
+	self.borderType = NSLineBorder;
+	self.contentViewMargins = NSZeroSize;
+	self.fillColor = [NSColor controlBackgroundColor];
+	self.borderColor = [NSColor controlBackgroundColor];
+	NSImageView * v = [[NSImageView alloc] initWithFrame:NSZeroRect];
+	v.imageAlignment = NSImageAlignCenter;
+	v.imageScaling = NSImageScaleProportionallyDown;
+	[self addSubview:v];
+	self.image = v;
+	NSButton * b = [[NSButton alloc] initWithFrame:NSMakeRect(0., 0., 16., 16.)];
+	[b setButtonType:NSSwitchButton];
+	b.title = @"";
+	b.target = self;
+	b.action = @selector(ipeToggle:);
+	[self addSubview:b];
+	self.imarked = b;
+	NSTextField * t = [[NSTextField alloc] initWithFrame:NSZeroRect];
+	t.editable = NO;
+	t.selectable = NO;
+	t.bordered = NO;
+	t.drawsBackground = NO;
+	t.alignment = NSCenterTextAlignment;
+	t.lineBreakMode = NSLineBreakByTruncatingTail;
+	[self addSubview:t];
+	self.ititle = t;
+	[self ipeLayout];
+    }
+    return self;
+}
+
+// icon above, checkbox and label in a line below
+- (void)ipeLayout {
+    NSSize s = [self bounds].size;
+    double textX = self.imarked.hidden ? 4. : 22.;
+    self.image.frame =
+	NSMakeRect(4., 24., std::max(s.width - 8., 0.), std::max(s.height - 28., 0.));
+    self.imarked.frame = NSMakeRect(4., 4., 16., 16.);
+    self.ititle.frame = NSMakeRect(textX, 3., std::max(s.width - textX - 4., 0.), 18.);
+}
+
+- (void)setFrameSize:(NSSize)size {
+    [super setFrameSize:size];
+    [self ipeLayout];
+}
+
+- (void)ipeSet:(IpeSorterEntry *)entry {
+    if (!entry) return;
+    self.entry = entry;
+    self.image.image = entry.image;
+    self.ititle.stringValue = entry.label ? entry.label : @"";
+    self.imarked.hidden = !entry.hasMark;
+    self.imarked.state = entry.marked ? NSOnState : NSOffState;
+    self.imarked.enabled = !entry.readOnly;
+    [self ipeLayout];
+}
+
+- (void)ipeToggle:(id)sender {
+    self.entry.marked = ([(NSButton *)sender state] == NSOnState);
+}
+
+// the context menu is created by the collection view
+- (NSMenu *)menuForEvent:(NSEvent *)event {
+    return [[self superview] menuForEvent:event];
+}
+
+@end
+
+@interface IpeSorterPrototype : NSCollectionViewItem
+@end
+
+@implementation IpeSorterPrototype
+
+- (void)loadView {
+    self.view = [[IpeSorterItemView alloc] initWithFrame:NSMakeRect(0., 0., 100., 100.)];
+}
+
+- (void)setRepresentedObject:(id)representedObject {
+    [super setRepresentedObject:representedObject];
+    [(IpeSorterItemView *)[self view] ipeSet:representedObject];
+}
+
+- (void)setSelected:(BOOL)flag {
+    [super setSelected:flag];
+
+    NSBox * view = (NSBox *)[self view];
+    if (flag) {
+	view.fillColor = [NSColor selectedControlColor];
+	view.borderColor = [NSColor blackColor];
+    } else {
+	view.fillColor = [NSColor controlBackgroundColor];
+	view.borderColor = [NSColor controlBackgroundColor];
+    }
+}
+
+@end
+
+@interface IpeSorterView : NSCollectionView <NSCollectionViewDelegate>
+@property BOOL ipeReadOnly;
+
+- (instancetype)initWithReadOnly:(BOOL)readOnly;
+- (void)ipeSetItems:(const std::vector<SorterItem> &)items;
+- (void)ipeFillOrder:(std::vector<int> &)order;
+@end
+
+@implementation IpeSorterView {
+    NSMutableArray<IpeSorterEntry *> * iEntries; // current items, in order
+    NSMutableArray<IpeSorterEntry *> * iCut;     // items removed by "Cut"
+    NSIndexSet * iDragIndexes;
+    NSInteger iMenuHit; // item under the pointer when the menu was shown, or -1
+}
+
+- (instancetype)initWithReadOnly:(BOOL)readOnly {
+    self = [super initWithFrame:NSZeroRect];
+    if (self) {
+	self.ipeReadOnly = readOnly;
+	iEntries = [NSMutableArray array];
+	iCut = [NSMutableArray array];
+	iMenuHit = -1;
+	self.itemPrototype = [IpeSorterPrototype new];
+	self.selectable = YES;
+	self.allowsMultipleSelection = YES;
+	self.delegate = self;
+	if (!readOnly) [self registerForDraggedTypes:@[ IpeSorterDragType ]];
+    }
+    return self;
+}
+
+- (void)ipeReload {
+    self.content = [NSArray arrayWithArray:iEntries];
+    self.selectionIndexes = [NSIndexSet indexSet];
+}
+
+- (void)ipeSetItems:(const std::vector<SorterItem> &)items {
+    int iconWidth = 32, iconHeight = 32;
+    [iEntries removeAllObjects];
+    [iCut removeAllObjects];
+    for (size_t i = 0; i < items.size(); ++i) {
+	const SorterItem & it = items[i];
+	IpeSorterEntry * e = [IpeSorterEntry new];
+	e.number = static_cast<NSInteger>(i) + 1;
+	e.hasMark = it.hasMark;
+	e.marked = it.hasMark && it.mark;
+	e.readOnly = self.ipeReadOnly;
+	e.label = S2N(it.label);
+	e.image = bitmapImage(it.image);
+	if (it.image.kind == ImageSpec::EBitmap) {
+	    iconWidth = std::max(iconWidth, it.image.width);
+	    iconHeight = std::max(iconHeight, it.image.height);
+	}
+	[iEntries addObject:e];
+    }
+    // all items have the size of the largest icon (and room for a short label)
+    NSSize size = NSMakeSize(std::max(iconWidth + 8, 90), iconHeight + 28);
+    self.minItemSize = size;
+    self.maxItemSize = size;
+    [self ipeReload];
+}
+
+// The numbers of the items in their current order, negated if marked.
+// For a readonly sorter, the numbers of the selected items.
+- (void)ipeFillOrder:(std::vector<int> &)order {
+    order.clear();
+    if (self.ipeReadOnly) {
+	NSIndexSet * sel = [self selectionIndexes];
+	for (NSUInteger i = [sel firstIndex]; i != NSNotFound;
+	     i = [sel indexGreaterThanIndex:i]) {
+	    if (i < [iEntries count]) order.push_back(int(iEntries[i].number));
+	}
+    } else {
+	for (IpeSorterEntry * e in iEntries)
+	    order.push_back(int(e.marked ? -e.number : e.number));
+    }
+}
+
+- (NSMenu *)menuForEvent:(NSEvent *)event {
+    if (self.ipeReadOnly) return nil;
+    NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
+    iMenuHit = -1;
+    for (NSUInteger i = 0; i < [iEntries count]; ++i) {
+	NSCollectionViewItem * item = [self itemAtIndex:i];
+	if (item && NSPointInRect(p, [[item view] frame])) {
+	    iMenuHit = i;
+	    break;
+	}
+    }
+    // the item under the pointer is selected, unless it was already
+    if (iMenuHit >= 0 && ![[self selectionIndexes] containsIndex:iMenuHit])
+	self.selectionIndexes = [NSIndexSet indexSetWithIndex:iMenuHit];
+
+    NSIndexSet * sel = [self selectionIndexes];
+    BOOL canMark = NO, canUnmark = NO;
+    for (NSUInteger i = [sel firstIndex]; i != NSNotFound;
+	 i = [sel indexGreaterThanIndex:i]) {
+	if (i >= [iEntries count] || !iEntries[i].hasMark) continue;
+	if (iEntries[i].marked)
+	    canUnmark = YES;
+	else
+	    canMark = YES;
+    }
+    NSMenu * menu = [[NSMenu alloc] initWithTitle:@""];
+    if ([sel count] > 0) {
+	[self ipeAddMenuItem:@"Delete" action:@selector(ipeDelete:) to:menu];
+	[self ipeAddMenuItem:@"Cut" action:@selector(ipeCut:) to:menu];
+	if (canMark) [self ipeAddMenuItem:@"Mark" action:@selector(ipeMark:) to:menu];
+	if (canUnmark)
+	    [self ipeAddMenuItem:@"Unmark" action:@selector(ipeUnmark:) to:menu];
+    }
+    if ([iCut count] > 0)
+	[self ipeAddMenuItem:@"Insert" action:@selector(ipeInsert:) to:menu];
+    return [menu numberOfItems] > 0 ? menu : nil;
+}
+
+- (void)ipeAddMenuItem:(NSString *)title action:(SEL)action to:(NSMenu *)menu {
+    NSMenuItem * item = [menu addItemWithTitle:title action:action keyEquivalent:@""];
+    item.target = self;
+}
+
+- (void)ipeDelete:(id)sender {
+    [iEntries removeObjectsAtIndexes:[self selectionIndexes]];
+    [self ipeReload];
+}
+
+- (void)ipeCut:(id)sender {
+    NSIndexSet * sel = [self selectionIndexes];
+    [iCut setArray:[iEntries objectsAtIndexes:sel]];
+    [iEntries removeObjectsAtIndexes:sel];
+    [self ipeReload];
+}
+
+// the cut items go before the item that was clicked, or to the end
+- (void)ipeInsert:(id)sender {
+    NSUInteger pos = (iMenuHit >= 0) ? NSUInteger(iMenuHit) : [iEntries count];
+    NSIndexSet * at =
+	[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(pos, [iCut count])];
+    [iEntries insertObjects:iCut atIndexes:at];
+    [iCut removeAllObjects];
+    [self ipeReload];
+    self.selectionIndexes = at;
+}
+
+- (void)ipeSetMarks:(BOOL)mark {
+    NSIndexSet * sel = [self selectionIndexes];
+    for (NSUInteger i = [sel firstIndex]; i != NSNotFound;
+	 i = [sel indexGreaterThanIndex:i]) {
+	if (i >= [iEntries count] || !iEntries[i].hasMark) continue;
+	iEntries[i].marked = mark;
+	[[self itemAtIndex:i] setRepresentedObject:iEntries[i]];
+    }
+}
+
+- (void)ipeMark:(id)sender {
+    [self ipeSetMarks:YES];
+}
+
+- (void)ipeUnmark:(id)sender {
+    [self ipeSetMarks:NO];
+}
+
+- (BOOL)collectionView:(NSCollectionView *)cv
+    canDragItemsAtIndexes:(NSIndexSet *)indexes
+		withEvent:(NSEvent *)event {
+    return !self.ipeReadOnly;
+}
+
+- (BOOL)collectionView:(NSCollectionView *)cv
+    writeItemsAtIndexes:(NSIndexSet *)indexes
+	   toPasteboard:(NSPasteboard *)pasteboard {
+    iDragIndexes = [indexes copy];
+    [pasteboard setData:[@"ipe" dataUsingEncoding:NSUTF8StringEncoding]
+		forType:IpeSorterDragType];
+    return YES;
+}
+
+- (NSDragOperation)collectionView:(NSCollectionView *)cv
+		     validateDrop:(id<NSDraggingInfo>)draggingInfo
+		    proposedIndex:(NSInteger *)proposedDropIndex
+		    dropOperation:(NSCollectionViewDropOperation *)proposedDropOperation {
+    if (self.ipeReadOnly || !iDragIndexes) return NSDragOperationNone;
+    *proposedDropOperation = NSCollectionViewDropBefore;
+    return NSDragOperationMove;
+}
+
+- (BOOL)collectionView:(NSCollectionView *)cv
+	    acceptDrop:(id<NSDraggingInfo>)draggingInfo
+		 index:(NSInteger)index
+	 dropOperation:(NSCollectionViewDropOperation)dropOperation {
+    if (self.ipeReadOnly || !iDragIndexes) return NO;
+    NSIndexSet * moved = iDragIndexes;
+    iDragIndexes = nil;
+    NSUInteger dest = index - [moved countOfIndexesInRange:NSMakeRange(0, index)];
+    NSArray * move = [iEntries objectsAtIndexes:moved];
+    [iEntries removeObjectsAtIndexes:moved];
+    NSIndexSet * at =
+	[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(dest, [move count])];
+    [iEntries insertObjects:move atIndexes:at];
+    [self ipeReload];
+    self.selectionIndexes = at;
+    return YES;
 }
 
 @end
@@ -401,6 +745,7 @@ void PDialog::setMapped(lua_State * L, int idx) {
     case EInput: [((NSTextField *)ctrl) setStringValue:S2N(m.text)]; break;
     case ETextEdit: setTextView((NSTextView *)ctrl, m.text); break;
     case EImage: [(IpeDialogImage *)ctrl setSpec:m.image]; break;
+    case ESorter: [(IpeSorterView *)ctrl ipeSetItems:m.sorter]; break;
     case ECheckBox: [((NSButton *)ctrl) setState:m.value]; break;
     case EList:
 	// listbox gets items directly from items array
@@ -427,13 +772,16 @@ void PDialog::retrieveValues() {
 	case EList: m.value = [((NSTableView *)ctrl) selectedRow]; break;
 	case ECombo: m.value = [((NSPopUpButton *)ctrl) indexOfSelectedItem]; break;
 	case ECheckBox: m.value = [((NSButton *)ctrl) intValue]; break;
+	case ESorter: [(IpeSorterView *)ctrl ipeFillOrder:m.order]; break;
 	default: break; // label and button - nothing to do
 	}
     }
 }
 
 void PDialog::enableItem(int idx, bool value) {
-    if (iElements[idx].type != ETextEdit && iElements[idx].type != EImage)
+    SElement & m = iElements[idx];
+    // images and sorters are not controls, and cannot be disabled
+    if (m.type != ETextEdit && m.type != EImage && m.type != ESorter)
 	[((NSControl *)iViews[idx]) setEnabled:value];
 }
 
@@ -522,7 +870,8 @@ void PDialog::layoutControls() {
 	SElement & m = iElements[i];
 	if (m.row < 0) continue;
 	NSView * w = iViews[i];
-	if (m.type == EList || m.type == ETextEdit) w = [[w superview] superview];
+	if (m.type == EList || m.type == ETextEdit || m.type == ESorter)
+	    w = [[w superview] superview];
 	layout(w, rows[m.row], "t=t");
 	if (m.type == ECombo || m.type == ECheckBox)
 	    layout(rows[m.row + m.rowspan - 1], w, "b>b");
@@ -531,7 +880,7 @@ void PDialog::layoutControls() {
 	layout(w, cols[m.col], "l=l");
 	layout(w, cols[m.col + m.colspan - 1], "r=r");
 	if (m.type == EInput || m.type == ETextEdit) layout(w, nil, "w>0", 100);
-	if (m.type == EImage) {
+	if (m.type == EImage || m.type == ESorter) {
 	    layout(w, nil, "w>0", m.minWidth);
 	    layout(w, nil, "h>0", m.minHeight);
 	}
@@ -634,6 +983,13 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 		view = [[IpeDialogImage alloc] initWithWidth:m.minWidth
 						      height:m.minHeight
 							spec:m.image];
+	    } break;
+	    case ESorter: {
+		scroll = [[NSScrollView alloc] initWithFrame:NSZeroRect];
+		IpeSorterView * sv =
+		    [[IpeSorterView alloc] initWithReadOnly:!!(m.flags & EReadOnly)];
+		[sv ipeSetItems:m.sorter];
+		view = sv;
 	    } break;
 	    case ETextEdit: {
 		scroll = [[NSScrollView alloc] initWithFrame:NSZeroRect];

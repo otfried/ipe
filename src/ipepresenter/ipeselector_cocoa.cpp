@@ -254,25 +254,3 @@ int showPageSelectDialog(int width, int height, const char * title,
 }
 
 // --------------------------------------------------------------------
-
-int CanvasBase::selectPageOrView(Document * doc, int page, int startIndex, int pageWidth,
-				 int width, int height) {
-    // for retina displays, create bitmap with twice the resolution
-    Thumbnail thumbs(doc, 2 * pageWidth);
-
-    NSSize tnSize;
-    tnSize.width = thumbs.width() / 2.0;
-    tnSize.height = thumbs.height() / 2.0;
-
-    const char * title = (page >= 0) ? "Ipe: Select view" : "Ipe: Select page";
-
-    IpeSelectorProvider * provider = [IpeSelectorProvider new];
-    provider.doc = doc;
-    provider.thumb = &thumbs;
-    provider.page = page;
-    provider.tnSize = tnSize;
-
-    return showPageSelectDialog(width, height, title, provider, startIndex);
-}
-
-// --------------------------------------------------------------------

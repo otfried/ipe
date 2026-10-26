@@ -20,11 +20,11 @@ endif
 all: $(TARGET)
 
 sources	= ipetool.cpp ipecanvas.cpp ipepdfview.cpp
-cocoa_sources = ipecanvas_cocoa.cpp ipeselector_cocoa.cpp ipepdfview_cocoa.cpp
-win_sources = ipecanvas_win.cpp ipeselector_win.cpp ipepdfview_win.cpp
-gtk_sources = ipecanvas_gtk.cpp ipeselector_gtk.cpp
-qt_sources = ipecanvas_qt.cpp ipeselector_qt.cpp ipepdfview_qt.cpp
-moc_headers = ipecanvas_qt.h ipeselector_qt.h ipepdfview_qt.h
+cocoa_sources = ipecanvas_cocoa.cpp ipepdfview_cocoa.cpp
+win_sources = ipecanvas_win.cpp ipepdfview_win.cpp
+gtk_sources = ipecanvas_gtk.cpp
+qt_sources = ipecanvas_qt.cpp ipepdfview_qt.cpp
+moc_headers = ipecanvas_qt.h ipepdfview_qt.h
 js_sources = ipecanvas_js.cpp
 
 ifdef IPEWASM

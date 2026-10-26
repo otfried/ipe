@@ -103,6 +103,62 @@ function dialog2()
   d:execute({600, 300})
 end
 
+-- a bitmap filled with a color, with a darker border
+local function colorBitmap(w, h, r, g, b)
+  local rows = {}
+  for y = 0, h - 1 do
+    local row = {}
+    for x = 0, w - 1 do
+      local border = (x < 2 or y < 2 or x >= w - 2 or y >= h - 2)
+      local f = border and 0.5 or 1.0
+      row[#row + 1] = string.char(math.floor(r * f), math.floor(g * f),
+				  math.floor(b * f), 255)
+    end
+    rows[#rows + 1] = table.concat(row)
+  end
+  return { width=w, height=h, pixels=table.concat(rows) }
+end
+
+function dialog3()
+  local d = ipeui.Dialog(appui, "Sorter")
+  local colors = { { 255, 0, 0 }, { 0, 200, 0 }, { 0, 0, 255 }, { 255, 200, 0 },
+		   { 200, 0, 200 }, { 0, 200, 200 } }
+  local items = { width=500, height=300 }
+  for i, c in ipairs(colors) do
+    items[i] = { label="Item " .. i, bitmap=colorBitmap(64, 48, c[1], c[2], c[3]) }
+    -- items 2, 4, and 6 have a checkbox, item 4 is marked
+    if i % 2 == 0 then items[i].mark = (i == 4) end
+  end
+  d:add("label", "label", {label="Right click to delete, cut, insert, mark"}, 1, 1)
+  d:add("sorter", "sorter", items, 2, 1)
+  d:setStretch("row", 2, 1)
+  d:setStretch("column", 1, 1)
+  d:addButton("ok", "&Ok", "accept")
+  d:addButton("cancel", "&Cancel", "reject")
+  local r = d:execute({600, 400})
+  local order = d:get("sorter")
+  print("Dialog returns", r, "sorter is { " .. table.concat(order, ", ") .. " }")
+end
+
+function dialog4()
+  local d = ipeui.Dialog(appui, "Readonly sorter")
+  local colors = { { 255, 0, 0 }, { 0, 200, 0 }, { 0, 0, 255 }, { 255, 200, 0 },
+		   { 200, 0, 200 }, { 0, 200, 200 }, { 128, 128, 128 }, { 255, 128, 0 } }
+  local items = { width=500, height=300, readonly=true }
+  for i, c in ipairs(colors) do
+    items[i] = { label="Symbol " .. i, bitmap=colorBitmap(64, 48, c[1], c[2], c[3]) }
+  end
+  d:add("label", "label", {label="Select one or more symbols"}, 1, 1)
+  d:add("sorter", "sorter", items, 2, 1)
+  d:setStretch("row", 2, 1)
+  d:setStretch("column", 1, 1)
+  d:addButton("ok", "&Ok", "accept")
+  d:addButton("cancel", "&Cancel", "reject")
+  local r = d:execute({600, 400})
+  local selected = d:get("sorter")
+  print("Dialog returns", r, "selected { " .. table.concat(selected, ", ") .. " }")
+end
+
 function showMenuInner(x, y)
   print("Show menu", x, y)
   local m = ipeui.Menu(appui)
@@ -110,6 +166,8 @@ function showMenuInner(x, y)
   m:add("save", "Save")
   m:add("dialog 1", "Show dialog 1")
   m:add("dialog 2", "Show dialog 2")
+  m:add("dialog 3", "Show sorter dialog")
+  m:add("dialog 4", "Show readonly sorter dialog")
   m:add("messagebox", "MessageBox...")
   m:add("submenu1", "Submenu 1", { "alpha", "beta", "gamma" })
   m:add("submenu2", "Submenu 2", { "alpha", "beta", "gamma" },
@@ -149,6 +207,10 @@ function actionInner(cmd)
     dialog1()
   elseif cmd == "dialog 2" then
     dialog2()
+  elseif cmd == "dialog 3" then
+    dialog3()
+  elseif cmd == "dialog 4" then
+    dialog4()
   elseif cmd == "messagebox" then
     local r = ipeui.messageBox(appui, "warning", "Testing 123", "TEST 1 2 3",
 			       "savediscardcancel")

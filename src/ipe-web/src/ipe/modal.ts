@@ -11,8 +11,7 @@ import type { DialogId, Ipe, ResumeResult } from "./ipejs";
 import { get, removeChildren } from "./util";
 
 import "./modal.css";
-import Sortable from "sortablejs";
-import type { PopupMenu, PopupMenuResults } from "./popup-menu";
+import type { PopupMenu } from "./popup-menu";
 
 type Directory =
 	| "documents"
@@ -220,10 +219,10 @@ export class Modal {
 		this.ctrlEnterHandler = () => this.close(ACCEPT);
 	}
 
-	showDialog(options: DialogOptions) {
+	showDialog(options: DialogOptions, popupMenu: PopupMenu) {
 		this.dialogId = options.dialogId;
 		this.header.innerText = options.caption;
-		const focus = setupElements(this.ipe, this.body, options);
+		const focus = setupElements(this.ipe, this.body, options, popupMenu);
 		setupButtons(this.footer, options, (result) => this.close(result));
 		this.ctrlEnterHandler = () => this.close(ACCEPT);
 		if (focus) setTimeout(() => focus.focus(), 0);
@@ -392,103 +391,6 @@ export class Modal {
 			this._populateFileManager(ft.dir);
 		} else {
 			this.close(path);
-		}
-	}
-
-	pageSelector(
-		caption: string,
-		items: PageSelectorItem[],
-		sorter: boolean,
-		popupMenu: PopupMenu,
-	): void {
-		this.inPageSelector = true;
-		this.header.innerText = caption;
-		const contents = document.createElement("div");
-		contents.setAttribute("id", "contents");
-		contents.classList.add("modal-pageselector");
-		this.body.appendChild(contents);
-		for (let i = 0; i < items.length; ++i) {
-			const item = document.createElement("div");
-			item.classList.add("modal-page");
-			item.setAttribute("id", `select-${i}`);
-			const image = document.createElement("img");
-			image.classList.add("modal-pageimage");
-			item.appendChild(image);
-			const data = this.ipe.FS.readFile(`/tmp/pages/select-${i}.png`);
-			const blob = new Blob([data.buffer], { type: "image/png" });
-			image.setAttribute("src", URL.createObjectURL(blob));
-			const label = document.createElement("div");
-			label.classList.add("modal-pagelabel");
-			label.innerText = items[i].label;
-			item.appendChild(label);
-			if (!sorter) {
-				item.addEventListener("click", () => this.close(i + 1));
-			} else {
-				if (items[i].marked) item.classList.add("marked");
-				item.addEventListener("contextmenu", (event) =>
-					this._sorterContextMenu(event, item, popupMenu),
-				);
-			}
-			contents.appendChild(item);
-		}
-		if (sorter) {
-			Sortable.create(contents);
-			setupMessageBoxButtons(this.footer, 1, (result) =>
-				this._handlePageSorterAccept(result, items, contents),
-			);
-		}
-		this.show();
-	}
-
-	private _sorterContextMenu(
-		event: MouseEvent,
-		item: HTMLDivElement,
-		popupMenu: PopupMenu,
-	): void {
-		event.preventDefault();
-		const menu = [{ name: "delete", label: "Delete" }];
-		if (item.classList.contains("marked"))
-			menu.push({ name: "unmark", label: "Unmark" });
-		else menu.push({ name: "mark", label: "Mark" });
-		popupMenu.openPopup(event.clientX, event.clientY, menu, (result) =>
-			this._handleSorterPopupResult(result, item),
-		);
-	}
-
-	private _handleSorterPopupResult(
-		result: PopupMenuResults,
-		item: HTMLDivElement,
-	) {
-		if (!result) return;
-		switch (result[0]) {
-			case "delete":
-				item.remove();
-				break;
-			case "mark":
-				item.classList.add("marked");
-				break;
-			case "unmark":
-				item.classList.remove("marked");
-				break;
-		}
-	}
-
-	private _handlePageSorterAccept(
-		result: ResumeResult,
-		items: PageSelectorItem[],
-		contents: HTMLDivElement,
-	): void {
-		if (result !== 1) {
-			this.close(null);
-		} else {
-			const pages = [];
-			const marks = items.map((item) => item.marked);
-			for (const child of contents.children) {
-				const oldIdx = Number.parseInt(child.id.substring(7), 10);
-				marks[oldIdx] = child.classList.contains("marked");
-				pages.push(oldIdx + 1);
-			}
-			this.close([pages, marks]);
 		}
 	}
 }

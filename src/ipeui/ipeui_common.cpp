@@ -120,9 +120,9 @@ int Dialog::addButton(lua_State * L) {
 }
 
 int Dialog::add(lua_State * L) {
-    static const char * const typenames[] = {"button", "text",  "list",
-					     "label",  "combo", "checkbox",
-					     "input",  "image", nullptr};
+    static const char * const typenames[] = {"button", "text",     "list",  "label",
+					     "combo",  "checkbox", "input", "image",
+					     "sorter", nullptr};
 
     SElement m;
     m.name = checkstring(L, 2);
@@ -149,6 +149,7 @@ int Dialog::add(lua_State * L) {
     case ECheckBox: addCheckbox(L, m); break;
     case EInput: addInput(L, m); break;
     case EImage: addImage(L, m); break;
+    case ESorter: addSorter(L, m); break;
     default: break;
     }
     iElements.push_back(m);
@@ -246,6 +247,39 @@ void Dialog::addImage(lua_State * L, SElement & m) {
     lua_pop(L, 3); // height, width, value
 }
 
+// Check the bitmap table at the stack index and return its size and pixels
+// (RGBA, 4 * width * height bytes, valid as long as the table is alive).
+// Raises a Lua error for argument number arg if the table is not valid.
+static void checkBitmap(lua_State * L, int index, int arg, int & width, int & height,
+			const char *& data) {
+    luaL_argcheck(L, lua_istable(L, index), arg, "bitmap must be a table");
+    index = lua_absindex(L, index);
+    lua_getfield(L, index, "width");
+    lua_getfield(L, index, "height");
+    lua_getfield(L, index, "pixels");
+    luaL_argcheck(L, lua_isnumber(L, -3) && lua_isnumber(L, -2), arg,
+		  "bitmap needs integer width and height");
+    luaL_argcheck(L, lua_type(L, -1) == LUA_TSTRING, arg, "bitmap needs a pixels string");
+    lua_Integer w = (lua_Integer)lua_tonumber(L, -3);
+    lua_Integer h = (lua_Integer)lua_tonumber(L, -2);
+    luaL_argcheck(L, w > 0 && h > 0 && w <= 65536 && h <= 65536, arg,
+		  "invalid bitmap size");
+    size_t len;
+    data = lua_tolstring(L, -1, &len);
+    luaL_argcheck(L, len == size_t(w) * size_t(h) * 4, arg,
+		  "bitmap pixels must have 4 * width * height bytes");
+    width = int(w);
+    height = int(h);
+    lua_pop(L, 3); // pixels, height, width
+}
+
+static void setBitmap(ImageSpec & image, int width, int height, const char * data) {
+    image.kind = ImageSpec::EBitmap;
+    image.width = width;
+    image.height = height;
+    image.pixels.assign(data, size_t(width) * size_t(height) * 4);
+}
+
 // Image specification is a table with one of the fields "text", "path",
 // or "bitmap" (a table with "width", "height", and "pixels"), and an
 // optional "zoom".  An empty table clears the image.
@@ -273,31 +307,78 @@ void Dialog::parseImage(lua_State * L, int index, ImageSpec & image) {
 	result.kind = ImageSpec::EFile;
 	result.text = tostring(L, -2);
     } else if (!lua_isnil(L, -1)) {
-	luaL_argcheck(L, lua_istable(L, -1), index, "bitmap must be a table");
-	int bm = lua_absindex(L, -1);
-	lua_getfield(L, bm, "width");
-	lua_getfield(L, bm, "height");
-	lua_getfield(L, bm, "pixels");
-	luaL_argcheck(L, lua_isnumber(L, -3) && lua_isnumber(L, -2), index,
-		      "bitmap needs integer width and height");
-	luaL_argcheck(L, lua_type(L, -1) == LUA_TSTRING, index,
-		      "bitmap needs a pixels string");
-	lua_Integer w = (lua_Integer)lua_tonumber(L, -3);
-	lua_Integer h = (lua_Integer)lua_tonumber(L, -2);
-	luaL_argcheck(L, w > 0 && h > 0 && w <= 65536 && h <= 65536, index,
-		      "invalid bitmap size");
-	size_t len;
-	const char * data = lua_tolstring(L, -1, &len);
-	luaL_argcheck(L, len == size_t(w) * size_t(h) * 4, index,
-		      "bitmap pixels must have 4 * width * height bytes");
-	result.kind = ImageSpec::EBitmap;
-	result.width = int(w);
-	result.height = int(h);
-	result.pixels.assign(data, len);
-	lua_pop(L, 3); // pixels, height, width
+	int w, h;
+	const char * data;
+	checkBitmap(L, -1, index, w, h, data);
+	setBitmap(result, w, h, data);
     }
     lua_pop(L, 3); // bitmap, path, text
     image = std::move(result);
+}
+
+// A sorter shows icons that the user can delete, mark, and rearrange.
+// The table is an array of items, each a table with the optional fields
+// "mark" (a boolean: show a checkbox), "label" (a string), and "bitmap"
+// (as for images).  The fields "width" and "height" give the size of the
+// element in pixels.
+void Dialog::addSorter(lua_State * L, SElement & m) {
+    m.minWidth = 300;
+    m.minHeight = 200;
+    // the option "readonly" can only be given here, not changed later
+    lua_getfield(L, 4, "readonly");
+    if (!lua_isnil(L, -1)) {
+	luaL_argcheck(L, lua_isboolean(L, -1), 4, "readonly must be a boolean");
+	if (lua_toboolean(L, -1)) m.flags |= EReadOnly;
+    }
+    lua_pop(L, 1); // readonly
+    parseSorter(L, 4, m);
+    lua_getfield(L, 4, "width");
+    if (lua_isnumber(L, -1)) m.minWidth = luaL_checkinteger(L, -1);
+    lua_getfield(L, 4, "height");
+    if (lua_isnumber(L, -1)) m.minHeight = luaL_checkinteger(L, -1);
+    lua_pop(L, 2); // height, width
+}
+
+// Replace the items of the sorter.  The result of "get" is then the current
+// order, in which all items are present and marked as given -- or, for a
+// readonly sorter, the empty list, as nothing is selected.
+void Dialog::parseSorter(lua_State * L, int index, SElement & m) {
+    luaL_checktype(L, index, LUA_TTABLE);
+    index = lua_absindex(L, index);
+    std::vector<SorterItem> items;
+    int no = lua_rawlen(L, index);
+    for (int i = 1; i <= no; ++i) {
+	lua_rawgeti(L, index, i);
+	luaL_argcheck(L, lua_istable(L, -1), index, "sorter items must be tables");
+	int t = lua_absindex(L, -1);
+	SorterItem item;
+	lua_getfield(L, t, "mark");
+	if (!lua_isnil(L, -1)) {
+	    luaL_argcheck(L, lua_isboolean(L, -1), index, "mark must be a boolean");
+	    item.hasMark = true;
+	    item.mark = lua_toboolean(L, -1);
+	}
+	lua_getfield(L, t, "label");
+	if (!lua_isnil(L, -1)) {
+	    luaL_argcheck(L, lua_isstring(L, -1), index, "label must be a string");
+	    item.label = tostring(L, -1);
+	}
+	lua_getfield(L, t, "bitmap");
+	if (!lua_isnil(L, -1)) {
+	    int w, h;
+	    const char * data;
+	    checkBitmap(L, -1, index, w, h, data);
+	    setBitmap(item.image, w, h, data);
+	}
+	lua_pop(L, 4); // bitmap, label, mark, item
+	items.push_back(std::move(item));
+    }
+    m.order.clear();
+    if (!(m.flags & EReadOnly)) {
+	for (int i = 0; i < int(items.size()); ++i)
+	    m.order.push_back(items[i].hasMark && items[i].mark ? -(i + 1) : i + 1);
+    }
+    m.sorter = std::move(items);
 }
 
 void Dialog::addTextEdit(lua_State * L, SElement & m) {
@@ -392,6 +473,19 @@ void Dialog::setUnmapped(lua_State * L, int idx) {
     case ETextEdit:
     case EInput: m.text = checkstring(L, 3); break;
     case EImage: parseImage(L, 3, m.image); break;
+    case ESorter:
+	luaL_checktype(L, 3, LUA_TTABLE);
+	// "readonly" is fixed when the element is added, but one can pass the same
+	// options table again
+	lua_getfield(L, 3, "readonly");
+	if (!lua_isnil(L, -1)) {
+	    luaL_argcheck(L, lua_isboolean(L, -1), 3, "readonly must be a boolean");
+	    luaL_argcheck(L, bool(lua_toboolean(L, -1)) == bool(m.flags & EReadOnly), 3,
+			  "readonly cannot be changed");
+	}
+	lua_pop(L, 1);
+	parseSorter(L, 3, m);
+	break;
     case EList:
     case ECombo:
 	if (lua_isnumber(L, 3)) {
@@ -429,6 +523,13 @@ int Dialog::get(lua_State * L) {
     case EList:
     case ECombo: lua_pushinteger(L, m.value + 1); return 1;
     case ECheckBox: lua_pushboolean(L, m.value); return 1;
+    case ESorter:
+	lua_createtable(L, m.order.size(), 0);
+	for (int i = 0; i < int(m.order.size()); ++i) {
+	    lua_pushinteger(L, m.order[i]);
+	    lua_rawseti(L, -2, i + 1);
+	}
+	return 1;
     default: return luaL_argerror(L, 2, "no suitable element");
     }
 }

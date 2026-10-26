@@ -273,15 +273,6 @@ function MODEL:absoluteButton(button)
   end
 end
 
-function MODEL:selectPage(pno, vno)
-  if self.ui.selectPageAsync then
-    self.ui:selectPageAsync(self.doc, pno, vno)
-    return coroutine.yield()
-  else
-    return self.ui:selectPage(self.doc, pno, vno)
-  end
-end
-
 function MODEL:action_jump_view()
   local d = self:selectPage(self.pno, self.vno)
   if d then
@@ -2187,13 +2178,82 @@ function mark_pages(doc, marks)
   return originalMarks
 end
 
-function MODEL:pageSorter(pno)
-  if self.ui.pageSorterAsync then
-    self.ui:pageSorterAsync(self.doc, pno)
-    return coroutine.yield()
-  else
-    return self.ui:pageSorter(self.doc, pno)
+-- The items of the sorter dialog: the pages of the document, or the views
+-- of page pno.  Every item shows a thumbnail of the paper (the last view of a page).
+-- Returns the list of items and the list of marks.
+local function sorterItems(ui, doc, pno, withMarks)
+  local layout = doc:sheets():find("layout")
+  -- the half pixel makes sure that the width is not rounded down
+  local zoom = (prefs.thumbnail_width + 0.5) / layout.papersize.x
+  local items, marks = {}, {}
+  local function thumbnail(pageno, viewno)
+    return ui:renderPage(doc, pageno, viewno, "png", nil, zoom,
+			 false, true) -- not transparent, nocrop
   end
+  if pno then
+    local p = doc[pno]
+    for i = 1,p:countViews() do
+      local name = p:viewName(i)
+      marks[i] = withMarks and p:markedView(i) or nil
+      items[i] = { mark = marks[i],
+		   label = (name ~= "") and string.format("%d: %s", i, name)
+		     or ("View " .. i),
+		   bitmap = thumbnail(pno, i) }
+    end
+  else
+    local variant = doc:properties().variant
+    for i, p in doc:pages() do
+      local title = p:title(variant)
+      marks[i] = withMarks and p:marked() or nil
+      items[i] = { mark = marks[i],
+		   label = (title ~= "") and string.format("%d: %s", i, title)
+		     or ("Page " .. i),
+		   bitmap = thumbnail(i, p:countViews()) }
+    end
+  end
+  return items, marks
+end
+
+function MODEL:selectPage(pno, vno)
+  local items, marks = sorterItems(self.ui, self.doc, pno)
+  items.width = 300
+  items.height = 200
+  items.readonly = true
+  local d = ipeui.Dialog(self.ui:win(),
+			 pno and "Ipe: select view" or "Ipe: select page")
+  d:add("sorter", "sorter", items, 1, 1)
+  d:addButton("ok", "&Ok", "accept")
+  d:addButton("cancel", "&Cancel", "reject")
+  d:setStretch("row", 1, 1)
+  d:setStretch("column", 1, 1)
+  if not d:execute(prefs.page_sorter_size) then return end
+  return d:get("sorter")[1]
+end
+
+-- Let the user rearrange, delete, and mark the pages of the document,
+-- or the views of page pno.
+-- Returns nil if canceled, otherwise a table with the numbers of the pages (views)
+-- that remain, in their new order, and a table with the marks for all
+-- original pages (views).
+function MODEL:pageSorter(pno)
+  local items, marks = sorterItems(self.ui, self.doc, pno)
+  items.width = 300
+  items.height = 200
+  local d = ipeui.Dialog(self.ui:win(),
+			 pno and "Ipe: View sorter" or "Ipe: Page sorter")
+  d:add("sorter", "sorter", items, 1, 1)
+  d:addButton("ok", "&Ok", "accept")
+  d:addButton("cancel", "&Cancel", "reject")
+  d:setStretch("row", 1, 1)
+  d:setStretch("column", 1, 1)
+  if not d:execute(prefs.page_sorter_size) then return end
+  -- the result lists the original numbers in the new order, negative if marked
+  local arr = {}
+  for i, n in ipairs(d:get("sorter")) do
+    arr[i] = math.abs(n)
+    marks[arr[i]] = (n < 0)
+  end
+  return arr, marks
 end
 
 function MODEL:action_page_sorter()

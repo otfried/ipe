@@ -33,6 +33,8 @@
 
 #include <windows.h>
 #include <windowsx.h>
+
+#include <commctrl.h>
 // must be before this
 #include <gdiplus.h>
 // need IMF_SPELLCHECKING, only defined for RichEdit 8 (Windows 8+)
@@ -214,6 +216,9 @@ protected:
 
     BOOL initDialog();
     BOOL dlgCommand(WPARAM wParam, LPARAM lParam);
+    BOOL dlgNotify(WPARAM wParam, LPARAM lParam);
+    void populateSorter(int idx);
+    void sorterMenu(int idx, HWND lv, POINT pt, int hit);
     BOOL handleResize();
     static BOOL CALLBACK dialogProc(HWND hwndDlg, UINT message, WPARAM wParam,
 				    LPARAM lParam);
@@ -224,6 +229,11 @@ private:
     std::vector<int> iRowHeight;
     std::vector<int> iColWidth;
     bool iSettingText = false; // suppress callbacks for programmatic text changes
+    // sorter elements: allow changes of the checkboxes made by this program
+    bool iSorterUpdating = false;
+    // sorter elements: the items cut from the list (number and state image),
+    // indexed by element
+    std::vector<std::vector<std::pair<int, int>>> iCutLists;
 };
 
 PDialog::PDialog(lua_State * L0, WINID parent, const char * caption,
@@ -250,6 +260,7 @@ void PDialog::setMapped(lua_State * L, int idx) {
 	iSettingText = false;
 	break;
     case EImage: InvalidateRect(h, nullptr, TRUE); break;
+    case ESorter: populateSorter(idx); break;
     case EList:
 	if (!lua_isnumber(L, 3)) {
 	    ListBox_ResetContent(h);
@@ -297,6 +308,226 @@ static void markupLog(HWND h, const std::string & text) {
     // not found, nothing to be done
 }
 
+// --------------------------------------------------------------------
+// The sorter element: a list view in icon view mode.  The user can select
+// items and, unless the sorter is readonly, delete them, mark them, and move
+// them (by cutting them and inserting them somewhere else) using a context
+// menu.  The checkboxes (state images) of the list view are only displayed:
+// the user cannot change them directly.
+
+// state images: 0 means no checkbox, 1 is unchecked, 2 is checked
+static int sorterStateImage(HWND lv, int i) {
+    return (ListView_GetItemState(lv, i, LVIS_STATEIMAGEMASK) >> 12) & 0xf;
+}
+
+static bool sorterSelected(HWND lv, int i) {
+    return (ListView_GetItemState(lv, i, LVIS_SELECTED) & LVIS_SELECTED) != 0;
+}
+
+// The number (starting from 1) of the item in the table given to the dialog
+static int sorterNumber(HWND lv, int i) {
+    LVITEMW item = {};
+    item.mask = LVIF_PARAM;
+    item.iItem = i;
+    SendMessageW(lv, LVM_GETITEMW, 0, (LPARAM)&item);
+    return int(item.lParam);
+}
+
+static std::vector<int> sorterSelectedRows(HWND lv) {
+    std::vector<int> rows;
+    int n = ListView_GetItemCount(lv);
+    for (int i = 0; i < n; ++i)
+	if (sorterSelected(lv, i)) rows.push_back(i);
+    return rows;
+}
+
+// An icon of the given size, with the bitmap in its center.  The alpha channel
+// has to be premultiplied for the image list.
+static HBITMAP createIconBitmap(const ImageSpec & spec, int width, int height) {
+    BITMAPINFO info = {};
+    info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    info.bmiHeader.biWidth = width;
+    info.bmiHeader.biHeight = -height; // top-down
+    info.bmiHeader.biPlanes = 1;
+    info.bmiHeader.biBitCount = 32;
+    info.bmiHeader.biCompression = BI_RGB;
+    void * bits = nullptr;
+    HBITMAP bitmap = CreateDIBSection(nullptr, &info, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (!bitmap || !bits) return bitmap;
+    memset(bits, 0, size_t(width) * size_t(height) * 4);
+    if (spec.kind == ImageSpec::EBitmap) {
+	int ox = (width - spec.width) / 2;
+	int oy = (height - spec.height) / 2;
+	const unsigned char * p = (const unsigned char *)spec.pixels.data();
+	for (int y = 0; y < spec.height; ++y) {
+	    unsigned char * q = (unsigned char *)bits + (size_t(oy + y) * width + ox) * 4;
+	    for (int x = 0; x < spec.width; ++x, p += 4, q += 4) {
+		unsigned a = p[3];
+		q[0] = (unsigned char)((p[2] * a + 127) / 255);
+		q[1] = (unsigned char)((p[1] * a + 127) / 255);
+		q[2] = (unsigned char)((p[0] * a + 127) / 255);
+		q[3] = (unsigned char)a;
+	    }
+	}
+    }
+    return bitmap;
+}
+
+static void insertSorterItem(HWND lv, const std::vector<SorterItem> & items, int number,
+			     int position, int stateImage) {
+    WString label(items[number - 1].label.c_str());
+    LVITEMW item = {};
+    item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
+    item.iItem = position;
+    item.pszText = label.data();
+    // the image list has the icons of all items, in the order of the table
+    item.iImage = number - 1;
+    item.lParam = number;
+    SendMessageW(lv, LVM_INSERTITEMW, 0, (LPARAM)&item);
+    // with checkboxes, new items start with the state image "unchecked", and
+    // the state given to LVM_INSERTITEM is not reliably used: set it explicitly
+    ListView_SetItemState(lv, position, INDEXTOSTATEIMAGEMASK(stateImage),
+			  LVIS_STATEIMAGEMASK);
+}
+
+void PDialog::populateSorter(int idx) {
+    SElement & m = iElements[idx];
+    HWND lv = GetDlgItem(hDialog, idx + IDBASE);
+    iSorterUpdating = true;
+    iCutLists[idx].clear();
+    ListView_DeleteAllItems(lv);
+    ListView_SetExtendedListViewStyleEx(lv, LVS_EX_CHECKBOXES | LVS_EX_DOUBLEBUFFER,
+					LVS_EX_CHECKBOXES | LVS_EX_DOUBLEBUFFER);
+
+    // all icons get the size of the largest bitmap
+    int iconWidth = 1, iconHeight = 1;
+    for (const SorterItem & it : m.sorter) {
+	if (it.image.kind != ImageSpec::EBitmap) continue;
+	iconWidth = std::max(iconWidth, it.image.width);
+	iconHeight = std::max(iconHeight, it.image.height);
+    }
+    int n = int(m.sorter.size());
+    HIMAGELIST images = ImageList_Create(iconWidth, iconHeight, ILC_COLOR32, n, 4);
+    for (const SorterItem & it : m.sorter) {
+	HBITMAP bitmap = createIconBitmap(it.image, iconWidth, iconHeight);
+	ImageList_Add(images, bitmap, nullptr);
+	DeleteObject(bitmap);
+    }
+    // the list view destroys its image lists when it is destroyed
+    HIMAGELIST old = ListView_SetImageList(lv, images, LVSIL_NORMAL);
+    if (old) ImageList_Destroy(old);
+    ListView_SetIconSpacing(lv, std::max(iconWidth, 80) + 40, iconHeight + 50);
+
+    for (int i = 0; i < n; ++i) {
+	const SorterItem & it = m.sorter[i];
+	int state = it.hasMark ? (it.mark ? 2 : 1) : 0;
+	insertSorterItem(lv, m.sorter, i + 1, i, state);
+    }
+    iSorterUpdating = false;
+}
+
+void PDialog::sorterMenu(int idx, HWND lv, POINT pt, int hit) {
+    // the item under the pointer is selected, unless it was already
+    if (hit >= 0 && !sorterSelected(lv, hit)) {
+	ListView_SetItemState(lv, -1, 0, LVIS_SELECTED);
+	ListView_SetItemState(lv, hit, LVIS_SELECTED, LVIS_SELECTED);
+    }
+    std::vector<int> rows = sorterSelectedRows(lv);
+    bool canMark = false, canUnmark = false;
+    for (int r : rows) {
+	int state = sorterStateImage(lv, r);
+	if (state == 1) canMark = true;
+	if (state == 2) canUnmark = true;
+    }
+    std::vector<std::pair<int, int>> & cut = iCutLists[idx];
+    if (rows.empty() && cut.empty()) return;
+
+    HMENU menu = CreatePopupMenu();
+    if (!rows.empty()) {
+	AppendMenuA(menu, MF_STRING, 1, "&Delete");
+	AppendMenuA(menu, MF_STRING, 2, "&Cut");
+	if (canMark) AppendMenuA(menu, MF_STRING, 5, "&Mark");
+	if (canUnmark) AppendMenuA(menu, MF_STRING, 6, "&Unmark");
+    }
+    if (!cut.empty()) {
+	if (hit >= 0) {
+	    AppendMenuA(menu, MF_STRING, 3, "Insert &before");
+	    AppendMenuA(menu, MF_STRING, 4, "Insert &after");
+	} else {
+	    AppendMenuA(menu, MF_STRING, 3, "Insert at &end");
+	}
+    }
+    ClientToScreen(lv, &pt);
+    int result = TrackPopupMenu(menu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_RIGHTBUTTON,
+				pt.x, pt.y, 0, hDialog, nullptr);
+    DestroyMenu(menu);
+
+    SElement & m = iElements[idx];
+    switch (result) {
+    case 1: // Delete
+	for (auto it = rows.rbegin(); it != rows.rend(); ++it)
+	    ListView_DeleteItem(lv, *it);
+	break;
+    case 2: // Cut: the new cut items replace the old ones
+	cut.clear();
+	for (int r : rows) cut.push_back({sorterNumber(lv, r), sorterStateImage(lv, r)});
+	for (auto it = rows.rbegin(); it != rows.rend(); ++it)
+	    ListView_DeleteItem(lv, *it);
+	break;
+    case 3:   // Insert (before the item, or at the end)
+    case 4: { // Insert after
+	int pos = (hit < 0) ? ListView_GetItemCount(lv) : (result == 3 ? hit : hit + 1);
+	iSorterUpdating = true;
+	ListView_SetItemState(lv, -1, 0, LVIS_SELECTED);
+	for (const auto & c : cut) {
+	    insertSorterItem(lv, m.sorter, c.first, pos, c.second);
+	    ListView_SetItemState(lv, pos, LVIS_SELECTED, LVIS_SELECTED);
+	    ++pos;
+	}
+	cut.clear();
+	iSorterUpdating = false;
+    } break;
+    case 5:   // Mark
+    case 6: { // Unmark
+	iSorterUpdating = true;
+	for (int r : rows) {
+	    if (sorterStateImage(lv, r) == 0) continue; // no checkbox
+	    ListView_SetItemState(lv, r, INDEXTOSTATEIMAGEMASK(result == 5 ? 2 : 1),
+				  LVIS_STATEIMAGEMASK);
+	}
+	iSorterUpdating = false;
+    } break;
+    default: return; // menu canceled
+    }
+    ListView_Arrange(lv, LVA_DEFAULT);
+}
+
+BOOL PDialog::dlgNotify(WPARAM, LPARAM lParam) {
+    NMHDR * nm = (NMHDR *)lParam;
+    int idx = int(nm->idFrom) - IDBASE;
+    if (idx < 0 || idx >= int(iElements.size()) || iElements[idx].type != ESorter)
+	return FALSE;
+    switch (nm->code) {
+    case LVN_ITEMCHANGING: {
+	// the user cannot change the checkboxes (not by clicking, and not by keyboard)
+	NMLISTVIEW * lvn = (NMLISTVIEW *)lParam;
+	if (!iSorterUpdating && (lvn->uChanged & LVIF_STATE)
+	    && ((lvn->uNewState ^ lvn->uOldState) & LVIS_STATEIMAGEMASK)) {
+	    SetWindowLongPtr(hDialog, DWLP_MSGRESULT, TRUE); // reject the change
+	    return TRUE;
+	}
+	return FALSE;
+    }
+    case NM_RCLICK:
+	if (!(iElements[idx].flags & EReadOnly)) {
+	    NMITEMACTIVATE * ia = (NMITEMACTIVATE *)lParam;
+	    sorterMenu(idx, ia->hdr.hwndFrom, ia->ptAction, ia->iItem);
+	}
+	return TRUE;
+    default: return FALSE;
+    }
+}
+
 BOOL PDialog::initDialog() {
     BOOL result = TRUE;
     for (int i = 0; i < int(iElements.size()); ++i) {
@@ -332,6 +563,7 @@ BOOL PDialog::initDialog() {
 	case ECheckBox:
 	    CheckDlgButton(hDialog, i + IDBASE, (m.value ? BST_CHECKED : BST_UNCHECKED));
 	    break;
+	case ESorter: populateSorter(i); break;
 	default: break;
 	}
     }
@@ -371,6 +603,20 @@ void PDialog::retrieveValues() {
 	case ECheckBox:
 	    m.value = (IsDlgButtonChecked(hDialog, i + IDBASE) == BST_CHECKED);
 	    break;
+	case ESorter: {
+	    // the numbers of the items in the list, negative if marked; for a
+	    // readonly sorter the numbers of the selected items
+	    m.order.clear();
+	    int n = ListView_GetItemCount(h);
+	    for (int k = 0; k < n; ++k) {
+		int number = sorterNumber(h, k);
+		if (m.flags & EReadOnly) {
+		    if (sorterSelected(h, k)) m.order.push_back(number);
+		} else {
+		    m.order.push_back(sorterStateImage(h, k) == 2 ? -number : number);
+		}
+	    }
+	} break;
 	case ELabel:
 	default: break; // nothing to do
 	}
@@ -521,6 +767,9 @@ BOOL CALLBACK PDialog::dialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
     case WM_SIZE:
 	if (d) return d->handleResize();
 	return FALSE;
+    case WM_NOTIFY:
+	if (d) return d->dlgNotify(wParam, lParam);
+	return FALSE;
     case WM_DRAWITEM:
 	if (d && wParam >= IDBASE && wParam < IDBASE + d->iElements.size()) {
 	    SElement & m = d->iElements[wParam - IDBASE];
@@ -601,6 +850,12 @@ void PDialog::buildElements(std::vector<short> & t) {
 	    buildDimensions(t, m, id);
 	    buildControl(t, 0x0085); // combo box
 	    break;
+	case ESorter:
+	    buildFlags(t, flags | WS_TABSTOP | WS_BORDER | LVS_ICON | LVS_SHOWSELALWAYS
+			      | LVS_AUTOARRANGE);
+	    buildDimensions(t, m, id);
+	    buildControlClass(t, L"SysListView32", nullptr); // list view
+	    break;
 	default: break;
 	}
     }
@@ -609,6 +864,15 @@ void PDialog::buildElements(std::vector<short> & t) {
 Dialog::Result PDialog::buildAndRun(int w, int h) {
     // converts dimensions to dialog units and possibly changes them
     computeDimensions(w, h);
+
+    iCutLists.assign(iElements.size(), {});
+    for (const SElement & m : iElements) {
+	if (m.type != ESorter) continue;
+	// the list view class has to be registered
+	INITCOMMONCONTROLSEX icex = {sizeof(INITCOMMONCONTROLSEX), ICC_LISTVIEW_CLASSES};
+	InitCommonControlsEx(&icex);
+	break;
+    }
 
     RECT rect;
     GetWindowRect(iParent, &rect);
@@ -658,11 +922,13 @@ void PDialog::computeDimensions(int & w, int & h) {
 	if (m.row < 0) { // button row
 	    buttonWidth += m.minWidth + PAD;
 	} else {
-	    // for EImage, minWidth/minHeight are a pixel size, not dialog units
+	    // for EImage and ESorter, minWidth/minHeight are a pixel size, not
+	    // dialog units
 	    int pixelW = m.minWidth;
 	    int pixelH = m.minHeight;
-	    int dluW = (m.type == EImage) ? pixelW * 4 / iBaseX : pixelW;
-	    int dluH = (m.type == EImage) ? pixelH * 8 / iBaseY : pixelH;
+	    bool inPixels = (m.type == EImage || m.type == ESorter);
+	    int dluW = inPixels ? pixelW * 4 / iBaseX : pixelW;
+	    int dluH = inPixels ? pixelH * 8 / iBaseY : pixelH;
 	    int wd = dluW / m.colspan;
 	    for (int j = m.col; j < m.col + m.colspan; ++j) {
 		if (wd > minWidth[j]) minWidth[j] = wd;
