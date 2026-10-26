@@ -215,6 +215,100 @@ test("red-paths script", function ()
   equal(page[3]:get("stroke"), "black", "stroke of text")
 end)
 
+-- These scripts call doc:runLatex(), which does not start LaTeX for
+-- documents without text objects, so their test documents have none.
+
+local gradientXml = [[<ipestyle>
+<gradient name="ball" type="radial" coords="-4 10 2 0 0 18">
+ <stop offset="0" color="1 1 0"/>
+ <stop offset="1" color="0 1 0"/>
+</gradient>
+</ipestyle>]]
+
+-- Like documents made in the editor, the document gets a stylesheet of its
+-- own on top of the built-in "standard" sheet, which is not saved.
+local function addCustomSheet(doc)
+  local sheet = ipe.Sheet()
+  sheet:setName("custom")
+  doc:sheets():insert(1, sheet)
+end
+
+local function addGradient(doc)
+  local sheet = assert(ipe.Sheet(nil, gradientXml))
+  doc:sheets():sheet(1):addFrom(sheet, "gradient", "ball")
+end
+
+test("recenter script", function ()
+  local doc = ipe.Document()
+  doc[1]:insert(nil, box(100, 100, 200, 150, "blue"), nil, "alpha")
+  local second = ipe.Page()
+  second:insert(nil, box(10, 20, 50, 400, "black"), nil, "alpha")
+  second:insert(nil, box(400, 300, 420, 310, "black"), nil, "alpha")
+  doc:append(second)
+  assert(doc:save(tmp("pages.ipe")))
+
+  local out = tmp("centered.ipe")
+  local output = runScript("recenter", quote(tmp("pages.ipe")) .. " " .. quote(out))
+  equal(output, "", "output")
+  local result = assert(ipe.Document(out))
+  equal(#result, 2, "number of pages")
+  local framesize = result:sheets():find("layout").framesize
+  for pno, page in result:pages() do
+    local bbox = ipe.Rect()
+    for i = 1, #page do bbox:add(page:bbox(i)) end
+    -- the objects are centered in the frame
+    near(bbox:left() + bbox:width() / 2, framesize.x / 2, "x of center on page " .. pno)
+    near(bbox:bottom() + bbox:height() / 2, framesize.y / 2, "y of center on page " .. pno)
+  end
+  -- the shapes are not changed, only moved
+  near(result[1]:bbox(1):width(), doc[1]:bbox(1):width(), "width")
+  near(result[2]:bbox(2):height(), doc[2]:bbox(2):height(), "height")
+end)
+
+test("recenter script prints usage", function ()
+  local output = runScript("recenter", "")
+  contains(output, "Usage: ipescript recenter <inputfile> <outputfile>")
+end)
+
+test("show-gradients script", function ()
+  local doc = fixture(false)
+  addCustomSheet(doc)
+  addGradient(doc)
+  assert(doc:save(tmp("gradient.ipe")))
+  local output = runScript("show-gradients", quote(tmp("gradient.ipe")))
+  contains(output, "Gradient: \tball\n")
+  contains(output, "  type: radial\n")
+  -- the fields are printed in no particular order
+  contains(output, "  stops:\n")
+  contains(output, "        r: 1.0\n")
+  contains(output, "        g: 1.0\n")
+  -- a document without gradients prints nothing
+  output = runScript("show-gradients", quote(tmp("figure.ipe")))
+  equal(output, "", "output for a document without gradients")
+end)
+
+test("add-gradient script", function ()
+  local doc = fixture(false)
+  addCustomSheet(doc)
+  assert(doc:save(tmp("styled.ipe")))
+  local output = runScript("add-gradient", quote(tmp("styled.ipe")))
+  -- it prints the names of the stylesheets of the document
+  equal(output, "custom\nstandard\n", "output")
+  local result = assert(ipe.Document(tmp("styled.ipe") .. ".new.ipe"))
+  local names = result:sheets():allNames("gradient")
+  local found = false
+  for _, name in ipairs(names) do
+    if name == "ball" then found = true end
+  end
+  check(found, "the new document has no gradient 'ball'")
+  local gradient = result:sheets():find("gradient", "ball")
+  equal(gradient.type, "radial", "type of gradient")
+  -- the original document is not changed
+  local original = assert(ipe.Document(tmp("styled.ipe")))
+  equal(#original:sheets():allNames("gradient"), 0, "gradients in the original")
+  equal(#result[1], 3, "number of objects")
+end)
+
 ----------------------------------------------------------------------
 -- Ipelets
 ----------------------------------------------------------------------

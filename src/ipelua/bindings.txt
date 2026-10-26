@@ -16,27 +16,6 @@ provided by the Ipe program itself:
 \li \subpage luaipe
 \li \subpage luaipeui
 
-\section luaex Examples
-
-Here is a Lua script that reads an Ipe document and then recenters
-each page on the paper.  You can run this script as 
-"ipescript recenter".
-
-\verbinclude recenter.lua
-
-The following script prints out all the gradients defined in a
-document:
-
-\verbinclude show-gradients.lua
-
-And here is a script that shows how to add a gradient to a document
-(the same technique works for tilings and effects):
-
-\verbinclude add-gradient.lua
-
-For more examples, have a look at the scripts in your Ipe
-installation, such as add-style.lua or update-styles.lua.
-
 */	
 
 /*! \page luageo Lua bindings for geometric objects
