@@ -2,7 +2,7 @@
 
 > Ipe is an extensible drawing editor with a Lua scripting interface. This documentation explains how to write Ipe scripts and ipelets (extensions of the editor) in Lua, with complete examples and a reference for all Lua functions.
 
-(Ipe 7.3.1, generated 2026-10-26 from commit 29e6c6c24eca)
+(Ipe 7.3.1, generated 2026-10-26 from commit fd2381e9899a)
 
 ## Introduction
 
@@ -98,11 +98,12 @@ treat the document:
 
 The rest of this chapter first introduces the common Lua library, then
 describes scripts and ipelets in turn.  The complete reference for the
-Lua library is the [Ipelib documentation](https://ipe.otfried.org/ipelib/) (look for the pages *Lua bindings
-for ...*, and *Ipelets*).  The best documentation of what is possible
-are the existing scripts and ipelets that come with Ipe: the scripts
-are in the `scripts` folder, and the ipelets in the `ipelets`
-folder of the Ipe installation (and in the Ipe source distribution).
+Lua library is the [Ipelib documentation](https://otfried.github.com/ipe/ipelib/) (look for the pages *Lua
+bindings for ...*, and *Ipelets*).  The best documentation of what is
+possible are the existing scripts and ipelets that come with Ipe: the
+scripts are in the `scripts` folder, and the ipelets in the
+`ipelets` folder of the Ipe installation (and in the Ipe source
+distribution).
 
 ### The Lua library in a nutshell
 
@@ -892,9 +893,9 @@ have been imported from Ipe's global namespace: `_G`, `ipe`, `ipeui`, `math`, `s
 `config`, and `mouse`.  You can access any others you may need
 through `_G` (for instance `_G.type` or `_G.revertOriginal`).
 
-The manual (chapter "Scripts and ipelets") has a tutorial with
-examples.  See also "Programming in Lua" for the bindings of the Ipe objects, and
-"Lua bindings for dialogs and menus" for dialogs.
+The manual has a tutorial with complete examples: see the chapter
+[Scripts and ipelets](https://otfried.github.io/ipe/82_ipelets.html).  See also "Lua bindings for Ipelib" for the bindings
+of the Ipe objects, and "Lua bindings for dialogs and menus" for dialogs.
 
 #### Undo items
 
@@ -971,13 +972,14 @@ The script *run-ipelet* (run as `ipescript run-ipelet`) runs a
 Lua ipelet on a document without starting the Ipe editor.  It uses the
 `model` of the Ipe editor with a user interface that does nothing, runs
 the ipelet, saves the result, and checks that undo and redo restore the
-page exactly.  Dialogs behave as if accepted.  See the manual for details.
+page exactly.  Dialogs behave as if accepted.  See the manual section
+[Testing an ipelet without the editor](https://otfried.github.io/ipe/82_ipelets.html#testing-ipelets) for details.
 
 Look at the existing ipelets for inspiration.
 
 // --------------------------------------------------------------------
 
-### Programming in Lua
+### Lua bindings for Ipelib
 
 The library *libipelua* implements Lua bindings for many classes in
 Ipelib.  The bindings are available in Lua ipelets, as well as in Lua
@@ -988,12 +990,6 @@ These pages document the Lua bindings to Ipelib:
 * Lua bindings for geometric objects
 * Lua bindings for objects and attributes
 * Lua bindings for Document, Page, and StyleSheet
-
-When writing Ipelets in Lua, you have access to additional methods
-provided by the Ipe program itself:
-
-* Lua bindings for Ipe
-* Lua bindings for dialogs and menus
 
 ### Lua bindings for geometric objects
 
@@ -1684,7 +1680,8 @@ are only available to Lua code running inside Ipe.
 #### Application user interface
 
 The application user interface object provides the GUI for the Ipe
-program. 
+program.  Ipelets reach it as `model.ui`; the manual explains the
+[ipelet model](https://otfried.github.io/ipe/82_ipelets.html#ipelet-model) with examples.
 
 ```lua
 -- model is a Lua table containing methods that will be called 
@@ -1909,13 +1906,13 @@ The behaviour is different on differen platforms:
 started for the command, and when the command terminates, the dialog
 is closed and the function returns with the value 'true'.
 
-2. On Qt, the dialog is modal, but lives on the main event loop. A
-thread is started for the command.  If this thread terminates quickly
-(e.g. around 300ms), then the function immediately returns with value
-'true'.  Otherwise, the dialog appears, and the function immediately
-returns with value 'false'.  In this case, the calling Lua code should
-yield to return to the main event loop.  When the thread terminates,
-it will resume the Lua coroutine.
+2. On Qt and GTK, the dialog is modal, but lives on the main event
+loop. A thread is started for the command.  If this thread terminates
+quickly (e.g. around 300ms), then the function immediately returns
+with value 'true'.  Otherwise, the dialog appears, and the function
+immediately returns with value 'false'.  In this case, the calling Lua
+code should yield to return to the main event loop.  When the thread
+terminates, it will resume the Lua coroutine.
 
 3. On JS, the dialog is modal on the normal browser event loop.
 'command' must be the name of a tex engine.  The method now calls the
@@ -1931,7 +1928,8 @@ started by Ipelib.
 
 The ipeui module provides dialogs and popup menus for Lua.  It does
 not depend on any other Ipe component, and can be reused in other Lua
-projects.
+projects.  The manual shows
+[dialogs in ipelets](https://otfried.github.io/ipe/82_ipelets.html#dialogs) with a complete example.
 
 #### Global methods
 

@@ -37,10 +37,6 @@ $(function() {
 /* @license-end */
 </script>
 <div id="main-nav"></div>
-<div id="nav-path" class="navpath">
-  <ul>
-<li class="navelem"><a class="el" href="index.html">The Ipe library documentation</a></li><li class="navelem"><a class="el" href="lua.html">Programming in Lua</a></li>  </ul>
-</div>
 </div><!-- top -->
 <div><div class="header">
   <div class="headertitle"><div class="title">Lua bindings for Ipe</div></div>
@@ -49,7 +45,7 @@ $(function() {
 <div class="textblock"><p>These are the Lua methods provided by the Ipe program itself. They are only available to Lua code running inside Ipe.</p>
 <h1><a class="anchor" id="luaappui"></a>
 Application user interface</h1>
-<p>The application user interface object provides the GUI for the Ipe program.</p>
+<p>The application user interface object provides the GUI for the Ipe program. Ipelets reach it as <code>model.ui</code>; the manual explains the <a href="https://otfried.github.io/ipe/82_ipelets.html#ipelet-model">ipelet model</a> with examples.</p>
 <pre class="fragment">-- model is a Lua table containing methods that will be called 
 -- by the ui when events occur
 ui = AppUi(model)
@@ -221,7 +217,7 @@ Wait dialog</h2>
 <p>The behaviour is different on differen platforms:</p>
 <ol type="1">
 <li>On Win32 and MacOS, the dialog has its own event loop. A thread is started for the command, and when the command terminates, the dialog is closed and the function returns with the value 'true'.</li>
-<li>On Qt, the dialog is modal, but lives on the main event loop. A thread is started for the command. If this thread terminates quickly (e.g. around 300ms), then the function immediately returns with value 'true'. Otherwise, the dialog appears, and the function immediately returns with value 'false'. In this case, the calling Lua code should yield to return to the main event loop. When the thread terminates, it will resume the Lua coroutine.</li>
+<li>On Qt and GTK, the dialog is modal, but lives on the main event loop. A thread is started for the command. If this thread terminates quickly (e.g. around 300ms), then the function immediately returns with value 'true'. Otherwise, the dialog appears, and the function immediately returns with value 'false'. In this case, the calling Lua code should yield to return to the main event loop. When the thread terminates, it will resume the Lua coroutine.</li>
 <li>On JS, the dialog is modal on the normal browser event loop. 'command' must be the name of a tex engine. The method now calls the 'runLatex' method on the JS 'window' object with the command as an argument. This method is supposed to be an async JS function that returns with a promise. The 'waitDialog' method immediately returns with value 'false'. The JS code that hosts the Ipe WASM libraries must ensure that when the promise is fulfilled, the 'resume' method in the JS bindings of the 'ui' is called. No additional threads are started by Ipelib. </li>
 </ol>
 </div></div><!-- contents -->

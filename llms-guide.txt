@@ -2,7 +2,7 @@
 
 > Ipe is an extensible drawing editor with a Lua scripting interface. This documentation explains how to write Ipe scripts and ipelets (extensions of the editor) in Lua, with complete examples and a reference for all Lua functions.
 
-(Ipe 7.3.1, generated 2026-10-26 from commit 29e6c6c24eca)
+(Ipe 7.3.1, generated 2026-10-26 from commit fd2381e9899a)
 
 ## Introduction
 
@@ -98,11 +98,12 @@ treat the document:
 
 The rest of this chapter first introduces the common Lua library, then
 describes scripts and ipelets in turn.  The complete reference for the
-Lua library is the [Ipelib documentation](https://ipe.otfried.org/ipelib/) (look for the pages *Lua bindings
-for ...*, and *Ipelets*).  The best documentation of what is possible
-are the existing scripts and ipelets that come with Ipe: the scripts
-are in the `scripts` folder, and the ipelets in the `ipelets`
-folder of the Ipe installation (and in the Ipe source distribution).
+Lua library is the [Ipelib documentation](https://otfried.github.com/ipe/ipelib/) (look for the pages *Lua
+bindings for ...*, and *Ipelets*).  The best documentation of what is
+possible are the existing scripts and ipelets that come with Ipe: the
+scripts are in the `scripts` folder, and the ipelets in the
+`ipelets` folder of the Ipe installation (and in the Ipe source
+distribution).
 
 ### The Lua library in a nutshell
 

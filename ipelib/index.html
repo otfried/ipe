@@ -45,8 +45,8 @@ $(function() {
 <div class="textblock"><p>The Ipe library ("Ipelib") provides the geometric primitives and implements all the geometric objects that appear in Ipe. Many tasks related to modifying an Ipe document are actually performed by Ipelib. For instance, the ipetoipe program consists of only a few calls to Ipelib.</p>
 <p>Ipelib can easily be used by C++ programs to read, write, and modify Ipe documents. Compiling Ipelib is easy, it requires only the standard C++ library (including the STL), and the zlib compression library. Nearly all symbols in Ipelib are in the <a class="el" href="namespaceipe.html">ipe</a> namespace, those that aren't start with the letters "Ipe".</p>
 <p>Before using Ipelib in your own program, make sure to initialize the library by calling <a class="el" href="classipe_1_1_platform.html#aaee52c13d75a741ce59d10f25ec61fcd" title="Initialize Ipelib.">ipe::Platform::initLib()</a>.</p>
-<p>Many of the Ipelib classes are also made available as Lua objects. <a class="el" href="lua.html">Programming in Lua</a> describes the Lua bindings to Ipelib, to ipeui, and to the Ipe program itself. The Ipe program itself is mostly written in Lua and uses these Lua bindings.</p>
-<p>On Unix, all filenames passed to Ipelib are assumed to be in the local system's encoding. On Windows, all filenames passed to Ipelib are assumed to be UTF-8. All Lua strings are assumed to be UTF-8 (filenames are converted by the ipelua bindings).</p>
+<p>Many of the Ipelib classes are also made available as Lua objects. <a class="el" href="lua.html">Lua bindings for Ipelib</a> describes these bindings. The Ipe program itself is mostly written in Lua and uses these Lua bindings.</p>
+<p>Ipe uses UTF-8 for all text strings, including filenames passed to Ipelib and all Lua strings.</p>
 <p><a class="el" href="ipelets.html">Ipelets</a> explains how to write ipelets, that is, extensions to Ipe. Ipelets are either written in Lua or in C++ (using a small Lua wrapper to describe the ipelet). C++ ipelets have to be linked with Ipelib to access and modify Ipe objects.</p>
 <p>The classes documented here are implemented in five different libraries:</p>
 <ul>
@@ -54,7 +54,7 @@ $(function() {
 <li><em>libipecairo</em> implements the <a class="el" href="group__cairo.html">Ipe cairo module</a>. It provides drawing of Ipe objects using the Cairo library. </li>
 <li><em>libipelua</em> implements the <a class="el" href="lua.html">Lua bindings</a> for Ipelib. If installed properly, it can be loaded dynamically from Lua using <code>require</code>. It is also used by ipescript. </li>
 <li><em>libipecanvas</em> implements the Ipe canvas module. It provides a widget for displaying and editing Ipe objects. </li>
-<li><em>libipeui</em> implements Lua bindings for user interfaces. This library does not depend on any other Ipe component, and can be used for other Lua projects.</li>
+<li><em>libipeui</em> implements the <a class="el" href="luaipeui.html">Lua bindings</a> for user interfaces. This library does not depend on any other Ipe component, and can be used for other Lua projects.</li>
 </ul>
 <p>Here is an annotated list of the modules:</p>
 <ul>
@@ -68,11 +68,14 @@ $(function() {
 <li><a class="el" href="group__cairo.html">Ipe Cairo interface</a> : Classes to draw Ipe objects on a Cairo surface: <a class="el" href="classipe_1_1_cairo_painter.html" title="Ipe Painter using Cairo and Freetype as a backend.">ipe::CairoPainter</a>, <a class="el" href="classipe_1_1_fonts.html" title="Provides the fonts used to render text.">ipe::Fonts</a>, <a class="el" href="classipe_1_1_face.html" title="A typeface (aka font), actually loaded (from a font file or PDF file).">ipe::Face</a> </li>
 <li><a class="el" href="group__canvas.html">Ipe canvas</a> : A widget <a class="el" href="classipe_1_1_canvas.html" title="A widget (control) that displays an Ipe document page.">ipe::Canvas</a> to display Ipe objects, and tools for this canvas: <a class="el" href="classipe_1_1_pan_tool.html" title="A tool for panning the canvas.">ipe::PanTool</a>, <a class="el" href="classipe_1_1_select_tool.html" title="A tool for selecting objects.">ipe::SelectTool</a>, <a class="el" href="classipe_1_1_transform_tool.html" title="A tool for transforming the selected objects on the canvas.">ipe::TransformTool</a>.</li>
 </ul>
-<p>Finally, here is list of the pages describing Lua bindings:</p>
+<p>For quick access, the Lua bindings for Ipelib:</p>
 <ul>
 <li><a class="el" href="luageo.html">Lua bindings for geometric objects</a> Lua bindings for basic geometric objects </li>
 <li><a class="el" href="luaobj.html">Lua bindings for objects and attributes</a> Lua bindings for Ipe objects </li>
-<li><a class="el" href="luapage.html">Lua bindings for Document, Page, and StyleSheet</a> Lua bindings for documents, pages, and stylesheets </li>
+<li><a class="el" href="luapage.html">Lua bindings for Document, Page, and StyleSheet</a> Lua bindings for documents, pages, and stylesheets</li>
+</ul>
+<p>The Lua bindings for ipeui (dialogs, menus, etc.), and for Ipe itself (available in ipelets, but not in Ipe scripts):</p>
+<ul>
 <li><a class="el" href="luaipeui.html">Lua bindings for dialogs and menus</a> Lua bindings for dialogs, menus, etc. </li>
 <li><a class="el" href="luaipe.html">Lua bindings for Ipe</a> Lua bindings for the Ipe program itself. </li>
 </ul>
