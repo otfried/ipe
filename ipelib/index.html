@@ -47,13 +47,13 @@ $(function() {
 <p>Before using Ipelib in your own program, make sure to initialize the library by calling <a class="el" href="classipe_1_1_platform.html#aaee52c13d75a741ce59d10f25ec61fcd" title="Initialize Ipelib.">ipe::Platform::initLib()</a>.</p>
 <p>Many of the Ipelib classes are also made available as Lua objects. <a class="el" href="lua.html">Lua bindings for Ipelib</a> describes these bindings. The Ipe program itself is mostly written in Lua and uses these Lua bindings.</p>
 <p>Ipe uses UTF-8 for all text strings, including filenames passed to Ipelib and all Lua strings.</p>
-<p><a class="el" href="ipelets.html">Ipelets</a> explains how to write ipelets, that is, extensions to Ipe. Ipelets are either written in Lua or in C++ (using a small Lua wrapper to describe the ipelet). C++ ipelets have to be linked with Ipelib to access and modify Ipe objects.</p>
+<p>The <a href="https://otfried.github.io/ipe/82_ipelets.html">manual</a> explains how to write Ipe scripts and ipelets (extensions to Ipe) in Lua. Ipelets can also be <a class="el" href="cpp-ipelets.html">written in C++</a> (using a small Lua wrapper to describe the ipelet). C++ ipelets have to be linked with Ipelib to access and modify Ipe objects.</p>
 <p>The classes documented here are implemented in five different libraries:</p>
 <ul>
 <li><em>libipe</em> is the core Ipelib library. It implements geometric primitives, Ipe objects, and the Ipe document. However, it doesn't know anything about drawing to the screen or about the Lua bindings. </li>
 <li><em>libipecairo</em> implements the <a class="el" href="group__cairo.html">Ipe cairo module</a>. It provides drawing of Ipe objects using the Cairo library. </li>
 <li><em>libipelua</em> implements the <a class="el" href="lua.html">Lua bindings</a> for Ipelib. If installed properly, it can be loaded dynamically from Lua using <code>require</code>. It is also used by ipescript. </li>
-<li><em>libipecanvas</em> implements the Ipe canvas module. It provides a widget for displaying and editing Ipe objects. </li>
+<li><em>libipecanvas</em> implements the <a class="el" href="group__canvas.html">Ipe canvas module</a>. It provides a widget for displaying and editing Ipe objects. </li>
 <li><em>libipeui</em> implements the <a class="el" href="luaipeui.html">Lua bindings</a> for user interfaces. This library does not depend on any other Ipe component, and can be used for other Lua projects.</li>
 </ul>
 <p>Here is an annotated list of the modules:</p>

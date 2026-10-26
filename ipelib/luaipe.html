@@ -124,7 +124,8 @@ format, value = ui:getClipboard(allowBitmap)
 </pre><p>On GTK and in the JS version, the method is called <code>getClipboardAsync</code> and delivers its result to the coroutine passed as an additional argument. Use <code>model:clipboard</code> instead, which hides this difference.</p>
 <p>The following methods work on the canvas inside the UI:</p>
 <pre class="fragment">ui:setPage(page, pgno, view, styleSheet) -- set page shown on canvas
-ui:setSnap(snap)                    -- for 'snap' table see below
+ui:setSnap(snap)                    -- for the 'snap' table see the manual
+                                    -- (chapter "Scripts and ipelets", "The snap settings")
 ui:setFontPool(p)       -- an opaque object obtained from an ipe.Document
 
 -- 'pan' is a vector indicating the user coordinates at canvas center

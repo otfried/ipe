@@ -2,7 +2,7 @@
 
 > Ipe is an extensible drawing editor with a Lua scripting interface. This documentation explains how to write Ipe scripts and ipelets (extensions of the editor) in Lua, with complete examples and a reference for all Lua functions.
 
-(Ipe 7.3.1, generated 2026-10-26 from commit 1110279968e0)
+(Ipe 7.3.1, generated 2026-10-26 from commit 278ee7ba5506)
 
 ## Introduction
 
@@ -60,16 +60,19 @@ ipelets.
 ### How this documentation is organized
 
 * **Guide**: a tutorial on writing scripts and ipelets, with complete
-  examples.
+  examples.  It also describes the ipelet `model` object, undo items, and
+  the snap settings.
 * **Lua API reference**: every function of the Lua bindings (geometry,
   objects, attributes, pages, documents, stylesheets), the Ipe editor
-  (`AppUi`), dialogs and menus, and the ipelet `model`.
+  (`AppUi`), and dialogs and menus.
 
 ## Scripts and ipelets
 
 Most of the Ipe program is written in the scripting language [Lua](https://www.lua.org), and the same Lua library that Ipe uses to
 read, write, and modify documents is available for your own programs.
-There are two ways to use it:
+Interesting classes like vectors, matrices, Ipe objects, and Ipe
+documents are made available through this library. There are two ways
+to use it:
 
 * An **Ipe script** is a Lua program that you run from the command
   line using `ipescript`.  A script reads an Ipe document,
@@ -83,10 +86,16 @@ There are two ways to use it:
   selected.  Ipelets are good for functions that you want to use
   interactively.
 
-Scripts and ipelets share most of what they need to know.  They use the
-same classes for documents, pages, objects, and geometry, and the same
-conventions.  The differences are in how they are started and how they
-treat the document:
+A quick aside: Sometimes you will already have code that provides some
+geometric computation in another programming language such as C++.
+Ipe provides an easy mechanism, sufficient for many applictions, to
+implement your ipelet entirely in C++ .  It is described in the
+[Ipelib documentation](https://otfried.github.io/ipe/ipelib/cpp-ipelets.html).
+
+But back to Lua: scripts and ipelets share most of what they need to
+know.  They use the same classes for documents, pages, objects, and
+geometry, and the same conventions.  The differences are in how they
+are started and how they treat the document:
 
 |  | Script | Ipelet |
 |---|---|---|
@@ -352,7 +361,7 @@ end
 -- better verify if a custom sheet for gradients exists already
 -- and create it if not.
 s:sheet(1):addFrom(ts, "gradient", "ball")
-assert(doc:runLatex())
+-- assert(doc:runLatex())
 doc:save(figname .. ".new.ipe")
 ```
 
@@ -451,19 +460,31 @@ The model is a Lua object with these members:
 
 * `model.pno`, `model.vno`: the number of the current page and view.
 
+* `model.file_name`: the name of the document's file, or `nil` if the document has not been saved yet.
+
 * `model:page()`: the current page.
 
 * `model:selection()`: a table with the numbers of the selected objects of the current page.
 
 * `model.attributes`: the attributes currently set in the property boxes of the user interface (a table you can pass to `ipe.Path` and friends).
 
-* `model.snap`: the current snapping settings.
+* `model.snap`: the current snapping settings, see "The snap settings".
 
-* `model.ui`: the user interface, with for instance `model.ui:pos()` (the mouse position after snapping), `model.ui:win()` (the window, to be used as the parent of dialogs), and `model.ui:explain(text)` (shows text in the status bar).
+* `model.ui`: the user interface, with for instance `model.ui:pos()` (the mouse position after snapping), `model.ui:win()` (the window, to be used as the parent of dialogs), `model.ui:zoom()` (the zoom of the canvas, in pixels per point), and `model.ui:explain(text)` (shows text in the status bar).  All methods are listed in the [Ipelib documentation](https://otfried.github.io/ipe/ipelib/luaipe.html#luaappui).
+
+* `model:register(t)`: registers an undo item and performs its change, see below.
+
+* `model:creation(label, obj)`: inserts a new object into the active layer of the current page, and makes it the only selected object (registers the undo item).
+
+* `model:transformation(label, matrix, deselect)`: transforms the selected objects by a matrix, and deselects them if `deselect` is true (registers the undo item).
+
+* `model:setAttribute(name, value)`: sets an attribute of the selected objects (registers the undo item).
 
 * `model:warning(text, details)`: shows a warning box.
 
-* `model:getString(prompt, caption, initial)`: asks the user for a string (returns `nil` if the user cancels).
+* `model:getString(prompt, caption, initial)`: asks the user for a string (returns `nil` if the user cancels); `caption` and `initial` are optional.
+
+* `model:getDouble(caption, label, value, minimum, maximum)`: asks the user for a number between `minimum` and `maximum`, with `value` as the initial value (returns `nil` if the user cancels or enters something illegal).
 
 An ipelet has access to the live document, but it must **not modify
 it directly**.  The Ipe editor keeps an undo stack, and it does not
@@ -705,6 +726,26 @@ methods = {
 If your ipelet changes the stylesheets of the document, set
 `t.style_sheets_changed = true` in the undo item, so that Ipe updates the
 lists of symbolic names in the user interface after an undo or redo.
+
+#### The snap settings
+
+The table `model.snap` contains the snapping settings of the editor
+(see the chapter "Snapping").  The same table is passed to C++ ipelets and to
+`ui:setSnap`.  Its fields are:
+
+* `snapvtx`, `snapctl`, `snapbd`, `snapint`, `snapgrid`, `snapangle`, `snapcustom`, `snapauto`: booleans that say whether snapping to vertices, control points, boundaries, intersections, the grid, angles, the custom grid, and automatic angular snapping is switched on.
+
+* `grid_visible`: boolean: is the grid shown?
+
+* `gridsize`: the grid size in points (an integer).
+
+* `anglesize`: the angle for angular snapping, in degrees.
+
+* `snap_distance`: the distance in pixels within which snapping takes effect.
+
+* `with_axes`: boolean: are the axes of the axis system shown?
+
+* `origin`, `orientation`: the origin of the axis system (a vector) and the direction of its x-axis (an angle in radians).
 
 #### Dialogs
 

@@ -2,139 +2,9 @@
 
 > Ipe is an extensible drawing editor with a Lua scripting interface. This documentation explains how to write Ipe scripts and ipelets (extensions of the editor) in Lua, with complete examples and a reference for all Lua functions.
 
-(Ipe 7.3.1, generated 2026-10-26 from commit 1110279968e0)
+(Ipe 7.3.1, generated 2026-10-26 from commit 278ee7ba5506)
 
 ## Lua API reference
-
-### Ipelets written in Lua
-
-Ipelets written in Lua have access to the entire Ipe user interface,
-and can in principle do anything that Ipe can do.
-
-An ipelet is a Lua script that is placed in Ipe's ipelet directory.
-
-The script needs to define three global variables, namely `label`, `about`, and either `run` or `methods` (or both).
-
-* `label` is a string containing the label (that is, the name) of
-  the ipelet.  It is shown in the Ipelet menu.
-
-* `about` is a string containing an 'about' or copyright notice for
-      the ipelet.  Ipe displays this in the "About the ipelets" box.
-
-* `run` is used if the ipelet contains only a single method.
-    When the ipelet is invoked, the function `run` is called by Lua.
-
-* `methods` is used if the ipelet contains more than one method.
-    It is an array with an entry for each method.  Each entry is a
-    table with keys `label` (defining the label of the method) and
-    `run` (a Lua function that will be called by Ipe to execute this
-    method).  If an entry does not have a `run` field, then the
-    global `run` method is called instead.
-
-If an ipelet defines no `label` variable, then the ipelet is not
-added to the Ipelet menu.  Such ipelets can be used to customize Ipe.
-
-If an ipelet has a `category`, it is placed in that submenu of the
-Ipelet menu (see `prefs.ipelet_menu` in *prefs.lua*).
-
-When Ipe invokes an ipelet, the Lua method is called with two
-arguments: the first argument *model* is the active Ipe user
-interface (the "model" of the document window), the second is the index
-of the method being invoked (always 1 if the ipelet has a single `run` function).  A keyboard shortcut for method number *n* of the ipelet in
-file *name.lua* is defined by setting `shortcuts.ipelet_n_name`.
-
-The "global" environment of the ipelet is a private environment for
-this ipelet only, so there is no need to fear polluting the global
-namespace - you can use names here freely.  Only the following names
-have been imported from Ipe's global namespace: `_G`, `ipe`, `ipeui`, `math`, `string`, `table`, `assert`, `ipairs`, `pairs`, `print`, `tonumber`, `tostring`, `shortcuts`, `prefs`,
-`config`, and `mouse`.  You can access any others you may need
-through `_G` (for instance `_G.type` or `_G.revertOriginal`).
-
-The manual has a tutorial with complete examples: see the chapter
-[Scripts and ipelets](https://otfried.github.io/ipe/82_ipelets.html).  See also "Lua bindings for Ipelib" for the bindings
-of the Ipe objects, and "Lua bindings for dialogs and menus" for dialogs.
-
-#### Undo items
-
-It is important that the ipelet does *not* directly modify the
-document.  This would mess up the undo stack, and could cause Ipe to
-crash on undo or redo.  Instead, to modify the document the ipelet
-needs to create an undo item `t` and call `model:register(t)`.
-
-An undo item is a Lua table with the following fields:
-```lua
-t.label   -- string, shown to the user ("Undo 'label'")
-t.pno     -- page number to show after undo and redo
-t.vno     -- view number to show after undo and redo
-t.undo    -- function t.undo(t, doc) that reverts the change
-t.redo    -- function t.redo(t, doc) that makes the change
-
--- optional:
-t.style_sheets_changed = true  -- if the style sheets of doc are changed
-```
-`model:register(t)` records the selection, calls `t.redo` with the item and the
-document `model.doc` to make the change, and puts `t` on the undo stack.  A page-wide change
-is easily implemented by making copies of the page before and after the
-change, and switching between them:
-```lua
-local t = { label = "my change", pno = model.pno, vno = model.vno,
-            original = model:page():clone(),
-            final = model:page():clone(),
-            undo = _G.revertOriginal,   -- doc:set(t.pno, t.original)
-            redo = _G.revertFinal }     -- doc:set(t.pno, t.final)
--- modify t.final here (not model:page()!)
-model:register(t)
-```
-
-#### The model
-
-The model has the following members and methods:
-```lua
-model.doc          -- the document
-model.pno          -- current page number
-model.vno          -- current view number
-model.file_name    -- name of the file, or nil
-model.attributes   -- attributes currently set in user interface
-                   -- (a table suitable for ipe.Path, ipe.Text, ipe.Reference)
-model.snap         -- currently active snap settings (see below)
-model.ui           -- the AppUi object (see \ref luaappui)
-
-model:page()       -- returns current page
-model:selection()  -- table with the numbers of the selected objects
-                   -- of the current page
-
-model:register(t)  -- register undo item and execute its redo method
-
--- register undo items for the most common changes:
-model:creation(label, obj)       -- insert obj into the active layer;
-                                 -- obj becomes the only selected object
-model:transformation(label, m, deselect)
-                                 -- transform selected objects by matrix m
-model:setAttribute(property, value)
-                                 -- set property of selected objects
-
-model:warning(text, details)     -- display a warning box
-
--- ask the user for a value; return nil if the user cancels:
-s = model:getString(prompt, caption, initial)  -- caption and initial are optional
-n = model:getDouble(caption, label, initial, minimum, maximum)
-```
-
-Useful methods of `model.ui` are `win()` (the window to be used as the
-parent of dialogs), `explain(text)` (show text in the status bar), `pos()` (mouse position, after snapping), and `zoom()`.
-
-#### Testing ipelets
-
-The script *run-ipelet* (run as `ipescript run-ipelet`) runs a
-Lua ipelet on a document without starting the Ipe editor.  It uses the
-`model` of the Ipe editor with a user interface that does nothing, runs
-the ipelet, saves the result, and checks that undo and redo restore the
-page exactly.  Dialogs behave as if accepted.  See the manual section
-[Testing an ipelet without the editor](https://otfried.github.io/ipe/82_ipelets.html#testing-ipelets) for details.
-
-Look at the existing ipelets for inspiration.
-
-// --------------------------------------------------------------------
 
 ### Lua bindings for Ipelib
 
@@ -926,7 +796,8 @@ The following methods work on the canvas inside the UI:
 
 ```lua
 ui:setPage(page, pgno, view, styleSheet) -- set page shown on canvas
-ui:setSnap(snap)                    -- for 'snap' table see below
+ui:setSnap(snap)                    -- for the 'snap' table see the manual
+                                    -- (chapter "Scripts and ipelets", "The snap settings")
 ui:setFontPool(p)       -- an opaque object obtained from an ipe.Document
 
 -- 'pan' is a vector indicating the user coordinates at canvas center

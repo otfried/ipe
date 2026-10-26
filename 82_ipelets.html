@@ -50,7 +50,9 @@
 <span id="id1"></span><h1>Scripts and ipelets<a class="headerlink" href="#scripts-and-ipelets" title="Permalink to this headline">¶</a></h1>
 <p>Most of the Ipe program is written in the scripting language <a class="reference external" href="https://www.lua.org">Lua</a>, and the same Lua library that Ipe uses to
 read, write, and modify documents is available for your own programs.
-There are two ways to use it:</p>
+Interesting classes like vectors, matrices, Ipe objects, and Ipe
+documents are made available through this library. There are two ways
+to use it:</p>
 <ul class="simple">
 <li><p>An <strong>Ipe script</strong> is a Lua program that you run from the command
 line using <strong class="program">ipescript</strong>.  A script reads an Ipe document,
@@ -63,10 +65,15 @@ the document you are editing, usually on the objects you have
 selected.  Ipelets are good for functions that you want to use
 interactively.</p></li>
 </ul>
-<p>Scripts and ipelets share most of what they need to know.  They use the
-same classes for documents, pages, objects, and geometry, and the same
-conventions.  The differences are in how they are started and how they
-treat the document:</p>
+<p>A quick aside: Sometimes you will already have code that provides some
+geometric computation in another programming language such as C++.
+Ipe provides an easy mechanism, sufficient for many applictions, to
+implement your ipelet entirely in C++ .  It is described in the
+<a class="reference external" href="https://otfried.github.io/ipe/ipelib/cpp-ipelets.html">Ipelib documentation</a>.</p>
+<p>But back to Lua: scripts and ipelets share most of what they need to
+know.  They use the same classes for documents, pages, objects, and
+geometry, and the same conventions.  The differences are in how they
+are started and how they treat the document:</p>
 <table class="colwidths-given docutils align-default">
 <colgroup>
 <col style="width: 20%" />
@@ -163,7 +170,7 @@ center <em>c</em> is <code class="code docutils literal notranslate"><span class
 </ul>
 </div>
 <div class="section" id="writing-scripts">
-<span id="id2"></span><h2>Writing scripts<a class="headerlink" href="#writing-scripts" title="Permalink to this headline">¶</a></h2>
+<span id="id3"></span><h2>Writing scripts<a class="headerlink" href="#writing-scripts" title="Permalink to this headline">¶</a></h2>
 <p>A script is a Lua file in one of Ipe’s script folders.  The script
 <code class="file docutils literal notranslate"><span class="pre">count-objects.lua</span></code> is run by saying</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ipescript count-objects figure.ipe</span>
@@ -343,7 +350,7 @@ the built-in style sheet, the change would not be preserved at all.</p>
 <span class="c1">-- better verify if a custom sheet for gradients exists already</span>
 <span class="c1">-- and create it if not.</span>
 <span class="n">s</span><span class="p">:</span><span class="n">sheet</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span><span class="n">addFrom</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="s2">&quot;gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;ball&quot;</span><span class="p">)</span>
-<span class="nb">assert</span><span class="p">(</span><span class="n">doc</span><span class="p">:</span><span class="n">runLatex</span><span class="p">())</span>
+<span class="c1">-- assert(doc:runLatex())</span>
 <span class="n">doc</span><span class="p">:</span><span class="n">save</span><span class="p">(</span><span class="n">figname</span> <span class="o">..</span> <span class="s2">&quot;.new.ipe&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -444,6 +451,9 @@ started Ipe.</p>
 </dd>
 <dt><code class="code docutils literal notranslate"><span class="pre">model.pno</span></code>, <code class="code docutils literal notranslate"><span class="pre">model.vno</span></code></dt><dd><p>the number of the current page and view.</p>
 </dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model.file_name</span></code></dt><dd><p>the name of the document’s file, or <code class="code docutils literal notranslate"><span class="pre">nil</span></code> if the document has
+not been saved yet.</p>
+</dd>
 <dt><code class="code docutils literal notranslate"><span class="pre">model:page()</span></code></dt><dd><p>the current page.</p>
 </dd>
 <dt><code class="code docutils literal notranslate"><span class="pre">model:selection()</span></code></dt><dd><p>a table with the numbers of the selected objects of the current
@@ -452,16 +462,33 @@ page.</p>
 <dt><code class="code docutils literal notranslate"><span class="pre">model.attributes</span></code></dt><dd><p>the attributes currently set in the property boxes of the user
 interface (a table you can pass to <code class="code docutils literal notranslate"><span class="pre">ipe.Path</span></code> and friends).</p>
 </dd>
-<dt><code class="code docutils literal notranslate"><span class="pre">model.snap</span></code></dt><dd><p>the current snapping settings.</p>
+<dt><code class="code docutils literal notranslate"><span class="pre">model.snap</span></code></dt><dd><p>the current snapping settings, see <a class="reference internal" href="#snap-settings"><span class="std std-ref">The snap settings</span></a>.</p>
 </dd>
 <dt><code class="code docutils literal notranslate"><span class="pre">model.ui</span></code></dt><dd><p>the user interface, with for instance <code class="code docutils literal notranslate"><span class="pre">model.ui:pos()</span></code> (the
 mouse position after snapping), <code class="code docutils literal notranslate"><span class="pre">model.ui:win()</span></code> (the window,
-to be used as the parent of dialogs), and <code class="code docutils literal notranslate"><span class="pre">model.ui:explain(text)</span></code>
-(shows text in the status bar).</p>
+to be used as the parent of dialogs), <code class="code docutils literal notranslate"><span class="pre">model.ui:zoom()</span></code> (the
+zoom of the canvas, in pixels per point), and
+<code class="code docutils literal notranslate"><span class="pre">model.ui:explain(text)</span></code> (shows text in the status bar).  All
+methods are listed in the <a class="reference external" href="https://otfried.github.io/ipe/ipelib/luaipe.html#luaappui">Ipelib documentation</a>.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model:register(t)</span></code></dt><dd><p>registers an undo item and performs its change, see below.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model:creation(label,</span> <span class="pre">obj)</span></code></dt><dd><p>inserts a new object into the active layer of the current page, and
+makes it the only selected object (registers the undo item).</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model:transformation(label,</span> <span class="pre">matrix,</span> <span class="pre">deselect)</span></code></dt><dd><p>transforms the selected objects by a matrix, and deselects them if
+<code class="code docutils literal notranslate"><span class="pre">deselect</span></code> is true (registers the undo item).</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model:setAttribute(name,</span> <span class="pre">value)</span></code></dt><dd><p>sets an attribute of the selected objects (registers the undo item).</p>
 </dd>
 <dt><code class="code docutils literal notranslate"><span class="pre">model:warning(text,</span> <span class="pre">details)</span></code></dt><dd><p>shows a warning box.</p>
 </dd>
-<dt><code class="code docutils literal notranslate"><span class="pre">model:getString(prompt,</span> <span class="pre">caption,</span> <span class="pre">initial)</span></code></dt><dd><p>asks the user for a string (returns <code class="code docutils literal notranslate"><span class="pre">nil</span></code> if the user cancels).</p>
+<dt><code class="code docutils literal notranslate"><span class="pre">model:getString(prompt,</span> <span class="pre">caption,</span> <span class="pre">initial)</span></code></dt><dd><p>asks the user for a string (returns <code class="code docutils literal notranslate"><span class="pre">nil</span></code> if the user cancels);
+<code class="code docutils literal notranslate"><span class="pre">caption</span></code> and <code class="code docutils literal notranslate"><span class="pre">initial</span></code> are optional.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">model:getDouble(caption,</span> <span class="pre">label,</span> <span class="pre">value,</span> <span class="pre">minimum,</span> <span class="pre">maximum)</span></code></dt><dd><p>asks the user for a number between <code class="code docutils literal notranslate"><span class="pre">minimum</span></code> and <code class="code docutils literal notranslate"><span class="pre">maximum</span></code>,
+with <code class="code docutils literal notranslate"><span class="pre">value</span></code> as the initial value (returns <code class="code docutils literal notranslate"><span class="pre">nil</span></code> if the user
+cancels or enters something illegal).</p>
 </dd>
 </dl>
 <p>An ipelet has access to the live document, but it must <strong>not modify
@@ -703,6 +730,31 @@ with several methods:</p>
 <code class="code docutils literal notranslate"><span class="pre">t.style_sheets_changed</span> <span class="pre">=</span> <span class="pre">true</span></code> in the undo item, so that Ipe updates the
 lists of symbolic names in the user interface after an undo or redo.</p>
 </div>
+<div class="section" id="the-snap-settings">
+<span id="snap-settings"></span><h3>The snap settings<a class="headerlink" href="#the-snap-settings" title="Permalink to this headline">¶</a></h3>
+<p>The table <code class="code docutils literal notranslate"><span class="pre">model.snap</span></code> contains the snapping settings of the editor
+(see <a class="reference internal" href="40_snapping.html"><span class="doc">Snapping</span></a>).  The same table is passed to C++ ipelets and to
+<code class="code docutils literal notranslate"><span class="pre">ui:setSnap</span></code>.  Its fields are:</p>
+<dl class="simple">
+<dt><code class="code docutils literal notranslate"><span class="pre">snapvtx</span></code>, <code class="code docutils literal notranslate"><span class="pre">snapctl</span></code>, <code class="code docutils literal notranslate"><span class="pre">snapbd</span></code>, <code class="code docutils literal notranslate"><span class="pre">snapint</span></code>, <code class="code docutils literal notranslate"><span class="pre">snapgrid</span></code>, <code class="code docutils literal notranslate"><span class="pre">snapangle</span></code>, <code class="code docutils literal notranslate"><span class="pre">snapcustom</span></code>, <code class="code docutils literal notranslate"><span class="pre">snapauto</span></code></dt><dd><p>booleans that say whether snapping to vertices, control points,
+boundaries, intersections, the grid, angles, the custom grid, and
+automatic angular snapping is switched on.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">grid_visible</span></code></dt><dd><p>boolean: is the grid shown?</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">gridsize</span></code></dt><dd><p>the grid size in points (an integer).</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">anglesize</span></code></dt><dd><p>the angle for angular snapping, in degrees.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">snap_distance</span></code></dt><dd><p>the distance in pixels within which snapping takes effect.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">with_axes</span></code></dt><dd><p>boolean: are the axes of the axis system shown?</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">origin</span></code>, <code class="code docutils literal notranslate"><span class="pre">orientation</span></code></dt><dd><p>the origin of the axis system (a vector) and the direction of its
+x-axis (an angle in radians).</p>
+</dd>
+</dl>
+</div>
 <div class="section" id="dialogs">
 <h3>Dialogs<a class="headerlink" href="#dialogs" title="Permalink to this headline">¶</a></h3>
 <p>Ipelets can show dialogs using <code class="code docutils literal notranslate"><span class="pre">ipeui.Dialog</span></code>, as in the scale example
@@ -849,6 +901,7 @@ testing.  Here is the output of <em>run-ipelet</em> for the example
 <li><a class="reference internal" href="#writing-ipelets">Writing ipelets</a><ul>
 <li><a class="reference internal" href="#the-ipelet-s-environment">The ipelet’s environment</a></li>
 <li><a class="reference internal" href="#the-model-and-why-you-must-not-touch-the-document">The model, and why you must not touch the document</a></li>
+<li><a class="reference internal" href="#the-snap-settings">The snap settings</a></li>
 <li><a class="reference internal" href="#dialogs">Dialogs</a></li>
 <li><a class="reference internal" href="#testing-an-ipelet-without-the-editor">Testing an ipelet without the editor</a></li>
 <li><a class="reference internal" href="#c-ipelets">C++ ipelets</a></li>
