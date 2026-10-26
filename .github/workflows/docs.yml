@@ -1,0 +1,61 @@
+name: Documentation
+# Builds the user manual (Sphinx), the documentation for AI assistants
+# (llms.txt), and the Ipelib documentation (Doxygen), and publishes all of
+# them together with GitHub pages:
+#   https://otfried.github.io/ipe/         the manual and llms.txt
+#   https://otfried.github.io/ipe/ipelib/  the Ipelib and Lua bindings documentation
+# They have to be deployed in one step, as every deployment replaces the
+# contents of the gh-pages branch.
+on:
+  push:
+    paths:
+      - 'manual/**'
+      - 'scripts/**'
+      - 'src/ipelua/*.txt'
+      - 'src/ipelib/**'
+      - 'src/include/**'
+      - 'src/ipecairo/**'
+      - 'src/ipecanvas/**'
+      - 'src/ipelets/kgon/**'
+      - '.github/workflows/docs.yml'
+concurrency:
+  group: documentation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build Ipelib documentation
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y doxygen lua5.4
+        # the output directories are set in the doxyfile (relative to src/ipelib)
+        mkdir -p build/doxygen
+        cd src/ipelib
+        doxygen doxyfile
+        echo "Doxygen warnings: $(grep -c 'warning' ../../build/doxygen/ipedox.log || true)"
+    - name: Build HTML
+      uses: ammaraskar/sphinx-action@master
+      with:
+        docs-folder: "manual/"
+        build-command: "sphinx-build -M html . ../build"
+    - name: Generate documentation for AI assistants (llms.txt)
+      run: |
+        # the Sphinx container created the directory as root
+        sudo lua5.4 manual/llms/mkllms.lua build/html https://otfried.github.io/ipe/
+    - name: Add Ipelib documentation to the site
+      run: |
+        test -f build/doxygen/ipelib/html/index.html
+        sudo cp -r build/doxygen/ipelib/html build/html/ipelib
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ipe-manual
+        path: build/html/
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/master'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: build/html
