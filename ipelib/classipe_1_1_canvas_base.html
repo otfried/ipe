@@ -47,7 +47,6 @@ $(function() {
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classipe_1_1_canvas_base-members.html">List of all members</a>  </div>
@@ -167,11 +166,6 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a616ab40c56e993daa34b1aca1cee34c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8e353b4582e5bf7e1a2445602f51ac0c" id="r_a8e353b4582e5bf7e1a2445602f51ac0c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classipe_1_1_canvas_base.html#a8e353b4582e5bf7e1a2445602f51ac0c">invalidate</a> (int x, int y, int w, int h)=0</td></tr>
 <tr class="separator:a8e353b4582e5bf7e1a2445602f51ac0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a0f325331437cb832b861a205d89b85bc" id="r_a0f325331437cb832b861a205d89b85bc"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classipe_1_1_canvas_base.html#a0f325331437cb832b861a205d89b85bc">selectPageOrView</a> (<a class="el" href="classipe_1_1_document.html">Document</a> *doc, int page=-1, int startIndex=0, int pageWidth=240, int width=600, int height=480)</td></tr>
-<tr class="separator:a0f325331437cb832b861a205d89b85bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
@@ -1417,78 +1411,6 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a0f325331437cb832b861a205d89b85bc" name="a0f325331437cb832b861a205d89b85bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0f325331437cb832b861a205d89b85bc">&#9670;&#160;</a></span>selectPageOrView()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">int CanvasBase::selectPageOrView </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classipe_1_1_document.html">Document</a> *&#160;</td>
-          <td class="paramname"><em>doc</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>page</em> = <code>-1</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>startIndex</em> = <code>0</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>pageWidth</em> = <code>240</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>width</em> = <code>600</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>height</em> = <code>480</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Show dialog to select a page or a view. </p>
-<p>If <em>page</em> is negative (the default), shows thumbnails of all pages of the document in a dialog. If the user selects a page, the page number is returned. If the dialog is canceled, -1 is returned.</p>
-<p>If <em>page</em> is non-negative, all views of this page are shown, and the selected view number is returned.</p>
-<p><em>itemWidth</em> is the width of the page thumbnails (the height is computed automatically).</p>
-<p>If <em>page</em> is negative (the default), shows thumbnails of all pages of the document in a dialog. If the user selects a page, the page number is returned. If the dialog is canceled, -1 is returned.</p>
-<p>If <em>page</em> is non-negative, all views of this page are shown, and the selected view number is returned.</p>
-<p>If <em>page</em> is negative (the default), shows thumbnails of all pages of the document in a dialog. If the user selects a page, the page number is returned. If the dialog is canceled, -1 is returned.</p>
-<p>If <em>page</em> is non-negative, all views of this page are shown, and the selected view number is returned.</p>
-<p><em>pageWidth</em> is the width of the page thumbnails (the height is computed automatically). </p>
-
-<p class="reference">References <a class="el" href="classipe_1_1_thumbnail.html#a530ee72a72e3a07111bf04114ecb1c2e">ipe::Thumbnail::height()</a>, and <a class="el" href="classipe_1_1_thumbnail.html#a010a2b56653efef7e2a6399f29309052">ipe::Thumbnail::width()</a>.</p>
-
-</div>
-</div>
 <a id="a8e353b4582e5bf7e1a2445602f51ac0c" name="a8e353b4582e5bf7e1a2445602f51ac0c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8e353b4582e5bf7e1a2445602f51ac0c">&#9670;&#160;</a></span>invalidate() <span class="overload">[1/2]</span></h2>
 
@@ -2724,10 +2646,6 @@ Protected Attributes</h2></td></tr>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li><b>ipecanvas.h</b></li>
 <li><b>ipecanvas.cpp</b></li>
-<li><b>ipeselector_cocoa.cpp</b></li>
-<li><b>ipeselector_gtk.cpp</b></li>
-<li><b>ipeselector_qt.cpp</b></li>
-<li><b>ipeselector_win.cpp</b></li>
 </ul>
 </div><!-- contents -->
 <hr>

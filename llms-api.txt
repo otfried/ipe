@@ -2,7 +2,7 @@
 
 > Ipe is an extensible drawing editor with a Lua scripting interface. This documentation explains how to write Ipe scripts and ipelets (extensions of the editor) in Lua, with complete examples and a reference for all Lua functions.
 
-(Ipe 7.3.1, generated 2026-10-26 from commit 278ee7ba5506)
+(Ipe 7.3.1, generated 2026-10-27 from commit d6c5d69f6f45)
 
 ## Lua API reference
 
@@ -694,7 +694,6 @@ ok = ipelet:run(num, page, doc, pageno, viewno, layer, attributes, snap, helper)
 -- return the path of an Ipe folder, followed by the optional file name:
 -- name is one of "lua", "icons", "doc", "styles", "ipelets", "scripts",
 -- "user-styles", "user-ipelets", "user-scripts", "config", "latex"
--- (the "latex" folder is created if it does not exist)
 path = ipe.folder(name)
 path = ipe.folder(name, filename)
 ```
@@ -774,8 +773,6 @@ ui:setBookmarks(?)
 pno = ui:selectPage(doc) 
 -- select one view and return view number (or nil if canceled)
 vno = ui:selectPage(doc, page_no)
-
-ui:pageSorter(?)
 
 ui:setClipboard(text)     -- store text on system clipboard
 
@@ -1060,7 +1057,7 @@ Closing the dialog causes the Lua thread to be resumed.
 
 *name* can be an arbitrary string. *what* must be one of 
 ```lua
-button, text, list, label, combo, checkbox, input, image
+button, text, list, label, combo, checkbox, input, image, sorter
 ```
 *options* is a table.  Most fields are optional:
 ```lua
@@ -1093,6 +1090,12 @@ action= Lua method  (called when state changed)
 value=table     (see below, default is an empty preview)
 width=number    (preview area width in pixels, default 180)
 height=number   (preview area height in pixels, default 80)
+
+-- sorter:
+array of items  (see below)
+width=number    (width of the element in pixels, default 300)
+height=number   (height of the element in pixels, default 200)
+readonly=bool   (default false; only the user can select, see below)
 ```
 
 An *image* element shows a preview of a bitmap inside a fixed-size
@@ -1128,6 +1131,68 @@ d:set("preview", { path="/tmp/picture.png", zoom=2.0 })
 d:set("preview", { bitmap={ width=2, height=1, pixels="\255\0\0\255\0\0\255\128" } })
 ```
 
+A *sorter* element shows a list of icons, like Ipe's page sorter.  The
+user can delete items, mark and unmark them, and rearrange them.  Items
+are rearranged by dragging them (all selected items move together) to a
+new position, marked by a vertical bar; dropping them below the last
+line or after the last item moves them to the end.  A context menu
+(right click) offers "Delete", "Mark", and "Unmark" for the selected
+items, and "Cut" and "Insert" as an alternative way to move items: cut
+items are inserted before the item that was clicked (or at the end, when
+clicking on empty space).  An item can also be marked by clicking its
+checkbox.  The options table is an array
+of items, where each item is a table with the optional fields
+```lua
+mark=boolean      (true or false: the item has a checkbox, marked or not;
+                   nil: no checkbox)
+label="string"    (text shown below the icon)
+bitmap=table      (the icon, a bitmap in memory in the format described above
+                   for images; items without bitmap have an empty icon)
+```
+All icons are shown in a cell of the size of the largest bitmap.  The
+value of a sorter, as returned by *get*, is a table of integers that
+describes the current state of the list: for every item that is still
+present, in the current order, it contains the number of the item in the
+table that was originally passed to *add* or *set* (starting from 1),
+and that number is negated if the item is marked.  For instance, if the
+original table had four items, then
+```lua
+{ 3, 2, -4 }
+```
+means that the first item has been deleted, that the third item is now first
+in the list, and that the fourth item is marked.  Items without checkbox are
+never marked.  *set* replaces the items of a sorter by those of a new table
+(and the numbers refer to the new table).  Before the dialog is shown, *get*
+returns the numbers of all items in their original order, marked as given.
+Example:
+```lua
+local items = {
+  { label="Page 1", mark=false, bitmap=bitmap1 },
+  { label="Page 2", mark=true, bitmap=bitmap2 },
+  { label="Page 3", bitmap=bitmap3 },
+  width=500, height=300 }
+d:add("pages", "sorter", items, 1, 1)
+...
+order = d:get("pages")    -- for instance { 2, 3, -1 }
+```
+A sorter that is created with `readonly=true` cannot be modified by the
+user: items cannot be dragged, deleted, or marked, there is no context menu,
+and checkboxes are only displayed.  Users can still scroll through the items
+and select them (one item, or several items using Ctrl and Shift).  For a
+readonly sorter, *get* returns the numbers (from 1, never negated) of the
+selected items, in the order of the list, for instance `{ 2, 5 }`.  Nothing is
+selected at first, and after *set*.  Only the user is restricted: Lua code can
+still replace the items of a readonly sorter using *set*.  The `readonly`
+option is fixed when the element is added.  *set* accepts the same options
+table again (so the `readonly` field may be present), but cannot change it.
+This makes sorters usable to let the user pick one or several items, for
+instance a symbol from a stylesheet.
+
+The sorter element is available in all versions of Ipe.  The Windows version has
+no drag and drop: items are rearranged using "Cut" and "Insert before" /
+"Insert after" (or "Insert at end") in the context menu, and items can only be
+marked and unmarked using the context menu, not by clicking the checkbox.
+
 The Lua method for button, checkbox, combo, and list is called with
 the dialog as an argument.  Do not capture the dialog inside the
 method, as this would create a cyclic reference that would stop the
@@ -1137,14 +1202,17 @@ deleted it.)
 
 The argument of *set* is:
 * a string value for *label*, *text*, and *input*,
-* a table for *image*,
+* a table for *image* (see above),
+* an array of items for *sorter*,
 * either an integer, a string, or an array of string items for *list* and *combo*,
 * a boolean for *checkbox*.
 
 The result value of *get* is:
 * a string for *text* and *input*,
 * an integer for *list* (or nil if there is no current item) and *combo*,
-* a boolean for *checkbox*.
+* a boolean for *checkbox*,
+* a table of integers for *sorter* (see above): the current order of the items,
+or the selected items if the sorter is readonly.
 
 #### Popup menus
 
