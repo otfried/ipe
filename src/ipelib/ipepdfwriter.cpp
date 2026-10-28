@@ -817,7 +817,7 @@ void PdfWriter::createPageView(int pno, int view) {
     bm.scanPage(page);
     // ipeDebug("# of bitmaps: %d", bm.iBitmaps.size());
     embedBitmaps(bm);
-    if (page->findLayer("NOPDF") >= 0) return;
+	if (page->skipped(iVariant) || page->findLayer("NOPDF") >= 0) return;
     // create page stream
     String pagedata;
     StringStream sstream(pagedata);
@@ -996,6 +996,7 @@ void PdfWriter::createBookmarks() {
     std::vector<Section> sections;
     for (int pg = iFromPage; pg <= iToPage; ++pg) {
 	if ((iSaveFlags & SaveFlag::MarkedView) && !iDoc->page(pg)->marked()) continue;
+	if (iDoc->page(pg)->skipped(iVariant)) continue;
 	if (iDoc->page(pg)->findLayer("NOPDF") >= 0) continue;
 	String s = iDoc->page(pg)->section(0);
 	String ss = iDoc->page(pg)->section(1);
@@ -1059,6 +1060,7 @@ void PdfWriter::createNamedDests() {
     std::vector<std::pair<String, int>> dests;
     for (int pg = iFromPage; pg <= iToPage; ++pg) {
 	if ((iSaveFlags & SaveFlag::MarkedView) && !iDoc->page(pg)->marked()) continue;
+	if (iDoc->page(pg)->skipped(iVariant)) continue;
 	if (iDoc->page(pg)->findLayer("NOPDF") >= 0) continue;
 	String s = iDoc->page(pg)->section(0);
 	if (!s.empty()) dests.push_back(std::make_pair(s, pageObjectNumber(pg)));
@@ -1113,19 +1115,16 @@ void PdfWriter::createTrailer() {
     if (nameDict >= 0) iStream << "/Names " << nameDict << " 0 R\n";
     if (iDoc->countTotalViews() > 1) {
 	iStream << "/PageLabels << /Nums [ ";
-	int count = 0;
-	for (int page = 0; page < iDoc->countPages(); ++page) {
-	    if (!(iSaveFlags & SaveFlag::MarkedView) || iDoc->page(page)->marked()) {
-		int nviews = (iSaveFlags & SaveFlag::MarkedView)
-				 ? iDoc->page(page)->countMarkedViews()
-				 : iDoc->page(page)->countViews();
-		if (nviews > 1) {
-		    iStream << count << " <</S /D /P (" << (page + 1) << "-)>>";
-		} else { // one view only!
-		    iStream << count << " <</P (" << (page + 1) << ")>>";
-		}
-		count += nviews;
-	    }
+	for (int first = 0; first < size(iPageObjectNumbers);) {
+	    int page = iPageObjectNumbers[first].page;
+	    int next = first + 1;
+	    while (next < size(iPageObjectNumbers) && iPageObjectNumbers[next].page == page)
+		++next;
+	    if (next - first > 1)
+		iStream << first << " <</S /D /P (" << (page + 1) << "-)>>";
+	    else
+		iStream << first << " <</P (" << (page + 1) << ")>>";
+	    first = next;
 	}
 	iStream << "] >>\n";
     }

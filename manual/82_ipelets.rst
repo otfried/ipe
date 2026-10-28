@@ -26,7 +26,7 @@ A quick aside: Sometimes you will already have code that provides some
 geometric computation in another programming language such as C++.
 Ipe provides an easy mechanism, sufficient for many applictions, to
 implement your ipelet entirely in C++ .  It is described in the
-`Ipelib documentation <https://otfried.github.io/ipe/ipelib/cpp-ipelets.html>`_.
+`C++ ipelet documentation <https://otfried.github.io/ipe/ipelib/cpp-ipelets.html>`_.
 
 But back to Lua: scripts and ipelets share most of what they need to
 know.  They use the same classes for documents, pages, objects, and

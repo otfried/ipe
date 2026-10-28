@@ -350,7 +350,7 @@ void CanvasBase::drawObjects(cairo_t * cc) {
     }
 
     CairoPainter painter(iCascade, iFonts.get(), cc, iZoom, iStyle.pretty, false);
-    painter.setDimmed(iDimmed);
+    painter.setDimmed(iDimmed || iPage->skipped(iVisibleVariant));
     painter.setBitmapCache(&iBitmapCache);
     const auto viewMap = iPage->viewMap(iView, iCascade);
     painter.setAttributeMap(&viewMap);
@@ -664,6 +664,18 @@ bool CanvasBase::refreshSurface() {
 	    if (iSnap.iGridVisible) drawGrid(cc);
 	    drawObjects(cc);
 	    if (iSnap.iWithAxes) drawAxes(cc);
+        if (iPage->skipped(iVisibleVariant)) {
+        const Rect paper = iCascade->findLayout()->paper();
+        cairo_save(cc);
+        cairo_set_source_rgba(cc, 0.8, 0.1, 0.1, 0.35);
+        cairo_set_line_width(cc, 3.0 / iZoom);
+        cairo_move_to(cc, paper.bottomLeft().x, paper.bottomLeft().y);
+        cairo_line_to(cc, paper.topRight().x, paper.topRight().y);
+        cairo_move_to(cc, paper.topLeft().x, paper.topLeft().y);
+        cairo_line_to(cc, paper.bottomRight().x, paper.bottomRight().y);
+        cairo_stroke(cc);
+        cairo_restore(cc);
+        }
 	}
 	cairo_surface_flush(iSurface);
 	cairo_destroy(cc);

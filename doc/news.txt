@@ -48,7 +48,7 @@ Ipe 7.3.1
    (#374).
 
  * Refactor UI code to make use of Lua coroutines.  It's now possible
-   to use aynchronous services (like online Latex) without a blocking
+   to use asynchronous services (like online Latex) without a blocking
    wait on a second thread.  All calls into Lua are now protected, so
    a bug in the Lua code will not cause Ipe to crash.  
 

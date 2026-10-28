@@ -182,6 +182,33 @@ identically in the start and final position, then the tangent
 directions should also be the same.
 
 
+Document variants
+-----------------
+
+Document variants let you maintain several versions of a presentation in
+a single Ipe document.  Define the variants in a style sheet and select
+the current variant using the variant selector in the toolbar.  Objects
+without a variant are shared by all versions; an object whose `variant`
+attribute is set in its context menu appears only in that variant.
+
+Two common uses are:
+
+* **Several languages:** Define a variant for each language, for example
+  ``english`` and ``deutsch``.  Keep figures and formulas shared, and
+  give each translation of a text object the corresponding variant.
+  You can also enter a different page title for each language using
+  :menuselection:`Page --> Edit title & sections`.
+
+* **Short and long talks:** Define variants such as ``short`` and
+  ``long``.  For pages containing additional examples or technical
+  details, open :menuselection:`Page --> Edit title & sections` and
+  select "Skip this page" for the short variant.  You can also use
+  variant-specific objects to adjust the content of shared pages.
+
+PDF, PowerPoint, and HTML/JS output use the current variant.  Skipped
+pages, including all their views, are omitted from the output, but
+remain editable in Ipe, where they are dimmed and marked with a red
+cross.
 
 Bookmarks
 ---------

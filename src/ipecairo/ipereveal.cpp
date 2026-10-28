@@ -82,7 +82,7 @@ String Reveal::createSVG() {
 
     for (int pageNo = iFromPage; pageNo <= iToPage; ++pageNo) {
 	const Page * page = iDoc->page(pageNo);
-	if (page->findLayer("NOPDF") >= 0) continue;
+	if (page->skipped(variant) || page->findLayer("NOPDF") >= 0) continue;
 
 	for (int view = 0; view < page->countViews(); ++view) {
 	    const auto viewMap = page->viewMap(view, iDoc->cascade());
@@ -208,7 +208,7 @@ bool Reveal::writeSlides(Stream & out, String svg) {
     Attribute variant = iDoc->variant();
     for (int pageNo = iFromPage; pageNo <= iToPage; ++pageNo) {
 	const Page * page = iDoc->page(pageNo);
-	if (page->findLayer("NOPDF") >= 0) continue;
+	if (page->skipped(variant) || page->findLayer("NOPDF") >= 0) continue;
 	for (int view = 0; view < page->countViews(); ++view) {
 	    // TODO layer matrix in view for position computation?
 	    Attribute bg = page->backgroundSymbol(iDoc->cascade());
@@ -242,7 +242,7 @@ bool Reveal::writeSlides(Stream & out, String svg) {
 
     for (int pageNo = iFromPage; pageNo <= iToPage; ++pageNo) {
 	const Page * page = iDoc->page(pageNo);
-	if (page->findLayer("NOPDF") >= 0) continue;
+	if (page->skipped(variant) || page->findLayer("NOPDF") >= 0) continue;
 	if (page->countViews() > 1) out << "<section>\n";
 	for (int view = 0; view < page->countViews(); ++view) {
 	    out << "<section>\n"

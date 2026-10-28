@@ -446,6 +446,7 @@ bool Reveal::createJson(const char * destination, bool onlyMarked) {
 
     for (int pageNo = iFromPage; pageNo <= iToPage; ++pageNo) {
 	const Page * page = iDoc->page(pageNo);
+    if (page->skipped(iDoc->variant())) continue;
 	int nViews = page->countViews();
 	if (onlyMarked) {
 	    if (!page->marked()) continue;
