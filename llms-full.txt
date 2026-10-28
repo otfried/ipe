@@ -2,7 +2,7 @@
 
 > Ipe is an extensible drawing editor with a Lua scripting interface. This documentation explains how to write Ipe scripts and ipelets (extensions of the editor) in Lua, with complete examples and a reference for all Lua functions.
 
-(Ipe 7.3.1, generated 2026-10-27 from commit d6c5d69f6f45)
+(Ipe 7.3.1, generated 2026-10-28 from commit 65fadb640bb3)
 
 ## Introduction
 
@@ -90,7 +90,7 @@ A quick aside: Sometimes you will already have code that provides some
 geometric computation in another programming language such as C++.
 Ipe provides an easy mechanism, sufficient for many applictions, to
 implement your ipelet entirely in C++ .  It is described in the
-[Ipelib documentation](https://otfried.github.io/ipe/ipelib/cpp-ipelets.html).
+[C++ ipelet documentation](https://otfried.github.io/ipe/ipelib/cpp-ipelets.html).
 
 But back to Lua: scripts and ipelets share most of what they need to
 know.  They use the same classes for documents, pages, objects, and

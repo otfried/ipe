@@ -194,6 +194,31 @@ perspective).  So, for instance, if the object itself is oriented
 identically in the start and final position, then the tangent
 directions should also be the same.</p>
 </div>
+<div class="section" id="document-variants">
+<h2>Document variants<a class="headerlink" href="#document-variants" title="Permalink to this headline">¶</a></h2>
+<p>Document variants let you maintain several versions of a presentation in
+a single Ipe document.  Define the variants in a style sheet and select
+the current variant using the variant selector in the toolbar.  Objects
+without a variant are shared by all versions; an object whose <cite>variant</cite>
+attribute is set in its context menu appears only in that variant.</p>
+<p>Two common uses are:</p>
+<ul class="simple">
+<li><p><strong>Several languages:</strong> Define a variant for each language, for example
+<code class="docutils literal notranslate"><span class="pre">english</span></code> and <code class="docutils literal notranslate"><span class="pre">deutsch</span></code>.  Keep figures and formulas shared, and
+give each translation of a text object the corresponding variant.
+You can also enter a different page title for each language using
+<span class="menuselection">Page ‣ Edit title &amp; sections</span>.</p></li>
+<li><p><strong>Short and long talks:</strong> Define variants such as <code class="docutils literal notranslate"><span class="pre">short</span></code> and
+<code class="docutils literal notranslate"><span class="pre">long</span></code>.  For pages containing additional examples or technical
+details, open <span class="menuselection">Page ‣ Edit title &amp; sections</span> and
+select “Skip this page” for the short variant.  You can also use
+variant-specific objects to adjust the content of shared pages.</p></li>
+</ul>
+<p>PDF, PowerPoint, and HTML/JS output use the current variant.  Skipped
+pages, including all their views, are omitted from the output, but
+remain editable in Ipe, where they are dimmed and marked with a red
+cross.</p>
+</div>
 <div class="section" id="bookmarks">
 <h2>Bookmarks<a class="headerlink" href="#bookmarks" title="Permalink to this headline">¶</a></h2>
 <p>You can set a section title and a subsection title for each page of an
@@ -476,6 +501,7 @@ large enough.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#animations">Animations</a></li>
+<li><a class="reference internal" href="#document-variants">Document variants</a></li>
 <li><a class="reference internal" href="#bookmarks">Bookmarks</a></li>
 <li><a class="reference internal" href="#excluding-a-page-from-the-presentation">Excluding a page from the presentation</a></li>
 <li><a class="reference internal" href="#tricks-with-views">Tricks with views</a><ul>
