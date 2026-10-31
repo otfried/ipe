@@ -400,112 +400,6 @@ function ellipse(model)
   model:creation("create ellipse from foci and third point", ellipse)
 end
 
-function splitPolyLine(model)
-    -- Get the data from the page and the user
-    local str = model:getString("Enter number of pieces")
-    if not str or str:match("^%s*$)") then return end
-    local k = tonumber(str)
-    if not k or k < 2 or k > 1000 or k ~= math.floor(k) then
-      model:warning("Enter a number between 2 and 1000!")
-      return
-    end
-    local p = model:page()
-    local prim = p:primarySelection()
-    if not prim then model.ui:explain("no selection") return end
-    local selection = p[prim]
-    if selection:type() ~= "path" or #selection:shape() ~= 1 then
-        model:warning("Cannot split polyline", "Primary selection is not a continuous polyline")
-        return
-    end
-    local m = selection:matrix()
-    local polyLine = selection:shape()[1]
-
-    -- We get the vertices, and the distance elapsed at each vertex
-    local lengthElapsed = { 0 }
-    local vertices = {}
-    for i = 2, #polyLine + 1 do
-        local segment = polyLine[i-1]
-        if segment.type ~= "segment" then
-            model:warning("Cannot split polyline", "The path must contain only straight line segments")
-            return
-        end
-        local start = m * segment[1]
-        vertices[i-1] = start
-        local finish = m * segment[2]
-        lengthElapsed[i]=(finish - start):len()+lengthElapsed[i-1]
-    end
-    vertices[#polyLine + 1] = m * polyLine[#polyLine][2]
-
-    -- If it's a polygon, we have to add the start again
-    if polyLine.closed then
-        vertices[#vertices + 1] = vertices[1]
-        lengthElapsed[#vertices] = lengthElapsed[#vertices - 1] + (vertices[1] - vertices[#vertices - 1]):len()
-    end
-
-    -- Point along a segment of a certain length from the start (a)
-    local function directionAlongSegment(a, b, x)
-        return a + x * (b - a):normalized()
-    end
-
-    local splitLength = lengthElapsed[#vertices] / k
-    local splitVertices = { vertices[1] }
-
-    -- Find where we need to put new vertices, the ones we split at
-    local elapsed = 0
-    local i = 1
-    for j = 1, k - 1 do
-        elapsed = elapsed + splitLength
-        while lengthElapsed[i + 1] < elapsed do
-            i = i + 1
-        end
-        splitVertices[j+1] = directionAlongSegment(vertices[i], vertices[i + 1], elapsed - lengthElapsed[i])
-    end
-    splitVertices[k + 1] = vertices[#vertices]
-
-    -- Each piece runs from one split vertex to the next, original vertices are kept
-    local pieces = {}
-    local v = 2
-    for j = 1, #splitVertices - 1 do
-        local piece = {splitVertices[j]}
-        while v < #vertices and lengthElapsed[v] < j * splitLength do
-            -- skip duplicate points
-            if (vertices[v] - piece[#piece]):len() > 1e-9 then
-                piece[#piece + 1] = vertices[v]
-            end
-            v = v + 1
-        end
-        -- skip duplicate points
-        if (splitVertices[j+1] - piece[#piece]):len() > 1e-9 then
-            piece[#piece+1] = splitVertices[j+1]
-        end
-        pieces[#pieces+1] = piece
-    end
-
-    -- Draw the pieces
-    local objs = {}
-    for _, piece in ipairs(pieces) do
-        local curve = { type = "curve", closed = false }
-        for v = 1, #piece - 1 do
-            curve[#curve+1] = { type = "segment", piece[v], piece[v+1] }
-        end
-        local obj = selection:clone()
-        obj:setShape({ curve })
-        obj:setMatrix(ipe.Matrix())
-        objs[#objs+1] = obj
-    end
-
-    -- Replace the original
-    local t = { label = "split polyline", pno = model.pno, vno = model.vno,
-                original = p:clone(), undo = revertOriginal }
-    local layer = p:layerOf(prim)
-    t.redo = function (t, doc)
-        local page = doc[t.pno]
-        page:remove(prim)
-        for _, obj in ipairs(objs) do page:insert(nil, obj:clone(), nil, layer) end
-    end
-    model:register(t)
-end
-
 methods = {
   { label = "Mirror horizontal", run=preciseTransform },
   { label = "Mirror vertical", run=preciseTransform },
@@ -524,7 +418,6 @@ methods = {
   { label = "Make parabolas", run=parabola },
   { label = "Regular k-gon", run=regularKGon },
   { label = "Ellipse from foci", run=ellipse },
-  { label = "Split polyline", run=splitPolyLine },
 }
 
 ----------------------------------------------------------------------

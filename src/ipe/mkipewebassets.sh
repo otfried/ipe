@@ -2,7 +2,7 @@
 # Prepare all files to be bundled for ipe-web
 #
 
-IPELETS="move.lua goodies.lua align.lua euclid.lua symbols.lua search-replace.lua selectby.lua gridmaker.lua variants.lua visualstyles.lua ipeletsearch.lua"
+IPELETS="move.lua goodies.lua align.lua euclid.lua symbols.lua search-replace.lua selectby.lua gridmaker.lua variants.lua visualstyles.lua ipeletsearch.lua cutter.lua"
 
 rm -fr opt
 mkdir -p opt/ipe/icons
