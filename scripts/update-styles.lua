@@ -20,7 +20,8 @@ local home = os.getenv("HOME")
 
 if ipestyles then
   styleDirs = { "." }
-  for w in string.gmatch(ipestyles, "[^:;]+") do
+  for dir in string.gmatch(ipestyles, "[^:;]+") do
+    local w = dir
     if w == "_" then w = config.system_styles end
     styleDirs[#styleDirs + 1] = w
   end
