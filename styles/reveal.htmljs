@@ -119,7 +119,7 @@
     const state = { progress: 0 };
     gsap.to(state, {
       progress: 1,
-      duration: 1,
+      duration: 2,
       ease: 'power1.inOut',
       immediateRender: true,
       onUpdate: () => {
@@ -142,7 +142,7 @@
     const end = MotionPathPlugin.getPositionOnPath(rawPath, 1);
     gsap.to(use, {
       motionPath: { path: pathEl, start: 0, end: 1, offsetX: -end.x, offsetY: -end.y },
-      duration: 1,
+      duration: 2,
       ease: 'power1.inOut',
       immediateRender: true
     });
@@ -176,7 +176,7 @@
     currentSlide.querySelector('svg > g').appendChild(clone);
     gsap.fromTo(clone,
       { drawSVG: '0%' },
-      { drawSVG: '100%', duration: 1, ease: 'power1.inOut', immediateRender: true,
+      { drawSVG: '100%', duration: 2, ease: 'power1.inOut', immediateRender: true,
         onComplete: () => {
           clone.remove();
           use.style.opacity = '1';
@@ -307,6 +307,13 @@
 
   gsap.registerPlugin(MorphSVGPlugin, DrawSVGPlugin, MotionPathPlugin);
   Reveal.initialize({
+    width: 1280,
+    height: 720,
+    margin: 0,
+    minScale: 0.1,
+    maxScale: 10,
+    center: false,
+
     hash: true,
     transition: 'none',
     slideNumber: true,
