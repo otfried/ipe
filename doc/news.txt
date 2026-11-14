@@ -84,6 +84,8 @@ Ipe 7.3.1
    definitions in alphabetic order.  This will greatly improve keeping
    Ipe files (in .ipe format) in git.
 
+ * Fix export to PNG not using nocrop option from stylesheet (#631).
+
 ----------------------------------------------------------------------
 
 Ipe 7.2.30 (2024-06-01: mini-release, source only)

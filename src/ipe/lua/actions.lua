@@ -896,7 +896,8 @@ function MODEL:export(format)
     end
     self.ui:renderPage(self.doc, self.pno, self.vno,
        		       format, s, self.ui:zoom(),
-		       true, false) -- transparent, nocrop
+		       true, -- transparent
+		       not self.doc:sheets():find("layout").crop)
     if not self:persistFile(s) then
       self:warning("Export failed",
 		   "I could not persist the exported file '" .. s .. "'.")
