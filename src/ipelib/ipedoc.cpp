@@ -624,7 +624,8 @@ int Document::runLatex(String docname, String & texLog) {
     int err = prepareLatexRun(&converter);
     if (err) return err;
     String cmd = Platform::howToRunLatex(iProperties.iTexEngine, docname);
-    if (cmd.empty() || Platform::system(cmd)) return ErrRunLatex;
+    if (cmd.empty()) return ErrRunLatex;
+    Platform::system(cmd);
     return completeLatexRun(texLog, converter);
 }
 
