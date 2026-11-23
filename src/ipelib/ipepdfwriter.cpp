@@ -817,7 +817,7 @@ void PdfWriter::createPageView(int pno, int view) {
     bm.scanPage(page);
     // ipeDebug("# of bitmaps: %d", bm.iBitmaps.size());
     embedBitmaps(bm);
-	if (page->skipped(iVariant) || page->findLayer("NOPDF") >= 0) return;
+    if (page->skipped(iVariant) || page->findLayer("NOPDF") >= 0) return;
     // create page stream
     String pagedata;
     StringStream sstream(pagedata);
@@ -1118,7 +1118,8 @@ void PdfWriter::createTrailer() {
 	for (int first = 0; first < size(iPageObjectNumbers);) {
 	    int page = iPageObjectNumbers[first].page;
 	    int next = first + 1;
-	    while (next < size(iPageObjectNumbers) && iPageObjectNumbers[next].page == page)
+	    while (next < size(iPageObjectNumbers)
+		   && iPageObjectNumbers[next].page == page)
 		++next;
 	    if (next - first > 1)
 		iStream << first << " <</S /D /P (" << (page + 1) << "-)>>";

@@ -60,6 +60,8 @@ public:
 	Attribute iTiling;
 	Attribute iGradient;
 	Attribute iStrokeGradient;
+	Attribute iSymGradient;
+	Attribute iSymStrokeGradient;
     };
 
 public:
@@ -110,6 +112,8 @@ public:
     void setTiling(Attribute til);
     void setGradient(Attribute grad);
     void setStrokeGradient(Attribute grad);
+    void setSymGradient(Attribute grad);
+    void setSymStrokeGradient(Attribute grad);
 
     //! Return style sheet cascade.
     inline const Cascade * cascade() const { return iCascade; }

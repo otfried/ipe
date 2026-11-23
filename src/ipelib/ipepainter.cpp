@@ -94,6 +94,8 @@ Painter::Painter(const Cascade * style) {
     state.iTiling = Attribute::NORMAL();
     state.iGradient = Attribute::NORMAL();
     state.iStrokeGradient = Attribute::NORMAL();
+    state.iSymGradient = Attribute::NORMAL();
+    state.iSymStrokeGradient = Attribute::NORMAL();
     iState.push_back(state);
     iMatrix.push_back(Matrix()); // identity
     iAttributeMap = nullptr;
@@ -287,22 +289,26 @@ void Painter::addClipPath() {
 //! Set stroke color, resolving symbolic color and "sym-x" colors
 void Painter::setStroke(Attribute color) {
     assert(!iInPath);
-    if (color == Attribute::SYM_STROKE())
+    if (color == Attribute::SYM_STROKE()) {
 	iState.back().iStroke = iState.back().iSymStroke;
-    else if (color == Attribute::SYM_FILL())
+	iState.back().iStrokeGradient = iState.back().iSymStrokeGradient;
+    } else if (color == Attribute::SYM_FILL()) {
 	iState.back().iStroke = iState.back().iSymFill;
-    else
+	iState.back().iStrokeGradient = iState.back().iSymGradient;
+    } else
 	iState.back().iStroke = lookup(EColor, color).color();
 }
 
 //! Set fill color, resolving symbolic color.
 void Painter::setFill(Attribute color) {
     assert(!iInPath);
-    if (color == Attribute::SYM_STROKE())
+    if (color == Attribute::SYM_STROKE()) {
 	iState.back().iFill = iState.back().iSymStroke;
-    else if (color == Attribute::SYM_FILL())
+	iState.back().iGradient = iState.back().iSymStrokeGradient;
+    } else if (color == Attribute::SYM_FILL()) {
 	iState.back().iFill = iState.back().iSymFill;
-    else
+	iState.back().iGradient = iState.back().iSymStrokeGradient;
+    } else
 	iState.back().iFill = lookup(EColor, color).color();
 }
 
@@ -420,6 +426,18 @@ void Painter::setSymPen(Attribute pen) {
 	iState.back().iSymPen = (++iState.rbegin())->iSymPen;
     else
 	iState.back().iSymPen = lookup(EPen, pen).number();
+}
+
+//! Set symbol gradient stroke.
+void Painter::setSymStrokeGradient(Attribute grad) {
+    assert(!iInPath);
+    iState.back().iSymStrokeGradient = grad;
+}
+
+//! Set symbol gradient fill.
+void Painter::setSymGradient(Attribute grad) {
+    assert(!iInPath);
+    iState.back().iSymGradient = grad;
 }
 
 //! Set full graphics state at once.

@@ -462,7 +462,9 @@ void Path::drawArrow(Painter & painter, Vector pos, Angle angle, Attribute shape
 	    Matrix m(s, 0, 0, s, 0, 0);
 	    painter.transform(m);
 	    painter.setSymStroke(Attribute(color));
+	    painter.setSymStrokeGradient(painter.strokeGradient());
 	    painter.setSymFill(Attribute(color));
+	    painter.setSymGradient(painter.strokeGradient());
 	    painter.setSymPen(Attribute(painter.pen()));
 	    symbol->iObject->draw(painter);
 	}
@@ -479,18 +481,18 @@ void Path::setShape(const Shape & shape) {
 void Path::draw(Painter & painter) const {
     painter.push();
     if (iPathMode <= EStrokedAndFilled) {
+	painter.setStrokeGradient(iStrokeGradient);
 	painter.setStroke(iStroke);
 	painter.setDashStyle(iDashStyle);
 	painter.setPen(iPen);
 	painter.setLineCap(lineCap());
 	painter.setLineJoin(lineJoin());
-	painter.setStrokeGradient(iStrokeGradient);
     }
     if (iPathMode >= EStrokedAndFilled) {
+	painter.setGradient(iGradient);
 	painter.setFill(iFill);
 	painter.setFillRule(fillRule());
 	painter.setTiling(iTiling);
-	painter.setGradient(iGradient);
     }
     painter.setOpacity(iOpacity);
     painter.setStrokeOpacity(iStrokeOpacity);
@@ -506,6 +508,7 @@ void Path::draw(Painter & painter) const {
 	// Draw arrows
 	if (iPathMode == EFilledOnly) {
 	    painter.setStroke(iFill);
+	    painter.setStrokeGradient(iGradient);
 	    painter.setPen(iPen);
 	    painter.setLineCap(lineCap());
 	    painter.setLineJoin(lineJoin());
