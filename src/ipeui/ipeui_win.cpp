@@ -1471,9 +1471,8 @@ static int ipeui_currentDateTime(lua_State * L) {
     SYSTEMTIME st;
     GetLocalTime(&st);
     char buf[32];
-    snprintf(buf, sizeof(buf), "%04d%02d%02d%02d%02d%02d", st.wYear, st.wMonth,
-	    st.wDay, st.wHour,
-	    st.wMinute, st.wSecond);
+    snprintf(buf, sizeof(buf), "%04d%02d%02d%02d%02d%02d", st.wYear, st.wMonth, st.wDay,
+	     st.wHour, st.wMinute, st.wSecond);
     lua_pushstring(L, buf);
     return 1;
 }

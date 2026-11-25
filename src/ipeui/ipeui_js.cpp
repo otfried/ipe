@@ -489,9 +489,9 @@ static int ipeui_currentDateTime(lua_State * L) {
     val dt = val::global("Date").new_();
     char buf[15];
     snprintf(buf, sizeof(buf), "%04d%02d%02d%02d%02d%02d", dt.call<int>("getFullYear"),
-	    dt.call<int>("getMonth") + 1, dt.call<int>("getDate"),
-	    dt.call<int>("getHours"), dt.call<int>("getMinutes"),
-	    dt.call<int>("getSeconds"));
+	     dt.call<int>("getMonth") + 1, dt.call<int>("getDate"),
+	     dt.call<int>("getHours"), dt.call<int>("getMinutes"),
+	     dt.call<int>("getSeconds"));
     lua_pushstring(L, buf);
     return 1;
 }

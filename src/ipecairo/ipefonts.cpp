@@ -189,8 +189,8 @@ String Fonts::freetypeVersion() {
     int major, minor, patch;
     FT_Library_Version(engine.iLib, &major, &minor, &patch);
     char buf[128];
-    snprintf(buf, sizeof(buf), "Freetype %d.%d.%d / %d.%d.%d", FREETYPE_MAJOR, FREETYPE_MINOR,
-	    FREETYPE_PATCH, major, minor, patch);
+    snprintf(buf, sizeof(buf), "Freetype %d.%d.%d / %d.%d.%d", FREETYPE_MAJOR,
+	     FREETYPE_MINOR, FREETYPE_PATCH, major, minor, patch);
     return String(buf);
 }
 

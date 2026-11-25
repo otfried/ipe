@@ -148,10 +148,10 @@ void Latex::addPageNumber(int pno, int vno, int npages, int nviews) {
     attr.iVerticalAlignment = pns->iVerticalAlignment;
     char latex[256];
     snprintf(latex, sizeof(latex),
-	    "\\def\\ipeNumber#1#2{#%d}"
-	    "\\setcounter{ipePage}{%d}\\setcounter{ipeView}{%d}"
-	    "\\setcounter{ipePages}{%d}\\setcounter{ipeViews}{%d}",
-	    (nviews > 1 ? 2 : 1), pno + 1, vno + 1, npages, nviews);
+	     "\\def\\ipeNumber#1#2{#%d}"
+	     "\\setcounter{ipePage}{%d}\\setcounter{ipeView}{%d}"
+	     "\\setcounter{ipePages}{%d}\\setcounter{ipeViews}{%d}",
+	     (nviews > 1 ? 2 : 1), pno + 1, vno + 1, npages, nviews);
     String data =
 	pns->iText.empty()
 	    ? "\\ipeNumber{\\arabic{ipePage}}{\\arabic{ipePage} - \\arabic{ipeView}}"
