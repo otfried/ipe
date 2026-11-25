@@ -142,7 +142,8 @@ NSString * ipeui_set_mnemonic(NSString * title, NSButton * button) {
 	[button setTitle:result];
 	if (mnemonic) {
 	    [button setKeyEquivalent:[NSString stringWithCharacters:&mnemonic length:1]];
-	    [button setKeyEquivalentModifierMask:NSAlternateKeyMask | NSCommandKeyMask];
+	    [button setKeyEquivalentModifierMask:NSEventModifierFlagOption
+					 | NSEventModifierFlagCommand];
 	}
     }
     return result;
@@ -352,6 +353,7 @@ static NSImage * bitmapImage(const ImageSpec & spec) {
 // with an icon, an optional label, and an optional checkbox.
 
 static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
+static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
 
 @interface IpeSorterEntry : NSObject
 @property NSInteger number; // number of the item in the table given to Lua (from 1)
@@ -382,7 +384,7 @@ static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
 	self.titlePosition = NSNoTitle;
 	self.boxType = NSBoxCustom;
 	self.cornerRadius = 8.0;
-	self.borderType = NSLineBorder;
+	self.borderWidth = 1.0;
 	self.contentViewMargins = NSZeroSize;
 	self.fillColor = [NSColor controlBackgroundColor];
 	self.borderColor = [NSColor controlBackgroundColor];
@@ -392,7 +394,7 @@ static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
 	[self addSubview:v];
 	self.image = v;
 	NSButton * b = [[NSButton alloc] initWithFrame:NSMakeRect(0., 0., 16., 16.)];
-	[b setButtonType:NSSwitchButton];
+	[b setButtonType:NSButtonTypeSwitch];
 	b.title = @"";
 	b.target = self;
 	b.action = @selector(ipeToggle:);
@@ -403,7 +405,7 @@ static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
 	t.selectable = NO;
 	t.bordered = NO;
 	t.drawsBackground = NO;
-	t.alignment = NSCenterTextAlignment;
+	t.alignment = NSTextAlignmentCenter;
 	t.lineBreakMode = NSLineBreakByTruncatingTail;
 	[self addSubview:t];
 	self.ititle = t;
@@ -433,13 +435,15 @@ static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
     self.image.image = entry.image;
     self.ititle.stringValue = entry.label ? entry.label : @"";
     self.imarked.hidden = !entry.hasMark;
-    self.imarked.state = entry.marked ? NSOnState : NSOffState;
+    self.imarked.state =
+	entry.marked ? NSControlStateValueOn : NSControlStateValueOff;
     self.imarked.enabled = !entry.readOnly;
     [self ipeLayout];
 }
 
 - (void)ipeToggle:(id)sender {
-    self.entry.marked = ([(NSButton *)sender state] == NSOnState);
+    self.entry.marked =
+	([(NSButton *)sender state] == NSControlStateValueOn);
 }
 
 // the context menu is created by the collection view
@@ -478,7 +482,8 @@ static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
 
 @end
 
-@interface IpeSorterView : NSCollectionView <NSCollectionViewDelegate>
+@interface IpeSorterView : NSCollectionView <NSCollectionViewDataSource,
+					      NSCollectionViewDelegate>
 @property BOOL ipeReadOnly;
 
 - (instancetype)initWithReadOnly:(BOOL)readOnly;
@@ -490,6 +495,7 @@ static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
     NSMutableArray<IpeSorterEntry *> * iEntries; // current items, in order
     NSMutableArray<IpeSorterEntry *> * iCut;     // items removed by "Cut"
     NSIndexSet * iDragIndexes;
+    NSCollectionViewGridLayout * iGridLayout;
     NSInteger iMenuHit; // item under the pointer when the menu was shown, or -1
 }
 
@@ -500,9 +506,13 @@ static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
 	iEntries = [NSMutableArray array];
 	iCut = [NSMutableArray array];
 	iMenuHit = -1;
-	self.itemPrototype = [IpeSorterPrototype new];
+	[self registerClass:[IpeSorterPrototype class]
+	 forItemWithIdentifier:IpeSorterItemIdentifier];
+	iGridLayout = [[NSCollectionViewGridLayout alloc] init];
+	self.collectionViewLayout = iGridLayout;
 	self.selectable = YES;
 	self.allowsMultipleSelection = YES;
+	self.dataSource = self;
 	self.delegate = self;
 	if (!readOnly) [self registerForDraggedTypes:@[ IpeSorterDragType ]];
     }
@@ -510,8 +520,24 @@ static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
 }
 
 - (void)ipeReload {
-    self.content = [NSArray arrayWithArray:iEntries];
+    [self reloadData];
     self.selectionIndexes = [NSIndexSet indexSet];
+}
+
+- (NSInteger)collectionView:(NSCollectionView *)collectionView
+    numberOfItemsInSection:(NSInteger)section {
+    (void)collectionView;
+    (void)section;
+    return iEntries.count;
+}
+
+- (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
+    itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
+    NSCollectionViewItem * item =
+	[collectionView makeItemWithIdentifier:IpeSorterItemIdentifier
+				   forIndexPath:indexPath];
+    [item setRepresentedObject:iEntries[indexPath.item]];
+    return item;
 }
 
 - (void)ipeSetItems:(const std::vector<SorterItem> &)items {
@@ -535,8 +561,8 @@ static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
     }
     // all items have the size of the largest icon (and room for a short label)
     NSSize size = NSMakeSize(std::max(iconWidth + 8, 90), iconHeight + 28);
-    self.minItemSize = size;
-    self.maxItemSize = size;
+    iGridLayout.minimumItemSize = size;
+    iGridLayout.maximumItemSize = size;
     [self ipeReload];
 }
 
@@ -561,7 +587,8 @@ static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
     NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
     iMenuHit = -1;
     for (NSUInteger i = 0; i < [iEntries count]; ++i) {
-	NSCollectionViewItem * item = [self itemAtIndex:i];
+	NSCollectionViewItem * item =
+	    [self itemAtIndexPath:[NSIndexPath indexPathForItem:i inSection:0]];
 	if (item && NSPointInRect(p, [[item view] frame])) {
 	    iMenuHit = i;
 	    break;
@@ -628,7 +655,8 @@ static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
 	 i = [sel indexGreaterThanIndex:i]) {
 	if (i >= [iEntries count] || !iEntries[i].hasMark) continue;
 	iEntries[i].marked = mark;
-	[[self itemAtIndex:i] setRepresentedObject:iEntries[i]];
+	NSIndexPath * indexPath = [NSIndexPath indexPathForItem:i inSection:0];
+	[[self itemAtIndexPath:indexPath] setRepresentedObject:iEntries[i]];
     }
 }
 
@@ -913,8 +941,8 @@ void PDialog::layoutControls() {
 // --------------------------------------------------------------------
 
 Dialog::Result PDialog::buildAndRun(int w, int h) {
-    NSUInteger style = NSTitledWindowMask | NSResizableWindowMask;
-    if (iIgnoreEscapeField >= 0) style |= NSClosableWindowMask;
+    NSUInteger style = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable;
+    if (iIgnoreEscapeField >= 0) style |= NSWindowStyleMaskClosable;
 
     iPanel = [[NSPanel alloc] initWithContentRect:NSMakeRect(400., 800., w, h)
 					styleMask:style
@@ -938,14 +966,14 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	NSScrollView * scroll = nil;
 	if (m.row < 0) {
 	    NSButton * b = [[NSButton alloc] initWithFrame:NSZeroRect];
-	    [b setButtonType:NSMomentaryPushInButton];
+	    [b setButtonType:NSButtonTypeMomentaryPushIn];
 	    ipeui_set_mnemonic(S2N(m.text), b);
 	    [b setImagePosition:NSNoImage];
-	    [b setBezelStyle:NSRoundedBezelStyle];
+	    [b setBezelStyle:NSBezelStylePush];
 	    ctrl = b;
 	    if (m.flags & EAccept) {
 		[b setKeyEquivalent:@"\r"];
-		[b setKeyEquivalentModifierMask:NSCommandKeyMask];
+		[b setKeyEquivalentModifierMask:NSEventModifierFlagCommand];
 	    }
 	} else {
 	    switch (m.type) {
@@ -959,17 +987,17 @@ Dialog::Result PDialog::buildAndRun(int w, int h) {
 	    } break;
 	    case EButton: {
 		NSButton * b = [[NSButton alloc] initWithFrame:NSZeroRect];
-		[b setButtonType:NSMomentaryPushInButton];
+		[b setButtonType:NSButtonTypeMomentaryPushIn];
 		ipeui_set_mnemonic(S2N(m.text), b);
 		[b setImagePosition:NSNoImage];
-		[b setBezelStyle:NSRoundedBezelStyle];
+		[b setBezelStyle:NSBezelStylePush];
 		ctrl = b;
 	    } break;
 	    case ECheckBox: {
 		NSButton * b = [[NSButton alloc] initWithFrame:NSZeroRect];
-		[b setButtonType:NSSwitchButton];
+		[b setButtonType:NSButtonTypeSwitch];
 		ipeui_set_mnemonic(S2N(m.text), b);
-		[b setState:m.value ? NSOnState : NSOffState];
+		[b setState:m.value ? NSControlStateValueOn : NSControlStateValueOff];
 		ctrl = b;
 	    } break;
 	    case EInput: {
@@ -1222,7 +1250,8 @@ int PMenu::add(lua_State * L) {
 	    [item setIpeSubmenuName:C2N(label)];
 	    [item setTarget:item];
 	    [item setIpeMenu:this];
-	    if (hascheck && !strcmp(label, current)) [item setState:NSOnState];
+	    if (hascheck && !strcmp(label, current))
+		[item setState:NSControlStateValueOn];
 	    [sm addItem:item];
 	    if (hascolor) {
 		lua_pushvalue(L, 6);  // function
@@ -1453,7 +1482,7 @@ static int ipeui_fileDialog(lua_State * L) {
 	NSOpenPanel * panel = [NSOpenPanel openPanel];
 	IpeFileDialogHelper * helper = [[IpeFileDialogHelper alloc] initFor:panel];
 	[helper setupWithLua:L];
-	if ([panel runModal] == NSFileHandlingPanelOKButton) {
+	if ([panel runModal] == NSModalResponseOK) {
 	    lua_pushstring(L, N2C([[panel URLs][0] path]));
 	    lua_pushinteger(L, [helper.fileType indexOfSelectedItem] + 1);
 	    return 2;
@@ -1462,7 +1491,7 @@ static int ipeui_fileDialog(lua_State * L) {
 	NSSavePanel * panel = [NSSavePanel savePanel];
 	IpeFileDialogHelper * helper = [[IpeFileDialogHelper alloc] initFor:panel];
 	[helper setupWithLua:L];
-	if ([panel runModal] == NSFileHandlingPanelOKButton) {
+	if ([panel runModal] == NSModalResponseOK) {
 	    lua_pushstring(L, N2C([[panel URL] path]));
 	    lua_pushinteger(L, [helper.fileType indexOfSelectedItem] + 1);
 	    return 2;
@@ -1520,16 +1549,16 @@ static int ipeui_messageBox(lua_State * L) {
     [alert setMessageText:C2N(text)];
     if (details) [alert setInformativeText:C2N(details)];
 
-    NSAlertStyle astyle = NSInformationalAlertStyle;
+    NSAlertStyle astyle = NSAlertStyleInformational;
     switch (type) {
     case 0:
     default: break;
-    case 1: astyle = NSWarningAlertStyle; break;
+    case 1: astyle = NSAlertStyleWarning; break;
     case 2: break;
     case 3:
 	// Question doesn't seem to exist on Cocoa
 	break;
-    case 4: astyle = NSCriticalAlertStyle; break;
+    case 4: astyle = NSAlertStyleCritical; break;
     }
 
     [alert setAlertStyle:astyle];
