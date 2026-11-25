@@ -104,14 +104,14 @@ AppUi::AppUi(lua_State * L0) {
     GMenu * menu2 = g_menu_new();
     for (int i = 0; i < int(NUM_ACTIONS); ++i) {
 	char name[32];
-	sprintf(name, "action%d", i);
+	snprintf(name, sizeof(name), "action%d", i);
 	GSimpleAction * action = g_simple_action_new(name, nullptr);
 	g_object_set_data(G_OBJECT(action), "appui", this);
 	g_object_set_data(G_OBJECT(action), "command", (gpointer)actions[i]);
 	g_signal_connect(action, "activate", G_CALLBACK(menuitem_response), action);
 	g_action_map_add_action(G_ACTION_MAP(actions_group), G_ACTION(action));
 	char detailed[40];
-	sprintf(detailed, "win.%s", name);
+	snprintf(detailed, sizeof(detailed), "win.%s", name);
 	GMenuItem * item = g_menu_item_new(actions[i], detailed);
 	if (i == 0)
 	    g_menu_append_item(menu1, item);

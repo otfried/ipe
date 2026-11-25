@@ -226,7 +226,7 @@ int main(int argc, char * argv[]) {
     }
 
     char buf[64];
-    sprintf(buf, "ipetoipe %d.%d.%d", ipe::IPELIB_VERSION / 10000,
+    snprintf(buf, sizeof(buf), "ipetoipe %d.%d.%d", ipe::IPELIB_VERSION / 10000,
 	    (ipe::IPELIB_VERSION / 100) % 100, ipe::IPELIB_VERSION % 100);
     Document::SProperties props = doc->properties();
     props.iCreator = buf;

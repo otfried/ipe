@@ -1448,7 +1448,7 @@ static int ipeui_messageBox(lua_State * L) {
     int ret = -1;
     if (details) {
 	char buf[strlen(text) + strlen(details) + 8];
-	sprintf(buf, "%s\n\n%s", text, details);
+	snprintf(buf, sizeof(buf), "%s\n\n%s", text, details);
 	WString wbuf(buf);
 	ret = MessageBoxW(hwnd, wbuf.data(), L"Ipe", uType);
     } else
@@ -1471,7 +1471,8 @@ static int ipeui_currentDateTime(lua_State * L) {
     SYSTEMTIME st;
     GetLocalTime(&st);
     char buf[32];
-    sprintf(buf, "%04d%02d%02d%02d%02d%02d", st.wYear, st.wMonth, st.wDay, st.wHour,
+    snprintf(buf, sizeof(buf), "%04d%02d%02d%02d%02d%02d", st.wYear, st.wMonth,
+	    st.wDay, st.wHour,
 	    st.wMinute, st.wSecond);
     lua_pushstring(L, buf);
     return 1;

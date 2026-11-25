@@ -295,7 +295,7 @@ AppUi::AppUi(lua_State * L0, int model, Qt::WindowFlags f)
 
     for (uint i = 0; i < iScalings.size(); ++i) {
 	char action[32];
-	sprintf(action, "scaling|%d", iScalings[i]);
+	snprintf(action, sizeof(action), "scaling|%d", iScalings[i]);
 	findAction(action)->setActionGroup(cs);
     }
 
@@ -868,8 +868,8 @@ static const char * const aboutText =
 
 void AppUi::aboutIpe() {
     std::vector<char> buf(strlen(aboutText) + 100);
-    sprintf(buf.data(), aboutText, IPELIB_VERSION / 10000, (IPELIB_VERSION / 100) % 100,
-	    IPELIB_VERSION % 100, COPYRIGHT_YEAR);
+    snprintf(buf.data(), buf.size(), aboutText, IPELIB_VERSION / 10000,
+	     (IPELIB_VERSION / 100) % 100, IPELIB_VERSION % 100, COPYRIGHT_YEAR);
 
     QMessageBox msgBox(this);
     msgBox.setWindowTitle("About Ipe");

@@ -1465,7 +1465,7 @@ int PMenu::add(lua_State * L) {
     auto addItem = [&](GMenu * menu, const char * label, const char * itemName,
 		       bool checkable, bool active, bool markup = false) {
 	char action_name[32];
-	sprintf(action_name, "item%d", iNextAction++);
+	snprintf(action_name, sizeof(action_name), "item%d", iNextAction++);
 	GSimpleAction * action =
 	    checkable ? g_simple_action_new_stateful(action_name, nullptr,
 						     g_variant_new_boolean(active))
@@ -1476,7 +1476,7 @@ int PMenu::add(lua_State * L) {
 	g_action_map_add_action(G_ACTION_MAP(iActions), G_ACTION(action));
 	iItems.push_back({name, itemName ? itemName : ""});
 	char detailed[40];
-	sprintf(detailed, "menu.%s", action_name);
+	snprintf(detailed, sizeof(detailed), "menu.%s", action_name);
 	std::string slabel;
 	if (label) {
 	    slabel = gtkMnemonic(label);

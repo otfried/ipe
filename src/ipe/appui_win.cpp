@@ -1023,7 +1023,7 @@ void AppUi::setLayers(const Page * page, int view) {
 	}
 	WString text(page->layer(i));
 	char buf[16];
-	sprintf(buf, " (%d)", objCounts[i]);
+	snprintf(buf, sizeof(buf), " (%d)", objCounts[i]);
 	text += WString(buf);
 	lvI.pszText = text.data();
 	(void)ListView_InsertItem(hLayers, &lvI);
@@ -1265,8 +1265,8 @@ static const char * const aboutText =
 
 void AppUi::aboutIpe() {
     std::vector<char> buf(strlen(aboutText) + 100);
-    sprintf(buf.data(), aboutText, IPELIB_VERSION / 10000, (IPELIB_VERSION / 100) % 100,
-	    IPELIB_VERSION % 100, COPYRIGHT_YEAR);
+    snprintf(buf.data(), buf.size(), aboutText, IPELIB_VERSION / 10000,
+	     (IPELIB_VERSION / 100) % 100, IPELIB_VERSION % 100, COPYRIGHT_YEAR);
 
     WString wbuf(buf.data());
     MessageBoxW(hwnd, wbuf.data(), L"About Ipe",
@@ -1364,7 +1364,7 @@ void AppUi::setMouseIndicator(const char * s) {
 
 void AppUi::setZoom(double zoom) {
     char s[32];
-    sprintf(s, "%dppi", int(72.0 * zoom));
+    snprintf(s, sizeof(s), "%dppi", int(72.0 * zoom));
     iCanvas->setZoom(zoom);
     sendMessage(hStatusBar, SB_SETTEXT, s, 3);
 }
@@ -1493,7 +1493,7 @@ int AppUi::clipboard(lua_State * L) {
     UINT pngFormat = 0;
     while ((format = EnumClipboardFormats(format)) != 0) {
 	if (!GetClipboardFormatNameA(format, formatName, 256))
-	    sprintf(formatName, "#%u", format);
+	    snprintf(formatName, sizeof(formatName), "#%u", format);
 	ipeDebug("Clipboard format %d %s", format, formatName);
 	if (format == CF_UNICODETEXT) haveText = true;
 	if (format == CF_BITMAP) haveBitmap = true;

@@ -336,10 +336,10 @@ void AppUiBase::buildMenus() {
 	char display[32];
 	char action[32];
 	if (s < 0)
-	    sprintf(display, "%d:1", -s);
+	    snprintf(display, sizeof(display), "%d:1", -s);
 	else
-	    sprintf(display, "1:%d", s);
-	sprintf(action, "@scaling|%d", s);
+	    snprintf(display, sizeof(display), "1:%d", s);
+	snprintf(action, sizeof(action), "@scaling|%d", s);
 	addSubItem(display, action);
     }
     endSubMenu();
@@ -541,7 +541,7 @@ void AppUiBase::canvasObserverPositionChanged() {
     adjust(v.y, iMouseIn, iMouseFactor);
     const char * units = mouse_units[iMouseIn];
     char s[256];
-    sprintf(s, iCoordinatesFormat.z(), v.x, units, v.y, units);
+    snprintf(s, sizeof(s), iCoordinatesFormat.z(), v.x, units, v.y, units);
     setMouseIndicator(s);
 }
 

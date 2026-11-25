@@ -90,7 +90,7 @@ static gboolean close_request(GtkWindow *, gpointer) {
 void AppUi::addItem(int m, int action, const char * label, const char * shortcut,
 		    bool checkable) {
     char action_name[32];
-    sprintf(action_name, "action%d", action);
+    snprintf(action_name, sizeof(action_name), "action%d", action);
     GSimpleAction * a = checkable
 			    ? g_simple_action_new_stateful(action_name, nullptr,
 							   g_variant_new_boolean(false))
@@ -101,7 +101,7 @@ void AppUi::addItem(int m, int action, const char * label, const char * shortcut
 
     GMenuItem * item = g_menu_item_new(label, action_name);
     char detailed_name[40];
-    sprintf(detailed_name, "win.%s", action_name);
+    snprintf(detailed_name, sizeof(detailed_name), "win.%s", action_name);
     g_menu_item_set_detailed_action(item, detailed_name);
     g_menu_append_item(iSubMenu[m], item);
     g_object_unref(item);

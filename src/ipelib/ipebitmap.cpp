@@ -301,7 +301,7 @@ void Bitmap::saveAsXml(Stream & stream, String id, int pdfObjNum) const {
 
     if (colorKey() >= 0) {
 	char buf[10];
-	sprintf(buf, "%x", colorKey());
+	snprintf(buf, sizeof(buf), "%x", colorKey());
 	stream << " ColorKey=\"" << buf << "\"";
     }
 

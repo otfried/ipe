@@ -168,7 +168,7 @@ GdkPixbuf * AppUi::prefsPixbuf(String name, int size) {
     if (scale < 1) scale = 1;
     int renderSize = size * scale;
     char keybuf[64];
-    sprintf(keybuf, "%d:", renderSize);
+    snprintf(keybuf, sizeof(keybuf), "%d:", renderSize);
     String key = String(keybuf) + name;
     auto it = iIconCache.find(key);
     if (it != iIconCache.end()) return it->second;
@@ -248,7 +248,7 @@ void AppUi::setPathView(const AllAttributes & all, Cascade * sheet) {
 
 String AppUi::opaqueName() {
     char buf[16];
-    sprintf(buf, "act%d", iNextActionId++);
+    snprintf(buf, sizeof(buf), "act%d", iNextActionId++);
     return buf;
 }
 
@@ -869,7 +869,7 @@ void AppUi::setToolVisible(int m, bool vis) {
 
 void AppUi::setZoom(double zoom) {
     char s[32];
-    sprintf(s, "(%dppi)", int(72.0 * zoom));
+    snprintf(s, sizeof(s), "(%dppi)", int(72.0 * zoom));
     iCanvas->setZoom(zoom);
     gtk_label_set_text(GTK_LABEL(iResolution), s);
 }
@@ -890,8 +890,8 @@ static void about_ok_cb(GtkButton *, gpointer data) {
 
 void AppUi::aboutIpe() {
     std::vector<char> buf(strlen(aboutText) + 100);
-    sprintf(buf.data(), aboutText, IPELIB_VERSION / 10000, (IPELIB_VERSION / 100) % 100,
-	    IPELIB_VERSION % 100, COPYRIGHT_YEAR);
+    snprintf(buf.data(), buf.size(), aboutText, IPELIB_VERSION / 10000,
+	     (IPELIB_VERSION / 100) % 100, IPELIB_VERSION % 100, COPYRIGHT_YEAR);
     // avoid GtkMessageDialog (deprecated GTK4 shim): its icon area appears to
     // reflow after the first frame, which is what was causing the jump
     GtkWidget * dialog = gtk_dialog_new();

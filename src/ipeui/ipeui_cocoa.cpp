@@ -1581,7 +1581,8 @@ static int ipeui_currentDateTime(lua_State * L) {
 			 | NSCalendarUnitSecond;
     NSDateComponents * st = [gregorian components:unitFlags fromDate:now];
     char buf[16];
-    sprintf(buf, "%04ld%02ld%02ld%02ld%02ld%02ld", long(st.year), long(st.month),
+    snprintf(buf, sizeof(buf), "%04ld%02ld%02ld%02ld%02ld%02ld", long(st.year),
+	    long(st.month),
 	    long(st.day), long(st.hour), long(st.minute), long(st.second));
     lua_pushstring(L, buf);
     return 1;

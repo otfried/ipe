@@ -269,7 +269,7 @@ void AppUi::setToolVisible(int tool, bool vis) {
 
 void AppUi::setZoom(double zoom) {
     char s[16];
-    sprintf(s, "(%dppi)", int(72.0 * zoom));
+    snprintf(s, sizeof(s), "(%dppi)", int(72.0 * zoom));
     setInnerText("resolution", s);
     iCanvas->setZoom(zoom);
 }

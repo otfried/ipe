@@ -472,8 +472,8 @@ static const char * const aboutText =
 
 void MainWindow::aboutIpePresenter() {
     std::vector<char> buf(strlen(aboutText) + 100);
-    sprintf(buf.data(), aboutText, IPELIB_VERSION / 10000, (IPELIB_VERSION / 100) % 100,
-	    IPELIB_VERSION % 100);
+    snprintf(buf.data(), buf.size(), aboutText, IPELIB_VERSION / 10000,
+	     (IPELIB_VERSION / 100) % 100, IPELIB_VERSION % 100);
 
     QMessageBox msgBox(this);
     msgBox.setWindowTitle("About IpePresenter");

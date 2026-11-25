@@ -333,7 +333,7 @@ bool VoronoiIpelet::run(int function, IpeletData *data, IpeletHelper *helper)
   ipeDebug("VoronoiIpelet::run(%d)", function);
   if (function == 5) {
     char buf[32];
-    std::sprintf(buf, "%g", iInfiniteEdgeLength);
+    std::snprintf(buf, sizeof(buf), "%g", iInfiniteEdgeLength);
     String el(buf);
     if (helper->getString("Length of infinite edges (in points):", el))
       iInfiniteEdgeLength = std::strtod(el.z(), nullptr);

@@ -151,7 +151,7 @@ void PdfString::write(Stream & stream, const PdfRenumber *, bool infl) const noe
 	for (int i = 0; i < iValue.size(); ++i) {
 	    int ch = iValue[i];
 	    if ((0 <= ch && ch < 0x20) || ch == '\\' || ch == '(' || ch == ')') {
-		sprintf(octbuf, "\\%.3o", (ch & 0xff));
+		snprintf(octbuf, sizeof(octbuf), "\\%.3o", (ch & 0xff));
 		stream << octbuf;
 	    } else
 		stream.putChar(ch);

@@ -219,7 +219,7 @@ static void setupFolders() {
     // USER folders
 
 #ifdef __APPLE__
-    fs::path local = fs::path(home.s8()) / "Library" / "Ipe";
+    fs::path local = home / "Library" / "Ipe";
     folders[FolderConfig] = sp(local);
     folders[FolderUserStyles] = sp(local / "styles");
     folders[FolderUserIpelets] = sp(local / "ipelets");
@@ -359,7 +359,7 @@ void ipeDebug(const char * msg, ...) noexcept {
 	char buf[8196];
 	va_list ap;
 	va_start(ap, msg);
-	std::vsprintf(buf, msg, ap);
+	std::vsnprintf(buf, sizeof(buf), msg, ap);
 	va_end(ap);
 	debugHandler(buf);
     }
@@ -652,14 +652,14 @@ String Platform::createTarball(String tex) {
     strcpy(p + 100, "0000644"); // mode
     strcpy(p + 108, "0001750"); // uid 1000
     strcpy(p + 116, "0001750"); // gid 1000
-    sprintf(p + 124, "%011o", (unsigned int)tex.size());
+    snprintf(p + 124, 12, "%011o", (unsigned int)tex.size());
     p[136] = '0'; // time stamp, fudge it
     p[156] = '0'; // normal file
     // checksum
     strcpy(p + 148, "        ");
     uint32_t checksum = 0;
     for (const char * q = p; q < p + 512; ++q) checksum += uint8_t(*q);
-    sprintf(p + 148, "%06o", checksum);
+    snprintf(p + 148, 8, "%06o", checksum);
     p[155] = ' ';
 
     String tar;

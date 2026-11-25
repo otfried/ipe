@@ -239,7 +239,7 @@ void Page::addLayer() {
     char name[20];
     int i = 1;
     for (;;) {
-	std::sprintf(name, "alpha%d", i);
+	std::snprintf(name, sizeof(name), "alpha%d", i);
 	if (findLayer(name) < 0) {
 	    addLayer(name);
 	    return;

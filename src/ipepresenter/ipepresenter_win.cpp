@@ -382,7 +382,8 @@ void AppUi::setView() {
 
 void AppUi::setTime() {
     char buf[16];
-    sprintf(buf, "%d:%02d:%02d", iTime / 3600, (iTime / 60) % 60, iTime % 60);
+    snprintf(buf, sizeof(buf), "%d:%02d:%02d", iTime / 3600, (iTime / 60) % 60,
+	     iTime % 60);
     setWindowText(hClock, buf);
 }
 
@@ -513,8 +514,8 @@ static const char * const aboutText =
 
 void AppUi::aboutIpePresenter() {
     std::vector<char> buf(strlen(aboutText) + 100);
-    sprintf(buf.data(), aboutText, IPELIB_VERSION / 10000, (IPELIB_VERSION / 100) % 100,
-	    IPELIB_VERSION % 100);
+    snprintf(buf.data(), buf.size(), aboutText, IPELIB_VERSION / 10000,
+	     (IPELIB_VERSION / 100) % 100, IPELIB_VERSION % 100);
 
     const char * s = buf.data();
     int n = strlen(s);

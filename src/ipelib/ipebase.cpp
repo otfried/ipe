@@ -622,7 +622,7 @@ void Stream::putRaw(const char * data, int size) {
 //! Output integer.
 Stream & Stream::operator<<(int i) {
     char buf[30];
-    std::sprintf(buf, "%d", i);
+    std::snprintf(buf, sizeof(buf), "%d", i);
     *this << buf;
     return *this;
 }
@@ -637,7 +637,7 @@ Stream & Stream::operator<<(double d) {
     if (d >= 1e9) {
 	// PDF will not be able to read this, but we have to write something.
 	// Such large numbers should only happen if something is wrong.
-	std::sprintf(buf, "%g", d);
+	std::snprintf(buf, sizeof(buf), "%g", d);
 	putCString(buf);
     } else if (d < 1e-8) {
 	putChar('0');
@@ -667,7 +667,7 @@ Stream & Stream::operator<<(double d) {
 	    ++intpart;
 	    v -= factor;
 	}
-	std::sprintf(buf, "%d", intpart);
+	std::snprintf(buf, sizeof(buf), "%d", intpart);
 	putCString(buf);
 	int mask = factor / 10;
 	if (v != 0) {
@@ -684,7 +684,7 @@ Stream & Stream::operator<<(double d) {
 //! Output byte in hexadecimal.
 void Stream::putHexByte(char b) {
     char buf[3];
-    std::sprintf(buf, "%02x", (b & 0xff));
+    std::snprintf(buf, sizeof(buf), "%02x", (b & 0xff));
     *this << buf;
 }
 

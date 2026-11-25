@@ -147,7 +147,7 @@ void Latex::addPageNumber(int pno, int vno, int npages, int nviews) {
     attr.iHorizontalAlignment = pns->iHorizontalAlignment;
     attr.iVerticalAlignment = pns->iVerticalAlignment;
     char latex[256];
-    sprintf(latex,
+    snprintf(latex, sizeof(latex),
 	    "\\def\\ipeNumber#1#2{#%d}"
 	    "\\setcounter{ipePage}{%d}\\setcounter{ipeView}{%d}"
 	    "\\setcounter{ipePages}{%d}\\setcounter{ipeViews}{%d}",

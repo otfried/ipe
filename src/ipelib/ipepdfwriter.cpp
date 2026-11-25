@@ -166,7 +166,7 @@ int PdfPainter::gradientPattern(Attribute grad) {
 
 static const char * opacityName(Fixed alpha) {
     static char buf[12];
-    sprintf(buf, "/alpha%03d", alpha.internal());
+    snprintf(buf, sizeof(buf), "/alpha%03d", alpha.internal());
     return buf;
 }
 
@@ -966,7 +966,7 @@ void PdfWriter::writeString(String text) {
 	char buf[5];
 	iStream << "<FEFF";
 	for (int i = 0; i < text.size();) {
-	    sprintf(buf, "%04X", text.unicode(i));
+	    snprintf(buf, sizeof(buf), "%04X", text.unicode(i));
 	    iStream << buf;
 	}
 	iStream << ">";
@@ -1166,10 +1166,10 @@ void PdfWriter::createTrailer() {
 	std::map<int, long>::const_iterator it = iXref.find(obj);
 	char s[12];
 	if (it == iXref.end()) {
-	    std::sprintf(s, "%010d", obj);
+	    std::snprintf(s, sizeof(s), "%010d", obj);
 	    iStream << s << " 00000 f \n"; // note the final space!
 	} else {
-	    std::sprintf(s, "%010ld", iXref[obj]);
+	    std::snprintf(s, sizeof(s), "%010ld", iXref[obj]);
 	    iStream << s << " 00000 n \n"; // note the final space!
 	}
     }

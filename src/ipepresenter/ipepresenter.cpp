@@ -150,7 +150,7 @@ void Presenter::makePageLabels() {
     } else {
 	for (int pno = 0; pno < iPdf->countPages(); ++pno) {
 	    char buf[16];
-	    sprintf(buf, "%d", pno + 1);
+	    snprintf(buf, sizeof(buf), "%d", pno + 1);
 	    iPageLabels.push_back(std::make_pair(String(buf), -1));
 	}
     }

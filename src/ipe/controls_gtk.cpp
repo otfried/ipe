@@ -178,7 +178,7 @@ void LayerBox::set(const Page * page, int view) {
     for (int i = 0; i < page->countLayers(); ++i) {
 	String name = page->layer(i);
 	char buf[32];
-	sprintf(buf, " (%d)", objCounts[i]);
+	snprintf(buf, sizeof(buf), " (%d)", objCounts[i]);
 	String text = name + buf;
 
 	GtkWidget * row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
