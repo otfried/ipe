@@ -129,8 +129,9 @@ AppUi::AppUi()
 
     iWindow = [[NSWindow alloc]
 	initWithContentRect:contentRect
-		  styleMask:(NSTitledWindowMask | NSClosableWindowMask
-			     | NSResizableWindowMask | NSMiniaturizableWindowMask)
+		  styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
+			     | NSWindowStyleMaskResizable
+			     | NSWindowStyleMaskMiniaturizable)
 		    backing:NSBackingStoreBuffered
 		      defer:YES];
 
@@ -148,7 +149,7 @@ AppUi::AppUi()
     iClock.drawsBackground = NO;
     iClock.editable = NO;
     iClock.font = [NSFont labelFontOfSize:24.0];
-    iClock.alignment = NSCenterTextAlignment;
+    iClock.alignment = NSTextAlignmentCenter;
     iClock.usesSingleLineMode = YES;
 
     iNotes = [[NSScrollView alloc] initWithFrame:subRect];
@@ -174,12 +175,12 @@ AppUi::AppUi()
 
     [iWindow setContentView:iContent];
 
-    iScreenWindow =
-	[[NSWindow alloc] initWithContentRect:contentRect
-				    styleMask:(NSTitledWindowMask | NSResizableWindowMask
-					       | NSMiniaturizableWindowMask)
-				      backing:NSBackingStoreBuffered
-					defer:YES];
+    iScreenWindow = [[NSWindow alloc]
+	initWithContentRect:contentRect
+		  styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskResizable
+			     | NSWindowStyleMaskMiniaturizable)
+		    backing:NSBackingStoreBuffered
+		      defer:YES];
     iScreen = [[IpePdfView alloc] initWithFrame:subRect];
     iScreen.pdfView->setBackground(ipe::Color(0, 0, 0));
     [iScreenWindow setContentView:iScreen];
@@ -387,13 +388,14 @@ static const char * const about_text =
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item {
     if (item.action == @selector(countDown:)) {
-	item.state = ui->iCountDown ? NSOnState : NSOffState;
+	item.state = ui->iCountDown ? NSControlStateValueOn : NSControlStateValueOff;
     } else if (item.action == @selector(countTime:)) {
-	item.state = ui->iCountTime ? NSOnState : NSOffState;
+	item.state = ui->iCountTime ? NSControlStateValueOn : NSControlStateValueOff;
     } else if (item.action == @selector(blackout:)) {
-	item.state = ui->iScreen.pdfView->blackout() ? NSOnState : NSOffState;
+	item.state = ui->iScreen.pdfView->blackout() ? NSControlStateValueOn
+						     : NSControlStateValueOff;
     } else if (item.action == @selector(laserPointer:)) {
-	item.state = ui->iLaserMode ? NSOnState : NSOffState;
+	item.state = ui->iLaserMode ? NSControlStateValueOn : NSControlStateValueOff;
     }
     return YES;
 }
@@ -443,7 +445,7 @@ static const char * const about_text =
     NSOpenPanel * panel = [NSOpenPanel openPanel];
     [panel beginSheetModalForWindow:ui->iWindow
 		  completionHandler:^(NSInteger result) {
-		    if (result == NSFileHandlingPanelOKButton) {
+		    if (result == NSModalResponseOK) {
 			NSURL * url = [[panel URLs] objectAtIndex:0];
 			if ([url isFileURL]) ui->load([url path]);
 		    }
@@ -547,7 +549,7 @@ static const char * const about_text =
     NSAlert * alert = [[NSAlert alloc] init];
     [alert setMessageText:@"About IpePresenter"];
     [alert setInformativeText:info];
-    [alert setAlertStyle:NSInformationalAlertStyle];
+    [alert setAlertStyle:NSAlertStyleInformational];
     [alert runModal];
 }
 

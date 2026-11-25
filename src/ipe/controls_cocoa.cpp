@@ -113,7 +113,7 @@
 }
 
 - (void)mouseDown:(NSEvent *)event {
-    if ([event modifierFlags] & NSControlKeyMask) {
+    if ([event modifierFlags] & NSEventModifierFlagControl) {
 	[self rightMouseDown:event];
 	return;
     }
@@ -308,7 +308,7 @@
 	NSButton * result = [tv makeViewWithIdentifier:@"LayerCheck" owner:self];
 	if (result == nil) {
 	    result = [[NSButton alloc] initWithFrame:NSMakeRect(0., 0., 20., 20.)];
-	    [result setButtonType:NSSwitchButton];
+	    [result setButtonType:NSButtonTypeSwitch];
 	    [result setImagePosition:NSImageOnly];
 	}
 	[result setAction:@selector(ipeLayerToggled:)];

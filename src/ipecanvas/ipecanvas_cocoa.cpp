@@ -181,10 +181,10 @@ void Canvas::fileDropped(String fname) {
 static int getModifiers(NSEvent * event) {
     uint modifierFlags = [event modifierFlags];
     int mod = 0;
-    if (modifierFlags & NSShiftKeyMask) mod |= CanvasBase::EShift;
-    if (modifierFlags & NSControlKeyMask) mod |= CanvasBase::EControl;
-    if (modifierFlags & NSCommandKeyMask) mod |= CanvasBase::ECommand;
-    if (modifierFlags & NSAlternateKeyMask) mod |= CanvasBase::EAlt;
+    if (modifierFlags & NSEventModifierFlagShift) mod |= CanvasBase::EShift;
+    if (modifierFlags & NSEventModifierFlagControl) mod |= CanvasBase::EControl;
+    if (modifierFlags & NSEventModifierFlagCommand) mod |= CanvasBase::ECommand;
+    if (modifierFlags & NSEventModifierFlagOption) mod |= CanvasBase::EAlt;
     return mod;
 }
 
@@ -248,9 +248,11 @@ void Canvas::scrollWheel(NSEvent * event) {
     if (iObserver) {
 	double xDelta = [event scrollingDeltaX];
 	double yDelta = [event scrollingDeltaY];
-	int kind = ([event modifierFlags] & (NSCommandKeyMask | NSControlKeyMask)) ? 2
-		   : [event hasPreciseScrollingDeltas]                             ? 1
-										   : 0;
+	int kind = ([event modifierFlags]
+		    & (NSEventModifierFlagCommand | NSEventModifierFlagControl))
+		       ? 2
+		   : [event hasPreciseScrollingDeltas] ? 1
+						       : 0;
 	iObserver->canvasObserverWheelMoved(-xDelta, yDelta, kind);
     }
 }

@@ -142,8 +142,8 @@ NSString * ipeui_set_mnemonic(NSString * title, NSButton * button) {
 	[button setTitle:result];
 	if (mnemonic) {
 	    [button setKeyEquivalent:[NSString stringWithCharacters:&mnemonic length:1]];
-	    [button setKeyEquivalentModifierMask:NSEventModifierFlagOption
-					 | NSEventModifierFlagCommand];
+	    [button setKeyEquivalentModifierMask:NSEventModifierFlagOption |
+						 NSEventModifierFlagCommand];
 	}
     }
     return result;
@@ -348,9 +348,8 @@ static NSImage * bitmapImage(const ImageSpec & spec) {
 @end
 
 // --------------------------------------------------------------------
-// The sorter element: a collection view (the same kind of legacy,
-// prototype-based collection view that the page sorter uses) showing items
-// with an icon, an optional label, and an optional checkbox.
+// The sorter element: a collection view showing items with an icon, an optional
+// label, and an optional checkbox.
 
 static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
 static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
@@ -435,15 +434,13 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
     self.image.image = entry.image;
     self.ititle.stringValue = entry.label ? entry.label : @"";
     self.imarked.hidden = !entry.hasMark;
-    self.imarked.state =
-	entry.marked ? NSControlStateValueOn : NSControlStateValueOff;
+    self.imarked.state = entry.marked ? NSControlStateValueOn : NSControlStateValueOff;
     self.imarked.enabled = !entry.readOnly;
     [self ipeLayout];
 }
 
 - (void)ipeToggle:(id)sender {
-    self.entry.marked =
-	([(NSButton *)sender state] == NSControlStateValueOn);
+    self.entry.marked = ([(NSButton *)sender state] == NSControlStateValueOn);
 }
 
 // the context menu is created by the collection view
@@ -482,8 +479,8 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
 
 @end
 
-@interface IpeSorterView : NSCollectionView <NSCollectionViewDataSource,
-					      NSCollectionViewDelegate>
+@interface IpeSorterView
+    : NSCollectionView <NSCollectionViewDataSource, NSCollectionViewDelegate>
 @property BOOL ipeReadOnly;
 
 - (instancetype)initWithReadOnly:(BOOL)readOnly;
@@ -507,7 +504,7 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
 	iCut = [NSMutableArray array];
 	iMenuHit = -1;
 	[self registerClass:[IpeSorterPrototype class]
-	 forItemWithIdentifier:IpeSorterItemIdentifier];
+	    forItemWithIdentifier:IpeSorterItemIdentifier];
 	iGridLayout = [[NSCollectionViewGridLayout alloc] init];
 	self.collectionViewLayout = iGridLayout;
 	self.selectable = YES;
@@ -525,17 +522,17 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
 }
 
 - (NSInteger)collectionView:(NSCollectionView *)collectionView
-    numberOfItemsInSection:(NSInteger)section {
+     numberOfItemsInSection:(NSInteger)section {
     (void)collectionView;
     (void)section;
     return iEntries.count;
 }
 
 - (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
-    itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
+     itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
     NSCollectionViewItem * item =
 	[collectionView makeItemWithIdentifier:IpeSorterItemIdentifier
-				   forIndexPath:indexPath];
+				  forIndexPath:indexPath];
     [item setRepresentedObject:iEntries[indexPath.item]];
     return item;
 }

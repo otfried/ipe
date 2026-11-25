@@ -441,13 +441,13 @@ static NSImage * colorIcon(Color color, int pixels = 20) {
 					image:image
 				       target:self
 				       action:@selector(ipeTouchBar:)];
-		b.buttonType = NSPushOnPushOffButton;
+		b.buttonType = NSButtonTypePushOnPushOff;
 		b.imagePosition = NSImageOnly;
 	    } else {
 		b = [NSButton buttonWithTitle:C2N(title)
 				       target:self
 				       action:@selector(ipeTouchBar:)];
-		if (idf == "show_axes") b.buttonType = NSPushOnPushOffButton;
+		if (idf == "show_axes") b.buttonType = NSButtonTypePushOnPushOff;
 	    }
 	    b.tag = tag;
 	    item.view = b;
@@ -508,23 +508,23 @@ void AppUi::addItem(NSMenu * menu, const char * title, const char * name) {
 	uint mask = 0;
 	if (sc.hasPrefix("Control+")) {
 	    sc = sc.substr(8);
-	    mask |= NSControlKeyMask;
+	    mask |= NSEventModifierFlagControl;
 	}
 	if (sc.hasPrefix("Ctrl+")) {
 	    sc = sc.substr(5);
-	    mask |= NSCommandKeyMask;
+	    mask |= NSEventModifierFlagCommand;
 	}
 	if (sc.hasPrefix("Command+")) {
 	    sc = sc.substr(8);
-	    mask |= NSCommandKeyMask;
+	    mask |= NSEventModifierFlagCommand;
 	}
 	if (sc.hasPrefix("Shift+")) {
 	    sc = sc.substr(6);
-	    mask |= NSShiftKeyMask;
+	    mask |= NSEventModifierFlagShift;
 	}
 	if (sc.hasPrefix("Alt+")) {
 	    sc = sc.substr(4);
-	    mask |= NSAlternateKeyMask;
+	    mask |= NSEventModifierFlagOption;
 	}
 
 	unichar code = 0;
@@ -639,8 +639,8 @@ AppUi::AppUi(lua_State * L0, int model)
 
     iWindow = [[NSWindow alloc]
 	initWithContentRect:contentRect
-		  styleMask:NSTitledWindowMask | NSClosableWindowMask
-			    | NSResizableWindowMask | NSMiniaturizableWindowMask
+		  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
+			    | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable
 		    backing:NSBackingStoreBuffered
 		      defer:YES];
 
@@ -778,9 +778,9 @@ void AppUi::makePropertiesTool() {
     for (int i = 0; i <= EUiOpacity; ++i) {
 	if (i != EUiDashStyle && i != EUiMarkShape && i != EUiOpacity) {
 	    iButton[i] = [[NSButton alloc] initWithFrame:NSMakeRect(0., 0., 12., 12.)];
-	    [iButton[i] setButtonType:NSMomentaryPushInButton];
+	    [iButton[i] setButtonType:NSButtonTypeMomentaryPushIn];
 	    [iButton[i] setImagePosition:NSImageOnly];
-	    [iButton[i] setBezelStyle:NSRegularSquareBezelStyle];
+	    [iButton[i] setBezelStyle:NSBezelStyleFlexiblePush];
 	    iButton[i].action = @selector(ipeAbsoluteButton:);
 	    iButton[i].tag = i;
 	    addToLayout(iPropertiesBox, iButton[i]);
@@ -820,21 +820,21 @@ void AppUi::makePropertiesTool() {
     [iSelector[EUiOpacity] setToolTip:@"Opacity"];
 
     iViewNumber = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 10, 20)];
-    [iViewNumber setButtonType:NSMomentaryPushInButton];
+    [iViewNumber setButtonType:NSButtonTypeMomentaryPushIn];
     [iViewNumber setTitle:@""];
     [iViewNumber setToolTip:@"Current view number"];
     [iViewNumber setImagePosition:NSNoImage];
-    [iViewNumber setBezelStyle:NSRoundedBezelStyle];
+    [iViewNumber setBezelStyle:NSBezelStylePush];
     [iViewNumber setAction:@selector(ipeAbsoluteButton:)];
     [iViewNumber setTag:EUiView];
     addToLayout(iPropertiesBox, iViewNumber);
 
     iPageNumber = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 10, 20)];
-    [iPageNumber setButtonType:NSMomentaryPushInButton];
+    [iPageNumber setButtonType:NSButtonTypeMomentaryPushIn];
     [iPageNumber setTitle:@""];
     [iPageNumber setToolTip:@"Current page number"];
     [iPageNumber setImagePosition:NSNoImage];
-    [iPageNumber setBezelStyle:NSRoundedBezelStyle];
+    [iPageNumber setBezelStyle:NSBezelStylePush];
     [iPageNumber setAction:@selector(ipeAbsoluteButton:)];
     [iPageNumber setTag:EUiPage];
     addToLayout(iPropertiesBox, iPageNumber);
@@ -845,7 +845,7 @@ void AppUi::makePropertiesTool() {
     addToLayout(iPropertiesBox, iPathView);
 
     iViewMarked = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 10, 10)];
-    [iViewMarked setButtonType:NSSwitchButton];
+    [iViewMarked setButtonType:NSButtonTypeSwitch];
     [iViewMarked setTitle:@"Mark view"];
     [iViewMarked setToolTip:@"Current view marked"];
     [iViewMarked setAction:@selector(ipeAbsoluteButton:)];
@@ -854,7 +854,7 @@ void AppUi::makePropertiesTool() {
     addToLayout(iPropertiesBox, iViewMarked);
 
     iPageMarked = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 10, 10)];
-    [iPageMarked setButtonType:NSSwitchButton];
+    [iPageMarked setButtonType:NSButtonTypeSwitch];
     [iPageMarked setTitle:@"Mark page"];
     [iPageMarked setToolTip:@"Current page marked"];
     [iPageMarked setAction:@selector(ipeAbsoluteButton:)];
@@ -933,10 +933,10 @@ void AppUi::makeSnapBar() {
 
     for (int i = 0; i < NUMSNAPBUTTONS; ++i) {
 	iSnapButton[i] = [[NSButton alloc] initWithFrame:NSMakeRect(0, 0, 32, 32)];
-	iSnapButton[i].buttonType = NSPushOnPushOffButton;
+	iSnapButton[i].buttonType = NSButtonTypePushOnPushOff;
 	iSnapButton[i].imagePosition = NSImageOnly;
 	iSnapButton[i].image = loadIcon(snapbutton_action[i]);
-	iSnapButton[i].bezelStyle = NSRegularSquareBezelStyle;
+	iSnapButton[i].bezelStyle = NSBezelStyleFlexiblePush;
 	iSnapButton[i].action = @selector(ipeSnapButton:);
 	iSnapButton[i].tag = i;
 	IpeAction * s = findAction(C2N(snapbutton_action[i]));
@@ -1071,8 +1071,8 @@ void AppUi::setActionsEnabled(bool mode) { iActionsEnabled = mode; }
 void AppUi::setNumbers(String vno, bool vm, String pno, bool pm) {
     iViewNumber.title = I2N(vno);
     iPageNumber.title = I2N(pno);
-    iViewMarked.state = vm ? NSOnState : NSOffState;
-    iPageMarked.state = pm ? NSOnState : NSOffState;
+    iViewMarked.state = vm ? NSControlStateValueOn : NSControlStateValueOff;
+    iPageMarked.state = pm ? NSControlStateValueOn : NSControlStateValueOff;
     iViewNumber.enabled = !vno.empty();
     iViewMarked.enabled = !vno.empty();
     iPageNumber.enabled = !pno.empty();
@@ -1095,7 +1095,7 @@ BOOL AppUi::validateMenuItem(NSMenuItem * item, NSString * name) {
 	    s.state = (iNotesPanel && [iNotesPanel isVisible]);
 	else if ([name isEqualToString:@"toggle_bookmarks"])
 	    s.state = (iBookmarksPanel && [iBookmarksPanel isVisible]);
-	[item setState:(s.state ? NSOnState : NSOffState)];
+	[item setState:(s.state ? NSControlStateValueOn : NSControlStateValueOff)];
 	return actionsEnabled() || s.alwaysOn;
     }
     return YES;
@@ -1121,16 +1121,14 @@ void AppUi::fillDynamicSubmenu(NSMenuItem * item) {
 	    NSMenuItem * mi = [[IpeMenuItem alloc] initWithTitle:I2N(attr.string())
 						       ipeAction:I2N(cmd + attr.string())
 						   keyEquivalent:@""];
-	    if (attr == iAll.iTextStyle) mi.state = NSOnState;
+	    if (attr == iAll.iTextStyle) mi.state = NSControlStateValueOn;
 	    [sm addItem:mi];
 	}
     } else if (item.tag == ESubmenuGridSize || item.tag == ESubmenuAngleSize) {
 	auto uisel = EUiGridSize;
-	auto sel = EGridSize;
 	String cmd = "gridsize|";
 	if (item.tag == ESubmenuAngleSize) {
 	    uisel = EUiAngleSize;
-	    sel = EAngleSize;
 	    cmd = "anglesize|";
 	}
 	auto curr = iSelector[uisel].indexOfSelectedItem;
@@ -1139,7 +1137,7 @@ void AppUi::fillDynamicSubmenu(NSMenuItem * item) {
 	    NSMenuItem * mi = [[IpeMenuItem alloc] initWithTitle:I2N(name)
 						       ipeAction:I2N(cmd + name)
 						   keyEquivalent:@""];
-	    if (count == curr) mi.state = NSOnState;
+	    if (count == curr) mi.state = NSControlStateValueOn;
 	    ++count;
 	    [sm addItem:mi];
 	}
@@ -1206,8 +1204,9 @@ void AppUi::setToolVisible(int m, bool vis) {
 	if (vis && iBookmarksPanel == nil) {
 	    iBookmarksPanel = [[NSPanel alloc]
 		initWithContentRect:NSMakeRect(400., 800., 240., 480.)
-			  styleMask:NSTitledWindowMask | NSClosableWindowMask
-				    | NSResizableWindowMask | NSMiniaturizableWindowMask
+			  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
+				    | NSWindowStyleMaskResizable
+				    | NSWindowStyleMaskMiniaturizable
 			    backing:NSBackingStoreBuffered
 			      defer:YES];
 	    NSRect cFrame = [[iBookmarksPanel contentView] frame];
@@ -1224,8 +1223,9 @@ void AppUi::setToolVisible(int m, bool vis) {
 	if (vis && iNotesPanel == nil) {
 	    iNotesPanel = [[NSPanel alloc]
 		initWithContentRect:NSMakeRect(400., 800., 240., 480.)
-			  styleMask:NSTitledWindowMask | NSClosableWindowMask
-				    | NSResizableWindowMask | NSMiniaturizableWindowMask
+			  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
+				    | NSWindowStyleMaskResizable
+				    | NSWindowStyleMaskMiniaturizable
 			    backing:NSBackingStoreBuffered
 			      defer:YES];
 	    NSRect cFrame = [[iNotesPanel contentView] frame];
@@ -1264,7 +1264,7 @@ void AppUi::snapButton(int sel) {
     NSString * a = C2N(snapbutton_action[sel]);
     IpeAction * s = findAction(a);
     if (s) {
-	s.state = (iSnapButton[sel].state == NSOnState);
+	s.state = (iSnapButton[sel].state == NSControlStateValueOn);
 	luaAction(N2I(a));
     }
 }
@@ -1281,8 +1281,8 @@ IpeAction * AppUi::findAction(NSString * name) const { return iActions[name]; }
 // Used for viewmarked, pagemarked, snapXXX, grid_visible, show_axes,
 // pretty_display, toggle_notes, toggle_bookmarks.
 bool AppUi::actionState(const char * name) {
-    if (!strcmp(name, "viewmarked")) return iViewMarked.state == NSOnState;
-    if (!strcmp(name, "pagemarked")) return iPageMarked.state == NSOnState;
+    if (!strcmp(name, "viewmarked")) return iViewMarked.state == NSControlStateValueOn;
+    if (!strcmp(name, "pagemarked")) return iPageMarked.state == NSControlStateValueOn;
     IpeAction * s = findAction(C2N(name));
     if (s) return s.state;
     return false;
@@ -1304,7 +1304,8 @@ void AppUi::setActionState(const char * name, bool value) {
 	       [a isEqualToString:@"show_axes"]) {
 	for (int i = 0; i < NUMSNAPBUTTONS; ++i) {
 	    if ([a isEqualToString:C2N(snapbutton_action[i])])
-		iSnapButton[i].state = value ? NSOnState : NSOffState;
+		iSnapButton[i].state =
+		    value ? NSControlStateValueOn : NSControlStateValueOff;
 	}
 	// update touch bar if it exists
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101202
@@ -1315,7 +1316,7 @@ void AppUi::setActionState(const char * name, bool value) {
 		auto item = [bar itemForIdentifier:a];
 		if (item != nil) {
 		    auto b = (NSButton *)item.view;
-		    b.state = value ? NSOnState : NSOffState;
+		    b.state = value ? NSControlStateValueOn : NSControlStateValueOff;
 		}
 	    }
 	}
@@ -1538,7 +1539,7 @@ int AppUi::setClipboard(lua_State * L) {
 bool AppUi::waitDialog(lua_State *, const char * cmd, const char * label) {
     NSPanel * panel =
 	[[NSPanel alloc] initWithContentRect:NSMakeRect(400., 800., 200, 100)
-				   styleMask:NSTitledWindowMask
+				   styleMask:NSWindowStyleMaskTitled
 				     backing:NSBackingStoreBuffered
 				       defer:YES];
     panel.title = @"Ipe: waiting";

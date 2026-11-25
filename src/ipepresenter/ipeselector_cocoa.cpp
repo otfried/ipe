@@ -155,7 +155,7 @@ NSSize thumbnail_size;
 	NSButton * b =
 	    [[NSButton alloc] initWithFrame:(NSRect){buttonOrigin, buttonSize}];
 	b.imagePosition = NSImageAbove;
-	b.buttonType = NSMomentaryPushInButton;
+	b.buttonType = NSButtonTypeMomentaryPushIn;
 	b.action = @selector(ipePageSelected:);
 	[self addSubview:b];
 	self.button = b;
@@ -188,13 +188,31 @@ NSSize thumbnail_size;
 
 // --------------------------------------------------------------------
 
-@interface IpeSelectorDelegate : NSObject <NSWindowDelegate>
+@interface IpeSelectorDelegate : NSObject <NSWindowDelegate, NSCollectionViewDataSource>
+
+@property NSArray<IpeSelectorItem *> * items;
 
 - (void)ipePageSelected:(id)sender;
 
 @end
 
 @implementation IpeSelectorDelegate
+
+- (NSInteger)collectionView:(NSCollectionView *)collectionView
+     numberOfItemsInSection:(NSInteger)section {
+    (void)collectionView;
+    (void)section;
+    return self.items.count;
+}
+
+- (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
+     itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
+    NSCollectionViewItem * item =
+	[collectionView makeItemWithIdentifier:@"IpeSelectorItem" forIndexPath:indexPath];
+    item.representedObject = self.items[indexPath.item];
+    ((IpeSelectorView *)item.view).button.target = self;
+    return item;
+}
 
 - (void)ipePageSelected:(id)sender {
     [NSApp stopModalWithCode:[sender tag]];
@@ -216,12 +234,12 @@ int showPageSelectDialog(int width, int height, const char * title,
 			 IpeSelectorProvider * provider, int startIndex) {
     thumbnail_size = provider.tnSize;
 
-    NSPanel * panel =
-	[[NSPanel alloc] initWithContentRect:NSMakeRect(200., 100., width, height)
-				   styleMask:NSTitledWindowMask | NSResizableWindowMask
-					     | NSClosableWindowMask
-				     backing:NSBackingStoreBuffered
-				       defer:YES];
+    NSPanel * panel = [[NSPanel alloc]
+	initWithContentRect:NSMakeRect(200., 100., width, height)
+		  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskResizable
+			    | NSWindowStyleMaskClosable
+		    backing:NSBackingStoreBuffered
+		      defer:YES];
     panel.title = C2N(title);
 
     IpeSelectorDelegate * delegate = [IpeSelectorDelegate new];
@@ -246,8 +264,15 @@ int showPageSelectDialog(int width, int height, const char * title,
     cv.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     scroll.documentView = cv;
 
-    cv.itemPrototype = [IpeSelectorPrototype new];
-    cv.content = elements;
+    [cv registerClass:[IpeSelectorPrototype class]
+	forItemWithIdentifier:@"IpeSelectorItem"];
+    NSCollectionViewGridLayout * grid = [[NSCollectionViewGridLayout alloc] init];
+    NSSize itemSize = NSMakeSize(thumbnail_size.width + 26, thumbnail_size.height + 50);
+    grid.minimumItemSize = itemSize;
+    grid.maximumItemSize = itemSize;
+    cv.collectionViewLayout = grid;
+    delegate.items = elements;
+    cv.dataSource = delegate;
 
     int result = [NSApp runModalForWindow:panel];
     return result;

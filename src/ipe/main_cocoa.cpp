@@ -153,7 +153,7 @@ static const char * const about_text =
     NSAlert * alert = [[NSAlert alloc] init];
     [alert setMessageText:text];
     [alert setInformativeText:info];
-    [alert setAlertStyle:NSInformationalAlertStyle];
+    [alert setAlertStyle:NSAlertStyleInformational];
     [alert runModal];
 }
 
@@ -210,7 +210,7 @@ static const char * const about_text =
     NSAlert * alert = [[NSAlert alloc] init];
     [alert setMessageText:@"Really quit Ipe?"];
     [alert setInformativeText:warn];
-    [alert setAlertStyle:NSWarningAlertStyle];
+    [alert setAlertStyle:NSAlertStyleWarning];
     [alert addButtonWithTitle:@"Discard all changes"];
     [alert addButtonWithTitle:@"Cancel"];
     switch ([alert runModal]) {
