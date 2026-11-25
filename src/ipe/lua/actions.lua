@@ -946,7 +946,7 @@ function MODEL:export_reveal(fromPage, toPage)
       fname = "/home/ipe/presentations/" .. fname:sub(21)
     end
   end
-  local f = io.open(prefs.html_template, "r")
+  local f = ipe.openFile(prefs.html_template, "r")
   htmlTemplate = f:read("*all")
   f:close()
   local result = self.ui:createPresentation(self.doc, fname, htmlTemplate, fromPage, toPage)
@@ -959,6 +959,8 @@ function MODEL:export_reveal(fromPage, toPage)
     else
       os.execute(prefs.browser:format(fname))
     end
+  else
+    self:warning("Could not create presentation")
   end
 end
 
