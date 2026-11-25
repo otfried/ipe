@@ -937,7 +937,7 @@ end
 
 function MODEL:export_reveal(fromPage, toPage)
   local fname = ipe.folder("latex", "presentation.html")
-  if config.platform == "htmljs" then
+  if config.platform == "web" then
     if self.file_name and (self.file_name:sub(-4) == ".ipe" or
 			   self.file_name:sub(-4) == ".pdf") then
       fname = self.file_name:sub(1, -5) .. ".html"

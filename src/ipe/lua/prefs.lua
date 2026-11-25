@@ -278,7 +278,7 @@ prefs.initial_attributes = {
   opacity = "opaque",
   strokeopacity = "opaque",
   variant = "undefined",
-  externalimages = true,
+  externalimages = false,
 }
 
 -- Ordering of attribute values in UI
