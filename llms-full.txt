@@ -2,7 +2,7 @@
 
 > Ipe is an extensible drawing editor with a Lua scripting interface. This documentation explains how to write Ipe scripts and ipelets (extensions of the editor) in Lua, with complete examples and a reference for all Lua functions.
 
-(Ipe 7.3.1, generated 2026-11-23 from commit 5c174d7f62f2)
+(Ipe 7.3.1, generated 2026-11-25 from commit 261636e41fc9)
 
 ## Introduction
 
