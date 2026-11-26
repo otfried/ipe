@@ -6,6 +6,7 @@ jobs:
     runs-on: macos-latest
     env:
       OSXTARGET: -mmacosx-version-min=12.00 -target arm64-apple-macos12
+      IPESTRICT: 1
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
