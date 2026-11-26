@@ -188,31 +188,13 @@ NSSize thumbnail_size;
 
 // --------------------------------------------------------------------
 
-@interface IpeSelectorDelegate : NSObject <NSWindowDelegate, NSCollectionViewDataSource>
-
-@property NSArray<IpeSelectorItem *> * items;
+@interface IpeSelectorDelegate : NSObject <NSWindowDelegate>
 
 - (void)ipePageSelected:(id)sender;
 
 @end
 
 @implementation IpeSelectorDelegate
-
-- (NSInteger)collectionView:(NSCollectionView *)collectionView
-     numberOfItemsInSection:(NSInteger)section {
-    (void)collectionView;
-    (void)section;
-    return self.items.count;
-}
-
-- (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
-     itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
-    NSCollectionViewItem * item =
-	[collectionView makeItemWithIdentifier:@"IpeSelectorItem" forIndexPath:indexPath];
-    item.representedObject = self.items[indexPath.item];
-    ((IpeSelectorView *)item.view).button.target = self;
-    return item;
-}
 
 - (void)ipePageSelected:(id)sender {
     [NSApp stopModalWithCode:[sender tag]];
@@ -264,15 +246,13 @@ int showPageSelectDialog(int width, int height, const char * title,
     cv.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
     scroll.documentView = cv;
 
-    [cv registerClass:[IpeSelectorPrototype class]
-	forItemWithIdentifier:@"IpeSelectorItem"];
-    NSCollectionViewGridLayout * grid = [[NSCollectionViewGridLayout alloc] init];
-    NSSize itemSize = NSMakeSize(thumbnail_size.width + 26, thumbnail_size.height + 50);
-    grid.minimumItemSize = itemSize;
-    grid.maximumItemSize = itemSize;
-    cv.collectionViewLayout = grid;
-    delegate.items = elements;
-    cv.dataSource = delegate;
+    // The prototype-based API is deprecated, but the replacement is not reliable
+    // on older versions of macOS.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    cv.itemPrototype = [IpeSelectorPrototype new];
+    cv.content = elements;
+#pragma clang diagnostic pop
 
     int result = [NSApp runModalForWindow:panel];
     return result;

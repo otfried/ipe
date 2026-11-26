@@ -348,11 +348,11 @@ static NSImage * bitmapImage(const ImageSpec & spec) {
 @end
 
 // --------------------------------------------------------------------
-// The sorter element: a collection view showing items with an icon, an optional
-// label, and an optional checkbox.
+// The sorter element: a collection view (the same kind of legacy,
+// prototype-based collection view that the page sorter uses) showing items
+// with an icon, an optional label, and an optional checkbox.
 
 static NSString * const IpeSorterDragType = @"ipeSorterDragIndexes";
-static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
 
 @interface IpeSorterEntry : NSObject
 @property NSInteger number; // number of the item in the table given to Lua (from 1)
@@ -479,8 +479,7 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
 
 @end
 
-@interface IpeSorterView
-    : NSCollectionView <NSCollectionViewDataSource, NSCollectionViewDelegate>
+@interface IpeSorterView : NSCollectionView <NSCollectionViewDelegate>
 @property BOOL ipeReadOnly;
 
 - (instancetype)initWithReadOnly:(BOOL)readOnly;
@@ -488,11 +487,15 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
 - (void)ipeFillOrder:(std::vector<int> &)order;
 @end
 
+// The prototype-based API is deprecated, but the replacement is not reliable
+// on older versions of macOS.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 @implementation IpeSorterView {
     NSMutableArray<IpeSorterEntry *> * iEntries; // current items, in order
     NSMutableArray<IpeSorterEntry *> * iCut;     // items removed by "Cut"
     NSIndexSet * iDragIndexes;
-    NSCollectionViewGridLayout * iGridLayout;
     NSInteger iMenuHit; // item under the pointer when the menu was shown, or -1
 }
 
@@ -503,13 +506,9 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
 	iEntries = [NSMutableArray array];
 	iCut = [NSMutableArray array];
 	iMenuHit = -1;
-	[self registerClass:[IpeSorterPrototype class]
-	    forItemWithIdentifier:IpeSorterItemIdentifier];
-	iGridLayout = [[NSCollectionViewGridLayout alloc] init];
-	self.collectionViewLayout = iGridLayout;
+	self.itemPrototype = [IpeSorterPrototype new];
 	self.selectable = YES;
 	self.allowsMultipleSelection = YES;
-	self.dataSource = self;
 	self.delegate = self;
 	if (!readOnly) [self registerForDraggedTypes:@[ IpeSorterDragType ]];
     }
@@ -517,24 +516,8 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
 }
 
 - (void)ipeReload {
-    [self reloadData];
+    self.content = [NSArray arrayWithArray:iEntries];
     self.selectionIndexes = [NSIndexSet indexSet];
-}
-
-- (NSInteger)collectionView:(NSCollectionView *)collectionView
-     numberOfItemsInSection:(NSInteger)section {
-    (void)collectionView;
-    (void)section;
-    return iEntries.count;
-}
-
-- (NSCollectionViewItem *)collectionView:(NSCollectionView *)collectionView
-     itemForRepresentedObjectAtIndexPath:(NSIndexPath *)indexPath {
-    NSCollectionViewItem * item =
-	[collectionView makeItemWithIdentifier:IpeSorterItemIdentifier
-				  forIndexPath:indexPath];
-    [item setRepresentedObject:iEntries[indexPath.item]];
-    return item;
 }
 
 - (void)ipeSetItems:(const std::vector<SorterItem> &)items {
@@ -558,8 +541,8 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
     }
     // all items have the size of the largest icon (and room for a short label)
     NSSize size = NSMakeSize(std::max(iconWidth + 8, 90), iconHeight + 28);
-    iGridLayout.minimumItemSize = size;
-    iGridLayout.maximumItemSize = size;
+    self.minItemSize = size;
+    self.maxItemSize = size;
     [self ipeReload];
 }
 
@@ -584,8 +567,7 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
     NSPoint p = [self convertPoint:[event locationInWindow] fromView:nil];
     iMenuHit = -1;
     for (NSUInteger i = 0; i < [iEntries count]; ++i) {
-	NSCollectionViewItem * item =
-	    [self itemAtIndexPath:[NSIndexPath indexPathForItem:i inSection:0]];
+	NSCollectionViewItem * item = [self itemAtIndex:i];
 	if (item && NSPointInRect(p, [[item view] frame])) {
 	    iMenuHit = i;
 	    break;
@@ -652,8 +634,7 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
 	 i = [sel indexGreaterThanIndex:i]) {
 	if (i >= [iEntries count] || !iEntries[i].hasMark) continue;
 	iEntries[i].marked = mark;
-	NSIndexPath * indexPath = [NSIndexPath indexPathForItem:i inSection:0];
-	[[self itemAtIndexPath:indexPath] setRepresentedObject:iEntries[i]];
+	[[self itemAtIndex:i] setRepresentedObject:iEntries[i]];
     }
 }
 
@@ -708,6 +689,8 @@ static NSString * const IpeSorterItemIdentifier = @"IpeSorterItem";
 }
 
 @end
+
+#pragma clang diagnostic pop
 
 // --------------------------------------------------------------------
 
