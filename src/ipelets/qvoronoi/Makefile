@@ -56,4 +56,12 @@ app:
 
 endif
 
+ifdef WIN32
+
+app:
+	$(INSTALL_DIR) $(BUILDDIR)/ipelets
+	$(INSTALL_FILES) qvoronoi.lua $(BUILDDIR)/ipelets
+
+endif
+
 # --------------------------------------------------------------------

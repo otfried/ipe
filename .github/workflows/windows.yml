@@ -1,0 +1,43 @@
+name: Build Ipe for Windows
+on:
+  workflow_dispatch:
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    env:
+      IPECROSS: x86_64
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Install compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+                  gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 \
+                  mingw-w64-tools meson lua5.5 icoutils dos2unix
+      - name: Download dependencies
+        run: |
+          wget https://github.com/otfried/windows-ipe/releases/download/2026.11.26/mingwlibs-x86_64.tar.gz
+          tar xzf mingwlibs-x86_64.tar.gz
+      - name: Compile
+        run: |
+          export IPEDEPS=`pwd`/mingwlibs-x86_64
+          cd src
+          make -j
+          make app
+          make dependencies
+          make -C ipe strip
+      - name: Build final zip
+        run: |
+          VERSION=`grep -E -o "^IPEVERS.*$" src/config.mak | grep -E -o "[0-9.]+"`
+          echo "Ipe version is $VERSION"
+          rm -fr mingw64/obj
+          mv -i mingw64 ipe-$VERSION
+          zip -r ipe-$VERSION-win64.zip ipe-$VERSION
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: ipe-windows
+          path: ipe-*-win64.zip
+          retention-days: 2
+      - run: 'echo "Status ${{ job.status }}"'

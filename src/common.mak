@@ -133,8 +133,13 @@ ifdef WIN32
 
   IPE_NO_IPELIB_VERSION_CHECK := 1
   CPPFLAGS       += -DWIN32 -DUNICODE -D_UNICODE
-  DLL_LDFLAGS	 += -shared 
-  PLUGIN_LDFLAGS += -shared
+  # If any statically linked dependency (such as libspiro) embeds its own
+  # explicit dllexport directives, GNU ld switches off its default
+  # "auto-export all global symbols" heuristic for the DLL being built,
+  # silently hiding all of Ipe's own symbols. Force full export explicitly
+  # so this cannot happen.
+  DLL_LDFLAGS	 += -shared -Wl,--export-all-symbols
+  PLUGIN_LDFLAGS += -shared -Wl,--export-all-symbols
   DL_LIBS        :=
   JPEG_CFLAGS    :=
   JPEG_LIBS      := -lgdiplus
@@ -148,12 +153,12 @@ ifdef WIN32
   buildlib	 = $(BUILDDIR)/bin
   buildbin       = $(BUILDDIR)/bin
   buildipelets   = $(BUILDDIR)/ipelets
-  exe_target	 = $(BUILDDIR)/bin/$1.exe
+  exe_target	 = $(buildbin)/$1.exe
   dll_target     = $(buildlib)/$1.dll
   soname         = 
   dll_symlinks   = 
   install_symlinks = 
-  ipelet_target  = $(BUILDDIR)/ipelets/$1.dll
+  ipelet_target  = $(buildipelets)/$1.dll
   check_lua      = luac -p
 
   CXXFLAGS	 += -g -O2
@@ -162,14 +167,14 @@ ifdef IPECROSS
   # http://mingw-w64.sourceforge.net/
   CXX           = $(IPECROSS)-w64-mingw32-g++
   CC            = $(IPECROSS)-w64-mingw32-gcc
-  STRIP_TARGET  = $(IPECROSS)-w64-mingw32-strip $(TARGET)
+  STRIP         = $(IPECROSS)-w64-mingw32-strip
   WINDRES	= $(IPECROSS)-w64-mingw32-windres
   IPEDEPS	?= /sw/mingwlibs-$(IPECROSS)
 else
   # --------------- Compiling with Mingw-w64 under Windows ---------------
   WINDRES	= windres.exe
   CXXFLAGS	+= -g -O2
-  STRIP_TARGET  = strip $(TARGET)
+  STRIP         = strip
   IPEDEPS	?= /mingwlibs
 endif
   ZLIB_CFLAGS   := -I$(IPEDEPS)/include
@@ -179,8 +184,8 @@ endif
   FREETYPE_LIBS := -L$(IPEDEPS)/lib -lfreetype
   CAIRO_CFLAGS  := -I$(IPEDEPS)/include/cairo
   CAIRO_LIBS    := -L$(IPEDEPS)/lib -lcairo
-  LUA_CFLAGS    := -I$(IPEDEPS)/lua54/include
-  LUA_LIBS      := $(IPEDEPS)/lua54/lua54.dll
+  LUA_CFLAGS    := -I$(IPEDEPS)/include/lua
+  LUA_LIBS      := $(IPEDEPS)/bin/lua55.dll
   SPIRO_CFLAGS  := -I$(IPEDEPS)/include/spiro
   SPIRO_LIBS    := -L$(IPEDEPS)/lib -lspiro
   GSL_CFLAGS	:=

@@ -110,6 +110,44 @@ dependencies:
 
 endif
 
+ifdef WIN32
+
+GCCLIBS = $(shell dpkg -L gcc-mingw-w64-x86-64-win32-runtime | grep libstdc++-6.dll)
+GCCLIBS += $(shell dpkg -L gcc-mingw-w64-x86-64-win32-runtime | grep libssp-0.dll)
+GCCLIBS += $(shell dpkg -L gcc-mingw-w64-x86-64-win32-runtime | grep libgcc_s_seh-1.dll)
+
+app:
+	$(INSTALL_DIR) $(BUILDDIR)/scripts
+	$(INSTALL_DIR) $(BUILDDIR)/lua
+	$(INSTALL_DIR) $(BUILDDIR)/ipelets
+	$(INSTALL_DIR) $(BUILDDIR)/styles
+	$(INSTALL_DIR) $(BUILDDIR)/icons
+	$(INSTALL_SCRIPTS) ../../scripts/* $(BUILDDIR)/scripts
+	$(INSTALL_FILES) lua/*.lua $(BUILDDIR)/lua
+	$(INSTALL_FILES) ../ipelets/lua/*.lua $(BUILDDIR)/ipelets
+	$(INSTALL_FILES) ../ipelets/qvoronoi/*.lua $(BUILDDIR)/ipelets
+	$(INSTALL_FILES) ../../styles/* $(BUILDDIR)/styles
+	$(INSTALL_FILES) ../../artwork/icons.ipe $(BUILDDIR)/icons
+	$(INSTALL_FILES) ../../doc/windows.txt $(BUILDDIR)/readme.txt
+	$(INSTALL_FILES) ../../doc/news.txt $(BUILDDIR)
+	$(INSTALL_FILES) ../../doc/gpl.txt $(BUILDDIR)
+	unix2dos $(BUILDDIR)/*.txt
+
+strip:
+	$(STRIP) $(BUILDDIR)/ipelets/*.dll
+	$(STRIP) $(BUILDDIR)/bin/*.dll $(BUILDDIR)/bin/*.exe
+
+dependencies:
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/bin/libcairo-2.dll $(buildbin)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/bin/libfreetype-6.dll $(buildbin)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/bin/libpixman-1-0.dll $(buildbin)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/bin/libpng16-16.dll $(buildbin)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/bin/lua55.dll $(buildbin)
+	$(INSTALL_PROGRAMS) $(IPEDEPS)/bin/zlib1.dll $(buildbin)
+	$(INSTALL_PROGRAMS) $(GCCLIBS) $(buildbin)
+
+endif
+
 install: $(TARGET)
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEBINDIR) 
 	$(INSTALL_DIR) $(INSTALL_ROOT)$(IPEMANDIR) 

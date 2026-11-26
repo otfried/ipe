@@ -26,11 +26,14 @@ endif
 
 ICONSET = ../artwork/ipe.iconset
 ifdef IPECROSS
-IPEICO = ../build/ipe.ico
+IPEICNS = ../build/ipe.ico
 else
-IPEICO =
-endif
+ifdef IPEUI_COCOA
 IPEICNS = ../build/ipe.icns
+else
+IPEICNS =
+endif
+endif
 
 .PHONY: all manual epub book documentation $(subdirs)
 
@@ -47,26 +50,28 @@ ipecanvas: ipelib ipecairo
 ipeview: ipecanvas
 ipelua: ipelib
 ipescript: ipelib ipelua
-ipe: ipelib ipecanvas ipelua ipeui $(IPEICO)
-ipepresenter: ipecanvas $(IPEICO)
+ipe: ipelib ipecanvas ipelua ipeui $(IPEICNS)
+ipepresenter: ipecanvas $(IPEICNS)
 ipecurl: ipelib
 ipejs: ipelib ipecairo ipecanvas
 
 $(subdirs):
 	$(MAKE) --directory=$@ $(GOAL)
 
-$(IPEICO):
+ifdef IPECROSS
+$(IPEICNS):
 	mkdir -p ../build
 	icotool -c $(ICONSET)/icon_16x16.png \
 		$(ICONSET)/icon_32x32.png \
 		$(ICONSET)/icon_64x64.png \
 		$(ICONSET)/icon_128x128.png \
 		$(ICONSET)/icon_256x256.png \
-		$(ICONSET)/icon_512x512.png -o $(IPEICO)
-
+		$(ICONSET)/icon_512x512.png -o $(IPEICNS)
+else
 $(IPEICNS):
 	mkdir -p ../build
 	iconutil -c icns -o $(IPEICNS) $(ICONSET)
+endif
 
 .PHONY: clean install
 clean:

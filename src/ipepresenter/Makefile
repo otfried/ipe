@@ -89,4 +89,12 @@ dependencies:
 
 endif
 
+ifdef WIN32
+
+app:
+
+dependencies:
+
+endif
+
 # --------------------------------------------------------------------

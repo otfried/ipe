@@ -24,4 +24,12 @@ app:
 
 endif
 
+ifdef WIN32
+
+app:
+	$(INSTALL_DIR) $(BUILDDIR)/ipelets
+	$(INSTALL_FILES) $(LUASCRIPTS) $(BUILDDIR)/ipelets
+
+endif
+
 # --------------------------------------------------------------------
