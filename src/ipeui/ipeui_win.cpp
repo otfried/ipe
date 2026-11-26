@@ -219,6 +219,10 @@ protected:
     BOOL dlgNotify(WPARAM wParam, LPARAM lParam);
     void populateSorter(int idx);
     void sorterMenu(int idx, HWND lv, POINT pt, int hit);
+    void sorterBeginDrag(int idx);
+    void sorterDragUpdate(bool autoScroll);
+    void sorterEndDrag(bool drop);
+    void sorterMoveSelected(HWND lv, int before);
     BOOL handleResize();
     static BOOL CALLBACK dialogProc(HWND hwndDlg, UINT message, WPARAM wParam,
 				    LPARAM lParam);
@@ -234,6 +238,11 @@ private:
     // sorter elements: the items cut from the list (number and state image),
     // indexed by element
     std::vector<std::vector<std::pair<int, int>>> iCutLists;
+    // sorter elements: the element being dragged (or -1), and where the
+    // dragged items would be dropped: next to the item iDropRow (or -1)
+    int iDragIdx = -1;
+    int iDropRow = -1;
+    bool iDropAfter = false;
 };
 
 PDialog::PDialog(lua_State * L0, WINID parent, const char * caption,
@@ -311,8 +320,8 @@ static void markupLog(HWND h, const std::string & text) {
 // --------------------------------------------------------------------
 // The sorter element: a list view in icon view mode.  The user can select
 // items and, unless the sorter is readonly, delete them, mark them, and move
-// them (by cutting them and inserting them somewhere else) using a context
-// menu.  The checkboxes (state images) of the list view are only displayed:
+// them (by dragging them, or by cutting them and inserting them somewhere
+// else using a context menu).  The checkboxes (state images) of the list view are only displayed:
 // the user cannot change them directly.
 
 // state images: 0 means no checkbox, 1 is unchecked, 2 is checked
@@ -502,6 +511,165 @@ void PDialog::sorterMenu(int idx, HWND lv, POINT pt, int hit) {
     ListView_Arrange(lv, LVA_DEFAULT);
 }
 
+// The list view in icon view cannot reorder items by dragging them, so we do
+// it ourselves: LVN_BEGINDRAG starts a drag, during which the dialog captures
+// the mouse, and the items are moved when the button is released.
+
+static const UINT_PTR SORTER_DRAG_TIMER = 1;
+
+// First the line of items closest to the position (vertically), then the item
+// in that line closest to it (horizontally).  So dropping below the last line,
+// or to the right of its last item, goes to the end.
+static bool sorterDropTarget(HWND lv, POINT pos, int & targetRow, bool & after) {
+    int n = ListView_GetItemCount(lv);
+    int bestVertical = 0, bestHorizontal = 0;
+    targetRow = -1;
+    for (int i = 0; i < n; ++i) {
+	RECT rc;
+	if (!ListView_GetItemRect(lv, i, &rc, LVIR_BOUNDS)) continue;
+	int centerX = (rc.left + rc.right) / 2;
+	int vertical = std::max({int(rc.top - pos.y), int(pos.y - rc.bottom), 0});
+	int horizontal = std::abs(centerX - int(pos.x));
+	if (targetRow < 0 || vertical < bestVertical
+	    || (vertical == bestVertical && horizontal < bestHorizontal)) {
+	    bestVertical = vertical;
+	    bestHorizontal = horizontal;
+	    targetRow = i;
+	    after = pos.x >= centerX;
+	}
+    }
+    return targetRow >= 0;
+}
+
+// a vertical bar next to the item before or after which items will go
+static void sorterDrawDropMark(HWND lv, int row, bool after) {
+    RECT rc;
+    if (row < 0 || !ListView_GetItemRect(lv, row, &rc, LVIR_BOUNDS)) return;
+    int x = after ? rc.right : rc.left;
+    RECT bar = {x - 1, rc.top, x + 2, rc.bottom};
+    HDC dc = GetDC(lv);
+    HBRUSH brush = CreateSolidBrush(GetSysColor(COLOR_HIGHLIGHT));
+    FillRect(dc, &bar, brush);
+    DeleteObject(brush);
+    ReleaseDC(lv, dc);
+}
+
+void PDialog::sorterBeginDrag(int idx) {
+    HWND lv = GetDlgItem(hDialog, idx + IDBASE);
+    if (iDragIdx >= 0 || sorterSelectedRows(lv).empty()) return;
+    iDragIdx = idx;
+    iDropRow = -1;
+    SetCapture(hDialog);
+    SetTimer(hDialog, SORTER_DRAG_TIMER, 50, nullptr);
+    sorterDragUpdate(false);
+}
+
+void PDialog::sorterDragUpdate(bool autoScroll) {
+    if (iDragIdx < 0) return;
+    if (GetAsyncKeyState(VK_ESCAPE) & 0x8000) {
+	sorterEndDrag(false);
+	return;
+    }
+    HWND lv = GetDlgItem(hDialog, iDragIdx + IDBASE);
+    POINT pt;
+    GetCursorPos(&pt);
+    ScreenToClient(lv, &pt);
+    RECT client;
+    GetClientRect(lv, &client);
+
+    // scroll while the pointer is near the top or bottom edge
+    bool scrolled = false;
+    const int margin = 24;
+    if (autoScroll && pt.x >= client.left && pt.x < client.right) {
+	int dy = 0;
+	if (pt.y < client.top + margin)
+	    dy = -margin;
+	else if (pt.y >= client.bottom - margin)
+	    dy = margin;
+	if (dy != 0) {
+	    POINT originBefore = {}, originAfter = {};
+	    ListView_GetOrigin(lv, &originBefore);
+	    ListView_Scroll(lv, 0, dy);
+	    ListView_GetOrigin(lv, &originAfter);
+	    scrolled = (originBefore.y != originAfter.y);
+	}
+    }
+
+    int row = -1;
+    bool after = false;
+    sorterDropTarget(lv, pt, row, after);
+    if (scrolled || row != iDropRow || after != iDropAfter) {
+	iDropRow = row;
+	iDropAfter = after;
+	// the bar is outside the items, so the background has to be erased
+	RedrawWindow(lv, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW);
+    }
+    sorterDrawDropMark(lv, iDropRow, iDropAfter);
+}
+
+void PDialog::sorterEndDrag(bool drop) {
+    if (iDragIdx < 0) return;
+    HWND lv = GetDlgItem(hDialog, iDragIdx + IDBASE);
+    int row = iDropRow;
+    bool after = iDropAfter;
+    iDragIdx = -1; // before releasing the capture, which sends WM_CAPTURECHANGED
+    iDropRow = -1;
+    KillTimer(hDialog, SORTER_DRAG_TIMER);
+    if (GetCapture() == hDialog) ReleaseCapture();
+    // The list view has not seen the button being released (the dialog had the
+    // mouse), so tell it, at a point outside of its client area, or it would
+    // not start another drag.
+    SendMessage(lv, WM_LBUTTONUP, 0, MAKELPARAM(0xffff, 0xffff));
+    if (drop && row >= 0)
+	sorterMoveSelected(lv, row + (after ? 1 : 0));
+    RedrawWindow(lv, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW);
+}
+
+// With LVS_AUTOARRANGE the list view does not place inserted items in the order
+// of their indices, so we place all items ourselves, in a grid with "base" as the
+// position of the first item.
+static void sorterLayout(HWND lv, POINT base) {
+    LONG_PTR style = GetWindowLongPtr(lv, GWL_STYLE);
+    SetWindowLongPtr(lv, GWL_STYLE, style & ~LONG_PTR(LVS_AUTOARRANGE));
+    DWORD spacing = ListView_GetItemSpacing(lv, FALSE);
+    int sx = std::max(1, int(LOWORD(spacing)));
+    int sy = std::max(1, int(HIWORD(spacing)));
+    RECT client;
+    GetClientRect(lv, &client);
+    int cols = std::max(1, int((client.right - client.left) / sx));
+    int n = ListView_GetItemCount(lv);
+    for (int i = 0; i < n; ++i)
+	ListView_SetItemPosition32(lv, i, base.x + (i % cols) * sx, base.y + (i / cols) * sy);
+    SetWindowLongPtr(lv, GWL_STYLE, style);
+}
+
+// Move the selected items so that they are in front of the item currently at
+// position "before", keeping their order.
+void PDialog::sorterMoveSelected(HWND lv, int before) {
+    std::vector<int> rows = sorterSelectedRows(lv);
+    if (rows.empty()) return;
+    POINT base = {};
+    ListView_GetItemPosition(lv, 0, &base);
+    int idx = int(GetDlgCtrlID(lv)) - IDBASE;
+    before = std::max(0, std::min(before, ListView_GetItemCount(lv)));
+    int removedBefore = 0;
+    std::vector<std::pair<int, int>> moved;
+    for (int r : rows) {
+	if (r < before) ++removedBefore;
+	moved.push_back({sorterNumber(lv, r), sorterStateImage(lv, r)});
+    }
+    iSorterUpdating = true;
+    for (auto it = rows.rbegin(); it != rows.rend(); ++it) ListView_DeleteItem(lv, *it);
+    int pos = before - removedBefore;
+    for (const auto & c : moved) {
+	insertSorterItem(lv, iElements[idx].sorter, c.first, pos, c.second);
+	ListView_SetItemState(lv, pos, LVIS_SELECTED, LVIS_SELECTED);
+	++pos;
+    }
+    iSorterUpdating = false;
+    sorterLayout(lv, base);
+}
+
 BOOL PDialog::dlgNotify(WPARAM, LPARAM lParam) {
     NMHDR * nm = (NMHDR *)lParam;
     int idx = int(nm->idFrom) - IDBASE;
@@ -518,6 +686,9 @@ BOOL PDialog::dlgNotify(WPARAM, LPARAM lParam) {
 	}
 	return FALSE;
     }
+    case LVN_BEGINDRAG:
+	if (!(iElements[idx].flags & EReadOnly)) sorterBeginDrag(idx);
+	return TRUE;
     case NM_RCLICK:
 	if (!(iElements[idx].flags & EReadOnly)) {
 	    NMITEMACTIVATE * ia = (NMITEMACTIVATE *)lParam;
@@ -769,6 +940,28 @@ BOOL CALLBACK PDialog::dialogProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
 	return FALSE;
     case WM_NOTIFY:
 	if (d) return d->dlgNotify(wParam, lParam);
+	return FALSE;
+    // while dragging in a sorter, the dialog has captured the mouse
+    case WM_MOUSEMOVE:
+	if (d && d->iDragIdx >= 0) {
+	    d->sorterDragUpdate(false);
+	    return TRUE;
+	}
+	return FALSE;
+    case WM_TIMER:
+	if (d && d->iDragIdx >= 0 && wParam == SORTER_DRAG_TIMER) {
+	    d->sorterDragUpdate(true);
+	    return TRUE;
+	}
+	return FALSE;
+    case WM_LBUTTONUP:
+	if (d && d->iDragIdx >= 0) {
+	    d->sorterEndDrag(true);
+	    return TRUE;
+	}
+	return FALSE;
+    case WM_CAPTURECHANGED:
+	if (d && d->iDragIdx >= 0 && (HWND)lParam != hwnd) d->sorterEndDrag(false);
 	return FALSE;
     case WM_DRAWITEM:
 	if (d && wParam >= IDBASE && wParam < IDBASE + d->iElements.size()) {
