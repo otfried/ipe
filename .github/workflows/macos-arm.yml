@@ -19,7 +19,7 @@ jobs:
           pip3 install dmgbuild
       - name: Download dependencies
         run: |
-          wget https://github.com/otfried/osx-ipe/releases/download/2024.02.25/osxlibs-arm.tar.gz
+          wget https://github.com/otfried/osx-ipe/releases/download/2026.11.28/osxlibs-arm.tar.gz
           tar xzf osxlibs-arm.tar.gz
       - name: Compile
         run: |
